@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Provides branch source functionality for GitLab in Jenkins
+</div>
