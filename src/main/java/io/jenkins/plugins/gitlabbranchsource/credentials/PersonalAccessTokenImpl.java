@@ -63,6 +63,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
          * {@inheritDoc}
          */
         @Override
+        @Nonnull
         public String getDisplayName() {
             return Messages.PersonalAccessTokenImpl_displayName();
         }
@@ -77,9 +78,9 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         @SuppressWarnings("unused")
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);
-            if(secret == null) {
-                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenRequired());
-            }
+//            if(secret == null) {
+//                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenRequired());
+//            }
             if(StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() != 20) {// length of GitLab Access Token is 20
                     return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
