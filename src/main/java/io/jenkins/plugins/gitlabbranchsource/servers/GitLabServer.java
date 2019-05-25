@@ -294,10 +294,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         }
         try {
             // TODO: resolve the null pointer exception raised by getToken() method
-            GitLabApi gitLabApi = new GitLabApi(
-                    serverUrl,
-                    ((GitLabAuthToken) AuthenticationTokens.convert(GitLabAuth.class, credentials))
-                            .getToken());
+            GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
+            String privateToken = "unknown";
+            if(gitLabAuth instanceof GitLabAuthToken) {
+                privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+            }
+            GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
             gitLabApi.getUserApi().getActiveUsers();
         } catch (GitLabApiException e) {
             return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
