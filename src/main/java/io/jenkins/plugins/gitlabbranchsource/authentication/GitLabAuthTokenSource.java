@@ -1,18 +1,18 @@
 package io.jenkins.plugins.gitlabbranchsource.authentication;
 
+import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
 import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
-import org.gitlab4j.api.models.ImpersonationToken;
 
 import javax.annotation.Nonnull;
 
-public class GitLabAuthTokenSource extends AuthenticationTokenSource<ImpersonationToken, PersonalAccessToken> {
+public class GitLabAuthTokenSource extends AuthenticationTokenSource<GitLabAuthToken, PersonalAccessToken> {
     /**
      * Constructor.
      */
     public GitLabAuthTokenSource() {
-        super(ImpersonationToken.class, PersonalAccessToken.class);
+        super(GitLabAuthToken.class, PersonalAccessToken.class);
     }
 
     /**
@@ -20,9 +20,7 @@ public class GitLabAuthTokenSource extends AuthenticationTokenSource<Impersonati
      */
     @Nonnull
     @Override
-    public ImpersonationToken convert(@Nonnull PersonalAccessToken credential) throws AuthenticationTokenException {
-        ImpersonationToken impersonationToken = new ImpersonationToken();
-        impersonationToken.setToken(credential.getToken().getPlainText());
-        return impersonationToken;
+    public GitLabAuthToken convert(@Nonnull PersonalAccessToken credential) throws AuthenticationTokenException {
+        return new GitLabAuthToken(credential.getToken().getPlainText());
     }
 }
