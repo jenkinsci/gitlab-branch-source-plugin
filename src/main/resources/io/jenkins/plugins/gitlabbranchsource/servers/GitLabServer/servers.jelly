@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <?jelly escape-by-default='true'?>
+
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
          xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:entry title="${%Name}" field="displayName">

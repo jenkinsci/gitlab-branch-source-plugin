@@ -186,6 +186,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         );
     }
 
+
     /**
      * {@inheritDoc}
      */
@@ -301,6 +302,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         } catch (GitLabApiException e) {
             return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
         }
+        return FormValidation.warning(Messages.GitLabServer_someException());
     }
 
 }
