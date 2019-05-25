@@ -1,6 +1,6 @@
 target
 /work*
-/github-branch-source.iml
+*.iml
 /.idea
 .classpath
 .project
