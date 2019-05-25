@@ -24,9 +24,6 @@ public class GitLabAuthToken implements GitLabAuth {
      * @return the token.
      */
     public String getToken() {
-        if(token != null) {
-            return token;
-        }
-        return "unknown";
+        return token;
     }
 }
