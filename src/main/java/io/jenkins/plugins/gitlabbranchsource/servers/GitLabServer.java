@@ -1,54 +1,39 @@
 package io.jenkins.plugins.gitlabbranchsource.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.google.common.base.Optional;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuth;
 import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.util.FluentIterableWrapper;
-import io.jenkins.plugins.gitlabbranchsource.util.NullSafeFunction;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.StringUtils;
-import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiClient;
 import org.gitlab4j.api.GitLabApiException;
-import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.filter;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-import static org.apache.commons.lang.StringUtils.trimToEmpty;
 
 /**
  * Represents a GitLab Server instance.
@@ -200,53 +185,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 )
         );
     }
-
-
-    // TODO: Remove unnecessary functions from github-plugin
-
-    /**
-     * Extracts token from secret found by {@link #secretFor(String)}
-     * Returns {@link #UNKNOWN_TOKEN} if no any creds secret found with this id.
-     *
-     * @param credentialsId id to find creds
-     *
-     * @return token from creds or default non empty string
-     */
-//    @Nonnull
-//    public static String tokenFor(String credentialsId) {
-//        return secretFor(credentialsId).or(new Supplier<Secret>() {
-//            @Override
-//            public Secret get() {
-//                return Secret.fromString(UNKNOWN_TOKEN);
-//            }
-//        }).getPlainText();
-//    }
-//
-//    /**
-//     * Tries to find {@link StringCredentials} by id and returns secret from it.
-//     *
-//     * @param credentialsId id to find creds
-//     *
-//     * @return secret from creds or empty optional
-//     */
-//    @Nonnull
-//    public static Optional<Secret> secretFor(String credentialsId) {
-//        List<StringCredentials> creds = filter(
-//                lookupCredentials(StringCredentials.class,
-//                        Jenkins.getInstance(), ACL.SYSTEM,
-//                        Collections.<DomainRequirement>emptyList()),
-//                withId(trimToEmpty(credentialsId))
-//        );
-//
-//        return FluentIterableWrapper.from(creds)
-//                .transform(new NullSafeFunction<StringCredentials, Secret>() {
-//                    @Override
-//                    protected Secret applyNullSafe(@Nonnull StringCredentials input) {
-//                        return input.getSecret();
-//                    }
-//                }).first();
-//    }
-
 
     /**
      * {@inheritDoc}
