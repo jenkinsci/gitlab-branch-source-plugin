@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.authentication;
 
+import hudson.Extension;
 import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
 import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
@@ -7,6 +8,7 @@ import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 
 import javax.annotation.Nonnull;
 
+@Extension
 public class GitLabAuthTokenSource extends AuthenticationTokenSource<GitLabAuthToken, PersonalAccessToken> {
     /**
      * Constructor.
