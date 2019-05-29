@@ -28,18 +28,14 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-
-import javax.ws.rs.core.Form;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
  * Represents a GitLab Server instance.
@@ -90,14 +86,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     private final String credentialsId;
 
-    /**
-     * The {@link #serverUrl} that Gitea thinks it is served at, if different from the URL that Jenkins needs to use to
-     * access Gitea.
-     *
-     * @since 1.0.5
-     */
-    @CheckForNull
-    private final String aliasUrl;
 
     /**
      * {@inheritDoc}
@@ -136,17 +124,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return credentialsId;
     }
 
-    /**
-     * Returns the {@link #getServerUrl()} that the GitLab server believes it has when publishing webhook events or
-     * {@code null} if this is a normal environment and GitLab is accessed through one true URL and has been configured
-     * with that URL.
-     * @return the {@link #getServerUrl()} that the GitLab server believes it has when publishing webhook events or
-     * {@code null}
-     */
-    @CheckForNull
-    public String getAliasUrl() {
-        return aliasUrl;
-    }
 
     /**
      * Constructor
@@ -156,19 +133,17 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
      *                      auto-management of hooks.
-     * @param aliasUrl      The URL this GitLab Server thinks it is at.
      * @since 1.0.5
      */
     @DataBoundConstructor
     public GitLabServer(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
-                       @CheckForNull String credentialsId, @CheckForNull String aliasUrl) {
+                       @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
         this.serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
-        this.aliasUrl = StringUtils.trimToNull(GitLabServers.normalizeServerUrl(aliasUrl));
     }
 
 
@@ -238,23 +213,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             }
             return FormValidation.warning("Only community version of GitLab is supported, GitLab Gold, Ultimate, " +
                     "Community self hosted etc are not supported, use only https://gitlab.com endpoint");
-        }
-        /**
-         * Checks that the supplied URL is valid.
-         *
-         * @param value the URL to check.
-         * @return the validation results.
-         */
-        public static FormValidation doCheckAliasUrl(@QueryParameter String value) {
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-            if (StringUtils.isBlank(value)) return FormValidation.ok();
-            try {
-                new URI(value);
-                return FormValidation.ok("working");
-            } catch (URISyntaxException e) {
-                return FormValidation.errorWithMarkup(Messages.GitLabServer_invalidUrl(Util.escape(e.getMessage())));
-
-            }
         }
 
 
