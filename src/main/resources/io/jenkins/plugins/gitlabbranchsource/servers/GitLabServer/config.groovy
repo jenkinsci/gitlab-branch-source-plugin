@@ -20,20 +20,22 @@ f.entry(title: _("Credentials"), field: "credentialsId") {
 }
 
 // TODO implement verifyCredentials method in GitLabServer
-f.block() {
-    f.validateButton(
-            title: _("Test connection"),
-            progress: _("Testing.."),
-            method: "verifyCredentials",
-            with: "serverUrl,credentialsId"
-    )
-}
+//f.block() {
+//    f.validateButton(
+//            title: _("Test connection"),
+//            progress: _("Testing.."),
+//            method: "verifyCredentials",
+//            with: "serverUrl,credentialsId"
+//    )
+//}
 
 f.entry() {
     f.checkbox(title: _("Manage hooks"), field: "manageHooks")
 }
 
+
+// TODO: fix advance config message
 f.advanced() {
     // Add advanced configurations for users specific to the server
-    f.description(title: descriptor.getAdvanceConfigMessage)
+    f.description(title: "Advanced configurations will be added in later release")
 }
