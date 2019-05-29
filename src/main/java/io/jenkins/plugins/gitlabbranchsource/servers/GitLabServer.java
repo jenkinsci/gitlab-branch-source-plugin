@@ -1,10 +1,14 @@
 package io.jenkins.plugins.gitlabbranchsource.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
@@ -24,12 +28,14 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+
+import javax.ws.rs.core.Form;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
@@ -41,6 +47,7 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
+    private static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
     /**
      * Common prefixes that we should remove when inferring a display name.
      */
@@ -69,8 +76,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * The URL of this GitLab Server.
      */
-    @Nonnull
-    private String serverUrl = GITLAB_SERVER_URL;
+    @NonNull
+    private String serverUrl;
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -103,7 +110,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     public String getServerUrl() {
         return serverUrl;
     }
@@ -153,11 +160,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @since 1.0.5
      */
     @DataBoundConstructor
-    public GitLabServer(@CheckForNull String displayName, @Nonnull String serverUrl, boolean manageHooks,
+    public GitLabServer(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
                        @CheckForNull String credentialsId, @CheckForNull String aliasUrl) {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
-        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
+        this.serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
         this.displayName = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
@@ -173,7 +180,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public StandardCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                lookupCredentials(
+                CredentialsProvider.lookupCredentials(
                         StandardCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
@@ -199,12 +206,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Our descriptor.
      */
+    @Extension
     public static class DescriptorImpl extends Descriptor<GitLabServer> {
 
         /**
          * {@inheritDoc}
          */
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.GitLabServer_displayName();
@@ -231,80 +239,82 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             return FormValidation.warning("Only community version of GitLab is supported, GitLab Gold, Ultimate, " +
                     "Community self hosted etc are not supported, use only https://gitlab.com endpoint");
         }
-    }
+        /**
+         * Checks that the supplied URL is valid.
+         *
+         * @param value the URL to check.
+         * @return the validation results.
+         */
+        public static FormValidation doCheckAliasUrl(@QueryParameter String value) {
+            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            if (StringUtils.isBlank(value)) return FormValidation.ok();
+            try {
+                new URI(value);
+                return FormValidation.ok("working");
+            } catch (URISyntaxException e) {
+                return FormValidation.errorWithMarkup(Messages.GitLabServer_invalidUrl(Util.escape(e.getMessage())));
 
-    /**
-     * Checks that the supplied URL is valid.
-     *
-     * @param value the URL to check.
-     * @return the validation results.
-     */
-    public static FormValidation doCheckAliasUrl(@QueryParameter String value) {
-        Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-        if (StringUtils.isBlank(value)) return FormValidation.ok();
-        try {
-            new URI(value);
-            return FormValidation.ok();
-        } catch (URISyntaxException e) {
-            return FormValidation.errorWithMarkup(Messages.GitLabServer_invalidUrl(Util.escape(e.getMessage())));
-        }
-    }
-
-
-    /**
-     * Stapler form completion.
-     *
-     * @param serverUrl the server URL.
-     * @return the available credentials.
-     */
-    @Restricted(NoExternalUse.class) // stapler
-    @SuppressWarnings("unused")
-    public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
-        Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-        StandardListBoxModel result = new StandardListBoxModel();
-        serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
-        result.includeMatchingAs(
-                ACL.SYSTEM,
-                Jenkins.getActiveInstance(),
-                StandardCredentials.class,
-                URIRequirementBuilder.fromUri(serverUrl).build(),
-                AuthenticationTokens.matcher(GitLabAuth.class)
-        );
-        return result;
-    }
-
-    public FormValidation doCheckCredentialsId(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
-        Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-        serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
-        StandardCredentials credentials = CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                        StandardCredentials.class,
-                        Jenkins.getActiveInstance(),
-                        ACL.SYSTEM,
-                        URIRequirementBuilder.fromUri(serverUrl).build()
-                ),
-                CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(GitLabAuth.class),
-                        withId(credentialsId)
-                )
-        );
-
-        if(credentials == null) {
-            return FormValidation.errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
-        }
-        try {
-            // TODO: resolve the null pointer exception raised by getToken() method
-            GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
-            String privateToken = "unknown";
-            if(gitLabAuth instanceof GitLabAuthToken) {
-                privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
             }
-            GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
-            gitLabApi.getUserApi().getActiveUsers();
-        } catch (GitLabApiException e) {
-            return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
         }
-        return FormValidation.warning(Messages.GitLabServer_someException());
+
+
+        /**
+         * Stapler form completion.
+         *
+         * @param serverUrl the server URL.
+         * @return the available credentials.
+         */
+        @Restricted(NoExternalUse.class) // stapler
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
+            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            StandardListBoxModel result = new StandardListBoxModel();
+            serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
+            result.includeMatchingAs(
+                    ACL.SYSTEM,
+                    Jenkins.getActiveInstance(),
+                    StandardCredentials.class,
+                    URIRequirementBuilder.fromUri(serverUrl).build(),
+                    AuthenticationTokens.matcher(GitLabAuth.class)
+            );
+            return result;
+        }
+
+        public FormValidation doCheckCredentialsId(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
+            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
+            StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+                    lookupCredentials(
+                            StandardCredentials.class,
+                            Jenkins.getActiveInstance(),
+                            ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(serverUrl).build()
+                    ),
+                    CredentialsMatchers.allOf(
+                            AuthenticationTokens.matcher(GitLabAuth.class),
+                            withId(credentialsId)
+                    )
+            );
+
+            if(credentials == null) {
+                return FormValidation.errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+            }
+            String privateToken = "unknown";
+            try {
+                // TODO: resolve the null pointer exception raised by getToken() method
+                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
+                if(gitLabAuth instanceof GitLabAuthToken) {
+                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+                }
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
+                gitLabApi.getUserApi().getActiveUsers();
+            } catch (GitLabApiException e) {
+                return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
+
+            }
+            return FormValidation.warning(Messages.GitLabServer_someException());
+        }
+
     }
 
 }
