@@ -4,6 +4,8 @@ import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
@@ -14,8 +16,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
 /**
  * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link CredentialsProvider}
@@ -27,7 +27,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     /**
      * Our token.
      */
-    @Nonnull
+    @NonNull
     private final Secret token;
 
     /**
@@ -40,7 +40,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      */
     @DataBoundConstructor
     public PersonalAccessTokenImpl(@CheckForNull CredentialsScope scope, @CheckForNull String id,
-                                   @CheckForNull String description, @Nonnull String token) {
+                                   @CheckForNull String description, @NonNull String token) {
         super(scope, id, description);
         this.token = Secret.fromString(token);
     }
@@ -49,7 +49,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * {@inheritDoc}
      */
     @Override
-    @Nonnull
+    @NonNull
     public Secret getToken() {
         return token;
     }
@@ -63,7 +63,6 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
          * {@inheritDoc}
          */
         @Override
-        @Nonnull
         public String getDisplayName() {
             return Messages.PersonalAccessTokenImpl_displayName();
         }
@@ -78,9 +77,9 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         @SuppressWarnings("unused")
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);
-//            if(secret == null) {
-//                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenRequired());
-//            }
+            if(secret == null) {
+                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenRequired());
+            }
             if(StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() != 20) {// length of GitLab Access Token is 20
                     return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());

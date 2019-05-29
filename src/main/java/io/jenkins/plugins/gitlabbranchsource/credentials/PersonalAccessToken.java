@@ -1,8 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource.credentials;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.Secret;
-import javax.annotation.Nonnull;
 
 public interface PersonalAccessToken extends StandardCredentials {
 
@@ -11,7 +11,7 @@ public interface PersonalAccessToken extends StandardCredentials {
      * @return the token.
      */
 
-    @Nonnull
+    @NonNull
     Secret getToken();
 
 }
