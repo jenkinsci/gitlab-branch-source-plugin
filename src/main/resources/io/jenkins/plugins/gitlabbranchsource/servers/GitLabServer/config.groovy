@@ -16,7 +16,7 @@ f.entry(title: _("Server URL"), field: "serverUrl") {
 }
 
 f.entry(title: _("Credentials"), field: "credentialsId") {
-    c.select(context: app, includeUser:false, expressionAllowed:false)
+    c.select(context: app)
 }
 
 // TODO implement verifyCredentials method in GitLabServer

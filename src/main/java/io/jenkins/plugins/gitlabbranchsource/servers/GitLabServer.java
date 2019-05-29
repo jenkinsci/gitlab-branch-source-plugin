@@ -139,7 +139,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                        @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks;
         this.credentialsId = credentialsId;
-        this.serverUrl = defaultIfBlank(GitLabServers.normalizeServerUrl(serverUrl), GITLAB_SERVER_URL);
+        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
@@ -195,7 +195,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          * @return the validation results.
          */
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
-            // TODO: Add support for GitLab Ultimate (self hosted) and Gold (saas) with premium support
+            // TODO: Add support for GitLab Ultimate (self hosted) and Gold (saas)
             Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 new URL(value);
@@ -222,7 +222,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
             Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
             StandardListBoxModel result = new StandardListBoxModel();
-            serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
             result.includeMatchingAs(
                     ACL.SYSTEM,
                     Jenkins.getActiveInstance(),
@@ -235,7 +234,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
         public FormValidation doCheckCredentialsId(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
             Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-            serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
             StandardCredentials credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
                             StandardCredentials.class,
@@ -261,7 +259,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 }
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
                 User user = gitLabApi.getUserApi().getCurrentUser();
-                return FormValidation.ok(String.format("Logging in as %s", user.getUsername()));
+                return FormValidation.ok(String.format("Logged in as %s", user.getUsername()));
             } catch (GitLabApiException e) {
                 return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
             }

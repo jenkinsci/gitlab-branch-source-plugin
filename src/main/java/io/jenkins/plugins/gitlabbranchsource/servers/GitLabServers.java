@@ -54,45 +54,6 @@ public class GitLabServers extends GlobalConfiguration {
 
 
     /**
-     * Fix a serverUrl.
-     *
-     * @param serverUrl the server URL.
-     * @return the normalized server URL.
-     */
-    @Nonnull
-    public static String normalizeServerUrl(@CheckForNull String serverUrl) {
-        serverUrl = StringUtils.defaultString(serverUrl);
-        try {
-            URI uri = new URI(serverUrl).normalize();
-            String scheme = uri.getScheme();
-            if ("http".equals(scheme) || "https".equals(scheme)) {
-                // we only expect http / https, but also these are the only ones where we know the authority
-                // is server based, i.e. [userinfo@]server[:port]
-                // DNS names must be US-ASCII and are case insensitive, so we force all to lowercase
-                String host = uri.getHost() == null ? null : uri.getHost().toLowerCase(Locale.ENGLISH);
-                int port = uri.getPort();
-                if ("http".equals(scheme) && port == 80) {
-                    port = -1;
-                } else if ("https".equals(scheme) && port == 443) {
-                    port = -1;
-                }
-                serverUrl = new URI(
-                        scheme,
-                        uri.getUserInfo(),
-                        host,
-                        port,
-                        uri.getPath(),
-                        uri.getQuery(),
-                        uri.getFragment()
-                ).toASCIIString();
-            }
-         } catch (URISyntaxException e) {
-            // ignore, this was a best effort tidy-up
-        }
-        return serverUrl.replaceAll("/$", "");
-    }
-
-    /**
      * Returns {@code true} if and only if there is more than one configured endpoint.
      *
      * @return {@code true} if and only if there is more than one configured endpoint.
@@ -224,7 +185,6 @@ public class GitLabServers extends GlobalConfiguration {
      * @return {@code true} if the list of endpoints was modified
      */
     public synchronized boolean removeServer(@CheckForNull String serverUrl) { // when passing predicate add an argument GitLabServerPredicate
-        serverUrl = normalizeServerUrl(serverUrl);
         boolean modified = false;
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (Iterator<GitLabServer> iterator = endpoints.iterator(); iterator.hasNext(); ) {
@@ -259,7 +219,6 @@ public class GitLabServers extends GlobalConfiguration {
      */
     @CheckForNull
     public synchronized GitLabServer findServer(@CheckForNull String serverUrl) {
-        serverUrl = normalizeServerUrl(serverUrl);
         for (GitLabServer endpoint : getServers()) {
             if (serverUrl.equals(endpoint.getServerUrl())) {
                 return endpoint;
