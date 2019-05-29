@@ -81,7 +81,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
                 return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenRequired());
             }
             if(StringUtils.equals(value, secret.getPlainText())) {
-                if (value.length() != 20) {// length of GitLab Access Token is 20
+                if (value.length() != 20) { // length of GitLab Access Token is 20
                     return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
                 }
             } else if (secret.getPlainText().length() != 20) {

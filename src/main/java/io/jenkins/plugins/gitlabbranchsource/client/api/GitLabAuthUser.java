@@ -1,7 +1,7 @@
-package io.jenkins.plugins.gitlabbranchsource.api.client;
+package io.jenkins.plugins.gitlabbranchsource.client.api;
 
 /**
- * Represents username/password authentication to the Gitea API
+ * Represents username/password authentication to the GitLab API
  */
 public class GitLabAuthUser implements GitLabAuth {
     /**

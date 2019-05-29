@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabbranchsource.api.client;
+package io.jenkins.plugins.gitlabbranchsource.client.api;
 
 /**
  * Represents token based authentication to the Gitea API.

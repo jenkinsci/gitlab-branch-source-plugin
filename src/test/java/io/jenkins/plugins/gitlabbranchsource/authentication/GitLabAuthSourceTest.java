@@ -1,9 +1,9 @@
 package io.jenkins.plugins.gitlabbranchsource.authentication;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.util.Secret;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuth;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthUser;
+import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuth;
+import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthUser;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import org.junit.ClassRule;
 import org.junit.Test;

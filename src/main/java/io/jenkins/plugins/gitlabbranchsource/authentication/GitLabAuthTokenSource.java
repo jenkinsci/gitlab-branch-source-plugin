@@ -1,7 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource.authentication;
 
 import hudson.Extension;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
+import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
 import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;

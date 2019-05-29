@@ -15,8 +15,8 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuth;
-import io.jenkins.plugins.gitlabbranchsource.api.client.GitLabAuthToken;
+import io.jenkins.plugins.gitlabbranchsource.client.GitLabAuth;
+import io.jenkins.plugins.gitlabbranchsource.client.GitLabAuthToken;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
@@ -30,8 +30,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.logging.Logger;
 
