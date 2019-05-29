@@ -110,7 +110,7 @@ public class GitLabServers extends GlobalConfiguration {
         ListBoxModel result = new ListBoxModel();
         for (GitLabServer endpoint : getServers()) {
             String serverUrl = endpoint.getServerUrl();
-            String displayName = endpoint.getDisplayName();
+            String displayName = endpoint.getName();
             result.add(StringUtils.isBlank(displayName) ? serverUrl : displayName + " (" + serverUrl + ")", serverUrl);
         }
         return result;

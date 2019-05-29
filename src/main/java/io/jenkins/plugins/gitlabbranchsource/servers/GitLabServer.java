@@ -66,7 +66,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Optional name to use to describe the end-point.
      */
     @CheckForNull
-    private final String displayName;
+    private final String name;
 
     /**
      * The URL of this GitLab Server.
@@ -90,8 +90,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * {@inheritDoc}
      */
     @CheckForNull
-    public String getDisplayName() {
-        return displayName;
+    public String getName() {
+        return name;
     }
 
     /**
@@ -140,7 +140,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
         this.credentialsId = manageHooks ? credentialsId : null;
         this.serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
-        this.displayName = StringUtils.isBlank(displayName)
+        this.name = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
     }
