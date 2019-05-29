@@ -70,10 +70,10 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         /**
          * Sanity check for a Gitlab access token.
          *
-         * @param value the token.
+         * @param value the personal access token.
          * @return the results of the sanity check.
          */
-        @Restricted(NoExternalUse.class)
+        @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);

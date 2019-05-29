@@ -1,7 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource.client.api;
 
 /**
- * Represents token based authentication to the Gitea API.
+ * Represents token based authentication to the GitLab API.
  */
 public class GitLabAuthToken implements GitLabAuth {
     /**
