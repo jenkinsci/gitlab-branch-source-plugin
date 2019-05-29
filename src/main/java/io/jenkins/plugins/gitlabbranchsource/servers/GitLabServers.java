@@ -137,6 +137,11 @@ public class GitLabServers extends GlobalConfiguration {
                 : Collections.unmodifiableList(servers);
     }
 
+    @Nonnull
+    @Override
+    public String getDisplayName() {
+        return Messages.GitLabServers_displayName();
+    }
 
     /**
      * Sets the list of endpoints.

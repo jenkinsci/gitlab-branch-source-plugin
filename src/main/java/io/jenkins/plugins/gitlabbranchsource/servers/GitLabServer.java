@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
  * Represents a GitLab Server instance.
@@ -77,7 +78,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
-    private final boolean manageHooks;
+    private boolean manageHooks;
 
     /**
      * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
@@ -123,7 +124,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return credentialsId;
     }
 
-
     /**
      * Constructor
      *
@@ -137,9 +137,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @DataBoundConstructor
     public GitLabServer(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
                        @CheckForNull String credentialsId) {
-        this.manageHooks = manageHooks && StringUtils.isNotBlank(credentialsId);
-        this.credentialsId = manageHooks ? credentialsId : null;
-        this.serverUrl = GitLabServers.normalizeServerUrl(serverUrl);
+        this.manageHooks = manageHooks;
+        this.credentialsId = credentialsId;
+        this.serverUrl = defaultIfBlank(GitLabServers.normalizeServerUrl(serverUrl), GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(displayName)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
@@ -183,14 +183,10 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @Extension
     public static class DescriptorImpl extends Descriptor<GitLabServer> {
 
-        /**
-         * {@inheritDoc}
-         */
-        @NonNull
-        @Override
-        public String getDisplayName() {
-            return Messages.GitLabServer_displayName();
+        public String getAdvanceConfigMessage() {
+            return Messages.GitLabServer_advancedSectionForFuture();
         }
+
 
         /**
          * Checks that the supplied URL is valid.

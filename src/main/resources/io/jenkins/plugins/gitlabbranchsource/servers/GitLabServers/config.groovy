@@ -15,4 +15,11 @@ f.section(title: descriptor.displayName) {
                 addCaption: _("Add GitLab Server")
         )
     }
+
+    f.advanced() {
+        f.entry() {
+            f.description(title: "Advanced configurations will be added in later release")
+        }
+        // add advanced configurations for users common to GitLab Servers
+    }
 }

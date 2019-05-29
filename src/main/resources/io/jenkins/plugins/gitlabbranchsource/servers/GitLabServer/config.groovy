@@ -19,12 +19,13 @@ f.entry(title: _("Credentials"), field: "credentialsId") {
     c.select(context: app, includeUser:false, expressionAllowed:false)
 }
 
+// TODO implement verifyCredentials method in GitLabServer
 f.block() {
     f.validateButton(
             title: _("Test connection"),
-            progress: _("Testing..."),
+            progress: _("Testing.."),
             method: "verifyCredentials",
-            with: "apiUrl,credentialsId"
+            with: "serverUrl,credentialsId"
     )
 }
 
@@ -33,5 +34,6 @@ f.entry() {
 }
 
 f.advanced() {
-    // Add advanced configurations for users
+    // Add advanced configurations for users specific to the server
+    f.description(title: descriptor.getAdvanceConfigMessage)
 }
