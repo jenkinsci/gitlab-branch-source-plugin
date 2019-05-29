@@ -23,6 +23,7 @@ import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.User;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -265,12 +266,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
                 }
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
-                gitLabApi.getUserApi().getActiveUsers();
+                User user = gitLabApi.getUserApi().getCurrentUser();
+                return FormValidation.ok(String.format("Logging in as %s", user.getUsername()));
             } catch (GitLabApiException e) {
                 return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
-
             }
-            return FormValidation.warning(Messages.GitLabServer_someException());
         }
 
     }
