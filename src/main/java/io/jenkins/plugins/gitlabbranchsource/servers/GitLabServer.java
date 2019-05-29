@@ -206,8 +206,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if(GITLAB_SERVER_URL.equals(value)) {
                 return FormValidation.ok(Messages.GitLabServer_validUrl());
             }
-            return FormValidation.warning("Only community version of GitLab is supported, GitLab Gold, Ultimate, " +
-                    "Community self hosted etc are not supported, use only https://gitlab.com endpoint");
+            return FormValidation.warning("Checks for community version of GitLab is supported, GitLab Gold, Ultimate, " +
+                    "Community self hosted etc are not supported, please test the connection to see if your URL is valid");
         }
 
         /**
