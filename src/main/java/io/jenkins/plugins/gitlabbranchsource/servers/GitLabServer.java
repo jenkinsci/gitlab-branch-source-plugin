@@ -185,6 +185,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @Extension
     public static class DescriptorImpl extends Descriptor<GitLabServer> {
 
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return "GitLab Server";
+        }
+
+
         public String getAdvanceConfigMessage() {
             return Messages.GitLabServer_advancedSectionForFuture();
         }
