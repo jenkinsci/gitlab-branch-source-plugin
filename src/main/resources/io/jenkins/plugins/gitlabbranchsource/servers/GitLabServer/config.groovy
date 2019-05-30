@@ -19,22 +19,22 @@ f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Per
     c.select(context: app)
 }
 
-f.block() {
-    f.validateButton(
-            title: _("Test connection"),
-            progress: _("Testing.."),
-            method: "testConnection",
-            with: "serverUrl,credentialsId"
-    )
+f.advanced() {
+
+    f.entry("title": "Advanced configurations") {
+        f.textbox("default": "Will be added in later release")
+    }
 }
+
+
+f.validateButton(
+        title: _("Test connection"),
+        progress: _("Testing.."),
+        method: "testConnection",
+        with: "serverUrl,credentialsId"
+)
+
 
 f.entry() {
     f.checkbox(title: _("Manage hooks"), field: "manageHooks")
-}
-
-
-// TODO: fix advance config message
-f.advanced() {
-    // Add advanced configurations for users specific to the server
-//    f.description(title: "Advanced configurations will be added in later release")
 }
