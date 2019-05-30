@@ -17,6 +17,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuth;
 import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessTokenImpl;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
@@ -222,8 +223,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
+            String privateToken = UNKNOWN_TOKEN;
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
             StandardCredentials credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
                             StandardCredentials.class,
@@ -239,7 +240,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if(credentials == null) {
                 return FormValidation.errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
             }
-            String privateToken = UNKNOWN_TOKEN;
             try {
                 GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
                 if(gitLabAuth instanceof GitLabAuthToken) {
@@ -268,12 +268,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             }
             return  new StandardListBoxModel()
                 .includeEmptyValue()
-                .includeMatchingAs(
-                        ACL.SYSTEM,
-                        Jenkins.getActiveInstance(),
+                .includeMatchingAs(ACL.SYSTEM,
+                        Jenkins.getInstance(),
                         StandardCredentials.class, // TODO: fix this because other irrelevant credentials also show up PersonalAccessTokenImpl.class
                         fromUri(serverUrl).build(),
-                        AuthenticationTokens.matcher(GitLabAuth.class)
+                        credentials -> credentials instanceof PersonalAccessTokenImpl
                 );
         }
     }
