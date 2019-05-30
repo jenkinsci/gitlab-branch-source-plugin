@@ -25,9 +25,11 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,6 +37,7 @@ import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
+import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
@@ -59,7 +62,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
 
     /**
-     * Used as default token value if no any creds found by given credsId.*/
+     * Used as default token value if no any credentials found by given credentialsId.*/
     private static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
 
     /**
@@ -157,7 +160,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                         StandardCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
-                        URIRequirementBuilder.fromUri(serverUrl).build()
+                        fromUri(serverUrl).build()
                 ),
                 CredentialsMatchers.allOf(
                         AuthenticationTokens.matcher(GitLabAuth.class),
@@ -202,16 +205,52 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             }
 
             if(GITLAB_SERVER_URL.equals(value)) {
-                return FormValidation.ok(Messages.GitLabServer_validUrl());
+                return FormValidation.ok();
             }
-            return FormValidation.warning("Checks for community version of GitLab is supported but GitLab Gold, Ultimate, " +
-                    "Community self hosted etc are not supported. Please test the connection to see if your URL is valid");
+            return FormValidation.warning(Messages.GitLabServer_recheckUrl());
+        }
+
+        @RequirePOST
+        @Restricted(DoNotUse.class)
+        @SuppressWarnings("unused")
+        public FormValidation doTestConnection(@QueryParameter String serverUrl,
+                                               @QueryParameter String credentialsId) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+                    lookupCredentials(
+                            StandardCredentials.class,
+                            Jenkins.getActiveInstance(),
+                            ACL.SYSTEM,
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                    ),
+                    CredentialsMatchers.allOf(
+                            AuthenticationTokens.matcher(GitLabAuth.class),
+                            withId(credentialsId)
+                    )
+            );
+            if(credentials == null) {
+                return FormValidation.errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+            }
+            String privateToken = UNKNOWN_TOKEN;
+            try {
+                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
+                if(gitLabAuth instanceof GitLabAuthToken) {
+                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+                }
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
+                User user = gitLabApi.getUserApi().getCurrentUser();
+                return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
+            } catch (GitLabApiException e) {
+                return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
+            }
         }
 
         /**
          * Stapler form completion.
          *
          * @param serverUrl the server URL.
+         * @param credentialsId the credentials Id
          * @return the available credentials.
          */
         @Restricted(NoExternalUse.class) // stapler
@@ -225,42 +264,10 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 .includeMatchingAs(
                         ACL.SYSTEM,
                         Jenkins.getActiveInstance(),
-                        StandardCredentials.class,
-                        URIRequirementBuilder.fromUri(serverUrl).build(),
+                        StandardCredentials.class, // TODO: fix this because other irrelevant credentials also show up PersonalAccessTokenImpl.class
+                        fromUri(serverUrl).build(),
                         AuthenticationTokens.matcher(GitLabAuth.class)
                 );
-        }
-
-        public FormValidation doCheckCredentialsId(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-            StandardCredentials credentials = CredentialsMatchers.firstOrNull(
-                    lookupCredentials(
-                            StandardCredentials.class,
-                            Jenkins.getActiveInstance(),
-                            ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(serverUrl).build()
-                    ),
-                    CredentialsMatchers.allOf(
-                            AuthenticationTokens.matcher(GitLabAuth.class),
-                            withId(credentialsId)
-                    )
-            );
-
-            if(credentials == null) {
-                return FormValidation.errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
-            }
-            String privateToken = "unknown";
-            try {
-                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
-                if(gitLabAuth instanceof GitLabAuthToken) {
-                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-                }
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
-                User user = gitLabApi.getUserApi().getCurrentUser();
-                return FormValidation.ok(String.format("Logged in as %s", user.getUsername()));
-            } catch (GitLabApiException e) {
-                return FormValidation.errorWithMarkup(Messages.GitLabServer_cannotConnect(Util.escape(e.getMessage())));
-            }
         }
     }
 }
