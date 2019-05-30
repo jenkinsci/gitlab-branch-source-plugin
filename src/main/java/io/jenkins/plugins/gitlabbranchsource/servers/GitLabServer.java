@@ -242,8 +242,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             }
             try {
                 GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
-                if(gitLabAuth instanceof GitLabAuthToken) {
-                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+                if(isToken(gitLabAuth)) {
+                    privateToken = getStringToken((GitLabAuthToken) gitLabAuth);
                 }
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
                 User user = gitLabApi.getUserApi().getCurrentUser();
@@ -270,10 +270,30 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 .includeEmptyValue()
                 .includeMatchingAs(ACL.SYSTEM,
                         Jenkins.getInstance(),
-                        StandardCredentials.class, // TODO: fix this because other irrelevant credentials also show up PersonalAccessTokenImpl.class
+                        StandardCredentials.class,
                         fromUri(serverUrl).build(),
                         credentials -> credentials instanceof PersonalAccessTokenImpl
                 );
         }
+    }
+
+    /**
+     *  Helper function
+     *
+     * @param gitLabAuth a generic auth object
+     * @return true if gitLabAuth is an object of GitLabAuthToken
+     */
+    private static boolean isToken(GitLabAuth gitLabAuth) {
+        return gitLabAuth instanceof GitLabAuthToken;
+    }
+
+    /**
+     *  Helper function
+     *
+     * @param gitLabAuthToken a generic auth object
+     * @return String token from gitLabAuthToken object
+     */
+    private static String getStringToken(GitLabAuthToken gitLabAuthToken) {
+        return gitLabAuthToken.getToken();
     }
 }

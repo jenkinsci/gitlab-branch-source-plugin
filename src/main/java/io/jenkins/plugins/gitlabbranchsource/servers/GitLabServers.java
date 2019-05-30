@@ -184,7 +184,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @param serverUrl the server URL to remove.
      * @return {@code true} if the list of endpoints was modified
      */
-    public synchronized boolean removeServer(@CheckForNull String serverUrl) { // when passing predicate add an argument GitLabServerPredicate
+    private synchronized boolean removeServer(@CheckForNull String serverUrl) { // when passing predicate add an argument GitLabServerPredicate
         boolean modified = false;
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (Iterator<GitLabServer> iterator = endpoints.iterator(); iterator.hasNext(); ) {
@@ -220,7 +220,7 @@ public class GitLabServers extends GlobalConfiguration {
     @CheckForNull
     public synchronized GitLabServer findServer(@CheckForNull String serverUrl) {
         for (GitLabServer endpoint : getServers()) {
-            if (serverUrl.equals(endpoint.getServerUrl())) {
+            if (serverUrl.equals(endpoint.getServerUrl())) { // TODO: fix server url NPE, maybe use optional here
                 return endpoint;
             }
         }
