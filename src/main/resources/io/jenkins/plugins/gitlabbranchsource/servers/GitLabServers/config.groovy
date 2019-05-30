@@ -17,8 +17,8 @@ f.section(title: descriptor.displayName) {
     }
     f.advanced() {
         // add advanced configurations for users common to GitLab Servers
-        f.entry() {
-            f.description(title: "Advanced configurations will be added in later release")
-        }
+//        f.entry() {
+//            "Advanced configurations will be added in later release"
+//        }
     }
 }

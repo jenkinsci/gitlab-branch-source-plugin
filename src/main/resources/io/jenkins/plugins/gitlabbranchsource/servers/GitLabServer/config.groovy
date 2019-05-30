@@ -37,5 +37,5 @@ f.entry() {
 // TODO: fix advance config message
 f.advanced() {
     // Add advanced configurations for users specific to the server
-    f.description(title: "Advanced configurations will be added in later release")
+//    f.description(title: "Advanced configurations will be added in later release")
 }

@@ -59,8 +59,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
 
     /**
-     * Used as default token value if no any creds found by given credsId.
-     */
+     * Used as default token value if no any creds found by given credsId.*/
     private static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
 
     /**
@@ -187,7 +186,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             return Messages.GitLabServer_advancedSectionForFuture();
         }
 
-
         /**
          * Checks that the supplied URL is valid.
          *
@@ -206,8 +204,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if(GITLAB_SERVER_URL.equals(value)) {
                 return FormValidation.ok(Messages.GitLabServer_validUrl());
             }
-            return FormValidation.warning("Checks for community version of GitLab is supported, GitLab Gold, Ultimate, " +
-                    "Community self hosted etc are not supported, please test the connection to see if your URL is valid");
+            return FormValidation.warning("Checks for community version of GitLab is supported but GitLab Gold, Ultimate, " +
+                    "Community self hosted etc are not supported. Please test the connection to see if your URL is valid");
         }
 
         /**
@@ -218,17 +216,19 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
-        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl) {
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
-            StandardListBoxModel result = new StandardListBoxModel();
-            result.includeMatchingAs(
-                    ACL.SYSTEM,
-                    Jenkins.getActiveInstance(),
-                    StandardCredentials.class,
-                    URIRequirementBuilder.fromUri(serverUrl).build(),
-                    AuthenticationTokens.matcher(GitLabAuth.class)
-            );
-            return result;
+        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
+            if(!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
+            }
+            return  new StandardListBoxModel()
+                .includeEmptyValue()
+                .includeMatchingAs(
+                        ACL.SYSTEM,
+                        Jenkins.getActiveInstance(),
+                        StandardCredentials.class,
+                        URIRequirementBuilder.fromUri(serverUrl).build(),
+                        AuthenticationTokens.matcher(GitLabAuth.class)
+                );
         }
 
         public FormValidation doCheckCredentialsId(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
@@ -251,7 +251,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             }
             String privateToken = "unknown";
             try {
-                // TODO: resolve the null pointer exception raised by getToken() method
                 GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
                 if(gitLabAuth instanceof GitLabAuthToken) {
                     privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
