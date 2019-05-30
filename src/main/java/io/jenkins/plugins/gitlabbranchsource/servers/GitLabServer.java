@@ -5,7 +5,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -64,7 +63,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
      * Used as default token value if no any credentials found by given credentialsId.*/
-    private static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
+    public static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
 
     /**
      * Optional name to use to describe the end-point.

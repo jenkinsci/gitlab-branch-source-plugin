@@ -36,5 +36,10 @@ f.validateButton(
 
 
 f.entry() {
-    f.checkbox(title: _("Manage hooks"), field: "manageHooks")
+    f.entry(title: _("Additional actions"), help: descriptor.getHelpFile('additional')) {
+        f.hetero_list(items: [],
+                addCaption: _("Manage additional GitHub actions"),
+                name: "actions",
+                oneEach: "true", hasHeader: "true", descriptors: instance.actions())
+    }
 }
