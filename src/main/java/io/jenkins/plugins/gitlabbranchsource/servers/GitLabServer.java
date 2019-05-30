@@ -243,7 +243,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             try {
                 GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
                 if(isToken(gitLabAuth)) {
-                    privateToken = getStringToken((GitLabAuthToken) gitLabAuth);
+                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
                 }
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
                 User user = gitLabApi.getUserApi().getCurrentUser();
@@ -285,15 +285,5 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     private static boolean isToken(GitLabAuth gitLabAuth) {
         return gitLabAuth instanceof GitLabAuthToken;
-    }
-
-    /**
-     *  Helper function
-     *
-     * @param gitLabAuthToken a generic auth object
-     * @return String token from gitLabAuthToken object
-     */
-    private static String getStringToken(GitLabAuthToken gitLabAuthToken) {
-        return gitLabAuthToken.getToken();
     }
 }
