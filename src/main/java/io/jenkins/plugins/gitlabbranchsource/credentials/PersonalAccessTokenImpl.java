@@ -21,7 +21,6 @@ import org.kohsuke.stapler.QueryParameter;
  * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link CredentialsProvider}
  * instances that store {@link Secret} locally.
  */
-
 public class PersonalAccessTokenImpl extends BaseStandardCredentials implements PersonalAccessToken {
 
     /**
@@ -39,8 +38,11 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * @param token       the token itself (will be passed through {@link Secret#fromString(String)})
      */
     @DataBoundConstructor
-    public PersonalAccessTokenImpl(@CheckForNull CredentialsScope scope, @CheckForNull String id,
-                                   @CheckForNull String description, @NonNull String token) {
+    public PersonalAccessTokenImpl(
+                @CheckForNull CredentialsScope scope,
+                @CheckForNull String id,
+                @CheckForNull String description,
+                @NonNull String token) {
         super(scope, id, description);
         this.token = Secret.fromString(token);
     }
@@ -59,10 +61,14 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      */
     @Extension
     public static class DescriptorImpl extends CredentialsDescriptor {
+
+        private int GITLAB_ACCESS_TOKEN_LENGTH = 20;
+
         /**
          * {@inheritDoc}
          */
         @Override
+        @NonNull
         public String getDisplayName() {
             return Messages.PersonalAccessTokenImpl_displayName();
         }
@@ -78,11 +84,11 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);
             if(StringUtils.equals(value, secret.getPlainText())) {
-                if (value.length() != 20) { // length of GitLab Access Token is 20
+                if (value.length() != GITLAB_ACCESS_TOKEN_LENGTH) {
                     return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
                 }
-            } else if (secret.getPlainText().length() != 20) {
-                return FormValidation.warning(Messages.PersonalAccessTokenImpl_tokenWrongLength());
+            } else if (secret.getPlainText().length() != GITLAB_ACCESS_TOKEN_LENGTH) {
+                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
             }
             return FormValidation.ok();
         }

@@ -198,18 +198,15 @@ public class GitLabServers extends GlobalConfiguration {
         }
 
         // TODO: Use predicate in place of iterator
-
         // Pass new GitLabServerEqualPredicate()
 
-        /*
-        for(GitLabServer endpoint : endpoints) {
-            if(p.test(serverUrl, endpoint)) {
-                endpoints.remove(endpoint);
-                modified = true;
-            }
-        }
-        */
-
+//        for(GitLabServer endpoint : endpoints) {
+//            if(p.test(serverUrl, endpoint)) {
+//                endpoints.remove(endpoint);
+//                modified = true;
+//            }
+//        }
+//
         setServers(endpoints);
         return modified;
     }

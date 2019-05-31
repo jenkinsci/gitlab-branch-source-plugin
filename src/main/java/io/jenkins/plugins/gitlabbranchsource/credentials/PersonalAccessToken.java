@@ -8,10 +8,9 @@ public interface PersonalAccessToken extends StandardCredentials {
 
     /**
      * Returns the token.
+     *
      * @return the token.
      */
-
     @NonNull
     Secret getToken();
-
 }

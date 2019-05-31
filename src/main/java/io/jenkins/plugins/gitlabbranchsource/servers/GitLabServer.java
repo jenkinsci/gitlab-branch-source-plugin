@@ -186,9 +186,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @NonNull
         @Override
         public String getDisplayName() {
-            return "GitLab Server";
+            return Messages.GitLabServer_displayName();
         }
-
 
         public String getAdvanceConfigMessage() {
             return Messages.GitLabServer_advancedSectionForFuture();
@@ -201,7 +200,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          * @return the validation results.
          */
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
-            // TODO: Add support for GitLab Ultimate (self hosted) and Gold (saas)
             Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 new URL(value);
@@ -209,6 +207,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 return FormValidation.error("Malformed GitLab url (%s)", e.getMessage());
             }
 
+            // TODO:[JENKINS-57747] Add support for GitLab Ultimate (self hosted) and Gold (saas)
             if(GITLAB_SERVER_URL.equals(value)) {
                 return FormValidation.ok();
             }
