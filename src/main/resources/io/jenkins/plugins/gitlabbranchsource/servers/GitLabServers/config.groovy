@@ -18,7 +18,7 @@ f.section(title: descriptor.displayName) {
         f.entry() {
             f.entry(title: _("Additional actions"), help: descriptor.getHelpFile('additional')) {
                 f.hetero_list(items: [],
-                        addCaption: _("Manage additional GitHub actions"),
+                        addCaption: _("Manage additional GitLab actions"),
                         name: "actions",
                         oneEach: "true", hasHeader: "true", descriptors: instance.actions())
             }
