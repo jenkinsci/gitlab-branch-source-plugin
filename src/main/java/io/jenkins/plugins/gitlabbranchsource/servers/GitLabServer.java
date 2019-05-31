@@ -46,7 +46,6 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
-    private static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
     /**
      * Common prefixes that we should remove when inferring a display name.
      */
@@ -57,7 +56,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             "scm.",
             "source."
     };
-
 
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
 
@@ -75,19 +73,18 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * The URL of this GitLab Server.
      */
     @NonNull
-    private String serverUrl;
+    private final String serverUrl;
 
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
-    private boolean manageHooks;
+    private final boolean manageHooks;
 
     /**
      * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
     @CheckForNull
     private final String credentialsId;
-
 
     /**
      * {@inheritDoc}
@@ -146,7 +143,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
                 : displayName;
     }
-
 
     /**
      * Looks up the {@link StandardCredentials} to use for auto-management of hooks.

@@ -6,8 +6,7 @@ def f = namespace(FormTagLib)
 
 f.section(title: descriptor.displayName) {
 
-    f.entry(title: _("GitLab Servers"),
-            help:descriptor.getHelpFile()) {
+    f.entry(title: _("GitLab Servers")) {
         f.repeatableHeteroProperty(
                 field: "servers",
                 hasHeader: "true",

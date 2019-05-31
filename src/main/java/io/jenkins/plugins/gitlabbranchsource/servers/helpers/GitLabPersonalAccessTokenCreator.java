@@ -157,7 +157,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             );
             createCredentials(serverUrl, token, login, tokenName);
             return FormValidation.ok(
-                    "Created credentials with id %s ", tokenName
+                    "Created credentials with id %s", tokenName
             );
         } catch (GitLabApiException e) {
             return FormValidation.error(e, "Can't create GL token for %s - %s", login, e.getMessage());

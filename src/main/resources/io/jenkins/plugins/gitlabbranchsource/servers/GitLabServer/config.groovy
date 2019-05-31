@@ -19,6 +19,11 @@ f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Per
     c.select(context: app)
 }
 
+f.entry(title: _("Web Hook"), "description": "Do you want to automatically manage GitLab Web Hooks on Jenkins Server?",
+        help:descriptor.getHelpFile("manageHooks")) {
+    f.checkbox(title: _("Manage Web Hooks"), field: "manageHooks")
+}
+
 // Add advance fields if user needs some meta data to send to the api
 //f.advanced() {
 //    f.entry("title": "Advanced configurations") {
