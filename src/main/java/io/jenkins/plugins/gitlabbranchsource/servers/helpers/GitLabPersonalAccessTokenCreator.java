@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource.servers.helpers;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -14,18 +13,19 @@ import com.cloudbees.plugins.credentials.domains.SchemeSpecification;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabbranchsource.servers.GitLabServer;
 import jenkins.model.Jenkins;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.utils.AccessTokenUtils;
-import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
@@ -45,13 +45,15 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-
+@Extension
 public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalAccessTokenCreator> implements
         Describable<GitLabPersonalAccessTokenCreator> {
 
+    private String tokenName;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabPersonalAccessTokenCreator.class);
 
-    public static final List<String> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
+    private static final List<String> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
             Constants.ApplicationScope.API.toValue(),
             Constants.ApplicationScope.READ_USER.toValue()
     );
@@ -93,7 +95,6 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
                 );
     }
 
-
     @SuppressWarnings("unused")
     @RequirePOST
     public FormValidation doCreateTokenByCredentials(
@@ -125,50 +126,46 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             return FormValidation.error("Can't create GitLab token, credentials are null");
         }
 
-        String token;
-
+        tokenName = UUID.randomUUID().toString();
         try {
-            token = AccessTokenUtils.createPersonalAccessToken(
+            String token = AccessTokenUtils.createPersonalAccessToken(
+                    defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
                     credentials.getUsername(),
                     Secret.toString(credentials.getPassword()),
-                    defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
-                    "mytoken",
+                    tokenName,
                     GL_PLUGIN_REQUIRED_SCOPE
             );
+            saveCredentials(serverUrl, token, credentials.getUsername());
+            return FormValidation.ok("Created credentials with id %s ", tokenName);
         } catch (GitLabApiException e) {
             return FormValidation.error(e, "Can't create GL token - %s", e.getMessage());
         }
-
-        StandardCredentials creds = createCredentials(serverUrl, token, credentials.getUsername());
-
-        return FormValidation.ok("Created credentials with id %s ", credentials.getId());
     }
 
     @SuppressWarnings("unused")
     @RequirePOST
     public FormValidation doCreateTokenByPassword(
             @QueryParameter String serverUrl,
-            @QueryParameter String username,
+            @QueryParameter String login,
             @QueryParameter String password) {
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        tokenName = UUID.randomUUID().toString();
         try {
             String token = AccessTokenUtils.createPersonalAccessToken(
-                    username,
-                    password,
                     defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
-                    UUID.randomUUID().toString(),
+                    login,
+                    password,
+                    tokenName,
                     GL_PLUGIN_REQUIRED_SCOPE
             );
-            StandardCredentials credentials = createCredentials(serverUrl, token, username);
+            saveCredentials(serverUrl, token, login);
             return FormValidation.ok(
-                    "Created credentials with id %s ", credentials.getId()
+                    "Created credentials with id %s ", tokenName
             );
         } catch (GitLabApiException e) {
-            return FormValidation.error(e, "Can't create GL token for %s - %s", username, e.getMessage());
+            return FormValidation.error(e, "Can't create GL token for %s - %s", login, e.getMessage());
         }
     }
-
-
 
     /**
      * Creates {@link org.jenkinsci.plugins.plaincredentials.StringCredentials} with previously created GitLab
@@ -180,19 +177,19 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
      * @param token        GitLab Personal Access Token
      * @param username     used to add to description of newly created credentials
      *
-     * @return credentials object
-     * @see #createCredentials(String, StandardCredentials)
+     * @see #saveCredentials(String, PersonalAccessTokenImpl)
      */
-    private StandardCredentials createCredentials(@Nullable String serverUrl, String token, String username) {
+    private void saveCredentials(@Nullable String serverUrl, String token, String username) {
         String url = defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL);
         String description = String.format("Auto Generated by %s server for %s user", url, username);
-        StringCredentialsImpl credentials = new StringCredentialsImpl(
+        tokenName = UUID.randomUUID().toString();
+        PersonalAccessTokenImpl credentials = new PersonalAccessTokenImpl(
                 CredentialsScope.GLOBAL,
-                UUID.randomUUID().toString(),
+                tokenName,
                 description,
-                Secret.fromString(token)
+                token
         );
-        return createCredentials(url, credentials);
+        saveCredentials(url, credentials);
     }
 
     /**
@@ -200,10 +197,8 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
      *
      * @param serverUrl to extract (and create if no any) domain
      * @param credentials to save credentials
-     *
-     * @return saved credentials
      */
-    private StandardCredentials createCredentials(String serverUrl, final StandardCredentials credentials) {
+    private void saveCredentials(String serverUrl, final PersonalAccessTokenImpl credentials) {
         URI serverUri = URI.create(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL));
 
         List<DomainSpecification> specifications = asList(
@@ -219,6 +214,5 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
                 LOGGER.error("Can't add credentials for domain", e);
             }
         });
-        return credentials;
     }
 }

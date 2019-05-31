@@ -8,7 +8,6 @@ f.section(title: descriptor.displayName) {
 
     f.entry(title: _("GitLab Servers"),
             help:descriptor.getHelpFile()) {
-
         f.repeatableHeteroProperty(
                 field: "servers",
                 hasHeader: "true",
@@ -16,9 +15,13 @@ f.section(title: descriptor.displayName) {
         )
     }
     f.advanced() {
-
-        f.entry("title": "Advanced configurations") {
-            f.textbox("default": "Will be added in later release")
+        f.entry() {
+            f.entry(title: _("Additional actions"), help: descriptor.getHelpFile('additional')) {
+                f.hetero_list(items: [],
+                        addCaption: _("Manage additional GitHub actions"),
+                        name: "actions",
+                        oneEach: "true", hasHeader: "true", descriptors: instance.actions())
+            }
         }
     }
 }

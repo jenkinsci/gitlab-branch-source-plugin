@@ -20,7 +20,6 @@ f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Per
 }
 
 f.advanced() {
-
     f.entry("title": "Advanced configurations") {
         f.textbox("default": "Will be added in later release")
     }
@@ -35,11 +34,4 @@ f.validateButton(
 )
 
 
-f.entry() {
-    f.entry(title: _("Additional actions"), help: descriptor.getHelpFile('additional')) {
-        f.hetero_list(items: [],
-                addCaption: _("Manage additional GitHub actions"),
-                name: "actions",
-                oneEach: "true", hasHeader: "true", descriptors: instance.actions())
-    }
-}
+

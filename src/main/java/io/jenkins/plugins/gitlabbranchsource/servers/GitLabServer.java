@@ -169,7 +169,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         );
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -177,7 +176,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
-
 
     /**
      * Our descriptor.

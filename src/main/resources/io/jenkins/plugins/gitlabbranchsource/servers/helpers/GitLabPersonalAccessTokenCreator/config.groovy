@@ -8,7 +8,7 @@ import lib.FormTagLib
 def f = namespace(FormTagLib);
 def c = namespace(CredentialsTagLib)
 
-f.entry(title: _("GitHub API URL"), field: "serverUrl",
+f.entry(title: _("GitLab Server URL"), field: "serverUrl",
         help: app.getDescriptor(GitLabServer.class)?.getHelpFile("serverUrl")) {
     f.textbox(default: GitLabServer.GITLAB_SERVER_URL)
 }
@@ -30,7 +30,7 @@ f.radioBlock(checked: true, name: "credentials", value: "plugin", title: "From c
 
 f.radioBlock(checked: false, name: "credentials", value: "manually", title: "From login and password") {
 
-    f.entry(title: _("Login"), field: "login") {
+    f.entry(title: _("Username"), field: "login") {
         f.textbox()
     }
 

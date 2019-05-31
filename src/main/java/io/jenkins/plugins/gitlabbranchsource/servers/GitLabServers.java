@@ -3,7 +3,9 @@ package io.jenkins.plugins.gitlabbranchsource.servers;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.gitlabbranchsource.servers.helpers.GitLabPersonalAccessTokenCreator;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -12,15 +14,12 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -102,6 +101,10 @@ public class GitLabServers extends GlobalConfiguration {
     @Override
     public String getDisplayName() {
         return Messages.GitLabServers_displayName();
+    }
+
+    public List<Descriptor> actions() {
+        return Collections.singletonList(Jenkins.getInstance().getDescriptor(GitLabPersonalAccessTokenCreator.class));
     }
 
     /**
