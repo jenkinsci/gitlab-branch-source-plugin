@@ -19,12 +19,12 @@ f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Per
     c.select(context: app)
 }
 
-f.advanced() {
-    f.entry("title": "Advanced configurations") {
-        f.textbox("default": "Will be added in later release")
-    }
-}
-
+// Add advance fields if user needs some meta data to send to the api
+//f.advanced() {
+//    f.entry("title": "Advanced configurations") {
+//        f.textbox("default": "Will be added in later release")
+//    }
+//}
 
 f.validateButton(
         title: _("Test connection"),
