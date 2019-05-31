@@ -77,23 +77,49 @@
         </dependency>
     </dependencies>
 
-    <!-- If you want this to appear on the wiki page:
     <developers>
-      <developer>
-        <id>bhacker</id>
-        <name>Bob Q. Hacker</name>
-        <email>bhacker@nowhere.net</email>
-      </developer>
-    </developers> -->
+        <developer>
+            <id>baymac</id>
+            <name>Parichay Barpanda</name>
+            <email>parichay.barpanda@gmail.com</email>
+        </developer>
+        <developer>
+            <id>LinuxSuRen</id>
+            <name>Zhao Xiaojie</name>
+            <email>parichay.barpanda@gmail.com</email>
+        </developer>
+        <developer>
+            <id>markyjackson-taulia</id>
+            <name>Marky Jackson</name>
+            <email>marky.r.jackson@gmail.com</email>
+        </developer>
+        <developer>
+            <id>jeffpearce</id>
+            <name>Jeff Pearce</name>
+            <email>jxpearce@godaddy.com</email>
+        </developer>
+        <developer>
+            <id>justinharringa</id>
+            <name>Justin Harringa</name>
+            <email>justin@harringa.com</email>
+        </developer>
+        <developer>
+            <id>casz</id>
+            <name>Joseph Peterson</name>
+            <email>josephp90@gmail.com</email>
+        </developer>
+    </developers>
 
-    <!-- Assuming you want to host on @jenkinsci:
-    <url>https://wiki.jenkins.io/display/JENKINS/TODO+Plugin</url>
-    <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    </scm>
+    <!-- Later host this plugin on @jenkinsci:
+    <url>https://wiki.jenkins.io/display/JENKINS/GitLab+Branch+Source+Plugin</url>
     -->
+
+    <scm>
+        <connection>scm:git:git://github.com/baymac/${project.artifactId}-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:baymac/${project.artifactId}-plugin.git</developerConnection>
+        <url>https://github.com/baymac/${project.artifactId}-plugin</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
