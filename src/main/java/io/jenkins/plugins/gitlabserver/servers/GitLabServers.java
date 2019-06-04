@@ -1,11 +1,11 @@
-package io.jenkins.plugins.gitlabbranchsource.servers;
+package io.jenkins.plugins.gitlabserver.servers;
 
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabbranchsource.servers.helpers.GitLabPersonalAccessTokenCreator;
+import io.jenkins.plugins.gitlabserver.servers.helpers.GitLabPersonalAccessTokenCreator;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;

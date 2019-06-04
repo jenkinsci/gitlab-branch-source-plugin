@@ -1,6 +1,6 @@
-package io.jenkins.plugins.gitlabbranchsource.servers.GitLabServer
+package io.jenkins.plugins.gitlabserver.servers.GitLabServer
 
-import io.jenkins.plugins.gitlabbranchsource.servers.GitLabServer
+import io.jenkins.plugins.gitlabserver.servers.GitLabServer
 import lib.FormTagLib
 import lib.CredentialsTagLib
 

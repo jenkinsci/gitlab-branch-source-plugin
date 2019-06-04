@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabbranchsource.servers;
+package io.jenkins.plugins.gitlabserver.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -14,9 +14,9 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuth;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessTokenImpl;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuth;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
@@ -33,7 +33,6 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;

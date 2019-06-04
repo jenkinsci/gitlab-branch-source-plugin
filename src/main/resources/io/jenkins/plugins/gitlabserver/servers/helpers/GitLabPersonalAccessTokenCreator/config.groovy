@@ -1,6 +1,6 @@
-package io.jenkins.plugins.gitlabbranchsource.servers.helpers.GitLabPersonalAccessTokenCreator
+package io.jenkins.plugins.gitlabserver.servers.helpers.GitLabPersonalAccessTokenCreator
 
-import io.jenkins.plugins.gitlabbranchsource.servers.GitLabServer
+import io.jenkins.plugins.gitlabserver.servers.GitLabServer
 import lib.CredentialsTagLib
 import lib.FormTagLib
 

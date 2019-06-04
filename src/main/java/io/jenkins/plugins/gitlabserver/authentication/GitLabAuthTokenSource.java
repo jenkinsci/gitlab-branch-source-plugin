@@ -1,9 +1,9 @@
-package io.jenkins.plugins.gitlabbranchsource.authentication;
+package io.jenkins.plugins.gitlabserver.authentication;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 

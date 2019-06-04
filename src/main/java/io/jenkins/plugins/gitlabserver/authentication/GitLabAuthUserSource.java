@@ -1,11 +1,11 @@
-package io.jenkins.plugins.gitlabbranchsource.authentication;
+package io.jenkins.plugins.gitlabserver.authentication;
 
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthUser;
-import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthUser;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokenException;
 import jenkins.authentication.tokens.api.AuthenticationTokenSource;
 

@@ -1,2 +1,2 @@
 
-package io.jenkins.plugins.gitlabbranchsource.servers;
+package io.jenkins.plugins.gitlabserver.servers;

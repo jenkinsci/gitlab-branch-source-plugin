@@ -1,9 +1,9 @@
-package io.jenkins.plugins.gitlabbranchsource.authentication;
+package io.jenkins.plugins.gitlabserver.authentication;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.util.Secret;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuth;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabbranchsource.client.api.GitLabAuthUser;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuth;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
+import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthUser;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -13,7 +13,7 @@ import org.mockito.Mockito;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
-import io.jenkins.plugins.gitlabbranchsource.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 
 import static org.junit.Assert.assertThat;
 

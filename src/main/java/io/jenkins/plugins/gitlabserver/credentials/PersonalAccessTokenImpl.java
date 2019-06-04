@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabbranchsource.credentials;
+package io.jenkins.plugins.gitlabserver.credentials;
 
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
