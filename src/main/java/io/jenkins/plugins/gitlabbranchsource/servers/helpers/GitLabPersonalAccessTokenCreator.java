@@ -51,9 +51,11 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabPersonalAccessTokenCreator.class);
 
-    private static final List<String> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
-            Constants.ApplicationScope.API.toValue(),
-            Constants.ApplicationScope.READ_USER.toValue()
+    private static final List<AccessTokenUtils.Scope> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
+            AccessTokenUtils.Scope.API,
+            AccessTokenUtils.Scope.READ_REGISTRY,
+            AccessTokenUtils.Scope.READ_USER,
+            AccessTokenUtils.Scope.READ_REPOSITORY
     );
 
     public GitLabPersonalAccessTokenCreator() {
