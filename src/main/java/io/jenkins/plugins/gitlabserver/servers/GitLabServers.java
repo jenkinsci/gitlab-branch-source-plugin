@@ -120,9 +120,6 @@ public class GitLabServers extends GlobalConfiguration {
     public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         servers = new ArrayList<>(Util.fixNull(endpoints));
-//        for(GitLabServer server: servers) {
-//            connectionMap.put(server.getName(), server);
-//        }
     }
 
     /**
