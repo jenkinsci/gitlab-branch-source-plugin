@@ -258,7 +258,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if(!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
-            return  new StandardListBoxModel()
+            return new StandardListBoxModel()
                 .includeEmptyValue()
                 .includeMatchingAs(ACL.SYSTEM,
                         Jenkins.getInstance(),
