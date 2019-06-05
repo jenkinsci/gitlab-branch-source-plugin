@@ -122,7 +122,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
             if (isToken(gitLabAuth)) {
                 privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-
             }
         }
         return privateToken;
@@ -235,10 +234,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @Override
         public String getDisplayName() {
             return Messages.GitLabServer_displayName();
-        }
-
-        public String getAdvanceConfigMessage() {
-            return Messages.GitLabServer_advancedSectionForFuture();
         }
 
         @RequirePOST
