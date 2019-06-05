@@ -38,21 +38,11 @@ public class GitLabServers extends GlobalConfiguration {
      */
     private List<GitLabServer> servers;
 
-    private transient Map<String, GitLabServer> connectionMap = new HashMap<>();
-
     /**
      * Constructor.
      */
     public GitLabServers() {
         load();
-        refreshConnectionMap();
-    }
-
-    private void refreshConnectionMap() {
-        connectionMap.clear();
-        for (GitLabServer server : servers) {
-            connectionMap.put(server.getName(), server);
-        }
     }
 
     /**
@@ -62,7 +52,6 @@ public class GitLabServers extends GlobalConfiguration {
     @Override
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         servers = req.bindJSONToList(GitLabServer.class, json.get("servers"));
-        refreshConnectionMap();
         save();
         return super.configure(req, json);
     }
@@ -109,7 +98,7 @@ public class GitLabServers extends GlobalConfiguration {
     @Nonnull
     public List<GitLabServer> getServers() {
         return servers == null || servers.isEmpty()
-                ? Collections.<GitLabServer>emptyList()
+                ? Collections.emptyList()
                 : Collections.unmodifiableList(servers);
     }
 
@@ -131,9 +120,9 @@ public class GitLabServers extends GlobalConfiguration {
     public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         servers = new ArrayList<>(Util.fixNull(endpoints));
-        for(GitLabServer server: servers) {
-            connectionMap.put(server.getName(), server);
-        }
+//        for(GitLabServer server: servers) {
+//            connectionMap.put(server.getName(), server);
+//        }
     }
 
     /**
@@ -175,19 +164,4 @@ public class GitLabServers extends GlobalConfiguration {
         }
         setServers(endpoints);
     }
-
-    /**
-     * Checks to see if the supplied server URL is defined in the global configuration.
-     *
-     * @param name the server url to check.
-     * @return the global configuration for the specified server url or {@code null} if not defined.
-     */
-    @CheckForNull
-    public GitLabServer getGitLabApi(@CheckForNull String name) {
-        if (!connectionMap.containsKey(name)) {
-            return null;
-        }
-        return connectionMap.get(name);
-    }
-
 }
