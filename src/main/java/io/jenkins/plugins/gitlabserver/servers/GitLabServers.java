@@ -65,16 +65,6 @@ public class GitLabServers extends GlobalConfiguration {
         return ExtensionList.lookup(GlobalConfiguration.class).get(GitLabServers.class);
     }
 
-
-    /**
-     * Returns {@code true} if and only if there is more than one configured endpoint.
-     *
-     * @return {@code true} if and only if there is more than one configured endpoint.
-     */
-    public boolean isEndpointSelectable() {
-        return getServers().size() > 1;
-    }
-
     /**
      * Populates a {@link ListBoxModel} with the endpoints.
      *
