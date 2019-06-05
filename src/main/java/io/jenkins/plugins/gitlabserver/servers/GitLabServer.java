@@ -84,7 +84,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Constructor
      *
-     * @param displayName   Optional name to use to describe the end-point.
+     * @param name   Optional name to use to describe the end-point.
      * @param serverUrl     The URL of this GitLab Server
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
@@ -92,14 +92,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @since 1.0.5
      */
     @DataBoundConstructor
-    public GitLabServer(@CheckForNull String displayName, @NonNull String serverUrl, boolean manageHooks,
+    public GitLabServer(@CheckForNull String name, @NonNull String serverUrl, boolean manageHooks,
                         @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks;
         this.credentialsId = credentialsId;
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
-        this.name = StringUtils.isBlank(displayName)
+        this.name = StringUtils.isBlank(name)
                 ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
-                : displayName;
+                : name;
     }
 
     /**
@@ -229,7 +229,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
-        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String name, @QueryParameter String serverUrl,
+        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
                                                      @QueryParameter String credentialsId) {
             if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
