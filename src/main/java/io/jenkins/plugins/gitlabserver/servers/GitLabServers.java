@@ -121,7 +121,7 @@ public class GitLabServers extends GlobalConfiguration {
     public boolean addServer(@Nonnull GitLabServer endpoint) {
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (GitLabServer ep : endpoints) {
-            if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
+            if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
                 return false;
             }
         }
@@ -140,7 +140,7 @@ public class GitLabServers extends GlobalConfiguration {
         boolean found = false;
         for (int i = 0; i < endpoints.size(); i++) {
             GitLabServer ep = endpoints.get(i);
-            if (ep.getServerUrl().equals(endpoint.getServerUrl())) {
+            if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
                 endpoints.set(i, endpoint);
                 found = true;
                 break;
