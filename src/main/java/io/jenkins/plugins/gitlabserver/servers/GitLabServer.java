@@ -82,9 +82,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     private final String credentialsId;
 
-    // To cache the client
-//    private transient GitLabApi gitLabApiCache;
-
     /**
      * Constructor
      *
@@ -165,13 +162,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public boolean isManageHooks() {
         return manageHooks;
     }
-
-//    public GitLabApi getGitLabApi() {
-//        if (gitLabApiCache == null) {
-//            gitLabApiCache = new GitLabApi(serverUrl, getToken(getServerUrl(), getCredentialsId()));
-//        }
-//        return gitLabApiCache;
-//    }
 
     /**
      * Returns the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
