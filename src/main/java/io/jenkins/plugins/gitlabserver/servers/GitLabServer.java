@@ -2,7 +2,6 @@ package io.jenkins.plugins.gitlabserver.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.AbstractIdCredentialsListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -148,7 +147,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public StandardCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
+                lookupCredentials(
                         StandardCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
@@ -156,43 +155,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 ),
                 CredentialsMatchers.allOf(
                         AuthenticationTokens.matcher(GitLabAuth.class),
-                        withId(credentialsId)
+                        CredentialsMatchers.withId(credentialsId)
                 )
         );
-    }
-
-    private static String getToken(String serverUrl, String credentialsId) {
-        String privateToken = UNKNOWN_TOKEN;
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-        StandardCredentials credentials = CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                        StandardCredentials.class,
-                        Jenkins.getActiveInstance(),
-                        ACL.SYSTEM,
-                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ),
-                CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(GitLabAuth.class),
-                        withId(credentialsId)
-                )
-        );
-        if (credentials != null) {
-            GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
-            if (isToken(gitLabAuth)) {
-                privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-            }
-        }
-        return privateToken;
-    }
-
-    /**
-     * Helper function
-     *
-     * @param gitLabAuth a generic auth object
-     * @return true if gitLabAuth is an object of GitLabAuthToken
-     */
-    private static boolean isToken(GitLabAuth gitLabAuth) {
-        return gitLabAuth instanceof GitLabAuthToken;
     }
 
     /**
@@ -276,6 +241,30 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             credentials -> credentials instanceof PersonalAccessTokenImpl);
+        }
+
+        private static String getToken(String serverUrl, String credentialsId) {
+            String privateToken = UNKNOWN_TOKEN;
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            StandardCredentials creds = CredentialsMatchers.firstOrNull(
+                    lookupCredentials(
+                            StandardCredentials.class,
+                            Jenkins.getActiveInstance(),
+                            ACL.SYSTEM,
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                    ),
+                    CredentialsMatchers.allOf(
+                            AuthenticationTokens.matcher(GitLabAuth.class),
+                            CredentialsMatchers.withId(credentialsId)
+                    )
+            );
+            if (creds != null) {
+                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, creds);
+                if (gitLabAuth instanceof GitLabAuthToken) {
+                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+                }
+            }
+            return privateToken;
         }
     }
 }
