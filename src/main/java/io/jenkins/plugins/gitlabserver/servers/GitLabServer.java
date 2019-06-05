@@ -103,40 +103,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 : displayName;
     }
 
-    private static String getToken(String serverUrl, String credentialsId) {
-        String privateToken = UNKNOWN_TOKEN;
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-        StandardCredentials credentials = CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                        StandardCredentials.class,
-                        Jenkins.getActiveInstance(),
-                        ACL.SYSTEM,
-                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ),
-                CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(GitLabAuth.class),
-                        withId(credentialsId)
-                )
-        );
-        if (credentials != null) {
-            GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
-            if (isToken(gitLabAuth)) {
-                privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-            }
-        }
-        return privateToken;
-    }
-
-    /**
-     * Helper function
-     *
-     * @param gitLabAuth a generic auth object
-     * @return true if gitLabAuth is an object of GitLabAuthToken
-     */
-    private static boolean isToken(GitLabAuth gitLabAuth) {
-        return gitLabAuth instanceof GitLabAuthToken;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -193,6 +159,40 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                         withId(credentialsId)
                 )
         );
+    }
+
+    private static String getToken(String serverUrl, String credentialsId) {
+        String privateToken = UNKNOWN_TOKEN;
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+                lookupCredentials(
+                        StandardCredentials.class,
+                        Jenkins.getActiveInstance(),
+                        ACL.SYSTEM,
+                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                ),
+                CredentialsMatchers.allOf(
+                        AuthenticationTokens.matcher(GitLabAuth.class),
+                        withId(credentialsId)
+                )
+        );
+        if (credentials != null) {
+            GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, credentials);
+            if (isToken(gitLabAuth)) {
+                privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
+            }
+        }
+        return privateToken;
+    }
+
+    /**
+     * Helper function
+     *
+     * @param gitLabAuth a generic auth object
+     * @return true if gitLabAuth is an object of GitLabAuthToken
+     */
+    private static boolean isToken(GitLabAuth gitLabAuth) {
+        return gitLabAuth instanceof GitLabAuthToken;
     }
 
     /**
@@ -269,14 +269,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
-            AbstractIdCredentialsListBoxModel<StandardListBoxModel, StandardCredentials> options = new StandardListBoxModel()
+            return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(ACL.SYSTEM,
                             Jenkins.getInstance(),
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             credentials -> credentials instanceof PersonalAccessTokenImpl);
-            return options;
         }
     }
 }
