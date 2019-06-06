@@ -100,7 +100,7 @@ public class GitLabServers extends GlobalConfiguration {
      * returns the list of descriptors
      */
     public List<Descriptor> actions() {
-        return Collections.singletonList(Jenkins.getInstance().getDescriptor(GitLabPersonalAccessTokenCreator.class));
+        return Collections.singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
     }
 
     /**
@@ -109,7 +109,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @param endpoints the list of endpoints.
      */
     public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         servers = new ArrayList<>(Util.fixNull(endpoints));
     }
 

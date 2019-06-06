@@ -75,20 +75,21 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
 
     @SuppressWarnings("unused")
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
-        if(!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+        Jenkins jenkins = Jenkins.get();
+        if(!jenkins.hasPermission(Jenkins.ADMINISTER)) {
             return new StandardListBoxModel().includeCurrentValue(credentialsId);
         }
         return new StandardUsernameListBoxModel()
                 .includeEmptyValue()
                 .includeMatchingAs(
                         ACL.SYSTEM,
-                        Jenkins.getInstance(),
+                        jenkins,
                         StandardUsernamePasswordCredentials.class,
                         fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
                         CredentialsMatchers.always()
                 ).includeMatchingAs(
                         Jenkins.getAuthentication(),
-                        Jenkins.getInstance(),
+                        jenkins,
                         StandardUsernamePasswordCredentials.class,
                         fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
                         CredentialsMatchers.always()
@@ -101,14 +102,15 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             @QueryParameter String serverUrl,
             @QueryParameter String credentialsId) {
 
-        Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+        Jenkins jenkins = Jenkins.get();
+        jenkins.checkPermission(Jenkins.ADMINISTER);
         if(isEmpty(credentialsId)) {
             return FormValidation.error("Please specify credentials to create token");
         }
 
         StandardUsernamePasswordCredentials credentials = firstOrNull(lookupCredentials(
                     StandardUsernamePasswordCredentials.class,
-                    Jenkins.getInstance(),
+                    jenkins,
                     ACL.SYSTEM,
                     fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
                     withId(credentialsId));
@@ -116,7 +118,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
         if(credentials == null) {
             credentials = firstOrNull(lookupCredentials(
                     StandardUsernamePasswordCredentials.class,
-                    Jenkins.getInstance(),
+                    jenkins,
                     Jenkins.getAuthentication(),
                     fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
                     withId(credentialsId));
@@ -147,7 +149,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             @QueryParameter String serverUrl,
             @QueryParameter String login,
             @QueryParameter String password) {
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         try {
             String tokenName = UUID.randomUUID().toString();
             String token = AccessTokenUtils.createPersonalAccessToken(

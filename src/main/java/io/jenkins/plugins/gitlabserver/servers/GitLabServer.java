@@ -196,7 +196,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 lookupCredentials(
                         UsernamePasswordCredentials.class,
-                        Jenkins.getActiveInstance(),
+                        Jenkins.get(),
                         ACL.SYSTEM,
                         fromUri(serverUrl).build()),
                         CredentialsMatchers.withId(credentialsId)
@@ -224,7 +224,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          * @return the validation results.
          */
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 new URL(value);
             } catch (MalformedURLException e) {
@@ -280,13 +280,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
                                                      @QueryParameter String credentialsId) {
-            if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+            Jenkins jenkins = Jenkins.get();
+            if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(ACL.SYSTEM,
-                            Jenkins.getInstance(),
+                            jenkins,
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             credentials -> credentials instanceof PersonalAccessToken);
@@ -294,11 +295,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
         private static String getToken(String serverUrl, String credentialsId) {
             String privateToken = UNKNOWN_TOKEN;
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins jenkins = Jenkins.get();
+            jenkins.checkPermission(Jenkins.ADMINISTER);
+
             PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
                             PersonalAccessToken.class,
-                            Jenkins.getActiveInstance(),
+                            jenkins,
                             ACL.SYSTEM,
                             fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
                             CredentialsMatchers.withId(credentialsId)
