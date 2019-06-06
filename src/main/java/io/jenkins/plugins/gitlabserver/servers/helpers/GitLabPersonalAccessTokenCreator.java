@@ -24,7 +24,6 @@ import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
 import jenkins.model.Jenkins;
-import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.utils.AccessTokenUtils;
 import org.kohsuke.stapler.QueryParameter;
