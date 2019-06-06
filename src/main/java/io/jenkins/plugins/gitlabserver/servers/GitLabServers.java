@@ -11,6 +11,8 @@ import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.StaplerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Extension
 public class GitLabServers extends GlobalConfiguration {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServers.class);
 
     /**
      * The list of {@link GitLabServer}, this is subject to the constraint that there can only ever be

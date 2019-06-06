@@ -15,7 +15,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
-import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.RandomStringUtils;
@@ -30,6 +29,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
@@ -44,6 +45,8 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
  */
 
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
 
     /**
      * Used as default server URL for the serverUrl field
@@ -226,13 +229,15 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             try {
                 new URL(value);
             } catch (MalformedURLException e) {
+                LOGGER.error("Incorrect server url - %s", value);
                 return FormValidation.error("Malformed GitLab url (%s)", e.getMessage());
             }
-
             // TODO:[JENKINS-57747] Add support for GitLab Ultimate (self hosted) and Gold (saas)
             if (GITLAB_SERVER_URL.equals(value)) {
+                LOGGER.info("Server URL is fine - %s", value);
                 return FormValidation.ok();
             }
+            LOGGER.info("Unable to validate serverUrl - %s", value);
             return FormValidation.warning(Messages.GitLabServer_recheckUrl());
         }
 
@@ -247,16 +252,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
+            LOGGER.info("Testing Connection..");
             String privateToken = getToken(serverUrl, credentialsId);
             if (privateToken.equals(UNKNOWN_TOKEN)) {
+                LOGGER.error("Cannot find private token");
                 return FormValidation
                         .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
             }
             try {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
                 User user = gitLabApi.getUserApi().getCurrentUser();
+                LOGGER.info(String.format("Connection established with the GitLab Server for %s", user.getUsername()));
                 return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
             } catch (GitLabApiException e) {
+                LOGGER.error(String.format("Failed to connect with GitLab Server - %s", e.getMessage()));
                 return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
             }
         }
