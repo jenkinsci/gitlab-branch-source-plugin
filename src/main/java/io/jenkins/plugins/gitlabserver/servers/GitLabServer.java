@@ -32,7 +32,6 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -76,13 +75,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * A unique name used to identify the endpoint.
      */
-    @Nonnull
+    @NonNull
     private String name;
 
     /**
      * The URL of this GitLab Server.
      */
-    @Nonnull
+    @NonNull
     private final String serverUrl;
 
     /**
@@ -109,7 +108,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     public String getName() {
         return name;
     }
@@ -159,7 +158,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @param name   A unique name to use to describe the end-point, if empty replaced with a random name
      */
     @DataBoundSetter
-    public void setName(@Nonnull String name) {
+    public void setName(@NonNull String name) {
         this.name = StringUtils.isBlank(name)
                 ? getRandomName()
                 : name;
