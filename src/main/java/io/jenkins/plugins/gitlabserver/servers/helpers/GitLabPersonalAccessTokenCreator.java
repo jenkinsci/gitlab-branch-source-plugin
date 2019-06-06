@@ -24,6 +24,11 @@ import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
+import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import jenkins.model.Jenkins;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.utils.AccessTokenUtils;
@@ -31,12 +36,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.firstOrNull;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;

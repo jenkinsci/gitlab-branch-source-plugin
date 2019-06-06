@@ -1,8 +1,8 @@
 package io.jenkins.plugins.gitlabserver.servers.GitLabServer
 
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer
-import lib.FormTagLib
 import lib.CredentialsTagLib
+import lib.FormTagLib
 import org.apache.commons.lang.RandomStringUtils
 
 def f = namespace(FormTagLib)
