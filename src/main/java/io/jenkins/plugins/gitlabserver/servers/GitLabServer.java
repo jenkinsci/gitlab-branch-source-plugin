@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -13,9 +14,7 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabserver.client.api.GitLabAuth;
-import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
@@ -45,6 +44,9 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
+    /**
+     * Used as default server URL for the serverUrl field
+     */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
     /**
      * Used as default token value if no any credentials found by given credentialsId.
@@ -156,24 +158,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
+     * Looks up the {@link UsernamePasswordCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
      */
     @CheckForNull
-    public StandardCredentials credentials() {
+    public UsernamePasswordCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 lookupCredentials(
-                        StandardCredentials.class,
+                        UsernamePasswordCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
-                        fromUri(serverUrl).build()
-                ),
-                CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(GitLabAuth.class),
+                        fromUri(serverUrl).build()),
                         CredentialsMatchers.withId(credentialsId)
-                )
-        );
+                );
     }
 
     /**
@@ -256,30 +254,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             Jenkins.getInstance(),
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
-                            credentials -> credentials instanceof PersonalAccessTokenImpl);
+                            credentials -> credentials instanceof PersonalAccessToken);
         }
 
         private static String getToken(String serverUrl, String credentialsId) {
             String privateToken = UNKNOWN_TOKEN;
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            StandardCredentials creds = CredentialsMatchers.firstOrNull(
+            PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
-                            StandardCredentials.class,
+                            PersonalAccessToken.class,
                             Jenkins.getActiveInstance(),
                             ACL.SYSTEM,
-                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                    ),
-                    CredentialsMatchers.allOf(
-                            AuthenticationTokens.matcher(GitLabAuth.class),
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
                             CredentialsMatchers.withId(credentialsId)
-                    )
-            );
-            if (creds != null) {
-                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, creds);
-                if (gitLabAuth instanceof GitLabAuthToken) {
-                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-                }
+                    );
+            if (credentials != null) {
+                privateToken = credentials.getToken().getPlainText();
             }
+
             return privateToken;
         }
     }
