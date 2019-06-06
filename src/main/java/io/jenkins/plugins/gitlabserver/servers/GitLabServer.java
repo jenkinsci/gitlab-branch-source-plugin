@@ -80,11 +80,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * The URL of this GitLab Server.
      */
     @Nonnull
-    private String serverUrl;
+    private final String serverUrl;
+
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
     private boolean manageHooks;
+
     /**
      * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
