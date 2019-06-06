@@ -64,7 +64,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     @Symbol("gitlabPersonalAccessToken")
     public static class DescriptorImpl extends CredentialsDescriptor {
 
-        private final int GITLAB_ACCESS_TOKEN_LENGTH = 20;
+        private static final int GITLAB_ACCESS_TOKEN_LENGTH = 20;
 
         /**
          * {@inheritDoc}
