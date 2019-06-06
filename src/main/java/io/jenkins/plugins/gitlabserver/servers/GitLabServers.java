@@ -86,7 +86,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @return the list of endpoints
      */
     @Nonnull
-    public List<GitLabServer> getServers() {
+    public synchronized List<GitLabServer> getServers() {
         return servers == null || servers.isEmpty()
                 ? Collections.emptyList()
                 : Collections.unmodifiableList(servers);
@@ -107,18 +107,19 @@ public class GitLabServers extends GlobalConfiguration {
      *
      * @param endpoints the list of endpoints.
      */
-    public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
+    public synchronized void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         servers = new ArrayList<>(Util.fixNull(endpoints));
     }
 
     /**
-     * Adds an endpoint.
+     * Adds an endpoint
+     * Checks if the GitLab Server name is unique
      *
      * @param endpoint the endpoint to add.
      * @return {@code true} if the list of endpoints was modified
      */
-    public boolean addServer(@Nonnull GitLabServer endpoint) {
+    public synchronized boolean addServer(@Nonnull GitLabServer endpoint) {
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (GitLabServer ep : endpoints) {
             if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
@@ -131,11 +132,12 @@ public class GitLabServers extends GlobalConfiguration {
     }
 
     /**
-     * Updates an existing endpoint (or adds if missing).
+     * Updates an existing endpoint (or adds if missing)
+     * Checks if the GitLab Server name is matched
      *
      * @param endpoint the endpoint to update.
      */
-    public void updateServer(@Nonnull GitLabServer endpoint) {
+    public synchronized void updateServer(@Nonnull GitLabServer endpoint) {
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         boolean found = false;
         for (int i = 0; i < endpoints.size(); i++) {
@@ -151,4 +153,25 @@ public class GitLabServers extends GlobalConfiguration {
         }
         setServers(endpoints);
     }
+
+    /**
+     * Removes an endpoint.
+     * Checks if the GitLab Server name is matched
+     *
+     * @param name the server URL to remove.
+     * @return {@code true} if the list of endpoints was modified
+     */
+    public synchronized boolean removeServer(@CheckForNull String name) {
+        boolean modified = false;
+        List<GitLabServer> endpoints = new ArrayList<>(getServers());
+        for (Iterator<GitLabServer> iterator = endpoints.iterator(); iterator.hasNext(); ) {
+            if (Util.fixNull(name).equals(Util.fixNull(iterator.next().getName()))) {
+                iterator.remove();
+                modified = true;
+            }
+        }
+        setServers(endpoints);
+        return modified;
+    }
+
 }

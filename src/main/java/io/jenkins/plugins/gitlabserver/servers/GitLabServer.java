@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabserver.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -20,6 +19,7 @@ import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -31,10 +31,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
@@ -50,6 +50,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Used as default token value if no any credentials found by given credentialsId.
      */
     public static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
+
+    /**
+     * Length of unique random numeric name for server
+     */
+    public static final int SHORT_NAME_LENGTH = 4;
+
     /**
      * Common prefixes that we should remove when inferring a display name.
      */
@@ -60,16 +66,17 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             "scm.",
             "source."
     };
+
     /**
-     * Optional name to use to describe the end-point.
+     * A unique name to use to identify the end-point.
      */
-    @CheckForNull
+    @Nonnull
     private final String name;
 
     /**
      * The URL of this GitLab Server.
      */
-    @NonNull
+    @Nonnull
     private final String serverUrl;
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
@@ -82,9 +89,19 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private final String credentialsId;
 
     /**
+     * Generates a random alphanumeric name for gitlab server if not entered by user
+     *
+     * @return String
+     */
+    private String getRandomName() {
+        return String.format("%s-%s", SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES),
+                RandomStringUtils.randomNumeric(SHORT_NAME_LENGTH));
+    }
+
+    /**
      * Constructor
      *
-     * @param name   Optional name to use to describe the end-point.
+     * @param name          A unique name to use to describe the end-point, if empty replaced with a random name
      * @param serverUrl     The URL of this GitLab Server
      * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
@@ -92,13 +109,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @since 1.0.5
      */
     @DataBoundConstructor
-    public GitLabServer(@CheckForNull String name, @NonNull String serverUrl, boolean manageHooks,
+    public GitLabServer(@Nonnull String name, @NonNull String serverUrl, boolean manageHooks,
                         @CheckForNull String credentialsId) {
         this.manageHooks = manageHooks;
         this.credentialsId = credentialsId;
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(name)
-                ? SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES)
+                ? getRandomName()
                 : name;
     }
 
