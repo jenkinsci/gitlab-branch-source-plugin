@@ -3,12 +3,13 @@ package io.jenkins.plugins.gitlabserver.servers.GitLabServer
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer
 import lib.FormTagLib
 import lib.CredentialsTagLib
+import org.apache.commons.lang.RandomStringUtils
 
 def f = namespace(FormTagLib)
 def c = namespace(CredentialsTagLib)
 
-f.entry(title: _("Name"), field: "name", "description": "A name for the connection") {
-    f.textbox()
+f.entry(title: _("Name"), field: "name", "description": "A unique name for the connection") {
+    f.textbox(default: String.format("gitlab-%s", RandomStringUtils.randomNumeric(GitLabServer.SHORT_NAME_LENGTH)))
 }
 
 f.entry(title: _("Server URL"), field: "serverUrl", "description": "The url to the GitLab server") {
