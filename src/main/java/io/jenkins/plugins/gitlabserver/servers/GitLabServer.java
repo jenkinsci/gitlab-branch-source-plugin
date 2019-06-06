@@ -27,6 +27,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
@@ -73,22 +74,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * A unique name used to identify the endpoint.
      */
     @Nonnull
-    private final String name;
+    private String name;
 
     /**
      * The URL of this GitLab Server.
      */
     @Nonnull
     private final String serverUrl;
+
     /**
      * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
      */
-    private final boolean manageHooks;
+    private boolean manageHooks;
+
     /**
      * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
     @CheckForNull
-    private final String credentialsId;
+    private String credentialsId;
 
     /**
      * Generates a random alphanumeric name for gitlab server if not entered by user
@@ -138,23 +141,47 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Data Bound Constructor
+     * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param name          A unique name to use to describe the end-point, if empty replaced with a random name
-     * @param serverUrl     The URL of this GitLab Server
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
-     *                      auto-management of hooks.
+     * @param serverUrl   The URL of this GitLab Server
      */
     @DataBoundConstructor
-    public GitLabServer(@Nonnull String name, @NonNull String serverUrl, boolean manageHooks,
-                        @CheckForNull String credentialsId) {
-        this.manageHooks = manageHooks;
-        this.credentialsId = credentialsId;
+    public GitLabServer(@NonNull String serverUrl) {
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
+    }
+
+    /**
+     * Data Bound Setter for Server Name
+     *
+     * @param name   A unique name to use to describe the end-point, if empty replaced with a random name
+     */
+    @DataBoundSetter
+    public void setName(@Nonnull String name) {
         this.name = StringUtils.isBlank(name)
                 ? getRandomName()
                 : name;
+    }
+
+    /**
+     * Data Bound Setter for Server URL
+     *
+     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
+     *                      GitLab Server Authentication to access GitLab APIs
+
+     */
+    @DataBoundSetter
+    public void setCredentialsId(@CheckForNull String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
+    /**
+     * Data Bound Setter for auto management of web hooks
+     *
+     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     */
+    @DataBoundSetter
+    public void setManageHooks(boolean manageHooks) {
+        this.manageHooks = manageHooks;
     }
 
     /**

@@ -10,25 +10,18 @@ import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.gitlab4j.api.GitLabApi;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Represents the global configuration of GitLab servers.
  */
-
 @Extension
 public class GitLabServers extends GlobalConfiguration {
 
@@ -48,7 +41,6 @@ public class GitLabServers extends GlobalConfiguration {
     /**
      * {@inheritDoc}
      */
-    // TODO: understand what configure does
     @Override
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         servers = req.bindJSONToList(GitLabServer.class, json.get("servers"));
