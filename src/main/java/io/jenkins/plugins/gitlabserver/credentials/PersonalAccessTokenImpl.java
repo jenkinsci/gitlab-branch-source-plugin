@@ -62,7 +62,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     @Extension
     public static class DescriptorImpl extends CredentialsDescriptor {
 
-        private int GITLAB_ACCESS_TOKEN_LENGTH = 20;
+        private final int GITLAB_ACCESS_TOKEN_LENGTH = 20;
 
         /**
          * {@inheritDoc}
