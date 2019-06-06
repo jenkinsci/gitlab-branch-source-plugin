@@ -99,27 +99,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Constructor
-     *
-     * @param name          A unique name to use to describe the end-point, if empty replaced with a random name
-     * @param serverUrl     The URL of this GitLab Server
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
-     *                      auto-management of hooks.
-     * @since 1.0.5
-     */
-    @DataBoundConstructor
-    public GitLabServer(@Nonnull String name, @NonNull String serverUrl, boolean manageHooks,
-                        @CheckForNull String credentialsId) {
-        this.manageHooks = manageHooks;
-        this.credentialsId = credentialsId;
-        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
-        this.name = StringUtils.isBlank(name)
-                ? getRandomName()
-                : name;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @CheckForNull
@@ -154,6 +133,26 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public String getCredentialsId() {
         return credentialsId;
+    }
+
+    /**
+     * Data Bound Constructor
+     *
+     * @param name          A unique name to use to describe the end-point, if empty replaced with a random name
+     * @param serverUrl     The URL of this GitLab Server
+     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
+     *                      auto-management of hooks.
+     */
+    @DataBoundConstructor
+    public GitLabServer(@Nonnull String name, @NonNull String serverUrl, boolean manageHooks,
+                        @CheckForNull String credentialsId) {
+        this.manageHooks = manageHooks;
+        this.credentialsId = credentialsId;
+        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
+        this.name = StringUtils.isBlank(name)
+                ? getRandomName()
+                : name;
     }
 
     /**

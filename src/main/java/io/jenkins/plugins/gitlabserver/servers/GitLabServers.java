@@ -178,5 +178,4 @@ public class GitLabServers extends GlobalConfiguration {
         setServers(endpoints);
         return modified;
     }
-
 }
