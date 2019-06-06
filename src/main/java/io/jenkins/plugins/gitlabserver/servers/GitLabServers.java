@@ -98,6 +98,11 @@ public class GitLabServers extends GlobalConfiguration {
         return Messages.GitLabServers_displayName();
     }
 
+    /**
+     * Gets descriptor of {@link GitLabPersonalAccessTokenCreator}
+     *
+     * returns the list of descriptors
+     */
     public List<Descriptor> actions() {
         return Collections.singletonList(Jenkins.getInstance().getDescriptor(GitLabPersonalAccessTokenCreator.class));
     }
