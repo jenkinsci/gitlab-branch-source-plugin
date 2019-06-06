@@ -152,8 +152,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public GitLabServer(@NonNull String serverUrl, @NonNull String name) {
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(name)
-            ? getRandomName()
-            : name;
+                ? getRandomName()
+                : name;
     }
 
     /**
