@@ -89,7 +89,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
      */
     @CheckForNull
-    private final String credentialsId;
+    private String credentialsId;
 
     /**
      * Generates a random alphanumeric name for gitlab server if not entered by user
@@ -139,14 +139,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Data Bound Constructor
+     * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
-     *                      GitLab Server Authentication to access GitLab APIs
+     * @param serverUrl   The URL of this GitLab Server
      */
     @DataBoundConstructor
-    public GitLabServer(@CheckForNull String credentialsId) {
-        this.credentialsId = credentialsId;
+    public GitLabServer(@NonNull String serverUrl) {
+        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
     }
 
     /**
@@ -164,11 +163,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for Server URL
      *
-     * @param serverUrl   The URL of this GitLab Server
+     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
+     *                      GitLab Server Authentication to access GitLab APIs
+
      */
     @DataBoundSetter
-    public void setServerUrl(@NonNull String serverUrl) {
-        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
+    public void setCredentialsId(@CheckForNull String credentialsId) {
+        this.credentialsId = credentialsId;
     }
 
     /**
