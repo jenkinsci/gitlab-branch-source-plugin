@@ -68,7 +68,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     };
 
     /**
-     * A unique name to use to identify the end-point.
+     * A unique name used to identify the endpoint.
      */
     @Nonnull
     private final String name;
@@ -101,7 +101,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * {@inheritDoc}
      */
-    @CheckForNull
+    @Nonnull
     public String getName() {
         return name;
     }
