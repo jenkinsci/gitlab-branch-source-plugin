@@ -144,23 +144,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param serverUrl   The URL of this GitLab Server
+     * @param serverUrl The URL of this GitLab Server
+     * @param name A unique name to use to describe the end-point, if empty replaced with a random
+     * name
      */
     @DataBoundConstructor
-    public GitLabServer(@NonNull String serverUrl) {
+    public GitLabServer(@NonNull String serverUrl, @NonNull String name) {
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
-    }
-
-    /**
-     * Data Bound Setter for Server Name
-     *
-     * @param name   A unique name to use to describe the end-point, if empty replaced with a random name
-     */
-    @DataBoundSetter
-    public void setName(@NonNull String name) {
         this.name = StringUtils.isBlank(name)
-                ? getRandomName()
-                : name;
+            ? getRandomName()
+            : name;
     }
 
     /**
