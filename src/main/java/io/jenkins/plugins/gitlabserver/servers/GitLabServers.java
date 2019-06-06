@@ -78,7 +78,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @return the list of endpoints
      */
     @Nonnull
-    public synchronized List<GitLabServer> getServers() {
+    public List<GitLabServer> getServers() {
         return servers == null || servers.isEmpty()
                 ? Collections.emptyList()
                 : Collections.unmodifiableList(servers);
@@ -104,7 +104,7 @@ public class GitLabServers extends GlobalConfiguration {
      *
      * @param endpoints the list of endpoints.
      */
-    public synchronized void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
+    public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         servers = new ArrayList<>(Util.fixNull(endpoints));
     }
@@ -116,7 +116,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @param endpoint the endpoint to add.
      * @return {@code true} if the list of endpoints was modified
      */
-    public synchronized boolean addServer(@Nonnull GitLabServer endpoint) {
+    public boolean addServer(@Nonnull GitLabServer endpoint) {
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (GitLabServer ep : endpoints) {
             if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
@@ -134,7 +134,7 @@ public class GitLabServers extends GlobalConfiguration {
      *
      * @param endpoint the endpoint to update.
      */
-    public synchronized void updateServer(@Nonnull GitLabServer endpoint) {
+    public void updateServer(@Nonnull GitLabServer endpoint) {
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         boolean found = false;
         for (int i = 0; i < endpoints.size(); i++) {
@@ -158,7 +158,7 @@ public class GitLabServers extends GlobalConfiguration {
      * @param name the server URL to remove.
      * @return {@code true} if the list of endpoints was modified
      */
-    public synchronized boolean removeServer(@CheckForNull String name) {
+    public boolean removeServer(@CheckForNull String name) {
         boolean modified = false;
         List<GitLabServer> endpoints = new ArrayList<>(getServers());
         for (Iterator<GitLabServer> iterator = endpoints.iterator(); iterator.hasNext(); ) {
