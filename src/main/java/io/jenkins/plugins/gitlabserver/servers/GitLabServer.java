@@ -4,6 +4,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -13,9 +14,7 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabserver.client.api.GitLabAuth;
-import io.jenkins.plugins.gitlabserver.client.api.GitLabAuthToken;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
+import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
@@ -45,6 +44,9 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
+    /**
+     * Used as default server URL for the serverUrl field
+     */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
     /**
      * Used as default token value if no any credentials found by given credentialsId.
@@ -170,7 +172,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                         fromUri(serverUrl).build()
                 ),
                 CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(GitLabAuth.class),
+                        AuthenticationTokens.matcher(UsernamePasswordCredentials.class),
                         CredentialsMatchers.withId(credentialsId)
                 )
         );
@@ -223,6 +225,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
             String privateToken = getToken(serverUrl, credentialsId);
+            if(privateToken == null) {
+                return FormValidation.error("Failed at converting token to GitLabAuthToken");
+            }
             if (privateToken.equals(UNKNOWN_TOKEN)) {
                 return FormValidation
                         .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
@@ -234,6 +239,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             } catch (GitLabApiException e) {
                 return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
             }
+
         }
 
         /**
@@ -256,13 +262,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             Jenkins.getInstance(),
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
-                            credentials -> credentials instanceof PersonalAccessTokenImpl);
+                            credentials -> credentials instanceof PersonalAccessToken);
         }
 
         private static String getToken(String serverUrl, String credentialsId) {
             String privateToken = UNKNOWN_TOKEN;
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            StandardCredentials creds = CredentialsMatchers.firstOrNull(
+            PersonalAccessToken credentials = (PersonalAccessToken) CredentialsMatchers.firstOrNull(
                     lookupCredentials(
                             StandardCredentials.class,
                             Jenkins.getActiveInstance(),
@@ -270,15 +276,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
                     ),
                     CredentialsMatchers.allOf(
-                            AuthenticationTokens.matcher(GitLabAuth.class),
+                            creds -> creds instanceof PersonalAccessToken,
                             CredentialsMatchers.withId(credentialsId)
                     )
             );
-            if (creds != null) {
-                GitLabAuth gitLabAuth = AuthenticationTokens.convert(GitLabAuth.class, creds);
-                if (gitLabAuth instanceof GitLabAuthToken) {
-                    privateToken = ((GitLabAuthToken) gitLabAuth).getToken();
-                }
+            if (credentials != null) {
+                privateToken = credentials.getToken().getPlainText();
             }
             return privateToken;
         }
