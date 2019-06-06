@@ -158,24 +158,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up the {@link StandardCredentials} to use for auto-management of hooks.
+     * Looks up the {@link UsernamePasswordCredentials} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
      */
     @CheckForNull
-    public StandardCredentials credentials() {
+    public UsernamePasswordCredentials credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 lookupCredentials(
-                        StandardCredentials.class,
+                        UsernamePasswordCredentials.class,
                         Jenkins.getActiveInstance(),
                         ACL.SYSTEM,
-                        fromUri(serverUrl).build()
-                ),
-                CredentialsMatchers.allOf(
-                        AuthenticationTokens.matcher(UsernamePasswordCredentials.class),
+                        fromUri(serverUrl).build()),
                         CredentialsMatchers.withId(credentialsId)
-                )
-        );
+                );
     }
 
     /**
@@ -225,9 +221,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
             String privateToken = getToken(serverUrl, credentialsId);
-            if(privateToken == null) {
-                return FormValidation.error("Failed at converting token to GitLabAuthToken");
-            }
             if (privateToken.equals(UNKNOWN_TOKEN)) {
                 return FormValidation
                         .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
@@ -239,7 +232,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             } catch (GitLabApiException e) {
                 return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
             }
-
         }
 
         /**
@@ -268,21 +260,18 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         private static String getToken(String serverUrl, String credentialsId) {
             String privateToken = UNKNOWN_TOKEN;
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            PersonalAccessToken credentials = (PersonalAccessToken) CredentialsMatchers.firstOrNull(
+            PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
-                            StandardCredentials.class,
+                            PersonalAccessToken.class,
                             Jenkins.getActiveInstance(),
                             ACL.SYSTEM,
-                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                    ),
-                    CredentialsMatchers.allOf(
-                            creds -> creds instanceof PersonalAccessToken,
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
                             CredentialsMatchers.withId(credentialsId)
-                    )
-            );
+                    );
             if (credentials != null) {
                 privateToken = credentials.getToken().getPlainText();
             }
+
             return privateToken;
         }
     }
