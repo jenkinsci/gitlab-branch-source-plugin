@@ -5,7 +5,7 @@ credentials:
           - gitlabPersonalAccessToken:
               scope: SYSTEM
               id: "i<3GitLab"
-              token: "sAf_Xasnou47yxoAsC"
+              token: "XfsqZvVtAx5YCph5bq3r"
 
 unclassified:
   gitLabServers:
