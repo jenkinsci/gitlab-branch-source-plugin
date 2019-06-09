@@ -11,11 +11,11 @@ To fully be able to run a Jenkins Continuous Integration on a GitLab repository 
 
 2. [GitLab Plugin](https://github.com/jenkinsci/gitlab-plugin/) - Server configuration and web hooks Management 
 
-3. GitLab Branch Source Plugin - To support Multi branch Pipeline Jobs (including Merge Requests) and Folder organisation
+3. GitLab Branch Source Plugin - To support Multi Branch Pipeline Jobs (including Merge Requests) and Folder organisation
 
 ## Jenkins and GitLab Integration:
 
-This section contains information related to how GitLab and Jen
+This section contains information about Jenkins CI support for GitLab.
 
 ### Present State
 
