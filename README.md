@@ -1,8 +1,13 @@
 # GitLab Branch Source Plugin
 
-This plugin is being developed as a part of GSoC 2019 project [Multi branch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
+**This repository contains source code for:**
 
-To fully run a Jenkins Continuous Integration on a GitLab repository or project, you require three plugins:
+* GitLab Server Plugin
+* GitLab Branch Source Plugin
+
+**This plugin is being developed as a part of GSoC 2019 project [Multi branch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).**
+
+To fully be able to run a Jenkins Continuous Integration on a GitLab repository or project, you require three plugins:
 
 1. [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitHub Java API
 
@@ -10,17 +15,25 @@ To fully run a Jenkins Continuous Integration on a GitLab repository or project,
 
 3. GitLab Branch Source Plugin - To support Multi branch Pipeline Jobs (including Merge Requests) and Folder organisation
 
-GitLab API Plugin has been released and GitLab Plugin is being heavily modified.
+## Jenkins and GitLab Integration:
 
-### Issues with Jenkins and GitLab Integration:
+### Present State
 
-i. The GitLab Java APIs are written within the plugin itself when it should be a different plugin.
+1. FreeStyle Jobs and Single Branch Pipeline are fully supported.
 
-ii. Multi branch Pipeline support is missing as Merge Requests cannot be discovered.
+2. Multi branch Pipeline Jobs are partially supported (no MRs detection).
 
-iii. GitLab Folder Organisation for GitLab Projects is not available.
+3. GitLab Folder Organisation is not supported
 
-iv. Convention for 3 separate plugin is not followed.
+### Issues
+
+1. The GitLab Java APIs are written within the plugin itself when it should be a different plugin.
+
+2. Multi branch Pipeline support is missing.
+
+3. GitLab Folder Organisation for GitLab Projects is missing.
+
+4. Convention for 3 separate plugin is not followed. (e.g. - github-api-plugin, github-plugin, github-branch-source-plugin)
 
 ### Goals of this project
 
@@ -38,39 +51,57 @@ iv. Convention for 3 separate plugin is not followed.
 
 7. Fully support Java 8 
 
-### Installation
+## Building the plugin
 
 No binaries are available for this plugin as the plugin is in the very early alpha stage, and not ready for the general public quite yet.  If you want to jump in early, you can try building it yourself from source.
 
-To run the plugin, run the following:
+### Steps:
 
-```bash
+1) Checkout out source code to your local machine:
 
-git clone https://github.com/baymac/gitlab-branch-source-plugin.git\
+     ```bash
+     git clone https://github.com/baymac/gitlab-branch-source-plugin.git\
+    
+     cd gitlab-branch-source-plugin
+     ```
 
-cd gitlab-branch-source-plugin
+2) Install the plugin:
+    
+    ```bash
+    mvn clean install 
+    ```
+    or
+    ```
+    mvn clean install -DskipTests # to skip tests
+    ```
 
-mvn clean install # use -DskipTests to skip tests
+3) Run the Plugin:
 
-mvn hpi:run # use -Djetty.port=<port> to define a port for plugin to run
+    ```bash
+    mvn hpi:run # runs a Jenkins instance at localhost:8080
+    ```
+    
+    or
+    
+    ```bash
+    mvn hpi:run -Djetty.port={port} # to run on your desired port number 
+    ```
 
-```
-
-If you want to test it with your Jenkins server, after `mvn clean install` follow these steps in your Jenkins instance:
-
-1. Select `Manage Jenkins`
-
-2. Select `Manage Plugins`
-
-3. Select `Advanced` tab
-
-3. In `Upload Plugin` section, select `Choose file`
-
-4. Select ${root_dir}/target/gitlab-branch-source.hpi
-
-5. Select `Upload` 
-
-6. Select `Install without restart`
+    If you want to test it with your Jenkins server, after `mvn clean install` follow these steps in your Jenkins instance:
+    
+    1. Select `Manage Jenkins`
+    
+    2. Select `Manage Plugins`
+    
+    3. Select `Advanced` tab
+    
+    3. In `Upload Plugin` section, select `Choose file`
+    
+    4. Select `${root_dir}/target/gitlab-branch-source.hpi`
+    
+    5. Select `Upload` 
+    
+    6. Select `Install without restart`
 
 
 
