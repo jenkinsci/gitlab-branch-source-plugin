@@ -146,7 +146,7 @@ There are multiple ways to do it:
     
     iv. Browse to `http://localhost:8080`
     
-    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/).
+    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/#on-macos-and-linux).
     
 2. Using a Jenkins Web application Archive (WAR) :
 
