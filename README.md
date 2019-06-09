@@ -260,7 +260,7 @@ Assuming plugin installation has been done already.
     
     vii. Enter a human readable description
     
-    ![gitlab-credentials](docs/img/gitlab-credentials.png)
+      ![gitlab-credentials](docs/img/gitlab-credentials.png)
     
     viii. Select `Add`
     
@@ -303,7 +303,7 @@ automatically inside Jenkins itself.
 required scope. You can go back to the GitLab Server Configuration to select the new credentials generated. Identify the new
 credentials with the `id` returned by token creator. It should be a a 128-bit long UUID-4 string (36 characters).
 
-![gitlab-token-creator](docs/img/gitlab-token-creator.png)
+   ![gitlab-token-creator](docs/img/gitlab-token-creator.png)
 
 ### Setting up GitLab for jobs
 
@@ -327,7 +327,10 @@ The team consists of:
 * [Justin](https://github.com/justinharringa) (Mentor)
 * [Jeff](https://github.com/jeffpearce) (Mentor)
 
-Honorable Mentions:
-6. [Oleg](https://github.com/oleg-nenashev) (The org admin who helps with all technical issues)
-7. [Greg](https://github.com/gmessner) (The creator of GitLab4J APIs)
-8. [Stephen](https://github.com/stephenc) (The creator of SCM related Plugins)
+Support:
+
+* [Oleg](https://github.com/oleg-nenashev) (The org admin who helps with all technical issues)
+* [Greg](https://github.com/gmessner) (The creator of GitLab4J APIs)
+* [Stephen](https://github.com/stephenc) (The creator of SCM related Plugins)
+
+Also thanks to entire Jenkins community for helping us with technical expertise and inspiration.
