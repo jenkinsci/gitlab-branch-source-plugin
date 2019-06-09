@@ -168,7 +168,7 @@ There are multiple ways to do it:
    
 4. Using a Bitnami Jenkins Stack:
 
-    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/)
+    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
     
 ### Post installation:
 
@@ -232,9 +232,9 @@ Assuming plugin installation has been done already.
      
 6. Adding a Personal Access Token Credentials:
 
-   This is a manual setup. To automatically generate Personal Accees Token see next section.
+   This is a manual setup. To automatically generate Personal Accees Token see next section
 
-    i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token inside Jenkins.
+    i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token inside Jenkins
 
     ii. Generate a Personal Access Token on your GitLab Server
         
@@ -327,10 +327,10 @@ The team consists of:
 * [Justin](https://github.com/justinharringa) (Mentor)
 * [Jeff](https://github.com/jeffpearce) (Mentor)
 
-Support:
+External Support:
 
 * [Oleg](https://github.com/oleg-nenashev) (The org admin who helps with all technical issues)
 * [Greg](https://github.com/gmessner) (The creator of GitLab4J APIs)
 * [Stephen](https://github.com/stephenc) (The creator of SCM related Plugins)
 
-Also thanks to entire Jenkins community for helping us with technical expertise and inspiration.
+Also thanks to entire Jenkins community for contributing with technical expertise and inspiration.
