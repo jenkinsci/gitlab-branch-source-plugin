@@ -206,10 +206,37 @@ Assuming plugin installation has been done already.
 
 2. Select `Configure System`
 
-3. Scroll to find the `GitLab` section
+3. Scroll down to find the `GitLab` section
 
-![gitlab-section](docs/img/gitlab-section.png)
+   ![gitlab-section](docs/img/gitlab-section.png)
 
+4. Select `Add GitLab Server` | Select `GitLab Server`
+
+5. Now you will now see the GitLab Server Configuration options
+   
+   ![gitlab-server](docs/img/gitlab-server.png)
+   
+   There are 4 fields that needs to be configured:
+       
+    i. `Name` - Plugin automatically generates an unique server name for you. User may want to configure this field to suit their needs but
+           should make sure it is sufficiently unique. We recommend to keep it as it is.
+       
+    ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User can modify it to enter their
+    GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.
+    
+    iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has
+    been added it shows "-none-". User can add a credential by clicking "Add" button.
+    
+    iv. `Web Hook` - This field is a checkbox. If you want the plugin to setup a webhook on your GitLab project(s) related jobs, check this box. 
+    The plugin listens to a URL for the concerned GitLab project(s) and when an event occurs in the GitLab Server, the server
+    sends an event trigger to the URL where the webhook is setup. If you want continuous integration (or continuous delivery) on your
+    GitLab project then you may want to automatically set it up.
+     
+6. Adding a Personal Access Token Credentials:
+
+    i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token inside Jenkins.
+
+    ii. 
 
 
 
