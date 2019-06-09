@@ -5,8 +5,6 @@
 * GitLab Server Plugin
 * GitLab Branch Source Plugin
 
-**This plugin is being developed as a part of GSoC 2019 project [Multi branch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).**
-
 To fully be able to run a Jenkins Continuous Integration on a GitLab repository or project, you require three plugins:
 
 1. [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitHub Java API
@@ -234,13 +232,102 @@ Assuming plugin installation has been done already.
      
 6. Adding a Personal Access Token Credentials:
 
+   This is a manual setup. To automatically generate Personal Accees Token see next section.
+
     i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token inside Jenkins.
 
-    ii. 
+    ii. Generate a Personal Access Token on your GitLab Server
+        
+        a. Select profile dropdown menu from top-right corner
+        
+        b. Select `Settings`
+        
+        c. Select `Access Token` from left column
+        
+        d. Enter a name | Set Scope to `api`,`read_user`, `read_repository`
+        
+        e. Select `Create Personal Access Token`
+        
+        f. Copy the token generated
+        
+    iii. Return to Jenkins | Select `Add` in Credentials field | Select `Jenkins`
+    
+    iv. Set `Kind` to GitLab Personal Access Token
+    
+    v. Enter `Token`
+    
+    vi. Enter a unique id in `ID`
+    
+    vii. Enter a human readable description
+    
+    ![gitlab-credentials](docs/img/gitlab-credentials.png)
+    
+    viii. Select `Add`
+    
+7. Testing connection:
 
+    i. Select your desired token in the `Credentials` dropdown
+    
+    ii. Select `Test Connection`
+    
+    iii. It should return something like `Credentials verified for user {username}`
+    
+8. Select `Apply` (at the bottom)
 
+9. GitLab Server is now setup on Jenkins
 
+#### Creating Personal Access Token within Jenkins
 
+User does not have to go to your GitLab Server settings for creating GitLab Personal Access Token, this can be done
+automatically inside Jenkins itself.
 
+1. Select `Advanced` at the bottom of `GitLab` Section.
 
+2. Select `Manage Additional GitLab Actions`
 
+3. Select `Convert login and password to token`
+
+4. Set the `GitLab Server URL`
+
+5. There are 2 options to generate token;
+
+    i. `From credentials` - To select an already persisting Username Password Credentials or add an Username Password
+    credential to persist it.
+    
+    ii. `From login and password` - If this is a one time thing then you can directly enter you credentials to the text boxes
+    and the username/password credential is not persisted.
+    
+6. After setting your username/password credential, select `Create token credentials`.
+
+7. The plugin will automatically create a Personal Token Access Token in your GitLab Server for the give user and with the
+required scope. You can go back to the GitLab Server Configuration to select the new credentials generated. Identify the new
+credentials with the `id` returned by token creator. It should be a a 128-bit long UUID-4 string (36 characters).
+
+![gitlab-token-creator](docs/img/gitlab-token-creator.png)
+
+### Setting up GitLab for jobs
+
+This section is a **Work in Progress**. Will be updated upon release.
+
+## Issues
+
+This project uses Jenkins [JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under `gitlab-branch-source-plugin` component.
+
+## Acknowledgements
+
+This plugin is built and maintained by the Google Summer of Code (GSoC) Team for
+[Multi branch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
+
+The team consists of:
+
+* [baymac](https://www.github.com/baymac) (Student)
+* [LinuxSuRen](https://github.com/LinuxSuRen) (Mentor)
+* [Marky](https://github.com/markyjackson-taulia) (Mentor)
+* [Joseph](https://github.com/casz) (Mentor)
+* [Justin](https://github.com/justinharringa) (Mentor)
+* [Jeff](https://github.com/jeffpearce) (Mentor)
+
+Honorable Mentions:
+6. [Oleg](https://github.com/oleg-nenashev) (The org admin who helps with all technical issues)
+7. [Greg](https://github.com/gmessner) (The creator of GitLab4J APIs)
+8. [Stephen](https://github.com/stephenc) (The creator of SCM related Plugins)
