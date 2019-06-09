@@ -71,7 +71,7 @@ No binaries are available for this plugin as the plugin is in the very early alp
     mvn clean install 
     ```
     or
-    ```
+    ```bash
     mvn clean install -DskipTests # to skip tests
     ```
 
