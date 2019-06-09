@@ -23,7 +23,7 @@ To fully be able to run a Jenkins Continuous Integration on a GitLab repository 
 
 2. Multi branch Pipeline Jobs are partially supported (no MRs detection).
 
-3. GitLab Folder Organisation is not supported
+3. GitLab Folder Organisation is not supported.
 
 ### Issues
 
@@ -33,23 +33,23 @@ To fully be able to run a Jenkins Continuous Integration on a GitLab repository 
 
 3. GitLab Folder Organisation for GitLab Projects is missing.
 
-4. Convention for 3 separate plugin is not followed. (e.g. - github-api-plugin, github-plugin, github-branch-source-plugin)
+4. Convention for 3 separate plugin is not followed (e.g. - github-api-plugin, github-plugin, github-branch-source-plugin).
 
 ### Goals of this project
 
-1. Implement a lightweight GitLab Plugin that depends on GitLab API Plugin.
+1. Implement a lightweight GitLab Plugin that depends on GitLab API Plugin
 
-2. Follow convention of 3 separate plugins (as listed above).
+2. Follow convention of 3 separate plugins (as listed above)
 
-3. Implement GitLab Branch Source Plugin 
+3. Implement GitLab Branch Source Plugin
 
 4. Support new Jenkins features such as [Jenkins Code as Configuration](https://github.com/jenkinsci/configuration-as-code-plugin) (JCasc)
 
 5. Provide rich user experience
 
-6. Support all SCM Trait APIs 
+6. Support all SCM Trait APIs
 
-7. Fully support Java 8 
+7. Fully support Java 8
 
 ## Building the plugin
 
@@ -102,6 +102,7 @@ No binaries are available for this plugin as the plugin is in the very early alp
     5. Select `Upload` 
     
     6. Select `Install without restart`
+
 
 
 
