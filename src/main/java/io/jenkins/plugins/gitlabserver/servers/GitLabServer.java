@@ -15,6 +15,8 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
+import java.net.MalformedURLException;
+import java.net.URL;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.RandomStringUtils;
@@ -31,10 +33,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
@@ -76,13 +74,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * A unique name used to identify the endpoint.
      */
-    @Nonnull
+    @NonNull
     private String name;
 
     /**
      * The URL of this GitLab Server.
      */
-    @Nonnull
+    @NonNull
     private final String serverUrl;
 
     /**
@@ -109,7 +107,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * {@inheritDoc}
      */
-    @Nonnull
+    @NonNull
     public String getName() {
         return name;
     }
@@ -146,20 +144,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param serverUrl   The URL of this GitLab Server
+     * @param serverUrl The URL of this GitLab Server
+     * @param name A unique name to use to describe the end-point, if empty replaced with a random
+     * name
      */
     @DataBoundConstructor
-    public GitLabServer(@NonNull String serverUrl) {
+    public GitLabServer(@NonNull String serverUrl, @NonNull String name) {
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
-    }
-
-    /**
-     * Data Bound Setter for Server Name
-     *
-     * @param name   A unique name to use to describe the end-point, if empty replaced with a random name
-     */
-    @DataBoundSetter
-    public void setName(@Nonnull String name) {
         this.name = StringUtils.isBlank(name)
                 ? getRandomName()
                 : name;
@@ -197,7 +188,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 lookupCredentials(
                         UsernamePasswordCredentials.class,
-                        Jenkins.getActiveInstance(),
+                        Jenkins.get(),
                         ACL.SYSTEM,
                         fromUri(serverUrl).build()),
                         CredentialsMatchers.withId(credentialsId)
@@ -225,7 +216,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          * @return the validation results.
          */
         public static FormValidation doCheckServerUrl(@QueryParameter String value) {
-            Jenkins.getActiveInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 new URL(value);
             } catch (MalformedURLException e) {
@@ -281,13 +272,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
                                                      @QueryParameter String credentialsId) {
-            if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+            Jenkins jenkins = Jenkins.get();
+            if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(ACL.SYSTEM,
-                            Jenkins.getInstance(),
+                            jenkins,
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             credentials -> credentials instanceof PersonalAccessToken);
@@ -295,11 +287,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
         private static String getToken(String serverUrl, String credentialsId) {
             String privateToken = UNKNOWN_TOKEN;
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins jenkins = Jenkins.get();
+            jenkins.checkPermission(Jenkins.ADMINISTER);
+
             PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
                     lookupCredentials(
                             PersonalAccessToken.class,
-                            Jenkins.getActiveInstance(),
+                            jenkins,
                             ACL.SYSTEM,
                             fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
                             CredentialsMatchers.withId(credentialsId)

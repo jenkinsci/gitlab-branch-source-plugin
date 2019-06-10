@@ -11,6 +11,7 @@ import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -60,9 +61,10 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * Our descriptor.
      */
     @Extension
+    @Symbol("gitlabPersonalAccessToken")
     public static class DescriptorImpl extends CredentialsDescriptor {
 
-        private int GITLAB_ACCESS_TOKEN_LENGTH = 20;
+        private static final int GITLAB_ACCESS_TOKEN_LENGTH = 20;
 
         /**
          * {@inheritDoc}
