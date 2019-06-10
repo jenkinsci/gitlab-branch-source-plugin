@@ -134,6 +134,7 @@
         <connection>scm:git:git://github.com/baymac/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:baymac/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/baymac/${project.artifactId}-plugin</url>
+        <tag>${scmTag}</tag>
     </scm>
 
     <build>
