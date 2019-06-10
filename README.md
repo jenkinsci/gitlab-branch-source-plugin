@@ -1,15 +1,18 @@
+[![Build Status](https://travis-ci.org/baymac/gitlab-branch-source-plugin.svg?branch=develop)](https://travis-ci.org/baymac/gitlab-branch-source-plugin)
+[![GitHub release](https://img.shields.io/github/release/baymac/gitlab-branch-source-plugin.svg)](https://github.com/baymac/gitlab-branch-source-plugin/releases)
+
 # GitLab Branch Source Plugin
 
 **This repository contains source code for:**
 
-* GitLab Server Plugin
-* GitLab Branch Source Plugin
+* GitLab Server Configuration
+* GitLab Branch Source 
 
 To fully be able to run a Jenkins Continuous Integration on a GitLab repository or project, you require three plugins:
 
 1. [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitHub Java API
 
-2. [GitLab Plugin](https://github.com/jenkinsci/gitlab-plugin/) - Server configuration and web hooks Management 
+2. GitLab Plugin- Server configuration and web hooks Management 
 
 3. GitLab Branch Source Plugin - To support Multi Branch Pipeline Jobs (including Merge Requests) and Folder organisation
 
