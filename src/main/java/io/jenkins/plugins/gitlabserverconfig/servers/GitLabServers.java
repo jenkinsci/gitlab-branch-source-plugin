@@ -1,11 +1,11 @@
-package io.jenkins.plugins.gitlabserver.servers;
+package io.jenkins.plugins.gitlabserverconfig.servers;
 
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabserver.servers.helpers.GitLabPersonalAccessTokenCreator;
+import io.jenkins.plugins.gitlabserverconfig.servers.helpers.GitLabPersonalAccessTokenCreator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;

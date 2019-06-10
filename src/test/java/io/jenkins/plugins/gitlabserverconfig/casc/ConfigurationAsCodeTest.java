@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabserver.casc;
+package io.jenkins.plugins.gitlabserverconfig.casc;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import hudson.security.ACL;
@@ -7,9 +7,9 @@ import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.model.CNode;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
-import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
-import io.jenkins.plugins.gitlabserver.servers.GitLabServers;
+import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessTokenImpl;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.Collections;
 import java.util.List;
 import org.junit.ClassRule;
