@@ -40,7 +40,7 @@ public class ConfigurationAsCodeTest {
         assertThat(servers.size(), is(1));
         GitLabServer server = servers.get(0);
         assertThat(server.getServerUrl(), is("https://gitlab.com"));
-//        assertThat(server.getName(), matchesPattern("gitlab-*"));
+        assertThat(server.getName(), matchesPattern("gitlab-[0-9]{4}"));
         assertThat(server.isManageHooks(), is(true));
 
         List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
