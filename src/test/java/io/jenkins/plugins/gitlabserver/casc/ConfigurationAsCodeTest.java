@@ -10,7 +10,6 @@ import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServers;
-
 import java.util.Collections;
 import java.util.List;
 import org.junit.ClassRule;
