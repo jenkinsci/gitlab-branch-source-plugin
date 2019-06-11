@@ -11,9 +11,6 @@ import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserver.servers.GitLabServers;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
 import org.junit.ClassRule;
