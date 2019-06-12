@@ -1,5 +1,5 @@
 servers:
 - credentialsId: "i<3GitLab"
   manageHooks: true
-  name: "gitlab.com"
+  name: "gitlab-[0-9]{4}"
   serverUrl: "https://gitlab.com"

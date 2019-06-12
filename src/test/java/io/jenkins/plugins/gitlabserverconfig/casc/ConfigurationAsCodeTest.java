@@ -15,6 +15,7 @@ import java.util.List;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import static com.jcabi.matchers.RegexMatchers.matchesPattern;
 import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
@@ -35,7 +36,7 @@ public class ConfigurationAsCodeTest {
         assertThat(servers.size(), is(1));
         GitLabServer server = servers.get(0);
         assertThat(server.getServerUrl(), is("https://gitlab.com"));
-        assertThat(server.getName(), is("gitlab.com"));
+        assertThat(server.getName(), matchesPattern("gitlab-[0-9]{4}"));
         assertThat(server.isManageHooks(), is(true));
 
         List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
@@ -58,6 +59,6 @@ public class ConfigurationAsCodeTest {
 
         String expected = toStringFromYamlFile(this, "expected_output.yml");
 
-        assertThat(exported, is(expected));
+        assertThat(exported, matchesPattern(expected));
     }
 }
