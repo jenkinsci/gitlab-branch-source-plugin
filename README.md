@@ -12,9 +12,12 @@ To fully be able to run a Jenkins Continuous Integration on a GitLab repository 
 
 1. [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitHub Java API
 
-2. GitLab Plugin- Server configuration and web hooks Management 
+2. GitLab Plugin - Server configuration and web hooks Management 
 
 3. GitLab Branch Source Plugin - To support Multi Branch Pipeline Jobs (including Merge Requests) and Folder organisation
+
+This repository contains two packages `io.jenkins.plugins.gitlabserverconfig` and `io.jenkins.plugins.gitlabbranchsource`. Ideally
+the former package should reside inside another plugin with name `GitLab Plugin`. 
 
 ## Jenkins and GitLab Integration:
 
@@ -124,7 +127,7 @@ we use the `@Extension` annotation type. This annotation is picked up by Jenkins
 
 ### Running your Jenkins server:
 
-There are multiple ways to do it:
+Here are a few ways to setup your own Jenkins server:
 
 1. Using a Jenkins docker:
     
@@ -165,7 +168,7 @@ There are multiple ways to do it:
     
     iv. Browse to `http://localhost:8080/jenkins`
     
-3. Using a Jenkins Azure solution from marketplace:
+3. Using a Jenkins Azure solution:
 
     Refer to Azure [docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/jenkins).
    

@@ -1,6 +1,6 @@
-package io.jenkins.plugins.gitlabserver.servers.GitLabServer
+package io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 
-import io.jenkins.plugins.gitlabserver.servers.GitLabServer
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import lib.CredentialsTagLib
 import lib.FormTagLib
 import org.apache.commons.lang.RandomStringUtils

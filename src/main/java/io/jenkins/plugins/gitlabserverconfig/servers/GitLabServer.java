@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabserver.servers;
+package io.jenkins.plugins.gitlabserverconfig.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -14,7 +14,7 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
 import jenkins.model.Jenkins;
