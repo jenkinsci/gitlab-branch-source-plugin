@@ -226,10 +226,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             // TODO:[JENKINS-57747] Add support for GitLab Ultimate (self hosted) and Gold (saas)
             if (GITLAB_SERVER_URL.equals(value)) {
                 LOGGER.info("Server URL is fine - %s", value);
-                return FormValidation.ok();
             }
             LOGGER.info("Unable to validate serverUrl - %s", value);
-            return FormValidation.warning(Messages.GitLabServer_recheckUrl());
+            return FormValidation.ok();
         }
 
         @NonNull

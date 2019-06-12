@@ -2,29 +2,33 @@ package io.jenkins.plugins.gitlabserverconfig.servers;
 
 import hudson.Extension;
 import hudson.ExtensionList;
-import hudson.Util;
 import hudson.model.Descriptor;
+import hudson.model.PersistentDescriptor;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabserverconfig.servers.helpers.GitLabPersonalAccessTokenCreator;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static hudson.Util.fixNull;
 
 /**
  * Represents the global configuration of GitLab servers.
  */
 @Extension
-public class GitLabServers extends GlobalConfiguration {
+public class GitLabServers extends GlobalConfiguration implements PersistentDescriptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServers.class);
 
@@ -35,20 +39,17 @@ public class GitLabServers extends GlobalConfiguration {
     private List<GitLabServer> servers;
 
     /**
-     * Constructor.
+     * Helper function to get predicate to filter servers
+     * based on their names
+     *
+     * @param keyExtractor the Function to filter
+     * @param <T> In this case it is server
+     * @return a predicate to filter servers list
      */
-    public GitLabServers() {
-        load();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-        servers = req.bindJSONToList(GitLabServer.class, json.get("servers"));
-        save();
-        return super.configure(req, json);
+    private static <T> Predicate<T> distinctByKey(
+            Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     /**
@@ -61,15 +62,15 @@ public class GitLabServers extends GlobalConfiguration {
     }
 
     /**
-     * Populates a {@link ListBoxModel} with the endpoints.
+     * Populates a {@link ListBoxModel} with the servers.
      *
-     * @return A {@link ListBoxModel} with all the endpoints
+     * @return A {@link ListBoxModel} with all the servers
      */
     public ListBoxModel getServerItems() {
         ListBoxModel result = new ListBoxModel();
-        for (GitLabServer endpoint : getServers()) {
-            String serverUrl = endpoint.getServerUrl();
-            String displayName = endpoint.getName();
+        for (GitLabServer server : getServers()) {
+            String serverUrl = server.getServerUrl();
+            String displayName = server.getName();
             result.add(StringUtils.isBlank(displayName) ? serverUrl : displayName + " (" + serverUrl + ")", serverUrl);
         }
         return result;
@@ -103,31 +104,35 @@ public class GitLabServers extends GlobalConfiguration {
     }
 
     /**
-     * Sets the list of endpoints.
+     * Sets the list of GitLab Servers
      *
-     * @param endpoints the list of endpoints.
+     * @param servers the list of endpoints.
      */
-    public void setServers(@CheckForNull List<? extends GitLabServer> endpoints) {
+    public void setServers(@CheckForNull List<? extends GitLabServer> servers) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-        servers = new ArrayList<>(Util.fixNull(endpoints));
+        this.servers = fixNull(servers).stream()
+            .filter(distinctByKey(GitLabServer::getName)).collect(Collectors.toList());
+        save();
     }
 
     /**
-     * Adds an endpoint
+     * Adds an server
      * Checks if the GitLab Server name is unique
      *
-     * @param endpoint the endpoint to add.
+     * @param server the server to add.
      * @return {@code true} if the list of endpoints was modified
      */
-    public boolean addServer(@Nonnull GitLabServer endpoint) {
-        List<GitLabServer> endpoints = new ArrayList<>(getServers());
-        for (GitLabServer ep : endpoints) {
-            if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
-                return false;
-            }
+    public boolean addServer(@Nonnull GitLabServer server) {
+        List<GitLabServer> servers = new ArrayList<>(getServers());
+        GitLabServer s = servers.stream()
+                .filter(server1 -> server1.getName().equals(server.getName()))
+                .findAny()
+                .orElse(null);
+        if(s != null) {
+            return false;
         }
-        endpoints.add(endpoint);
-        setServers(endpoints);
+        servers.add(server);
+        setServers(servers);
         return true;
     }
 
@@ -135,42 +140,34 @@ public class GitLabServers extends GlobalConfiguration {
      * Updates an existing endpoint (or adds if missing)
      * Checks if the GitLab Server name is matched
      *
-     * @param endpoint the endpoint to update.
+     * @param server the server to update.
+     * @return {@code true} if the list of endpoints was modified
      */
-    public void updateServer(@Nonnull GitLabServer endpoint) {
-        List<GitLabServer> endpoints = new ArrayList<>(getServers());
-        boolean found = false;
-        for (int i = 0; i < endpoints.size(); i++) {
-            GitLabServer ep = endpoints.get(i);
-            if (Util.fixNull(ep.getName()).equals(Util.fixNull(endpoint.getName()))) {
-                endpoints.set(i, endpoint);
-                found = true;
-                break;
-            }
+    public boolean updateServer(@Nonnull GitLabServer server) {
+        List<GitLabServer> servers = new ArrayList<>(getServers());
+        if(!servers.contains(server)) {
+            return false;
         }
-        if (!found) {
-            endpoints.add(endpoint);
-        }
-        setServers(endpoints);
+        servers = servers.stream()
+                .map(oldServer -> oldServer.getName().equals(server.getName()) ? server : oldServer)
+                .collect(Collectors.toList());
+        setServers(servers);
+        return true;
     }
 
     /**
-     * Removes an endpoint.
+     * Removes a server entry
      * Checks if the GitLab Server name is matched
      *
-     * @param name the server URL to remove.
+     * @param name the server name to remove.
      * @return {@code true} if the list of endpoints was modified
      */
     public boolean removeServer(@CheckForNull String name) {
-        boolean modified = false;
-        List<GitLabServer> endpoints = new ArrayList<>(getServers());
-        for (Iterator<GitLabServer> iterator = endpoints.iterator(); iterator.hasNext(); ) {
-            if (Util.fixNull(name).equals(Util.fixNull(iterator.next().getName()))) {
-                iterator.remove();
-                modified = true;
-            }
+        List<GitLabServer> servers = new ArrayList<>(getServers());
+        boolean removed = servers.removeIf(s -> s.getName().equals(name));
+        if(removed) {
+            setServers(servers);
         }
-        setServers(endpoints);
-        return modified;
+        return removed;
     }
 }
