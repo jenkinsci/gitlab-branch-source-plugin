@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabserver.servers.helpers;
+package io.jenkins.plugins.gitlabserverconfig.servers.helpers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -21,9 +21,9 @@ import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken;
-import io.jenkins.plugins.gitlabserver.credentials.PersonalAccessTokenImpl;
-import io.jenkins.plugins.gitlabserver.servers.GitLabServer;
+import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessTokenImpl;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
@@ -169,7 +169,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
     }
 
     /**
-     * Creates {@link io.jenkins.plugins.gitlabserver.credentials.PersonalAccessToken}
+     * Creates {@link io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken}
      * with previously created GitLab Personal Access Token.
      *
      * @param serverUrl to add to domain with host and scheme requirement from this url

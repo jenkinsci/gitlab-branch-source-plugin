@@ -5,4 +5,4 @@
  * to lazily instantiate {@link hudson.util.Secret} properties on access.
  */
 
-package io.jenkins.plugins.gitlabserver.credentials;
+package io.jenkins.plugins.gitlabserverconfig.credentials;

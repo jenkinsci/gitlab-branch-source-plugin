@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabserver.servers.GitLabServers
+package io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers
 
 import lib.FormTagLib
 
