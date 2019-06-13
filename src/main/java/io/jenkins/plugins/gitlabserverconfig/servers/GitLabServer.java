@@ -41,7 +41,6 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 /**
  * Represents a GitLab Server instance.
  */
-
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
@@ -50,6 +49,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Used as default server URL for the serverUrl field
      */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
+
     /**
      * Used as default token value if no any credentials found by given credentialsId.
      */
@@ -220,15 +220,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             try {
                 new URL(value);
             } catch (MalformedURLException e) {
-                LOGGER.error("Incorrect server url - %s", value);
-                return FormValidation.error("Malformed GitLab url (%s)", e.getMessage());
+                LOGGER.error("Incorrect url - %s", value);
+                return FormValidation.error("Malformed url (%s)", e.getMessage());
             }
-            // TODO:[JENKINS-57747] Add support for GitLab Ultimate (self hosted) and Gold (saas)
             if (GITLAB_SERVER_URL.equals(value)) {
-                LOGGER.info("Server URL is fine - %s", value);
+                LOGGER.info("Community version of GitLab - %s", value);
             }
-            LOGGER.info("Unable to validate serverUrl - %s", value);
-            return FormValidation.ok();
+            GitLabApi gitLabApi = new GitLabApi(value, "");
+            try {
+                gitLabApi.getProjectApi().getProjects(1, 1);
+                return FormValidation.ok();
+            } catch (GitLabApiException e) {
+                LOGGER.info("Unable to validate serverUrl - %s", value);
+                return FormValidation.error(Messages.GitLabServer_invalidUrl(value));
+            }
         }
 
         @NonNull
