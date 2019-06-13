@@ -313,9 +313,36 @@ credentials with the `id` returned by token creator. It should be a a 128-bit lo
    
 ### Configuration as Code
 
-There is an easier way to setup GitLab Server configuration on your Jenkins server. Jenkins
-Configuration as Code (JCasC) allows you to configure your Jenkins Global Configuration by a simple `yaml` file. If you
-use Jenkins Code as Configuration on your Jenkins Instance, you can add the following to your `jenkins.yaml`. 
+There is an easier way to setup GitLab Server configuration on your Jenkins server. No need for messing around in the UI,
+`Jenkins Configuration as Code (JCasC)` or simply `Configuration as Code` Plugin allows you to configure Jenkins
+via a `yaml` file. If you are a first time user, you can learn more about JCasC
+[here](https://github.com/jenkinsci/configuration-as-code-plugin).
+
+#### Prerequisite:
+
+Installed `Configuration as Code` Plugin on your Jenkins instance.
+
+For installing a new plugin see [doc](https://jenkins.io/doc/book/managing/plugins/).
+
+#### Add configuration YAML:
+
+There are multiple ways to load JCasC yaml file to configure Jenkins: 
+
+* JCasC by default searches for a file with the name `jenkins.yaml` in `$JENKINS_ROOT`.
+
+* The JCasC looks for an environment variable `CASC_JENKINS_CONFIG` which contains the path for the configuration `yaml` file.
+For example,
+
+    * Path to a folder containing a set of config files e.g. `/var/jenkins_home/casc_configs`.
+    
+    * A full path to a single file e.g. `/var/jenkins_home/casc_configs/jenkins.yaml`.
+      
+    * A URL pointing to a file served on the web e.g. `https://<your-domain>/jenkins.yaml`.
+
+* You can also set the configuration yaml path in the UI. Go to `<your-jenkins-domain>/configuration-as-code`. Enter
+path or URL to `jenkins.yaml` and select `Apply New Configuration`.
+
+To configure your GitLab Server in Jenkins add the following to `jenkins.yaml`:
 
 ```yaml
 credentials:
@@ -336,8 +363,8 @@ unclassified:
         serverUrl: "https://gitlab.com"
 ```
 
-See handling secrets [section](https://github.com/jenkinsci/configuration-as-code-plugin#handling-secrets) for better
-security.
+See handling secrets [section](https://github.com/jenkinsci/configuration-as-code-plugin#handling-secrets) in JCasC 
+documentation for better security.
 
 ### Setting up GitLab for jobs
 
