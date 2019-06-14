@@ -39,20 +39,6 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     private List<GitLabServer> servers;
 
     /**
-     * Helper function to get predicate to filter servers
-     * based on their names
-     *
-     * @param keyExtractor the Function to filter
-     * @param <T> In this case it is server
-     * @return a predicate to filter servers list
-     */
-    private static <T> Predicate<T> distinctByKey(
-            Function<? super T, ?> keyExtractor) {
-        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
-        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-    }
-
-    /**
      * Gets the {@link GitLabServers} singleton.
      *
      * @return the {@link GitLabServers} singleton.
@@ -101,6 +87,20 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      */
     public List<Descriptor> actions() {
         return Collections.singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
+    }
+
+    /**
+     * Helper function to get predicate to filter servers
+     * based on their names
+     *
+     * @param keyExtractor the Function to filter
+     * @param <T> In this case it is server
+     * @return a predicate to filter servers list
+     */
+    private static <T> Predicate<T> distinctByKey(
+            Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
     /**
