@@ -3,14 +3,14 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
 
-public class BranchSCMHEAD extends SCMHead {
+public class BranchSCMHead extends SCMHead {
 
     /**
      * Constructor.
      *
      * @param name the name.of the branch
      */
-    public BranchSCMHEAD(@NonNull String name) {
+    public BranchSCMHead(@NonNull String name) {
         super(name);
     }
 
