@@ -170,4 +170,20 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         }
         return removed;
     }
+
+    /**
+     * Checks to see if the supplied server URL is defined in the global configuration.
+     *
+     * @param serverUrl the server url to check.
+     * @return the global configuration for the specified server url or {@code null} if not defined.
+     */
+    @CheckForNull
+    public  GitLabServer findServer(@CheckForNull String serverUrl) {
+        List<GitLabServer> servers = new ArrayList<>(getServers());
+        return servers.stream()
+                .filter(server1 -> server1.getName().equals(serverUrl))
+                .findAny()
+                .orElse(null);
+    }
+
 }
