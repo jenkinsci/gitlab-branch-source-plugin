@@ -121,7 +121,7 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-
+    @Override
     public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source, @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
     }
