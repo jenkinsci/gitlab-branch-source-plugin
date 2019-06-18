@@ -142,7 +142,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         "ssh://git@" + sshUri.getHost() + (sshUri.getPort() != 22 ? ":" + sshUri.getPort() : "")
                 )
                         .path(UriTemplateBuilder.var("owner"))
-                        .path(UriTemplateBuilder.var("repository"))
+                        .path(UriTemplateBuilder.var("project"))
                         .literal(".git")
                         .build();
             }
@@ -159,7 +159,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     );
                     return UriTemplate.buildFromTemplate(tokenUri.toASCIIString())
                             .path(UriTemplateBuilder.var("owner"))
-                            .path(UriTemplateBuilder.var("repository"))
+                            .path(UriTemplateBuilder.var("project"))
                             .literal(".git")
                             .build();
                 } catch (URISyntaxException e) {
@@ -169,7 +169,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         }
         return UriTemplate.buildFromTemplate(serverUrl)
                 .path(UriTemplateBuilder.var("owner"))
-                .path(UriTemplateBuilder.var("repository"))
+                .path(UriTemplateBuilder.var("project"))
                 .literal(".git")
                 .build();
     }
@@ -206,7 +206,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      */
     @NonNull
     public final GitLabSCMBuilder withGitLabRemote() {
-        withRemote(checkoutUriTemplate().set("owner", projectOwner).set("repository", project).expand());
+        withRemote(checkoutUriTemplate().set("owner", projectOwner).set("project", project).expand());
         final SCMHead h = head();
         String projectUrl;
         if (h instanceof MergeRequestSCMHead) {
