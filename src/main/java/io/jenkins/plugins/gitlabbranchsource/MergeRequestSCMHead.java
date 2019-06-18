@@ -40,6 +40,11 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
         this.originName = originName;
     }
 
+    @Override
+    public String getPronoun() {
+        return Messages.MergeRequestSCMHead_Pronoun();
+    }
+
     @NonNull
     @Override
     public ChangeRequestCheckoutStrategy getCheckoutStrategy() {
