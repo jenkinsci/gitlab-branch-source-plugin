@@ -305,7 +305,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if (credentials != null) {
                 privateToken = credentials.getToken().getPlainText();
             }
-
             return privateToken;
         }
     }
