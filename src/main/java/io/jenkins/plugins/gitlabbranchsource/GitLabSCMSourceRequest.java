@@ -266,7 +266,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
         this.branches = branches;
     }
 
-    // TODO Iterable<GiteaTag> getTags() and setTags(...)
+    // TODO Iterable<Tag> getTags() and setTags(...)
 
     /**
      * Returns the names of the repository collaborators or {@code null} if those details have not been provided yet.
@@ -293,7 +293,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * their own.
      */
     @CheckForNull
-    public GitLabApi getConnection() {
+    public GitLabApi getGitLabApi() {
         return gitLabApi;
     }
 
@@ -302,7 +302,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      *
      * @param gitLabApi {@link GitLabApi} to use for the request.
      */
-    public void setConnection(@CheckForNull GitLabApi gitLabApi) {
+    public void setGitLabApi(@CheckForNull GitLabApi gitLabApi) {
         this.gitLabApi = gitLabApi;
     }
 
