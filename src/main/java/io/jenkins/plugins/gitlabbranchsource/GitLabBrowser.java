@@ -28,6 +28,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         return new URL(
                 UriTemplate.buildFromTemplate(getRepoUrl())
                 .literal("/commit")
+                .path(UriTemplateBuilder.var("changeSet"))
                 .build()
                 .set("changeSet", changeSet.getId())
                 .expand()
@@ -49,7 +50,6 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         if(path.getEditType().equals(EditType.DELETE)) {
             return diffLink(path);
         } else {
-            // TODO: verify its working
             return new URL(
                     UriTemplate.buildFromTemplate(getRepoUrl())
                             .literal("/blob")
@@ -64,7 +64,6 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     }
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
-        // TODO: verify its working
         return new URL(
                 UriTemplate.buildFromTemplate(getRepoUrl())
                         .literal("/commit")
