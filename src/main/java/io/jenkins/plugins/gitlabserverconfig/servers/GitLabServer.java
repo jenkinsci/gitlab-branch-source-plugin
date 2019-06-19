@@ -179,15 +179,15 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up the {@link UsernamePasswordCredentials} to use for auto-management of hooks.
+     * Looks up the {@link PersonalAccessToken} to use for auto-management of hooks.
      *
      * @return the credentials or {@code null}.
      */
     @CheckForNull
-    public UsernamePasswordCredentials credentials() {
+    public PersonalAccessToken credentials() {
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
                 lookupCredentials(
-                        UsernamePasswordCredentials.class,
+                        PersonalAccessToken.class,
                         Jenkins.get(),
                         ACL.SYSTEM,
                         fromUri(serverUrl).build()),
