@@ -13,7 +13,6 @@ import jenkins.scm.api.trait.SCMSourceRequest;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;

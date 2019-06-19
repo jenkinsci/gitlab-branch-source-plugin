@@ -24,7 +24,6 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
-
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
-import jenkins.plugins.git.GitSCMSourceRequest;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;

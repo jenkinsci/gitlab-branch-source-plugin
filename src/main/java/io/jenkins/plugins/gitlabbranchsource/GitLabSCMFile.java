@@ -1,20 +1,15 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import com.google.common.io.ByteStreams;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMFile;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.RepositoryFile;
-import org.gitlab4j.api.models.TreeItem;
-
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.List;
 
 public class GitLabSCMFile extends SCMFile {
 
@@ -61,7 +56,7 @@ public class GitLabSCMFile extends SCMFile {
     @NonNull
     @Override
     protected Type type() throws IOException, InterruptedException {
-        // TODO Needs review
+        // TODO needs review
         if (isFile == null) {
             try {
                 isFile = checkFile();
