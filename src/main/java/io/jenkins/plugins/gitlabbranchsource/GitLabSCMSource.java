@@ -37,6 +37,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -117,17 +118,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if(!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
+            // Tests if GitLab API is valid
             gitLabApi.getProjectApi().getProjects(1, 1);
+            gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
-                String revision = gitLabApi.getRepositoryApi().getBranch(project, head.getName()).getCommit().getId();
+                String revision = gitLabApi.getRepositoryApi().getBranch(gitlabProject, head.getName()).getCommit().getId();
                 listener.getLogger().format("Current revision of branch %s is %s%n", head.getName(), revision);
                 return new BranchSCMRevision((BranchSCMHead) head, revision);
             } else if(head instanceof MergeRequestSCMHead) {
                 MergeRequestSCMHead h = (MergeRequestSCMHead) head;
                 listener.getLogger().format("Querying the current revision of merge request #%s...%n", h.getId());
                 MergeRequest mr =
-                        gitLabApi.getMergeRequestApi().getMergeRequest(project, Integer.parseInt(h.getId()));
+                        gitLabApi.getMergeRequestApi().getMergeRequest(gitlabProject, Integer.parseInt(h.getId()));
                 if(mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
                     listener.getLogger().format("Current revision of merge request #%s is %s%n",
                             h.getId(), mr.getDiffRefs().getHeadSha());
@@ -167,14 +170,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             gitLabApi.getProjectApi().getProjects(1, 1);
             listener.getLogger().format("Looking up project %s/%s%n", projectOwner, project);
-            gitlabProject = gitLabApi.getProjectApi().getProject(project);
+            // as "path to the project" is required
+            gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
             sshRemote = gitlabProject.getSshUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
                     .withTraits(getTraits())
                     .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 if (request.isFetchBranches()) {
-                    request.setBranches(gitLabApi.getRepositoryApi().getBranches(project));
+                    request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
                 if (request.isFetchMRs()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
@@ -182,17 +186,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     if (gitlabProject.getForkedFromProject() == null) {
                         listener.getLogger()
                                 .format("%n  Unable to detect if it is a mirror or not still fetching MRs anyway...%n");
-                        request.setMergeRequests(gitLabApi.getMergeRequestApi().getMergeRequests(project));
+                        request.setMergeRequests(gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject));
                     }
                     else {
                         listener.getLogger().format("%n  Ignoring merge requests as project is a mirror...%n");
                     }
                 }
                 // TODO if (request.isFetchTags()) { ... }
+
                 if (request.isFetchBranches()) {
                     int count = 0;
                     listener.getLogger().format("%n Checking branches.. %n");
-                    for (final Branch b : gitLabApi.getRepositoryApi().getBranches(project)) {
+                    for (final Branch b : gitLabApi.getRepositoryApi().getBranches(gitlabProject)) {
                         count++;
                         listener.getLogger().format("%n Checking branch %s%n",
                                 HyperlinkNote.encodeTo(
@@ -241,7 +246,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         && request.getOriginMRStrategies().isEmpty())) {
                     int count = 0;
                     listener.getLogger().format("%n  Checking merge requests...%n");
-                    for(final MergeRequest m : gitLabApi.getMergeRequestApi().getMergeRequests(project, Constants.MergeRequestState.OPENED)) {
+                    List<MergeRequest> mrs = gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
+                    for (MergeRequest mr : mrs) {
+                        // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
+                        // It is required to get the individual diffRef using the Iid.
+                        final MergeRequest m = gitLabApi.getMergeRequestApi().getMergeRequest(gitlabProject, mr.getIid());
                         count++;
                         listener.getLogger().format("%n  Checking pull request %s%n",
                                 HyperlinkNote.encodeTo(
@@ -259,7 +268,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String originProject = project;
                         Set<ChangeRequestCheckoutStrategy> strategies = request.getMRStrategies(
                                 projectOwner.equalsIgnoreCase(originOwner)
-                                    && project.equalsIgnoreCase(originProject)
+                                        && project.equalsIgnoreCase(originProject)
                         );
                         for (ChangeRequestCheckoutStrategy strategy : strategies) {
                             if (request.process(new MergeRequestSCMHead(
@@ -306,9 +315,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         public void record(@NonNull SCMHead head, SCMRevision revision,
                                                            boolean isMatch) {
                                             if (isMatch) {
-                                                listener.getLogger().format("    Met criteria%n");
+                                                listener.getLogger().format(" Met criteria%n");
                                             } else {
-                                                listener.getLogger().format("    Does not meet criteria%n");
+                                                listener.getLogger().format(" Does not meet criteria%n");
                                             }
                                         }
                                     }
@@ -326,7 +335,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         } catch (GitLabApiException e) {
             e.printStackTrace();
         }
-        super.retrieve(criteria, observer, event, listener);
+    }
+
+    @Override
+    protected SCMRevision retrieve(@NonNull String thingName, @NonNull TaskListener listener)
+            throws IOException, InterruptedException {
+        SCMHeadObserver.Named baptist = SCMHeadObserver.named(thingName);
+        retrieve(null, baptist, null, listener);
+        return baptist.result();
     }
 
     private GitLabApi apiBuilder() throws AbortException {
