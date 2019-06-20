@@ -1,4 +1,4 @@
-package io.jenkins.plugins.gitlabbranchsource;
+package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
