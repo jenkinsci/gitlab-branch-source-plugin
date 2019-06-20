@@ -14,6 +14,7 @@ import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.security.ACL;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import jenkins.plugins.git.GitSCMBuilder;
