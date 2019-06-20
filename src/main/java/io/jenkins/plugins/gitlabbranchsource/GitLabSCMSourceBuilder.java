@@ -55,5 +55,4 @@ public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuil
         result.setTraits(traits());
         return result;
     }
-
 }
