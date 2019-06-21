@@ -18,7 +18,6 @@ import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
-import hudson.plugins.git.browser.GitLab;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
@@ -27,7 +26,6 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
@@ -60,7 +58,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -117,7 +114,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 .withTraits(traits)
                 .newRequest(this, observer)) {
             GitLabApi gitLabApi = apiBuilder(observer.getContext());
-            gitlabOwner = fetchOwner(gitLabApi);
+            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             List<Project> projects;
             if(gitlabOwner == GitLabOwner.USER) {
                 // Even returns the group projects owned by the user
@@ -167,9 +164,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     @Override
                     public void record(@NonNull String projectName, boolean isMatch) {
                         if (isMatch) {
-                            observer.getListener().getLogger().format("      Proposing %s%n", projectName);
+                            observer.getListener().getLogger().format(" Proposing %s%n", projectName);
                         } else {
-                            observer.getListener().getLogger().format("      Ignoring %s%n", projectName);
+                            observer.getListener().getLogger().format(" Ignoring %s%n", projectName);
                         }
                     }
                 })) {
@@ -177,7 +174,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             count);
                     return;
                 }
-
             }
             observer.getListener().getLogger().format("%n  %d repositories were processed%n", count);
         } catch (GitLabApiException e) {
@@ -191,7 +187,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
         GitLabApi gitLabApi = apiBuilder(owner);
         if(this.gitlabOwner == null) {
-            gitlabOwner = fetchOwner(gitLabApi);
+            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
         }
         String fullName = "";
         if(gitlabOwner == GitLabOwner.USER) {
@@ -239,7 +235,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
         if (gitlabOwner == GitLabOwner.USER) {
             String website = null;
             try {
-                website = gitLabApi.getUserApi().getUser(projectOwner).getWebsiteUrl();
+                // This is a hack since getting a user via username finds user from a list of users
+                // and list of users contain limited info about users which doesn't include website url
+                User user = gitLabApi.getUserApi().getUser(projectOwner);
+                website = gitLabApi.getUserApi().getUser(user.getId()).getWebsiteUrl();
             } catch (GitLabApiException e) {
                 e.printStackTrace();
             }
@@ -282,22 +281,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         fromUri(serverUrl).build()),
                 CredentialsMatchers.withId(credentialsId)
         );
-    }
-
-    private GitLabOwner fetchOwner(GitLabApi gitLabApi) {
-        try {
-            Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
-            return GitLabOwner.GROUP;
-        } catch (GitLabApiException e) {
-            try {
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
-                return GitLabOwner.USER;
-            } catch (GitLabApiException e1) {
-                e1.printStackTrace();
-            }
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Extension
