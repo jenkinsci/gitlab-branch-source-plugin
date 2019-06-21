@@ -1,7 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -10,8 +10,11 @@ import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.ProjectHook;
 import org.gitlab4j.api.models.User;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public class GitLabWebhookListener {
@@ -53,6 +56,17 @@ public class GitLabWebhookListener {
         try {
             GitLabApi gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
             User user = gitLabApi.getUserApi().getCurrentUser();
+            GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
+            if(gitLabOwner == GitLabOwner.USER) {
+                return;
+            }
+            Group gitLabGroup = gitLabApi.getGroupApi().getGroup(navigator.getProjectOwner());
+            if(gitLabGroup.getProjects().isEmpty()) {
+                return;
+            }
+            // TODO needs review
+            List<ProjectHook> projectHooks = gitLabApi.getProjectApi().getHooks(gitLabGroup);
+            ProjectHook projectHook = null;
 
         } catch (GitLabApiException e) {
             e.printStackTrace();
@@ -60,3 +74,5 @@ public class GitLabWebhookListener {
 
 
     }
+
+}
