@@ -52,6 +52,9 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
     @Override
     public long lastModified() throws IOException {
         Date lastActivity = project.getLastActivityAt();
+        if(lastActivity == null) {
+            return 0;
+        }
         return lastActivity.getTime();
     }
 

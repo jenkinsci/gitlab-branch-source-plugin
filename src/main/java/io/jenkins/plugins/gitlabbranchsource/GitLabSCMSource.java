@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
@@ -76,13 +77,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
-
     private final String serverUrl;
     private final String projectOwner;
     private final String project;
@@ -441,7 +442,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     .path(UriTemplateBuilder.var("branch"))
                     .build()
                     .set("owner", projectOwner)
-                    .set("repository", project)
+                    .set("project", project)
                     .set("branch", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(
@@ -510,7 +511,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
                 @Override
                 public void close() throws IOException {
-                    fs.close();
+                    Objects.requireNonNull(fs).close();
                 }
 
                 @Override
@@ -521,17 +522,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 @Override
                 public long lastModified() {
                     try {
-                        return fs.lastModified();
-                    } catch (IOException e) {
-                        return 0L;
-                    } catch (InterruptedException e) {
+                        return fs != null ? fs.lastModified() : 0;
+                    } catch (IOException | InterruptedException e) {
                         return 0L;
                     }
                 }
 
                 @Override
                 public SCMFile getRoot() {
-                    return fs.getRoot();
+                    return fs != null ? fs.getRoot() : null;
                 }
             };
         } catch (InterruptedException e) {
@@ -678,8 +677,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                      @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
+                // must have admin if you want the list without a context
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
-                    // must have admin if you want the list without a context
                     result.includeCurrentValue(credentialsId);
                     return result;
                 }
@@ -697,23 +696,25 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
                     context,
-                    PersonalAccessToken.class,
+                    StandardCredentials.class,
                     URIRequirementBuilder.fromUri(serverUrl).build(),
-                    credentials -> credentials instanceof PersonalAccessToken
+                    CredentialsMatchers.allOf(
+                            CredentialsMatchers.withId(credentialsId),
+                            CredentialsMatchers.instanceOf(StandardCredentials.class)
+                    )
             );
             return result;
         }
 
-        public ListBoxModel doFillProjecttems(@AncestorInPath SCMSourceOwner context,
+        public ListBoxModel doFillProjectItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
                                                   @QueryParameter String projectOwner,
-                                                  @QueryParameter String project) throws IOException,
-                InterruptedException {
+                                                  @QueryParameter String project) {
             ListBoxModel result = new ListBoxModel();
             if (context == null) {
+                // must have admin if you want the list without a context
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
-                    // must have admin if you want the list without a context
                     result.add(project);
                     return result;
                 }
@@ -755,7 +756,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 return result;
             } catch (GitLabApiException e) {
                 e.printStackTrace();
-                throw new IOException(e); // TODO find a better solution
+                return new StandardListBoxModel()
+                        .includeEmptyValue();
             }
         }
 
