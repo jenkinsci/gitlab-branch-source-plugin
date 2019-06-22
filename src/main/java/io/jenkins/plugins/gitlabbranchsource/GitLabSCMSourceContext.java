@@ -8,7 +8,6 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceContext;
-
 import java.util.EnumSet;
 import java.util.Set;
 

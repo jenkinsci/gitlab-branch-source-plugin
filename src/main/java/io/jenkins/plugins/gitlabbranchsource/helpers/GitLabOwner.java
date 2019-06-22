@@ -2,8 +2,6 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.User;
 
 public enum GitLabOwner {
 

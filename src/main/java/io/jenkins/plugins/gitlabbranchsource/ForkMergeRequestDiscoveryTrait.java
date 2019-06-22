@@ -20,7 +20,6 @@ import jenkins.scm.impl.trait.Discovery;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;

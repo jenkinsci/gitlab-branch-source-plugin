@@ -21,7 +21,6 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
-
 import java.io.IOException;
 
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
