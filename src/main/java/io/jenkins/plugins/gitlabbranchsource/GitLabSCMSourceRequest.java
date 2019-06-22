@@ -232,7 +232,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * may be empty if not {@link #isFetchMRs()}
      */
     @NonNull
-    public Iterable<MergeRequest> getPullRequests() {
+    public Iterable<MergeRequest> getMergeRequests() {
         return Util.fixNull(mergeRequests);
     }
 
