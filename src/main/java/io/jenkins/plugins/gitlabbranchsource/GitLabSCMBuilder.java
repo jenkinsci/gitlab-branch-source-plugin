@@ -25,7 +25,6 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
-import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -73,7 +72,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      * @param head      the {@link SCMHead}
      * @param revision  the (optional) {@link SCMRevision}
      */
-    public GitLabSCMBuilder(@Nonnull GitLabSCMSource source, @Nonnull SCMHead head, @CheckForNull SCMRevision revision) {
+    public GitLabSCMBuilder(@NonNull GitLabSCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision revision) {
         super(
                 head,
                 revision,

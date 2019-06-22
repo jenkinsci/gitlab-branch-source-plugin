@@ -144,7 +144,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 Graphics2D g = tmp.createGraphics();
                 try {
                     // important, if we don't set these two hints then scaling will not work headless
-                    g.setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC);
+                    ((Graphics2D) g).setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC);
                     g.setRenderingHint(KEY_ALPHA_INTERPOLATION, VALUE_ALPHA_INTERPOLATION_QUALITY);
                     g.scale(((double) curWidth) / src.getWidth(), ((double) curHeight) / src.getHeight());
                     g.drawImage(src, 0, 0, null);
