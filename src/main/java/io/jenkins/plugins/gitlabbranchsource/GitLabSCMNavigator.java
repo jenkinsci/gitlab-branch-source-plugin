@@ -371,7 +371,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @NonNull
         @Override
         public String getDescription() {
-            return "Scans a GitLab Group (or user account) for all repositories matching some defined markers.";
+            return "Scans a GitLab Group (or GitLab User) for all repositories matching some defined markers.";
         }
 
         @Override

@@ -704,7 +704,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
-        public ListBoxModel doFillRepositoryItems(@AncestorInPath SCMSourceOwner context,
+        public ListBoxModel doFillProjecttems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
                                                   @QueryParameter String credentialsId,
                                                   @QueryParameter String projectOwner,
