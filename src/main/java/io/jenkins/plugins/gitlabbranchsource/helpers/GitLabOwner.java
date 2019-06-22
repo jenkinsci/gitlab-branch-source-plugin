@@ -13,11 +13,11 @@ public enum GitLabOwner {
 
     public static GitLabOwner fetchOwner(GitLabApi gitLabApi, String projectOwner) {
         try {
-            Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
+            gitLabApi.getGroupApi().getGroup(projectOwner);
             return GitLabOwner.GROUP;
         } catch (GitLabApiException e) {
             try {
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
+                gitLabApi.getUserApi().getUser(projectOwner);
                 return GitLabOwner.USER;
             } catch (GitLabApiException e1) {
                 e1.printStackTrace();
