@@ -78,7 +78,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 revision,
                 checkoutUriTemplate(null, source.getServerUrl(), null, null)
                         .set("owner", source.getProject())
-                        .set("repository", source.getProject())
+                        .set("project", source.getProject())
                         .expand(),
                 source.getCredentialsId()
         );
@@ -138,8 +138,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
             if (credentials instanceof SSHUserPrivateKey) {
                 URI sshUri = URI.create(sshRemote);
                 return UriTemplate.buildFromTemplate(
-                        "ssh://git@" + sshUri.getHost() + (sshUri.getPort() != 22 ? ":" + sshUri.getPort() : "")
-                )
+                        "ssh://git@" + sshUri.getHost() + (sshUri.getPort() != 22 ? ":" + sshUri.getPort() : ""))
                         .path(UriTemplateBuilder.var("owner"))
                         .path(UriTemplateBuilder.var("project"))
                         .literal(".git")
