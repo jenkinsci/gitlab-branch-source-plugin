@@ -2,10 +2,10 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
@@ -49,7 +49,6 @@ import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
@@ -72,7 +71,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private final String serverUrl;
     private final String projectOwner;
     private String credentialsId;
-    private List<SCMTrait<?>> traits = new ArrayList<>();
+    private List<SCMTrait<? extends SCMTrait<?>>> traits = new ArrayList<>();
     private GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
     @DataBoundConstructor
@@ -93,13 +92,39 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return projectOwner;
     }
 
-    public void setCredentialsId(String credentialsId) {
-        this.credentialsId = credentialsId;
+    /**
+     * Sets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
+     * discovers. The new traits will take affect on the next navigation through any of the
+     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     *
+     * @param traits the new behavioural traits.
+     */
+    @DataBoundSetter
+    public void setTraits(@CheckForNull SCMTrait[] traits) {
+        this.traits = new ArrayList<>();
+        if (traits != null) {
+            for (SCMTrait trait : traits) {
+                this.traits.add(trait);
+            }
+        }
     }
 
-    @DataBoundSetter
-    public void setTraits(List<SCMTrait<?>> traits) {
-        this.traits = new ArrayList<>(Util.fixNull(traits));
+    /**
+     * Sets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
+     * discovers. The new traits will take affect on the next navigation through any of the
+     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     *
+     * @param traits the new behavioural traits.
+     */
+    @Override
+    public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
+        this.traits = traits != null ? new ArrayList<>(traits) : new ArrayList<SCMTrait<? extends SCMTrait<?>>>();
+
+    }
+
+
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
     }
 
     @NonNull

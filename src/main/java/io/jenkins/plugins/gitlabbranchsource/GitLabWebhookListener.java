@@ -15,13 +15,10 @@ import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectHook;
 import org.gitlab4j.api.models.User;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GitLabWebhookListener {
@@ -60,9 +57,9 @@ public class GitLabWebhookListener {
                 UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
             GitLabApi gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-            User user = gitLabApi.getUserApi().getCurrentUser();
+            gitLabApi.getUserApi().getCurrentUser();
             GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
-            List<Project> projects = new ArrayList<>();
+            List<Project> projects;
             // TODO check if user can be supported
             if(gitLabOwner == GitLabOwner.USER) {
                 return;
@@ -77,17 +74,14 @@ public class GitLabWebhookListener {
             }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
-            List<Stream<ProjectHook>> projectHooks = new ArrayList<>();
-            for(Project p : projects) {
-                projectHooks.add(gitLabApi.getProjectApi().getHooksStream(p));
-            }
             List<ProjectHook> validHooks = new ArrayList<>();
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
-            projectHooks.forEach(projectHook ->
-                    validHooks.add(projectHook
-                            .filter(hook -> hookUrl.equals(hook.getUrl()))
-                            .findFirst()
-                            .orElse(new ProjectHook())));
+            for(Project p : projects) {
+                validHooks.add(gitLabApi.getProjectApi().getHooksStream(p)
+                                        .filter(hook -> hookUrl.equals(hook.getUrl()))
+                                        .findFirst()
+                                        .orElse(new ProjectHook()));
+            }
             for(ProjectHook hook : validHooks) {
                 if(hook.getId() == null) {
                     Project project = projects.get(validHooks.indexOf(hook));
@@ -137,7 +131,7 @@ public class GitLabWebhookListener {
                 UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
             GitLabApi gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-            User user = gitLabApi.getUserApi().getCurrentUser();
+            gitLabApi.getUserApi().getCurrentUser();
             Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectOwner());
             try {
                 gitLabApi.getRepositoryApi().getTree(gitlabProject);
@@ -148,10 +142,8 @@ public class GitLabWebhookListener {
             }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
-            Stream<ProjectHook> projectHooks = gitLabApi.getProjectApi().getHooksStream(gitlabProject);
-            List<ProjectHook> validHooks = new ArrayList<>();
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
-            ProjectHook validHook = projectHooks
+            ProjectHook validHook = gitLabApi.getProjectApi().getHooksStream(gitlabProject)
                             .filter(hook -> hookUrl.equals(hook.getUrl()))
                             .findFirst()
                             .orElse(new ProjectHook());
