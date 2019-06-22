@@ -22,6 +22,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 import java.io.IOException;
+import java.util.Date;
 
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
@@ -50,8 +51,8 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
 
     @Override
     public long lastModified() throws IOException {
-        // TODO Fix this
-        return 0L;
+        Date lastActivity = project.getLastActivityAt();
+        return lastActivity.getTime();
     }
 
     @NonNull
