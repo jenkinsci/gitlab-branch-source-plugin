@@ -181,7 +181,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     public  GitLabServer findServer(@CheckForNull String serverUrl) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         return servers.stream()
-                .filter(server1 -> server1.getName().equals(serverUrl))
+                .filter(server1 -> server1.getServerUrl().equals(serverUrl))
                 .findAny()
                 .orElse(null);
     }
