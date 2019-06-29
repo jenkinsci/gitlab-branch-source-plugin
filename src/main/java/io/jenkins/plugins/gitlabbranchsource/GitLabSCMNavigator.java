@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -53,6 +54,7 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -361,9 +363,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
                     context,
-                    PersonalAccessToken.class,
+                    StandardUsernamePasswordCredentials.class,
                     URIRequirementBuilder.fromUri(serverUrl).build(),
-                    credentials -> credentials instanceof PersonalAccessToken
+                    GitClient.CREDENTIALS_MATCHER
             );
             return result;
         }
