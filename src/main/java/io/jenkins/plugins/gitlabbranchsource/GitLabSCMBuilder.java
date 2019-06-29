@@ -35,10 +35,6 @@ import java.util.Set;
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
  */
 public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
-
-    private static final String API_V4 = "api/v4";
-
-    private static final String API_V3 = "api/v3";
     /**
      * The context within which credentials should be resolved.
      */
