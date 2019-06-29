@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -363,7 +363,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
                     context,
-                    StandardUsernamePasswordCredentials.class,
+                    StandardUsernameCredentials.class,
                     URIRequirementBuilder.fromUri(serverUrl).build(),
                     GitClient.CREDENTIALS_MATCHER
             );

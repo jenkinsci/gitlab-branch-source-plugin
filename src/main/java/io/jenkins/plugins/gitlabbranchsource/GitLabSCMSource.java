@@ -4,6 +4,8 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
@@ -63,6 +65,7 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Visibility;
 import org.jenkins.ui.icon.IconSpec;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -631,16 +634,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             result.includeEmptyValue();
             result.includeMatchingAs(
-                    context instanceof Queue.Task ?
-                            Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                    context instanceof Queue.Task
+                            ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                             : ACL.SYSTEM,
                     context,
-                    StandardCredentials.class,
+                    StandardUsernameCredentials.class,
                     URIRequirementBuilder.fromUri(serverUrl).build(),
-                    CredentialsMatchers.allOf(
-                            CredentialsMatchers.withId(credentialsId),
-                            CredentialsMatchers.instanceOf(StandardCredentials.class)
-                    )
+                    GitClient.CREDENTIALS_MATCHER
             );
             return result;
         }

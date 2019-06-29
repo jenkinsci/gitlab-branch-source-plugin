@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
@@ -117,9 +117,9 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
             if (serverUri.getHost() != null) {
                 builder.withHostname(serverUri.getHost());
             }
-            StandardCredentials credentials = CredentialsMatchers.firstOrNull(
+            StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
-                            StandardCredentials.class,
+                            StandardUsernameCredentials.class,
                             context,
                             context instanceof Queue.Task
                                     ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
@@ -128,7 +128,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     ),
                     CredentialsMatchers.allOf(
                             CredentialsMatchers.withId(credentialsId),
-                            CredentialsMatchers.instanceOf(StandardCredentials.class)
+                            CredentialsMatchers.instanceOf(StandardUsernameCredentials.class)
                     )
             );
             if (credentials instanceof SSHUserPrivateKey) {
