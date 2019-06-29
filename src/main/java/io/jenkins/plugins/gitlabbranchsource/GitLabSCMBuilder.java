@@ -73,7 +73,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 head,
                 revision,
                 checkoutUriTemplate(null, source.getServerUrl(), null, null)
-                        .set("owner", source.getProject())
+                        .set("owner", source.getProjectOwner())
                         .set("project", source.getProject())
                         .expand(),
                 source.getCredentialsId()
@@ -88,7 +88,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         String projectUrl;
         if(head instanceof MergeRequestSCMHead) {
             MergeRequestSCMHead h = (MergeRequestSCMHead) head;
-            withRefSpec("+refs/merge-requests" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
+            withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(h.getOriginOwner(), h.getOriginProject());
         } else {
             withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
