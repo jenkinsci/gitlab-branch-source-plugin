@@ -4,6 +4,14 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.TaskListener;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMSource;
@@ -13,14 +21,6 @@ import jenkins.scm.api.trait.SCMSourceRequest;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
 

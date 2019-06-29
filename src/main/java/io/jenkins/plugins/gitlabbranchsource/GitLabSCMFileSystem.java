@@ -9,6 +9,8 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
+import java.io.IOException;
+import java.util.Date;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -21,8 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
-import java.io.IOException;
-import java.util.Date;
 
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 

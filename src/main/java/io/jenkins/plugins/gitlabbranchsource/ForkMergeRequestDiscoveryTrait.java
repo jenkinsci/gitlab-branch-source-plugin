@@ -3,6 +3,9 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
@@ -20,9 +23,6 @@ import jenkins.scm.impl.trait.Discovery;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * A {@link Discovery} trait for GitLab that will discover merge requests from forks of the repository.

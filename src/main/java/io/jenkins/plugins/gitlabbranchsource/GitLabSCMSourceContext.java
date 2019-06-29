@@ -3,13 +3,13 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.TaskListener;
+import java.util.EnumSet;
+import java.util.Set;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceContext;
-import java.util.EnumSet;
-import java.util.Set;
 
 public class GitLabSCMSourceContext
         extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {

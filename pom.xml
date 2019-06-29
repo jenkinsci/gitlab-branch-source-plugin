@@ -80,7 +80,6 @@
             <version>1.3</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>pipeline-build-step</artifactId>
@@ -123,7 +122,6 @@
             <version>2.19</version>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -242,9 +240,7 @@
         </developer>
     </developers>
 
-    <!-- Later host this plugin on @jenkinsci:
     <url>https://wiki.jenkins.io/display/JENKINS/GitLab+Branch+Source+Plugin</url>
-    -->
 
     <scm>
         <connection>scm:git:git://github.com/baymac/${project.artifactId}-plugin.git</connection>
@@ -253,46 +249,47 @@
         <tag>${scmTag}</tag>
     </scm>
 
-    <!--<build>-->
-        <!--<pluginManagement>-->
-            <!--<plugins>-->
-                <!--<plugin>-->
-                    <!--<groupId>org.apache.maven.plugins</groupId>-->
-                    <!--<artifactId>maven-checkstyle-plugin</artifactId>-->
-                    <!--<version>3.0.0</version>-->
-                    <!--<dependencies>-->
-                        <!--<dependency>-->
-                            <!--<groupId>com.puppycrawl.tools</groupId>-->
-                            <!--<artifactId>checkstyle</artifactId>-->
-                            <!--<version>8.18</version>-->
-                        <!--</dependency>-->
-                    <!--</dependencies>-->
-                <!--</plugin>-->
-            <!--</plugins>-->
-        <!--</pluginManagement>-->
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<artifactId>maven-checkstyle-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<configLocation>${project.basedir}/.mvn/checkstyle.xml</configLocation>-->
-                    <!--<includeTestSourceDirectory>true</includeTestSourceDirectory>-->
-                    <!--<sourceDirectories>-->
-                        <!--<sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>-->
-                    <!--</sourceDirectories>-->
-                    <!--<testSourceDirectories>-->
-                        <!--<sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>-->
-                    <!--</testSourceDirectories>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>check</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
-        <!--</plugins>-->
-    <!--</build>-->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>8.18</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <configLocation>${project.basedir}/.mvn/checkstyle.xml</configLocation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
+                    <testSourceDirectories>
+                        <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+                    </testSourceDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>

@@ -1,12 +1,11 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import hudson.init.Initializer;
+import java.util.NoSuchElementException;
 import jenkins.model.Jenkins;
 import org.apache.commons.jelly.JellyContext;
 import org.jenkins.ui.icon.Icon;
 import org.kohsuke.stapler.Stapler;
-
-import java.util.NoSuchElementException;
 
 import static org.jenkins.ui.icon.Icon.ICON_LARGE_STYLE;
 import static org.jenkins.ui.icon.Icon.ICON_MEDIUM_STYLE;

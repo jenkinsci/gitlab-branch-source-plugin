@@ -10,6 +10,7 @@ import hudson.plugins.git.Revision;
 import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.PreBuildMerge;
 import hudson.plugins.git.util.MergeRecord;
+import java.io.IOException;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
@@ -18,7 +19,6 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.MergeCommand;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import java.io.IOException;
 
 /**
  * Similar to {@link PreBuildMerge}, but we cannot use that unmodified: we need to specify the exact base branch

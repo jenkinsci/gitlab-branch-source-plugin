@@ -17,6 +17,11 @@ import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
@@ -25,11 +30,6 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
 
 /**
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
