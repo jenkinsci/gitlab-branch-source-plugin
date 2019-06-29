@@ -62,8 +62,7 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Visibility;
-import org.jenkins.ui.icon.Icon;
-import org.jenkins.ui.icon.IconSet;
+import org.jenkins.ui.icon.IconSpec;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -82,6 +81,7 @@ import java.util.Set;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
     private final String serverUrl;
@@ -574,82 +574,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Extension
-    public static class DescriptorImpl extends SCMSourceDescriptor {
+    public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
 
-        static {
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab icon-sm",
-                            "plugin/gitlab-scm/images/16x16/gitlab.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab icon-md",
-                            "plugin/gitlab-scm/images/24x24/gitlab.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab icon-lg",
-                            "plugin/gitlab-scm/images/32x32/gitlab.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab icon-xlg",
-                            "plugin/gitlab-scm/images/48x48/gitlab.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-sm",
-                            "plugin/gitlab-scm/images/16x16/gitlab.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-md",
-                            "plugin/gitlab-scm/images/24x24/gitlab.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-lg",
-                            "plugin/gitlab-scm/images/32x32/gitlab.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-xlg",
-                            "plugin/gitlab-scm/images/48x48/gitlab.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-project icon-sm",
-                            "plugin/gitlab-scm/images/16x16/gitlab-project.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-project icon-md",
-                            "plugin/gitlab-scm/images/24x24/gitlab-project.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-project icon-lg",
-                            "plugin/gitlab-scm/images/32x32/gitlab-project.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-project icon-xlg",
-                            "plugin/gitlab-scm/images/48x48/gitlab-project.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-sm",
-                            "plugin/gitlab-scm/images/16x16/gitlab-branch.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-md",
-                            "plugin/gitlab-scm/images/24x24/gitlab-branch.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-lg",
-                            "plugin/gitlab-scm/images/32x32/gitlab-branch.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-xlg",
-                            "plugin/gitlab-scm/images/48x48/gitlab-branch.png",
-                            Icon.ICON_XLARGE_STYLE));
+        @Override
+        public String getIconClassName() {
+            return ICON_GITLAB;
         }
 
         @NonNull
-        @Override
         public String getDisplayName() {
-            return "GitLab";
+            return Messages.GitLabSCMSource_DisplayName();
+        }
+
+        @Override
+        public String getPronoun() {
+            return Messages.GitLabSCMSource_Pronoun();
         }
 
         public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context,
@@ -791,11 +730,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     new ForkMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
                             new ForkMergeRequestDiscoveryTrait.TrustContributors())
             );
-        }
-
-        @Override
-        public String getIconClassName() {
-            return "icon-gitlab-project";
         }
 
         @NonNull
