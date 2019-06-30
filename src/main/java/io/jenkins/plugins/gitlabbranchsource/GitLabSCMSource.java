@@ -686,9 +686,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 } else {
                     gitLabApi =  new GitLabApi(serverUrl, "");
                 }
-                for (Project p : gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withVisibility(
-                        Visibility.PUBLIC))) {
-                    result.add(p.getName());
+                try {
+                    for (Project p : gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withVisibility(
+                            Visibility.PUBLIC))) {
+                        result.add(p.getName());
+                    }
+                } catch (GitLabApiException e) {
+                    for (Project p : gitLabApi.getGroupApi().getProjects(projectOwner)) {
+                        result.add(p.getName());
+                    }
                 }
                 return result;
             } catch (GitLabApiException e) {
