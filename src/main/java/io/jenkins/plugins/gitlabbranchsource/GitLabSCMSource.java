@@ -223,22 +223,22 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     // If `forkedFromProject` is null it doesn't mean anything
                     if (gitlabProject.getForkedFromProject() == null) {
                         listener.getLogger()
-                                .format("%n  Unable to detect if it is a mirror or not still fetching MRs anyway...%n");
+                                .format("%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
                         // TODO Fix this: cannot call getDiffRefs on requests since it will always return null
                         request.setMergeRequests(gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject));
                     }
                     else {
-                        listener.getLogger().format("%n  Ignoring merge requests as project is a mirror...%n");
+                        listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
                     }
                 }
                 // TODO if (request.isFetchTags()) { ... }
 
                 if (request.isFetchBranches()) {
                     int count = 0;
-                    listener.getLogger().format("%n Checking branches.. %n");
+                    listener.getLogger().format("%nChecking branches.. %n");
                     for (final Branch b : gitLabApi.getRepositoryApi().getBranches(gitlabProject)) {
                         count++;
-                        listener.getLogger().format("%n Checking branch %s%n",
+                        listener.getLogger().format("%nChecking branch %s%n",
                                 HyperlinkNote.encodeTo(
                                         UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
                                                 .literal("/tree")
@@ -269,29 +269,29 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                     @Override
                                     public void record(@NonNull SCMHead head, SCMRevision revision, boolean isMatch) {
                                         if (isMatch) {
-                                            listener.getLogger().format(" Met criteria%n");
+                                            listener.getLogger().format("Met criteria%n");
                                         } else {
-                                            listener.getLogger().format(" Does not meet criteria%n");
+                                            listener.getLogger().format("Does not meet criteria%n");
                                         }
                                     }
                                 })) {
-                            listener.getLogger().format("%n  %d branches were processed (query completed)%n", count);
+                            listener.getLogger().format("%n%d branches were processed (query completed)%n", count);
                             return;
                         }
                     }
-                    listener.getLogger().format("%n  %d branches were processed%n", count);
+                    listener.getLogger().format("%n%d branches were processed%n", count);
                 }
                 if(request.isFetchMRs() && gitlabProject.getForkedFromProject() == null && !(request.getForkMRStrategies().isEmpty()
                         && request.getOriginMRStrategies().isEmpty())) {
                     int count = 0;
-                    listener.getLogger().format("%n  Checking merge requests...%n");
+                    listener.getLogger().format("%nChecking merge requests...%n");
                     List<MergeRequest> mrs = gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
                     for (MergeRequest mr : mrs) {
                         // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
                         // It is required to get the individual diffRef using the Iid.
                         final MergeRequest m = gitLabApi.getMergeRequestApi().getMergeRequest(gitlabProject, mr.getIid());
                         count++;
-                        listener.getLogger().format("%n  Checking pull request %s%n",
+                        listener.getLogger().format("%nChecking merge request %s%n",
                                 HyperlinkNote.encodeTo(
                                         UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
                                                 .literal("/merge_requests")
@@ -354,21 +354,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         public void record(@NonNull SCMHead head, SCMRevision revision,
                                                            boolean isMatch) {
                                             if (isMatch) {
-                                                listener.getLogger().format(" Met criteria%n");
+                                                listener.getLogger().format("Met criteria%n");
                                             } else {
-                                                listener.getLogger().format(" Does not meet criteria%n");
+                                                listener.getLogger().format("Does not meet criteria%n");
                                             }
                                         }
                                     }
                             )) {
                                 listener.getLogger()
-                                        .format("%n  %d pull requests were processed (query completed)%n", count);
+                                        .format("%n%d merge requests were processed (query completed)%n", count);
                                 return;
                             }
 
                         }
                     }
-                    listener.getLogger().format("%n  %d pull requests were processed%n", count);
+                    listener.getLogger().format("%n%d merge requests were processed%n", count);
                 }
             }
         } catch (GitLabApiException e) {
@@ -428,7 +428,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder();
-                listener.getLogger().format("Looking up repository %s/%s%n", projectOwner, project);
+                listener.getLogger().format("Looking up repo %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
             } catch (GitLabApiException e) {
                 e.printStackTrace();
