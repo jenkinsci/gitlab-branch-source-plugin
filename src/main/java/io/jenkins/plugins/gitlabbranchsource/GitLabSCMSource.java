@@ -309,18 +309,27 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         );
                         for (ChangeRequestCheckoutStrategy strategy : strategies) {
                             if (request.process(new MergeRequestSCMHead(
+
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
                                                     .toLowerCase(Locale.ENGLISH) : ""),
+
                                             m.getIid(),
-                                            new BranchSCMHead(m.getSourceBranch()),
+
+                                            new BranchSCMHead(m.getTargetBranch()),
+
                                             ChangeRequestCheckoutStrategy.MERGE,
                                             originOwner.equalsIgnoreCase(projectOwner) && originProject
                                                     .equalsIgnoreCase(project)
                                                     ? SCMHeadOrigin.DEFAULT
                                                     : new SCMHeadOrigin.Fork(originOwner + "/" + originProject),
+
                                             originOwner,
+
                                             originProject,
-                                            m.getTargetBranch()),
+
+                                            m.getSourceBranch()
+
+                                    ),
                                     new SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
                                         @NonNull
                                         @Override

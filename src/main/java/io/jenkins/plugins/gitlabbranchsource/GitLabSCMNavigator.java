@@ -155,7 +155,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 projects = gitLabApi.getGroupApi().getProjects(projectOwner);
             }
             int count = 0;
-            observer.getListener().getLogger().format("%n  Checking repositories...%n");
+            observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
                 if(gitlabOwner == GitLabOwner.USER && p.getNamespace().getKind().equals("group")) {
                     // skip the user repos which includes all organizations that they are a member of
@@ -167,11 +167,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 try {
                     gitLabApi.getRepositoryApi().getTree(p);
                 } catch (GitLabApiException e) {
-                    observer.getListener().getLogger().format("%n    Ignoring empty repository %s%n",
+                    observer.getListener().getLogger().format("%nIgnoring empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
-                observer.getListener().getLogger().format("%n    Checking repository %s%n",
+                observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                 if (request.process(p.getName(), new SCMNavigatorRequest.SourceLambda() {
                     @NonNull
@@ -306,7 +306,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         owner,
                         Jenkins.getAuthentication(),
                         fromUri(serverUrl).build()),
-                CredentialsMatchers.withId(credentialsId)
+                credentials -> credentials instanceof PersonalAccessToken
         );
     }
 
