@@ -79,12 +79,15 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
     private final String serverUrl;
     private final String projectOwner;
     private final String project;
@@ -156,9 +159,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if(!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
-            // Tests if GitLab API is valid
-            gitLabApi.getProjectApi().getProjects(1, 1);
-            gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
+            LOGGER.info("Execute h l");
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
                 String revision = gitLabApi.getRepositoryApi().getBranch(gitlabProject, head.getName()).getCommit().getId();
@@ -206,10 +207,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
-            gitLabApi.getProjectApi().getProjects(1, 1);
-            listener.getLogger().format("Looking up project %s/%s%n", projectOwner, project);
-            // as "path to the project" is required
-            gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
+            LOGGER.info("Execute c o e l");
             sshRemote = gitlabProject.getSshUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
                     .withTraits(getTraits())
