@@ -3,8 +3,6 @@ package io.jenkins.plugins.gitlabserverconfig.servers;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -33,6 +31,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
@@ -45,14 +44,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
 
     /**
-     * Used as default server URL for the serverUrl field
+     * Used as default community saas version server URL for the serverUrl field
      */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
 
     /**
      * Used as default token value if no any credentials found by given credentialsId.
      */
-    public static final String UNKNOWN_TOKEN = "UNKNOWN_TOKEN";
+    public final static String EMPTY_TOKEN = "";
 
     /**
      * Length of unique random numeric name for server
@@ -74,7 +73,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * A unique name used to identify the endpoint.
      */
     @NonNull
-    private String name;
+    private final String name;
 
     /**
      * The URL of this GitLab Server.
@@ -88,9 +87,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private boolean manageHooks;
 
     /**
-     * The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management of hooks.
+     * The {@link PersonalAccessToken#getId()} of the credentials to use for auto-management of hooks.
      */
-    @CheckForNull
+    @NonNull
     private String credentialsId;
 
     /**
@@ -120,22 +119,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     * Returns {@code true} if Jenkins is supposed to auto-manage hooks for this end-point.
      *
-     * @return {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     * @return {@code true} if Jenkins is supposed to auto-manage hooks for this end-point.
      */
     public boolean isManageHooks() {
         return manageHooks;
     }
 
     /**
-     * Returns the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
-     * of hooks.
+     * Returns The {@link PersonalAccessToken#getId()} of the credentials to use for GitLab Server Authentication to access GitLab APIs.
      *
-     * @return the {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for auto-management
-     * of hooks.
+     * @return The {@link PersonalAccessToken#getId()} of the credentials to use for GitLab Server Authentication to access GitLab APIs.
      */
-    @CheckForNull
+    @NonNull
     public String getCredentialsId() {
         return credentialsId;
     }
@@ -143,27 +140,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param serverUrl The URL of this GitLab Server
-     * @param name A unique name to use to describe the end-point, if empty replaced with a random
-     * name
+     * @param serverUrl     The URL of this GitLab Server
+     * @param name          A unique name to use to describe the end-point, if empty replaced with a random name
+     * @param credentialsId The {@link PersonalAccessToken#getId()} of the credentials to use for GitLab Server Authentication to access GitLab APIs
      */
     @DataBoundConstructor
-    public GitLabServer(@NonNull String serverUrl, @NonNull String name) {
+    public GitLabServer(@NonNull String serverUrl, @NonNull String name, @NonNull String credentialsId) {
         this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(name)
                 ? getRandomName()
                 : name;
-    }
-
-    /**
-     * Data Bound Setter for Server URL
-     *
-     * @param credentialsId The {@link StandardUsernamePasswordCredentials#getId()} of the credentials to use for
-     *                      GitLab Server Authentication to access GitLab APIs
-
-     */
-    @DataBoundSetter
-    public void setCredentialsId(@CheckForNull String credentialsId) {
         this.credentialsId = credentialsId;
     }
 
@@ -178,20 +164,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up the {@link PersonalAccessToken} to use for auto-management of hooks.
+     * Looks up for Personal Access Token
      *
-     * @return the credentials or {@code null}.
+     * @param serverUrl         GitLab Server Url
+     * @param credentialsId     Credentials ListBox value
+     *
+     * @return {@link PersonalAccessToken}
      */
-    @CheckForNull
-    public PersonalAccessToken credentials() {
+    public static PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
+        Jenkins jenkins = Jenkins.get();
+        jenkins.checkPermission(Jenkins.ADMINISTER);
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                        PersonalAccessToken.class,
-                        Jenkins.get(),
-                        ACL.SYSTEM,
-                        fromUri(serverUrl).build()),
-                        CredentialsMatchers.withId(credentialsId)
-                );
+                    lookupCredentials(
+                            PersonalAccessToken.class,
+                            jenkins,
+                            ACL.SYSTEM,
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
+                            withId(credentialsId)
+                    );
     }
 
     /**
@@ -211,27 +201,27 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         /**
          * Checks that the supplied URL is valid.
          *
-         * @param value the URL to check.
+         * @param serverUrl the URL to check.
          * @return the validation results.
          */
-        public static FormValidation doCheckServerUrl(@QueryParameter String value) {
+        public static FormValidation doCheckServerUrl(@QueryParameter String serverUrl) {
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
-                new URL(value);
+                new URL(serverUrl);
             } catch (MalformedURLException e) {
-                LOGGER.error("Incorrect url - %s", value);
+                LOGGER.error(String.format("Incorrect url: %s", serverUrl));
                 return FormValidation.error("Malformed url (%s)", e.getMessage());
             }
-            if (GITLAB_SERVER_URL.equals(value)) {
-                LOGGER.info("Community version of GitLab - %s", value);
+            if (GITLAB_SERVER_URL.equals(serverUrl)) {
+                LOGGER.info(String.format("Community version of GitLab: %s", serverUrl));
             }
-            GitLabApi gitLabApi = new GitLabApi(value, "");
+            GitLabApi gitLabApi = new GitLabApi(serverUrl, "");
             try {
                 gitLabApi.getProjectApi().getProjects(1, 1);
                 return FormValidation.ok();
             } catch (GitLabApiException e) {
-                LOGGER.info("Invalid GitLab Server Url - %s", value);
-                return FormValidation.error(Messages.GitLabServer_invalidUrl(value));
+                LOGGER.info(String.format("Invalid GitLab Server Url: %s", serverUrl));
+                return FormValidation.error(Messages.GitLabServer_invalidUrl(serverUrl));
             }
         }
 
@@ -247,9 +237,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
             LOGGER.info("Testing Connection..");
-            String privateToken = getToken(serverUrl, credentialsId);
-            if (privateToken.equals(UNKNOWN_TOKEN)) {
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, "");
+            PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
+            String privateToken = "";
+            if(credentials != null) {
+                privateToken = credentials.getToken().getPlainText();
+            }
+            if (privateToken.equals(EMPTY_TOKEN)) {
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN);
                 try {
                     gitLabApi.getProjectApi().getProjects(1, 1);
                     return FormValidation.ok("Valid GitLab Server but no credentials specified");
@@ -258,15 +252,17 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     return FormValidation
                             .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
                 }
-            }
-            try {
+            } else {
+
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
-                User user = gitLabApi.getUserApi().getCurrentUser();
-                LOGGER.info(String.format("Connection established with the GitLab Server for %s", user.getUsername()));
-                return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
-            } catch (GitLabApiException e) {
-                LOGGER.error(String.format("Failed to connect with GitLab Server - %s", e.getMessage()));
-                return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
+                try {
+                    User user = gitLabApi.getUserApi().getCurrentUser();
+                    LOGGER.info(String.format("Connection established with the GitLab Server for %s", user.getUsername()));
+                    return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
+                } catch (GitLabApiException e) {
+                    LOGGER.error(String.format("Failed to connect with GitLab Server - %s", e.getMessage()));
+                    return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
+                }
             }
         }
 
@@ -292,25 +288,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             credentials -> credentials instanceof PersonalAccessToken);
-        }
-
-        private static String getToken(String serverUrl, String credentialsId) {
-            String privateToken = UNKNOWN_TOKEN;
-            Jenkins jenkins = Jenkins.get();
-            jenkins.checkPermission(Jenkins.ADMINISTER);
-
-            PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
-                    lookupCredentials(
-                            PersonalAccessToken.class,
-                            jenkins,
-                            ACL.SYSTEM,
-                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
-                            CredentialsMatchers.withId(credentialsId)
-                    );
-            if (credentials != null) {
-                privateToken = credentials.getToken().getPlainText();
-            }
-            return privateToken;
         }
     }
 }

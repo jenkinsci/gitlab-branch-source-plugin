@@ -124,11 +124,11 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      */
     public boolean addServer(@Nonnull GitLabServer server) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
-        GitLabServer s = servers.stream()
-                .filter(server1 -> server1.getName().equals(server.getName()))
+        GitLabServer gitLabServer = servers.stream()
+                .filter(s -> s.getName().equals(server.getName()))
                 .findAny()
                 .orElse(null);
-        if(s != null) {
+        if(gitLabServer != null) {
             return false;
         }
         servers.add(server);
@@ -181,7 +181,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     public  GitLabServer findServer(@CheckForNull String serverUrl) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         return servers.stream()
-                .filter(server1 -> server1.getServerUrl().equals(serverUrl))
+                .filter(server -> server.getServerUrl().equals(serverUrl))
                 .findAny()
                 .orElse(null);
     }

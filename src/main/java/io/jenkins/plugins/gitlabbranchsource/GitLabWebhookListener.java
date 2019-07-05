@@ -35,7 +35,7 @@ public class GitLabWebhookListener {
                 if (server == null || !server.isManageHooks()) {
                     return;
                 }
-                credentials = server.credentials();
+                credentials = GitLabServer.getCredentials(server.getServerUrl(), server.getCredentialsId());
                 break;
             case ITEM:
                 credentials = navigator.credentials(owner);
@@ -109,7 +109,7 @@ public class GitLabWebhookListener {
                 if (server == null || !server.isManageHooks()) {
                     return;
                 }
-                credentials = server.credentials();
+                credentials = GitLabServer.getCredentials(server.getServerUrl(), server.getCredentialsId());
                 break;
             case ITEM:
                 credentials = source.credentials();
