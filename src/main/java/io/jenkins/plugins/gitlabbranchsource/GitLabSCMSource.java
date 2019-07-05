@@ -652,29 +652,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
         public ListBoxModel doFillProjectItems(@AncestorInPath SCMSourceOwner context,
                                                   @QueryParameter String serverUrl,
-                                                  @QueryParameter String credentialsId,
-                                                  @QueryParameter String projectOwner,
-                                                  @QueryParameter String project) {
+                                                  @QueryParameter String projectOwner) {
             ListBoxModel result = new ListBoxModel();
-            if (context == null) {
-                // must have admin if you want the list without a context
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
-                    result.add(project);
-                    return result;
-                }
-            } else {
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
-                    // must be able to read the configuration or use the item credentials if you want the list
-                    result.add(project);
-                    return result;
-                }
-            }
-            GitLabServer server = GitLabServers.get().findServer(serverUrl);
-            if (server == null) {
-                // you can only get the list for registered servers
-                result.add(project);
-                return result;
+            if(projectOwner.equals("")) {
+                return new StandardListBoxModel()
+                        .includeEmptyValue();
             }
             PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
@@ -684,7 +666,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                     Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                                     : ACL.SYSTEM,
                             URIRequirementBuilder.fromUri(serverUrl).build()),
-                            CredentialsMatchers.withId(credentialsId)
+                            creds -> creds instanceof PersonalAccessToken
             );
             try {
                 GitLabApi gitLabApi;
