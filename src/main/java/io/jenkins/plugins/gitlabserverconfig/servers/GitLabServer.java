@@ -230,7 +230,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 gitLabApi.getProjectApi().getProjects(1, 1);
                 return FormValidation.ok();
             } catch (GitLabApiException e) {
-                LOGGER.info("Unable to validate serverUrl - %s", value);
+                LOGGER.info("Invalid GitLab Server Url - %s", value);
                 return FormValidation.error(Messages.GitLabServer_invalidUrl(value));
             }
         }
@@ -249,9 +249,15 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             LOGGER.info("Testing Connection..");
             String privateToken = getToken(serverUrl, credentialsId);
             if (privateToken.equals(UNKNOWN_TOKEN)) {
-                LOGGER.error("Cannot find private token");
-                return FormValidation
-                        .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, "");
+                try {
+                    gitLabApi.getProjectApi().getProjects(1, 1);
+                    return FormValidation.ok("Valid GitLab Server but no credentials specified");
+                } catch (GitLabApiException e) {
+                    LOGGER.error("Invalid GitLab Server Url");
+                    return FormValidation
+                            .errorWithMarkup(Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+                }
             }
             try {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
