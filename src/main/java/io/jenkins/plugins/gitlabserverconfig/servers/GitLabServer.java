@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabserverconfig.servers;
 
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
@@ -42,6 +43,11 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
+
+    /**
+     * The credentials matcher for GitLab Personal Access Token
+     */
+    public static final CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers.instanceOf(PersonalAccessToken.class);
 
     /**
      * Used as default community saas version server URL for the serverUrl field
@@ -287,7 +293,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             jenkins,
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
-                            credentials -> credentials instanceof PersonalAccessToken);
+                            CREDENTIALS_MATCHER
+                    );
         }
     }
 }

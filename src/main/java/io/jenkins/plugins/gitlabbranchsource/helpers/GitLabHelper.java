@@ -18,5 +18,4 @@ public class GitLabHelper {
         }
         throw new NoSuchFieldException(String.format("No server found with the name: %s", serverName));
     }
-
 }
