@@ -56,8 +56,8 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         ListBoxModel result = new ListBoxModel();
         for (GitLabServer server : getServers()) {
             String serverUrl = server.getServerUrl();
-            String displayName = server.getName();
-            result.add(StringUtils.isBlank(displayName) ? serverUrl : displayName + " (" + serverUrl + ")", serverUrl);
+            String serverName = server.getName(); // serverName or name or displayName
+            result.add(StringUtils.isBlank(serverName) ? serverUrl : serverName + " (" + serverUrl + ")", serverName);
         }
         return result;
     }
@@ -174,14 +174,14 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     /**
      * Checks to see if the supplied server URL is defined in the global configuration.
      *
-     * @param serverUrl the server url to check.
+     * @param serverName the server url to check.
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
     @CheckForNull
-    public  GitLabServer findServer(@CheckForNull String serverUrl) {
+    public  GitLabServer findServer(@CheckForNull String serverName) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         return servers.stream()
-                .filter(server -> server.getServerUrl().equals(serverUrl))
+                .filter(server -> server.getName().equals(serverName))
                 .findAny()
                 .orElse(null);
     }

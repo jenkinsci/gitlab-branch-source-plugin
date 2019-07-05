@@ -8,7 +8,7 @@ import org.apache.commons.lang.RandomStringUtils
 def f = namespace(FormTagLib)
 def c = namespace(CredentialsTagLib)
 
-f.entry(title: _("Name"), field: "name", "description": "A unique name for the server") {
+f.entry(title: _("Display Name"), field: "name", "description": "A unique name for the server") {
     f.textbox(default: String.format("gitlab-%s", RandomStringUtils.randomNumeric(GitLabServer.SHORT_NAME_LENGTH)))
 }
 
