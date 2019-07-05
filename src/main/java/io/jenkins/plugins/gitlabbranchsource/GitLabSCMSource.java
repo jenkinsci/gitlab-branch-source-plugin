@@ -159,7 +159,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if(!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
-            LOGGER.info("Execute h l");
+            LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
                 String revision = gitLabApi.getRepositoryApi().getBranch(gitlabProject, head.getName()).getCommit().getId();
@@ -207,7 +207,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
-            LOGGER.info("Execute c o e l");
+            LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
                     .withTraits(getTraits())
@@ -577,7 +577,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         getOwner(),
                         Jenkins.getAuthentication(),
                         fromUri(serverUrl).build()),
-                CredentialsMatchers.withId(credentialsId)
+                credentials -> credentials instanceof PersonalAccessToken
         );
     }
 

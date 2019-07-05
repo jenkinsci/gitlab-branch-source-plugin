@@ -10,9 +10,11 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.RepositoryFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GitLabSCMFile extends SCMFile {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMFile.class);
     private final GitLabApi gitLabApi;
     private final Project project;
     private final String ref;
@@ -91,7 +93,7 @@ public class GitLabSCMFile extends SCMFile {
 
     private InputStream fetchFile()  {
         try {
-            return gitLabApi.getRepositoryFileApi().getRawFile(project, getPath(), ref);
+            return gitLabApi.getRepositoryFileApi().getRawFile(project, ref, getPath());
         } catch (GitLabApiException e) {
             e.printStackTrace();
         }

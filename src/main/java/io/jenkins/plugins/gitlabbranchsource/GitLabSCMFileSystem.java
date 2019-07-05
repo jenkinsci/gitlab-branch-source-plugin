@@ -27,6 +27,7 @@ import org.gitlab4j.api.models.Project;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
+
     private final GitLabApi gitLabApi;
     private final Project project;
     private final String ref;
