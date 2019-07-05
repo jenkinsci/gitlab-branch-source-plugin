@@ -15,6 +15,7 @@ import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.net.URI;
@@ -72,14 +73,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         super(
                 head,
                 revision,
-                checkoutUriTemplate(null, source.getServerUrl(), null, null)
+                checkoutUriTemplate(null, GitLabHelper.getServerUrlFromName(source.getServerName()), null, null)
                         .set("owner", source.getProjectOwner())
                         .set("project", source.getProject())
                         .expand(),
                 source.getCredentialsId()
         );
         this.context = source.getOwner();
-        serverUrl = StringUtils.defaultIfBlank(source.getServerUrl(), GitLabServer.GITLAB_SERVER_URL);
+        serverUrl = StringUtils.defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()), GitLabServer.GITLAB_SERVER_URL);
         projectOwner = source.getProjectOwner();
         project = source.getProject();
         sshRemote = source.getSshRemote();

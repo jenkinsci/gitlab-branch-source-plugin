@@ -18,4 +18,9 @@ public class GitLabHelper {
         }
         throw new NoSuchFieldException(String.format("No server found with the name: %s", serverName));
     }
+
+    public static String getServerUrlFromName(String serverName) {
+        GitLabServer server = GitLabServers.get().findServer(serverName);
+        return server != null ? server.getServerUrl() : "";
+    }
 }

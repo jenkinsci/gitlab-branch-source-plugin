@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:c="/lib/credentials"
          xmlns:f="/lib/form" xmlns:scm="/jenkins/scm/api/form">
-    <f:entry title="${%Server}" field="serverUrl">
+    <f:entry title="${%Server}" field="serverName">
         <f:select/>
     </f:entry>
     <f:entry title="${%Credentials}" field="credentialsId">

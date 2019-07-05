@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -100,7 +101,7 @@ public class GitLabWebhookListener {
     public static void register(SCMSourceOwner owner, GitLabSCMSource source,
                                 WebhookRegistration mode, String credentialsId) {
         PersonalAccessToken credentials;
-        String serverUrl = source.getServerUrl();
+        String serverUrl = GitLabHelper.getServerUrlFromName(source.getServerName());
         switch (mode) {
             case DISABLE:
                 return;

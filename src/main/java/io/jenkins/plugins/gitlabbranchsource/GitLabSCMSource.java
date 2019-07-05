@@ -4,12 +4,10 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
@@ -22,6 +20,7 @@ import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -84,11 +83,12 @@ import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
-    private final String serverUrl;
+    private final String serverName;
     private final String projectOwner;
     private final String project;
     private String credentialsId;
@@ -97,14 +97,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private transient Project gitlabProject;
 
     @DataBoundConstructor
-    public GitLabSCMSource(String serverUrl, String projectOwner, String project) {
-        this.serverUrl = serverUrl;
+    public GitLabSCMSource(String serverName, String projectOwner, String project) {
+        this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.project = project;
     }
 
-    public String getServerUrl() {
-        return serverUrl;
+    public String getServerName() {
+        return serverName;
     }
 
     public String getProjectOwner() {
@@ -135,7 +135,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public String getRemote() {
-        return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), serverUrl, getSshRemote(), getCredentialsId())
+        return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getSshRemote(), getCredentialsId())
                 .set("owner", projectOwner).set("project", project).expand();
     }
 
@@ -154,7 +154,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         try {
-            GitLabApi gitLabApi = apiBuilder();
+            GitLabApi gitLabApi = apiBuilder(serverName);
             // To verify the supplied PAT is valid
             if(!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
@@ -192,7 +192,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 listener.getLogger().format("Unknown head: %s of type %s%n", head.getName(), head.getClass().getName());
                 return null;
             }
-        } catch (GitLabApiException e) {
+        } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
         return super.retrieve(head, listener);
@@ -202,7 +202,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected void retrieve(SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, SCMHeadEvent<?> event,
                             @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
-            GitLabApi gitLabApi = apiBuilder();
+            GitLabApi gitLabApi = apiBuilder(serverName);
             // To verify the supplied PAT is valid
             if (!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
@@ -378,7 +378,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     listener.getLogger().format("%n%d merge requests were processed%n", count);
                 }
             }
-        } catch (GitLabApiException e) {
+        } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
     }
@@ -408,16 +408,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         if (gitlabProject == null) {
             try {
-                GitLabApi gitLabApi = apiBuilder();
+                GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up repository %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
-            } catch (GitLabApiException e) {
+            } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
         }
         List<Action> result = new ArrayList<>();
         result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(), gitlabProject.getWebUrl()));
-        result.add(new GitLabLink("icon-project", UriTemplate.buildFromTemplate(serverUrl)
+        result.add(new GitLabLink("icon-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
                 .path(UriTemplateBuilder.var("owner"))
                 .path(UriTemplateBuilder.var("project"))
                 .build()
@@ -434,16 +434,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         if (gitlabProject == null) {
             try {
-                GitLabApi gitLabApi = apiBuilder();
+                GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up repo %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
-            } catch (GitLabApiException e) {
+            } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
         }
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
-            String branchUrl = UriTemplate.buildFromTemplate(serverUrl)
+            String branchUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
                     .path(UriTemplateBuilder.var("owner"))
                     .path(UriTemplateBuilder.var("project"))
                     .path("tree")
@@ -463,7 +463,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 result.add(new PrimaryInstanceMetadataAction());
             }
         } else if (head instanceof MergeRequestSCMHead) {
-            String mergeUrl = UriTemplate.buildFromTemplate(serverUrl)
+            String mergeUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
                     .path(UriTemplateBuilder.var("owner"))
                     .path(UriTemplateBuilder.var("project"))
                     .path("merge_requests")
@@ -554,30 +554,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         GitLabWebhookListener.register(getOwner(), this, mode, credentialsId);
     }
 
-    private GitLabApi apiBuilder() throws AbortException {
-        GitLabServer server = GitLabServers.get().findServer(serverUrl);
-        if (server == null) {
-            throw new AbortException("Unknown server: " + serverUrl);
-        }
-        PersonalAccessToken credentials = credentials();
-        SCMSourceOwner owner = getOwner();
-        if (owner != null) {
-            CredentialsProvider.track(owner, credentials);
-        }
-        if(credentials != null) {
-            return new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-        }
-        return new GitLabApi(serverUrl, "");
-    }
-
     public PersonalAccessToken credentials() {
         return CredentialsMatchers.firstOrNull(
                 lookupCredentials(
                         PersonalAccessToken.class,
                         getOwner(),
                         Jenkins.getAuthentication(),
-                        fromUri(serverUrl).build()),
-                credentials -> credentials instanceof PersonalAccessToken
+                        fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()),
+                GitLabServer.CREDENTIALS_MATCHER
         );
     }
 
@@ -599,20 +583,20 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return Messages.GitLabSCMSource_Pronoun();
         }
 
-        public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context,
-                                                 @QueryParameter String serverUrl) {
+        public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
+                                                 @QueryParameter String serverName) {
             if (context == null) {
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
-                    result.add(serverUrl);
+                    result.add(serverName);
                     return result;
                 }
             } else {
                 if (!context.hasPermission(Item.EXTENDED_READ)) {
                     // must be able to read the configuration the list
                     ListBoxModel result = new ListBoxModel();
-                    result.add(serverUrl);
+                    result.add(serverName);
                     return result;
                 }
             }
@@ -620,7 +604,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter String serverUrl,
+                                                     @QueryParameter String serverName,
                                                      @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
@@ -644,14 +628,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             : ACL.SYSTEM,
                     context,
                     StandardUsernameCredentials.class,
-                    URIRequirementBuilder.fromUri(serverUrl).build(),
+                    fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
                     GitClient.CREDENTIALS_MATCHER
             );
             return result;
         }
 
         public ListBoxModel doFillProjectItems(@AncestorInPath SCMSourceOwner context,
-                                                  @QueryParameter String serverUrl,
+                                                  @QueryParameter String serverName,
                                                   @QueryParameter String projectOwner) {
             ListBoxModel result = new ListBoxModel();
             if(projectOwner.equals("")) {
@@ -659,21 +643,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         .includeEmptyValue();
             }
             PersonalAccessToken credentials = CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
+                    lookupCredentials(
                             PersonalAccessToken.class,
                             context,
                             context instanceof Queue.Task ?
                                     Tasks.getDefaultAuthenticationOf((Queue.Task) context)
                                     : ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(serverUrl).build()),
+                            fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()),
                             creds -> creds instanceof PersonalAccessToken
             );
             try {
                 GitLabApi gitLabApi;
                 if(credentials != null) {
-                     gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
+                     gitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName), credentials.getToken().getPlainText());
                 } else {
-                    gitLabApi =  new GitLabApi(serverUrl, "");
+                    gitLabApi =  new GitLabApi(GitLabHelper.getServerUrlFromName(serverName), "");
                 }
                 try {
                     for (Project p : gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withVisibility(

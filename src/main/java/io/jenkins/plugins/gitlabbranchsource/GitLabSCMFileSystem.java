@@ -8,6 +8,7 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.io.IOException;
 import java.util.Date;
@@ -113,7 +114,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
                 return null;
             }
             SCMSourceOwner owner = source.getOwner();
-            String serverUrl = src.getServerUrl();
+            String serverUrl = GitLabHelper.getServerUrlFromName(src.getServerName());
             String credentialsId = src.getCredentialsId();
             PersonalAccessToken credentials = StringUtils.isBlank(credentialsId)
                     ? null
