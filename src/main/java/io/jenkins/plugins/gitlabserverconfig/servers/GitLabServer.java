@@ -62,7 +62,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Length of unique random numeric name for server
      */
-    public static final int SHORT_NAME_LENGTH = 4;
+    private static final int SHORT_NAME_LENGTH = 4;
 
     /**
      * Common prefixes that we should remove when inferring a display name.

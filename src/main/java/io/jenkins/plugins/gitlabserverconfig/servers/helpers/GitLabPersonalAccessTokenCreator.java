@@ -58,6 +58,11 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             AccessTokenUtils.Scope.READ_REPOSITORY
     );
 
+    private String getShortName(String tokenName) {
+        int SHORT_NAME_LENGTH = 8;
+        return tokenName.substring(0, SHORT_NAME_LENGTH); // To store a short version of UUID
+    }
+
     public GitLabPersonalAccessTokenCreator() {
         super(GitLabPersonalAccessTokenCreator.class);
     }
@@ -136,7 +141,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
                     tokenName,
                     GL_PLUGIN_REQUIRED_SCOPE
             );
-            tokenName = tokenName.substring(0, 8); // To store a short version of UUID
+            tokenName = getShortName(tokenName);
             createCredentials(serverUrl, token, credentials.getUsername(), tokenName);
             return FormValidation.ok("Created credentials with id %s ", tokenName);
         } catch (GitLabApiException e) {
@@ -160,7 +165,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
                     tokenName,
                     GL_PLUGIN_REQUIRED_SCOPE
             );
-            tokenName = tokenName.substring(0, 8); // To store a short version of UUID
+            tokenName = getShortName(tokenName);
             createCredentials(serverUrl, token, login, tokenName);
             return FormValidation.ok(
                     "Created credentials with id %s", tokenName
