@@ -406,17 +406,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+        LOGGER.info(String.format("e, l..%s", Thread.currentThread().getName()));
+        List<Action> result = new ArrayList<>();
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up repository %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
+                result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(), gitlabProject.getWebUrl()));
             } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
         }
-        List<Action> result = new ArrayList<>();
-        result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(), gitlabProject.getWebUrl()));
         result.add(new GitLabLink("icon-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
                 .path(UriTemplateBuilder.var("owner"))
                 .path(UriTemplateBuilder.var("project"))
@@ -432,6 +433,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+        LOGGER.info(String.format("h, e, l..%s", Thread.currentThread().getName()));
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder(serverName);
