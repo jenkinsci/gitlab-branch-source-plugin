@@ -22,6 +22,10 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         super(projectUrl);
     }
 
+    public String getProjectUrl() {
+        return super.getRepoUrl();
+    }
+
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         return new URL(
