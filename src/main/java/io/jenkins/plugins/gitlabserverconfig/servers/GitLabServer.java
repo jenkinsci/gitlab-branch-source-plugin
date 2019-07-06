@@ -242,7 +242,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
                                                @QueryParameter String credentialsId) {
-            LOGGER.info("Testing Connection..");
+            LOGGER.info("Testing Connection for GitLab, url:" + serverUrl);
             PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
             String privateToken = "";
             if(credentials != null) {
