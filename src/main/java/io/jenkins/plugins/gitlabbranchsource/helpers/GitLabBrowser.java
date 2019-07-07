@@ -29,7 +29,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         return new URL(
-                UriTemplate.buildFromTemplate(getRepoUrl())
+                UriTemplate.buildFromTemplate(getProjectUrl())
                 .literal("/commit")
                 .path(UriTemplateBuilder.var("changeSet"))
                 .build()
@@ -54,7 +54,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
             return diffLink(path);
         } else {
             return new URL(
-                    UriTemplate.buildFromTemplate(getRepoUrl())
+                    UriTemplate.buildFromTemplate(getProjectUrl())
                             .literal("/blob")
                             .path(UriTemplateBuilder.var("changeSet"))
                             .path(UriTemplateBuilder.var("path", true))
@@ -68,7 +68,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
         return new URL(
-                UriTemplate.buildFromTemplate(getRepoUrl())
+                UriTemplate.buildFromTemplate(getProjectUrl())
                         .literal("/commit")
                         .path(UriTemplateBuilder.var("changeSet"))
                         .fragment(UriTemplateBuilder.var("diff"))
