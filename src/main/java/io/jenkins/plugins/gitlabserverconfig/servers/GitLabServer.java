@@ -251,6 +251,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if (privateToken.equals(EMPTY_TOKEN)) {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN);
                 try {
+                    /*
+                    In order to validate a GitLab Server without personal access token,
+                    we are fetching 1 project from the GitLab Server. If no project exists,
+                    it returns an empty list. If no server exists at the specified endpoint,
+                    it raises GitLabAPIException.
+                     */
                     gitLabApi.getProjectApi().getProjects(1, 1);
                     return FormValidation.ok("Valid GitLab Server but no credentials specified");
                 } catch (GitLabApiException e) {
