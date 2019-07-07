@@ -411,7 +411,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder(serverName);
-                listener.getLogger().format("Looking up repository %s/%s%n", projectOwner, project);
+                listener.getLogger().format("Looking up project %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
                 result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(), gitlabProject.getWebUrl()));
             } catch (GitLabApiException | NoSuchFieldException e) {
@@ -437,7 +437,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder(serverName);
-                listener.getLogger().format("Looking up repo %s/%s%n", projectOwner, project);
+                listener.getLogger().format("Looking up project %s/%s%n", projectOwner, project);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
             } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
