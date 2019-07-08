@@ -207,6 +207,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (!gitLabApi.getAuthToken().equals("")) {
                 gitLabApi.getUserApi().getCurrentUser();
             }
+            if(gitlabProject == null) {
+                gitlabProject = gitLabApi.getProjectApi().getProject(projectOwner+"/"+project);
+            }
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)

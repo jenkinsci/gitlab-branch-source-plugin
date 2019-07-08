@@ -162,7 +162,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
                 if(gitlabOwner == GitLabOwner.USER && p.getNamespace().getKind().equals("group")) {
-                    // skip the user repos which includes all organizations that they are a member of
+                    // skip the user repos which includes all groups that they are a member of
                     continue;
                 }
                 count++;
