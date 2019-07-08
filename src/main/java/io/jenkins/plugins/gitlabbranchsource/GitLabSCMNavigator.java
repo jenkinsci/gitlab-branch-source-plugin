@@ -4,11 +4,9 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.AbortException;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
@@ -22,6 +20,7 @@ import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
@@ -65,20 +64,24 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
 public class GitLabSCMNavigator extends SCMNavigator {
-    private final String serverUrl;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMNavigator.class);
+    private final String serverName;
     private final String projectOwner;
     private String credentialsId;
     private List<SCMTrait<? extends SCMTrait<?>>> traits = new ArrayList<>();
     private GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
     @DataBoundConstructor
-    public GitLabSCMNavigator(String serverUrl, String projectOwner) {
-        this.serverUrl = serverUrl;
+    public GitLabSCMNavigator(String serverName, String projectOwner) {
+        this.serverName = serverName;
         this.projectOwner = projectOwner;
     }
 
@@ -86,8 +89,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return credentialsId;
     }
 
-    public String getServerUrl() {
-        return serverUrl;
+    public String getServerName() {
+        return serverName;
     }
 
     public String getProjectOwner() {
@@ -132,15 +135,16 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @NonNull
     @Override
     protected String id() {
-        return serverUrl + "::" + projectOwner;
+        return GitLabHelper.getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
+        LOGGER.info("visiting sources..");
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
                 .withTraits(traits)
                 .newRequest(this, observer)) {
-            GitLabApi gitLabApi = apiBuilder(observer.getContext());
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
             gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             List<Project> projects;
             if(gitlabOwner == GitLabOwner.USER) {
@@ -179,7 +183,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     public SCMSource create(@NonNull String projectName) throws IOException, InterruptedException {
                         return new GitLabSCMSourceBuilder(
                                 getId() + "::" + projectName,
-                                serverUrl,
+                                GitLabHelper.getServerUrlFromName(serverName),
                                 credentialsId,
                                 projectOwner,
                                 projectName
@@ -203,7 +207,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             observer.getListener().getLogger().format("%n  %d repositories were processed%n", count);
-        } catch (GitLabApiException e) {
+        } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
     }
@@ -212,70 +216,77 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @Override
     protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner, SCMNavigatorEvent event,
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
-        GitLabApi gitLabApi = apiBuilder(owner);
-        if(this.gitlabOwner == null) {
-            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+        LOGGER.info("retrieving actions..");
+        GitLabApi gitLabApi = null;
+        try {
+            gitLabApi = GitLabHelper.apiBuilder(serverName);
+            if (this.gitlabOwner == null) {
+                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            }
+            String fullName = "";
+            if (gitlabOwner == GitLabOwner.USER) {
+                try {
+                    fullName = gitLabApi.getUserApi().getUser(projectOwner).getName();
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    fullName = gitLabApi.getGroupApi().getGroup(projectOwner).getFullName();
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+            }
+            List<Action> result = new ArrayList<>();
+            String objectUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
+                    .path("owner")
+                    .build()
+                    .set("owner", projectOwner)
+                    .expand();
+            result.add(new ObjectMetadataAction(
+                    Util.fixEmpty(fullName),
+                    null,
+                    objectUrl)
+            );
+            String avatarUrl = "";
+            if (gitlabOwner == GitLabOwner.USER) {
+                try {
+                    avatarUrl = gitLabApi.getUserApi().getUser(projectOwner).getAvatarUrl();
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    avatarUrl = gitLabApi.getGroupApi().getGroup(projectOwner).getAvatarUrl();
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (StringUtils.isNotBlank(avatarUrl)) {
+                result.add(new GitLabAvatar(avatarUrl));
+            }
+            result.add(new GitLabLink("icon-gitlab", objectUrl));
+            if (gitlabOwner == GitLabOwner.USER) {
+                String website = null;
+                try {
+                    // This is a hack since getting a user via username finds user from a list of users
+                    // and list of users contain limited info about users which doesn't include website url
+                    User user = gitLabApi.getUserApi().getUser(projectOwner);
+                    website = gitLabApi.getUserApi().getUser(user.getId()).getWebsiteUrl();
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+                if (StringUtils.isBlank(website)) {
+                    listener.getLogger().println("User Website URL: unspecified");
+                    listener.getLogger().printf("User Website URL: %s%n",
+                            HyperlinkNote.encodeTo(website, StringUtils.defaultIfBlank(fullName, website)));
+                }
+            }
+            return result;
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+            throw new IOException("Server Not found");
         }
-        String fullName = "";
-        if(gitlabOwner == GitLabOwner.USER) {
-            try {
-                fullName = gitLabApi.getUserApi().getUser(projectOwner).getName();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                fullName = gitLabApi.getGroupApi().getGroup(projectOwner).getFullName();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        }
-        List<Action> result = new ArrayList<>();
-        String objectUrl = UriTemplate.buildFromTemplate(serverUrl)
-                .path("owner")
-                .build()
-                .set("owner", projectOwner)
-                .expand();
-        result.add(new ObjectMetadataAction(
-                Util.fixEmpty(fullName),
-                null,
-                objectUrl)
-        );
-        String avatarUrl = "";
-        if(gitlabOwner == GitLabOwner.USER) {
-            try {
-                avatarUrl = gitLabApi.getUserApi().getUser(projectOwner).getAvatarUrl();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                avatarUrl = gitLabApi.getGroupApi().getGroup(projectOwner).getAvatarUrl();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        }
-        if (StringUtils.isNotBlank(avatarUrl)) {
-            result.add(new GitLabAvatar(avatarUrl));
-        }
-        result.add(new GitLabLink("icon-gitlab", objectUrl));
-        if (gitlabOwner == GitLabOwner.USER) {
-            String website = null;
-            try {
-                // This is a hack since getting a user via username finds user from a list of users
-                // and list of users contain limited info about users which doesn't include website url
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
-                website = gitLabApi.getUserApi().getUser(user.getId()).getWebsiteUrl();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-            if (StringUtils.isBlank(website)) {
-                listener.getLogger().println("User Website URL: unspecified");
-                listener.getLogger().printf("User Website URL: %s%n",
-                        HyperlinkNote.encodeTo(website, StringUtils.defaultIfBlank(fullName, website)));
-            }
-        }
-        return result;
     }
 
     @Override
@@ -286,26 +297,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabWebhookListener.register(owner, this, mode, credentialsId);
     }
 
-    private GitLabApi apiBuilder(SCMSourceOwner owner) throws AbortException {
-        GitLabServer server = GitLabServers.get().findServer(serverUrl);
-        if (server == null) {
-            throw new AbortException("Unknown server: " + serverUrl);
-        }
-        PersonalAccessToken credentials = credentials(owner);
-        CredentialsProvider.track(owner, credentials);
-        if(credentials == null) {
-            return new GitLabApi(serverUrl, "");
-        }
-        return new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-    }
-
     public PersonalAccessToken credentials(SCMSourceOwner owner) {
         return CredentialsMatchers.firstOrNull(
                 lookupCredentials(
                         PersonalAccessToken.class,
                         owner,
                         Jenkins.getAuthentication(),
-                        fromUri(serverUrl).build()),
+                        fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()),
                 credentials -> credentials instanceof PersonalAccessToken
         );
     }
@@ -319,20 +317,20 @@ public class GitLabSCMNavigator extends SCMNavigator {
             return "GitLab Group";
         }
 
-        public ListBoxModel doFillServerUrlItems(@AncestorInPath SCMSourceOwner context,
-                                                 @QueryParameter String serverUrl) {
+        public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
+                                                 @QueryParameter String serverName) {
             if (context == null) {
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
-                    result.add(serverUrl);
+                    result.add(serverName);
                     return result;
                 }
             } else {
                 if (!context.hasPermission(Item.EXTENDED_READ)) {
                     // must be able to read the configuration the list
                     ListBoxModel result = new ListBoxModel();
-                    result.add(serverUrl);
+                    result.add(serverName);
                     return result;
                 }
             }
@@ -340,7 +338,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter String serverUrl,
+                                                     @QueryParameter String serverName,
                                                      @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
@@ -364,7 +362,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             : ACL.SYSTEM,
                     context,
                     StandardUsernameCredentials.class,
-                    URIRequirementBuilder.fromUri(serverUrl).build(),
+                    fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
                     GitClient.CREDENTIALS_MATCHER
             );
             return result;
