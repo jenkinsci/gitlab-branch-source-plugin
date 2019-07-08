@@ -9,18 +9,18 @@ public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuil
     @CheckForNull
     private final String id;
     @CheckForNull
-    private final String serverUrl;
+    private final String serverName;
     @CheckForNull
     private final String credentialsId;
     @NonNull
     private final String projectOwner;
 
-    public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverUrl,
+    public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverName,
                                   @CheckForNull String credentialsId, @NonNull String projectOwner,
                                   @NonNull String projectName) {
         super(GitLabSCMSource.class, projectName);
         this.id = id;
-        this.serverUrl = serverUrl;
+        this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.credentialsId = credentialsId;
     }
@@ -31,8 +31,8 @@ public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuil
     }
 
     @CheckForNull
-    public String getServerUrl() {
-        return serverUrl;
+    public String getServerName() {
+        return serverName;
     }
 
     @CheckForNull
@@ -49,7 +49,7 @@ public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuil
     @Override
     public GitLabSCMSource build() {
         // projectName() should have been getProjectName()
-        GitLabSCMSource result = new GitLabSCMSource(serverUrl, projectOwner, projectName());
+        GitLabSCMSource result = new GitLabSCMSource(serverName, projectOwner, projectName());
         result.setId(getId());
         result.setCredentialsId(getCredentialsId());
         result.setTraits(traits());

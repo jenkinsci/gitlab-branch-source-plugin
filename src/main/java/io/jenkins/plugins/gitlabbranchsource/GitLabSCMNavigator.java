@@ -183,7 +183,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     public SCMSource create(@NonNull String projectName) throws IOException, InterruptedException {
                         return new GitLabSCMSourceBuilder(
                                 getId() + "::" + projectName,
-                                GitLabHelper.getServerUrlFromName(serverName),
+                                serverName,
                                 credentialsId,
                                 projectOwner,
                                 projectName
