@@ -172,12 +172,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Looks up for Personal Access Token
      *
-     * @param serverUrl         GitLab Server Url
-     * @param credentialsId     Credentials ListBox value
-     *
      * @return {@link PersonalAccessToken}
      */
-    public static PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
+    public PersonalAccessToken getCredentials() {
         Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.ADMINISTER);
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
@@ -302,5 +299,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             CREDENTIALS_MATCHER
                     );
         }
+
+        private PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
+            Jenkins jenkins = Jenkins.get();
+            jenkins.checkPermission(Jenkins.ADMINISTER);
+            return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
+                    lookupCredentials(
+                            PersonalAccessToken.class,
+                            jenkins,
+                            ACL.SYSTEM,
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
+                    withId(credentialsId)
+            );
+        }
+
+
     }
 }

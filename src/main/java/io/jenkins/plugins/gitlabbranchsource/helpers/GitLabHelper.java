@@ -10,7 +10,7 @@ public class GitLabHelper {
     public static GitLabApi apiBuilder(String serverName) throws NoSuchFieldException {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if(server != null) {
-            PersonalAccessToken credentials = GitLabServer.getCredentials(server.getCredentialsId(), server.getServerUrl());
+            PersonalAccessToken credentials = server.getCredentials();
             if(credentials != null) {
                 return new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             }
@@ -23,4 +23,5 @@ public class GitLabHelper {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         return server != null ? server.getServerUrl() : "";
     }
+
 }
