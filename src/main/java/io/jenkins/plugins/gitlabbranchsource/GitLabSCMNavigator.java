@@ -8,11 +8,9 @@ import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
-import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
@@ -32,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
@@ -386,9 +385,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
         @Override
         public SCMNavigator newInstance(String name) {
+            LOGGER.info("Instantiating GitLabSCMNavigator..");
             List<GitLabServer> servers = GitLabServers.get().getServers();
             GitLabSCMNavigator navigator =
-                    new GitLabSCMNavigator(servers.isEmpty() ? null : servers.get(0).getServerUrl(), name);
+                    new GitLabSCMNavigator(servers.isEmpty() ? null : servers.get(0).getName(), "");
             navigator.setTraits(getTraitsDefaults());
             return navigator;
         }
@@ -428,13 +428,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
             return result;
         }
 
+        @Inject
+        private GitLabSCMSource.DescriptorImpl delegate;
+
+        @Override
+        @NonNull
+        @SuppressWarnings("unused") // jelly
         public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
-            GitLabSCMSource.DescriptorImpl descriptor =
-                    ExtensionList.lookup(Descriptor.class).get(GitLabSCMSource.DescriptorImpl.class);
-            if (descriptor == null) {
-                throw new AssertionError();
-            }
-            return new ArrayList<>(descriptor.getTraitsDefaults());
+            return new ArrayList<>(delegate.getTraitsDefaults());
         }
     }
 
