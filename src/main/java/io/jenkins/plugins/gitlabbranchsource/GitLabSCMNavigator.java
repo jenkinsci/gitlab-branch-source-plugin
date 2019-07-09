@@ -171,7 +171,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 try {
                     gitLabApi.getRepositoryApi().getTree(p);
                 } catch (GitLabApiException e) {
-                    observer.getListener().getLogger().format("%nIgnoring empty repository %s%n",
+                    observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
@@ -195,18 +195,18 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     @Override
                     public void record(@NonNull String projectName, boolean isMatch) {
                         if (isMatch) {
-                            observer.getListener().getLogger().format(" Proposing %s%n", projectName);
+                            observer.getListener().getLogger().format("Proposing %s%n", projectName);
                         } else {
-                            observer.getListener().getLogger().format(" Ignoring %s%n", projectName);
+                            observer.getListener().getLogger().format("Ignoring %s%n", projectName);
                         }
                     }
                 })) {
-                    observer.getListener().getLogger().format("%n  %d repositories were processed (query complete)%n",
+                    observer.getListener().getLogger().format("%n%d repositories were processed (query complete)%n",
                             count);
                     return;
                 }
             }
-            observer.getListener().getLogger().format("%n  %d repositories were processed%n", count);
+            observer.getListener().getLogger().format("%n%d repositories were processed%n", count);
         } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
