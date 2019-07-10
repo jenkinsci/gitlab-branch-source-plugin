@@ -80,29 +80,34 @@ public class GitLabSCMBuildStatusNotifier {
         status.setName(build.getParent().getFullName());
         if (Result.SUCCESS.equals(result)) {
             status.setDescription("This commit looks good");
+            status.setStatus("SUCCESS");
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
             status.setDescription("This commit has test failures");
+            status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (Result.FAILURE.equals(result)) {
             status.setDescription("There was a failure building this commit");
+            status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (result != null) { // ABORTED etc.
             status.setDescription("Something is wrong with the build of this commit");
-            state = Constants.CommitBuildState.FAILED;
+            status.setStatus("CANCELED");
+            state = Constants.CommitBuildState.CANCELED;
         } else {
             status.setDescription("Build started...");
-            state = Constants.CommitBuildState.PENDING;
+            status.setStatus("RUNNING");
+            state = Constants.CommitBuildState.RUNNING;
         }
 
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         String hash;
         if (revision instanceof BranchSCMRevision) {
-            listener.getLogger().format("[GitLab] Notifying branch build status: %s %s%n",
+            listener.getLogger().format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((BranchSCMRevision) revision).getHash();
         } else if (revision instanceof MergeRequestSCMRevision) {
-            listener.getLogger().format("[GitLab] Notifying merge request build status: %s %s%n",
+            listener.getLogger().format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
         } else {
@@ -118,17 +123,12 @@ public class GitLabSCMBuildStatusNotifier {
         }
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-            LOGGER.info("Publishing status");
-            LOGGER.info(String.format("ProjectId: %s", source.getProjectOwner()+'/'+source.getProject()));
-            LOGGER.info(String.format("Hash: %s", hash));
-            LOGGER.info(String.format("State: %s", state.toString()));
-            LOGGER.info(String.format("Server Name: %s", source.getServerName()));
             gitLabApi.getCommitsApi().addCommitStatus(
                     source.getProjectOwner()+'/'+source.getProject(),
                     hash,
                     state,
                     status);
-            listener.getLogger().format("[GitLab] Notified%n");
+            listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
         } catch (NoSuchFieldException | GitLabApiException e) {
             e.printStackTrace();
         }
@@ -195,6 +195,7 @@ public class GitLabSCMBuildStatusNotifier {
                         status.setTargetUrl(url);
                         status.setName(job.getFullName());
                         status.setDescription("Build queued...");
+                        status.setStatus("PENDING");
                         Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                         try {
                             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
