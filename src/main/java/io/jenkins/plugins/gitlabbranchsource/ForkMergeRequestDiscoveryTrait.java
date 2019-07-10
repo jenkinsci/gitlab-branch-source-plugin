@@ -112,9 +112,9 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
-        ctx.wantForkPRs(true);
+        ctx.wantForkMRs(true);
         ctx.withAuthority(trust);
-        ctx.withForkPRStrategies(getStrategies());
+        ctx.withForkMRStrategies(getStrategies());
     }
 
     /**

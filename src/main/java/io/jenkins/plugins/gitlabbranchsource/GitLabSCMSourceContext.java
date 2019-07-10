@@ -39,25 +39,25 @@ public class GitLabSCMSourceContext
         return wantTags;
     }
 
-    public final boolean wantPRs() {
+    public final boolean wantMRs() {
         return wantOriginMRs || wantForkMRs;
     }
 
-    public final boolean wantOriginPRs() {
+    public final boolean wantOriginMRs() {
         return wantOriginMRs;
     }
 
-    public final boolean wantForkPRs() {
+    public final boolean wantForkMRs() {
         return wantForkMRs;
     }
 
     @NonNull
-    public final Set<ChangeRequestCheckoutStrategy> originPRStrategies() {
+    public final Set<ChangeRequestCheckoutStrategy> originMRStrategies() {
         return originMRStrategies;
     }
 
     @NonNull
-    public final Set<ChangeRequestCheckoutStrategy> forkPRStrategies() {
+    public final Set<ChangeRequestCheckoutStrategy> forkMRStrategies() {
         return forkMRStrategies;
     }
 
@@ -83,25 +83,25 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public GitLabSCMSourceContext wantOriginPRs(boolean include) {
+    public GitLabSCMSourceContext wantOriginMRs(boolean include) {
         wantOriginMRs = wantOriginMRs || include;
         return this;
     }
 
     @NonNull
-    public GitLabSCMSourceContext wantForkPRs(boolean include) {
+    public GitLabSCMSourceContext wantForkMRs(boolean include) {
         wantForkMRs = wantForkMRs || include;
         return this;
     }
 
     @NonNull
-    public GitLabSCMSourceContext withOriginPRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withOriginMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
         originMRStrategies.addAll(strategies);
         return this;
     }
 
     @NonNull
-    public GitLabSCMSourceContext withForkPRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withForkMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
         forkMRStrategies.addAll(strategies);
         return this;
     }

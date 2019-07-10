@@ -90,11 +90,11 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         ctx.withAuthority(new BranchSCMHeadAuthority());
         switch (strategyId) {
             case 1:
-                ctx.wantOriginPRs(true);
+                ctx.wantOriginMRs(true);
                 ctx.withFilter(new ExcludeOriginMRBranchesSCMHeadFilter());
                 break;
             case 2:
-                ctx.wantOriginPRs(true);
+                ctx.wantOriginMRs(true);
                 ctx.withFilter(new OnlyOriginMRBranchesSCMHeadFilter());
                 break;
             case 3:
@@ -207,7 +207,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         public boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
             if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
-                    // only match if the merge request is an origin pull request
+                    // only match if the merge request is an origin merge request
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
                             && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
                         return true;

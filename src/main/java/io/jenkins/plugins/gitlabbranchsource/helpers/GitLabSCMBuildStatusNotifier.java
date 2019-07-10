@@ -58,8 +58,9 @@ public class GitLabSCMBuildStatusNotifier {
             return;
         }
         GitLabSCMSource source = (GitLabSCMSource) s;
-        if (new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(source.getTraits())
+        final GitLabSCMSourceContext sourceContext =new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits((source.getTraits()));
+        if (sourceContext
                 .notificationsDisabled()) {
             return;
         }
@@ -152,9 +153,9 @@ public class GitLabSCMBuildStatusNotifier {
                 return;
             }
             final GitLabSCMSource source = (GitLabSCMSource) src;
-            if (new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits(source.getTraits())
-                    .notificationsDisabled()) {
+            final GitLabSCMSourceContext sourceContext =new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                    .withTraits((source.getTraits()));
+            if (sourceContext.notificationsDisabled()) {
                 return;
             }
             final SCMHead head = SCMHead.HeadByItem.findHead(job);
@@ -242,7 +243,6 @@ public class GitLabSCMBuildStatusNotifier {
                 e.printStackTrace(listener.error("Could not send notifications"));
             }
         }
-
     }
 
     /**
@@ -269,5 +269,4 @@ public class GitLabSCMBuildStatusNotifier {
             }
         }
     }
-
 }
