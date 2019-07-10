@@ -46,7 +46,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     private Iterable<Branch> branches;
 
     /**
-     * The repository collaborator names or {@code null} if not provided.
+     * The project collaborator names or {@code null} if not provided.
      */
     @CheckForNull
     private Set<String> collaboratorNames;
@@ -65,13 +65,13 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
         super(source, context, listener);
         fetchBranches = context.wantBranches();
         fetchTags = context.wantTags();
-        fetchOriginMRs = context.wantOriginPRs();
-        fetchForkMRs = context.wantForkPRs();
-        originMRStrategies = fetchOriginMRs && !context.originPRStrategies().isEmpty()
-                ? Collections.unmodifiableSet(EnumSet.copyOf(context.originPRStrategies()))
+        fetchOriginMRs = context.wantOriginMRs();
+        fetchForkMRs = context.wantForkMRs();
+        originMRStrategies = fetchOriginMRs && !context.originMRStrategies().isEmpty()
+                ? Collections.unmodifiableSet(EnumSet.copyOf(context.originMRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
-        forkMRStrategies = fetchForkMRs && !context.forkPRStrategies().isEmpty()
-                ? Collections.unmodifiableSet(EnumSet.copyOf(context.forkPRStrategies()))
+        forkMRStrategies = fetchForkMRs && !context.forkMRStrategies().isEmpty()
+                ? Collections.unmodifiableSet(EnumSet.copyOf(context.forkMRStrategies()))
                 : Collections.<ChangeRequestCheckoutStrategy>emptySet();
         Set<SCMHead> includes = context.observer().getIncludes();
         if (includes != null) {
@@ -119,36 +119,36 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns {@code true} if pull request details need to be fetched.
+     * Returns {@code true} if merge request details need to be fetched.
      *
-     * @return {@code true} if pull request details need to be fetched.
+     * @return {@code true} if merge request details need to be fetched.
      */
     public final boolean isFetchMRs() {
         return isFetchOriginMRs() || isFetchForkMRs();
     }
 
     /**
-     * Returns {@code true} if origin pull request details need to be fetched.
+     * Returns {@code true} if origin merge request details need to be fetched.
      *
-     * @return {@code true} if origin pull request details need to be fetched.
+     * @return {@code true} if origin merge request details need to be fetched.
      */
     public final boolean isFetchOriginMRs() {
         return fetchOriginMRs;
     }
 
     /**
-     * Returns {@code true} if fork pull request details need to be fetched.
+     * Returns {@code true} if fork merge request details need to be fetched.
      *
-     * @return {@code true} if fork pull request details need to be fetched.
+     * @return {@code true} if fork merge request details need to be fetched.
      */
     public final boolean isFetchForkMRs() {
         return fetchForkMRs;
     }
 
     /**
-     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
+     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each origin merge request.
      *
-     * @return the {@link ChangeRequestCheckoutStrategy} to create for each origin pull request.
+     * @return the {@link ChangeRequestCheckoutStrategy} to create for each origin merge request.
      */
     @NonNull
     public final Set<ChangeRequestCheckoutStrategy> getOriginMRStrategies() {
@@ -156,9 +156,9 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each fork pull request.
+     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each fork merge request.
      *
-     * @return the {@link ChangeRequestCheckoutStrategy} to create for each fork pull request.
+     * @return the {@link ChangeRequestCheckoutStrategy} to create for each fork merge request.
      */
     @NonNull
     public final Set<ChangeRequestCheckoutStrategy> getForkMRStrategies() {
@@ -166,10 +166,10 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the {@link ChangeRequestCheckoutStrategy} to create for pull requests of the specified type.
+     * Returns the {@link ChangeRequestCheckoutStrategy} to create for merge requests of the specified type.
      *
-     * @param fork {@code true} to return strategies for the fork pull requests, {@code false} for origin pull requests.
-     * @return the {@link ChangeRequestCheckoutStrategy} to create for each pull request.
+     * @param fork {@code true} to return strategies for the fork merge requests, {@code false} for origin merge requests.
+     * @return the {@link ChangeRequestCheckoutStrategy} to create for each merge request.
      */
     @NonNull
     public final Set<ChangeRequestCheckoutStrategy> getMRStrategies(boolean fork) {
@@ -180,10 +180,10 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each pull request.
+     * Returns the {@link ChangeRequestCheckoutStrategy} to create for each merge request.
      *
-     * @return a map of the {@link ChangeRequestCheckoutStrategy} to create for each pull request keyed by whether the
-     * strategy applies to forks or not ({@link Boolean#FALSE} is the key for origin pull requests)
+     * @return a map of the {@link ChangeRequestCheckoutStrategy} to create for each merge request keyed by whether the
+     * strategy applies to forks or not ({@link Boolean#FALSE} is the key for origin merge requests)
      */
     public final Map<Boolean, Set<ChangeRequestCheckoutStrategy>> getMRStrategies() {
         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> result = new HashMap<>();
@@ -194,9 +194,9 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns requested pull request numbers.
+     * Returns requested merge request numbers.
      *
-     * @return the requested pull request numbers or {@code null} if the request was not scoped to a subset of pull
+     * @return the requested merge request numbers or {@code null} if the request was not scoped to a subset of merge
      * requests.
      */
     @CheckForNull
@@ -268,18 +268,18 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     // TODO Iterable<Tag> getTags() and setTags(...)
 
     /**
-     * Returns the names of the repository collaborators or {@code null} if those details have not been provided yet.
+     * Returns the names of the project collaborators or {@code null} if those details have not been provided yet.
      *
-     * @return the names of the repository collaborators or {@code null} if those details have not been provided yet.
+     * @return the names of the project collaborators or {@code null} if those details have not been provided yet.
      */
     public final Set<String> getCollaboratorNames() {
         return collaboratorNames;
     }
 
     /**
-     * Provides the request with the names of the repository collaborators.
+     * Provides the request with the names of the project collaborators.
      *
-     * @param collaboratorNames the names of the repository collaborators.
+     * @param collaboratorNames the names of the project collaborators.
      */
     public final void setCollaboratorNames(@CheckForNull Set<String> collaboratorNames) {
         this.collaboratorNames = collaboratorNames;

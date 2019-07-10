@@ -87,9 +87,9 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
-        ctx.wantOriginPRs(true);
+        ctx.wantOriginMRs(true);
         ctx.withAuthority(new OriginChangeRequestSCMHeadAuthority());
-        ctx.withOriginPRStrategies(getStrategies());
+        ctx.withOriginMRStrategies(getStrategies());
     }
 
     /**
