@@ -58,7 +58,7 @@ public class GitLabSCMBuildStatusNotifier {
             return;
         }
         GitLabSCMSource source = (GitLabSCMSource) s;
-        final GitLabSCMSourceContext sourceContext =new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+        final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits((source.getTraits()));
         if (sourceContext
                 .notificationsDisabled()) {
@@ -153,7 +153,7 @@ public class GitLabSCMBuildStatusNotifier {
                 return;
             }
             final GitLabSCMSource source = (GitLabSCMSource) src;
-            final GitLabSCMSourceContext sourceContext =new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+            final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                     .withTraits((source.getTraits()));
             if (sourceContext.notificationsDisabled()) {
                 return;

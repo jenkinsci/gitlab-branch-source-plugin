@@ -43,11 +43,11 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Constructor for legacy code.
      *
-     * @param buildBranch       build branches that are not filed as a PR.
-     * @param buildBranchWithPr build branches that are also PRs.
+     * @param buildBranch       build branches that are not filed as a MR.
+     * @param buildBranchWithMr build branches that are also MRs.
      */
-    public BranchDiscoveryTrait(boolean buildBranch, boolean buildBranchWithPr) {
-        this.strategyId = (buildBranch ? 1 : 0) + (buildBranchWithPr ? 2 : 0);
+    public BranchDiscoveryTrait(boolean buildBranch, boolean buildBranchWithMr) {
+        this.strategyId = (buildBranch ? 1 : 0) + (buildBranchWithMr ? 2 : 0);
     }
 
     /**
@@ -60,9 +60,9 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Returns {@code true} if building branches that are not filed as a PR.
+     * Returns {@code true} if building branches that are not filed as a MR.
      *
-     * @return {@code true} if building branches that are not filed as a PR.
+     * @return {@code true} if building branches that are not filed as a MR.
      */
     @Restricted(NoExternalUse.class)
     public boolean isBuildBranch() {
@@ -71,12 +71,12 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Returns {@code true} if building branches that are filed as a PR.
+     * Returns {@code true} if building branches that are filed as a MR.
      *
-     * @return {@code true} if building branches that are filed as a PR.
+     * @return {@code true} if building branches that are filed as a MR.
      */
     @Restricted(NoExternalUse.class)
-    public boolean isBuildBranchesWithPR() {
+    public boolean isBuildBranchesWithMR() {
         return (strategyId & 2) != 0;
     }
 
@@ -99,7 +99,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 break;
             case 3:
             default:
-                // we don't care if it is a PR or not, we're taking them all, no need to ask for PRs and no need
+                // we don't care if it is a MR or not, we're taking them all, no need to ask for MRs and no need
                 // to filter
                 break;
         }
@@ -154,8 +154,8 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         @SuppressWarnings("unused") // stapler
         public ListBoxModel doFillStrategyIdItems() {
             ListBoxModel result = new ListBoxModel();
-            result.add(Messages.BranchDiscoveryTrait_excludePRs(), "1");
-            result.add(Messages.BranchDiscoveryTrait_onlyPRs(), "2");
+            result.add(Messages.BranchDiscoveryTrait_excludeMRs(), "1");
+            result.add(Messages.BranchDiscoveryTrait_onlyMRs(), "2");
             result.add(Messages.BranchDiscoveryTrait_allBranches(), "3");
             return result;
         }
