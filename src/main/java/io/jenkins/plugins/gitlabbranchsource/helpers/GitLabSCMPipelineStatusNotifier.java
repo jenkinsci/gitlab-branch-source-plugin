@@ -45,8 +45,8 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 * Publishes Build-Status to GitLab using separate threads so it does not block while sending messages
 * TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better way to do this built into Jenkins
 */
-public class GitLabSCMBuildStatusNotifier {
-    private static final Logger LOGGER = Logger.getLogger(GitLabSCMBuildStatusNotifier.class.getName());
+public class GitLabSCMPipelineStatusNotifier {
+    private static final Logger LOGGER = Logger.getLogger(GitLabSCMPipelineStatusNotifier.class.getName());
 
     /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
