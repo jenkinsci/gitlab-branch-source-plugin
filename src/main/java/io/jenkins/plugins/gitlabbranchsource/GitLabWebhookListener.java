@@ -27,7 +27,7 @@ public class GitLabWebhookListener {
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
                                 WebhookRegistration mode, String credentialsId) {
         PersonalAccessToken credentials;
-        String serverUrl = navigator.getServerUrl();
+        String serverUrl = GitLabHelper.getServerUrlFromName(navigator.getServerName());
         switch (mode) {
             case DISABLE:
                 return;
