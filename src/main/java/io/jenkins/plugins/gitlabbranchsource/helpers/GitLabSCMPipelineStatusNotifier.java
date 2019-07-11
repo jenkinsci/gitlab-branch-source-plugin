@@ -74,10 +74,13 @@ public class GitLabSCMPipelineStatusNotifier {
             return;
         }
         Result result = build.getResult();
+        LOGGER.info("Result: " + result);
+
         CommitStatus status = new CommitStatus();
         Constants.CommitBuildState state;
         status.setTargetUrl(url);
         status.setName(build.getParent().getFullName());
+
         if (Result.SUCCESS.equals(result)) {
             status.setDescription("This commit looks good");
             status.setStatus("SUCCESS");
@@ -90,7 +93,7 @@ public class GitLabSCMPipelineStatusNotifier {
             status.setDescription("There was a failure building this commit");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
-        } else if (result != null) { // ABORTED etc.
+        } else if (result != null) { // ABORTED, NOT_BUILT.
             status.setDescription("Something is wrong with the build of this commit");
             status.setStatus("CANCELED");
             state = Constants.CommitBuildState.CANCELED;
@@ -148,6 +151,7 @@ public class GitLabSCMPipelineStatusNotifier {
                 return;
             }
             final Job<?, ?> job = (Job) wi.task;
+            LOGGER.info("QueueListener: Waiting"+job.getFullDisplayName());
             final SCMSource src = SCMSource.SourceByItem.findSource(job);
             if (!(src instanceof GitLabSCMSource)) {
                 return;
@@ -238,6 +242,7 @@ public class GitLabSCMPipelineStatusNotifier {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
                                SCMRevisionState pollingBaseline) throws Exception {
+            LOGGER.info("SCMListener: Checkout"+build.getFullDisplayName());
             try {
                 sendNotifications(build, listener);
             } catch (IOException | InterruptedException e) {
@@ -254,6 +259,7 @@ public class GitLabSCMPipelineStatusNotifier {
 
         @Override
         public void onCompleted(Run<?, ?> build, TaskListener listener) {
+            LOGGER.info("RunListener: Complete"+build.getFullDisplayName());
             try {
                 sendNotifications(build, listener);
             } catch (IOException | InterruptedException e) {
@@ -264,6 +270,7 @@ public class GitLabSCMPipelineStatusNotifier {
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
             try {
+                LOGGER.info("RunListener: Started"+run.getFullDisplayName());
                 sendNotifications(run, listener);
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace(listener.error("Could not send notifications"));
