@@ -22,17 +22,13 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
-import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import javax.inject.Inject;
 import jenkins.model.Jenkins;
-import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
@@ -72,16 +68,31 @@ import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fr
 public class GitLabSCMNavigator extends SCMNavigator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMNavigator.class);
-    private final String serverName;
+    /**
+     * The GitLab server name configured in Jenkins.
+     */
+    private String serverName;
+    /**
+     * The owner of the projects to navigate.
+     */
     private final String projectOwner;
+
+    /**
+     * The default credentials to use for checking out).
+     */
     private String credentialsId;
-    private List<SCMTrait<? extends SCMTrait<?>>> traits = new ArrayList<>();
-    private GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
+
+    /**
+     * The behavioural traits to apply.
+     */
+    private List<SCMTrait<? extends SCMTrait<?>>> traits;
+
+    private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
     @DataBoundConstructor
-    public GitLabSCMNavigator(String serverName, String projectOwner) {
-        this.serverName = serverName;
+    public GitLabSCMNavigator(String projectOwner) {
         this.projectOwner = projectOwner;
+        this.traits = new ArrayList<>();
     }
 
     public String getCredentialsId() {
@@ -126,9 +137,25 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     }
 
+    @DataBoundSetter
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+    }
 
+    @DataBoundSetter
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = credentialsId;
+    }
+
+    /**
+     * Gets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
+     * discovers.
+     *
+     * @return the behavioural traits.
+     */
+    @NonNull
+    public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
+        return Collections.unmodifiableList(traits);
     }
 
     @NonNull
@@ -200,12 +227,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         }
                     }
                 })) {
-                    observer.getListener().getLogger().format("%n%d repositories were processed (query complete)%n",
+                    observer.getListener().getLogger().format("%n%d projects were processed (query complete)%n",
                             count);
                     return;
                 }
             }
-            observer.getListener().getLogger().format("%n%d repositories were processed%n", count);
+            observer.getListener().getLogger().format("%n%d projects were processed%n", count);
         } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -370,7 +397,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @NonNull
         @Override
         public String getDescription() {
-            return "Scans a GitLab Group (or GitLab User) for all repositories matching some defined markers.";
+            return "Scans a GitLab Group (or GitLab User) for all projects matching some defined markers.";
         }
 
         @Override
@@ -386,9 +413,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @Override
         public SCMNavigator newInstance(String name) {
             LOGGER.info("Instantiating GitLabSCMNavigator..");
-            List<GitLabServer> servers = GitLabServers.get().getServers();
             GitLabSCMNavigator navigator =
-                    new GitLabSCMNavigator(servers.isEmpty() ? null : servers.get(0).getName(), "");
+                    new GitLabSCMNavigator("");
             navigator.setTraits(getTraitsDefaults());
             return navigator;
         }
@@ -401,26 +427,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
             all.addAll(SCMNavigatorTrait._for(this, GitLabSCMNavigatorContext.class, GitLabSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, GitLabSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, GitLabSCMBuilder.class));
-            Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
-            for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
-                SCMTraitDescriptor<?> d = iterator.next();
-                if (dedup.contains(d)
-                        || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
-                    // remove any we have seen already and ban the browser configuration as it will always be github
-                    iterator.remove();
-                } else {
-                    dedup.add(d);
-                }
-            }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
-            NamedArrayList.select(all, "Repositories", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
+            NamedArrayList.select(all, "Projects", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
                         @Override
                         public boolean test(SCMTraitDescriptor<?> scmTraitDescriptor) {
                             return scmTraitDescriptor instanceof SCMNavigatorTraitDescriptor;
                         }
                     },
                     true, result);
-            NamedArrayList.select(all, "Within repository", NamedArrayList
+            NamedArrayList.select(all, "Within project", NamedArrayList
                             .anyOf(NamedArrayList.withAnnotation(Discovery.class),
                                     NamedArrayList.withAnnotation(Selection.class)),
                     true, result);
@@ -435,7 +450,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @NonNull
         @SuppressWarnings("unused") // jelly
         public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
-            return new ArrayList<>(delegate.getTraitsDefaults());
+            List<SCMTrait<? extends SCMTrait<?>>> result = new ArrayList<>();
+            result.addAll(delegate.getTraitsDefaults());
+            return result;
         }
     }
 
