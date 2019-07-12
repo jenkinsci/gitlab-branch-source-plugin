@@ -8,6 +8,7 @@ import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import java.io.IOException;
 import java.util.Date;
+import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
@@ -33,6 +34,8 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
                 this.ref = ((MergeRequestSCMRevision) rev).getOrigin().getHash();
             } else if (rev instanceof BranchSCMRevision) {
                 this.ref = ((BranchSCMRevision) rev).getHash();
+            } else if (rev instanceof GitTagSCMRevision){
+                this.ref = ((GitTagSCMRevision) rev).getHash();
             } else {
                 this.ref = ref;
             }

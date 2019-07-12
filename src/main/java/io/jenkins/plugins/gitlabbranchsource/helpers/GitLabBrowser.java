@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.plugins.git.GitChangeSet;
@@ -81,6 +82,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     @Extension
     public static class DescriptorImp extends Descriptor<RepositoryBrowser<?>> {
+        @NonNull
         public String getDisplayName() {
             return "GitLab";
         }
