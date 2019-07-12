@@ -8,12 +8,28 @@
         <c:select/>
     </f:entry>
     <f:entry title="${%Owner}" field="projectOwner">
-        <f:textbox/>
+        <f:textbox clazz="project-owner"/>
     </f:entry>
-    <f:entry title="${%Project}" field="project">
-        <f:select/>
+    <f:entry title="${%Projects}" field="projectPath">
+        <f:select clazz="project-path"/>
     </f:entry>
     <f:entry title="${%Behaviours}">
         <scm:traits field="traits"/>
     </f:entry>
+    <script>
+        // var projectOwner = document.getElementsByClassName('project-owner');
+        //
+        // var projectPath = document.getElementsByClassName('project-path');
+        //
+        // projectPath.addEventListener('change', function() {
+        //     var currentPath = projectPath.value;
+        //     for(var i = currentPath.length-1; i >= 0; i--) {
+        //         currentPath = currentPath.substring(0, currentPath.length-1);
+        //         if(currentPath[i] === '/') {
+        //             break;
+        //         }
+        //     }
+        //     projectOwner.item(0).value = currentPath;
+        // })
+    </script>
 </j:jelly>

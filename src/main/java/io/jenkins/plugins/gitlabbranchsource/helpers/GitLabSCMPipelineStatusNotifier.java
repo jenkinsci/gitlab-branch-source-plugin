@@ -127,7 +127,7 @@ public class GitLabSCMPipelineStatusNotifier {
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             gitLabApi.getCommitsApi().addCommitStatus(
-                    source.getProjectOwner()+'/'+source.getProject(),
+                    source.getProjectPath(),
                     hash,
                     state,
                     status);
@@ -216,7 +216,7 @@ public class GitLabSCMPipelineStatusNotifier {
                                 resolving.remove(job);
                             }
                             gitLabApi.getCommitsApi().addCommitStatus(
-                                    source.getProjectOwner()+'/'+source.getProject(),
+                                    source.getProjectPath(),
                                     hash,
                                     state,
                                     status);

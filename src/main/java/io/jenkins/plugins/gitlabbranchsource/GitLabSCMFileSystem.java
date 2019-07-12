@@ -1,7 +1,5 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -9,23 +7,17 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
-import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.io.IOException;
 import java.util.Date;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
-import jenkins.scm.api.SCMSourceOwner;
-import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
-
-import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
 
@@ -99,45 +91,26 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
                 throws IOException, InterruptedException {
             GitLabSCMSource src = (GitLabSCMSource) source;
-            String projectOwner;
-            String project;
+            String projectPath;
             String ref;
             if (head instanceof MergeRequestSCMHead) {
-                projectOwner = ((MergeRequestSCMHead) head).getOriginOwner();
-                project = ((MergeRequestSCMHead) head).getOriginProject();
+                projectPath = ((MergeRequestSCMHead) head).getOriginProjectPath();
                 ref = ((MergeRequestSCMHead) head).getOriginName();
             } else if (head instanceof BranchSCMHead) {
-                projectOwner = src.getProjectOwner();
-                project = src.getProject();
+                projectPath = src.getProjectPath();
                 ref = head.getName();
             } else {
                 return null;
             }
-            SCMSourceOwner owner = source.getOwner();
-            String serverUrl = GitLabHelper.getServerUrlFromName(src.getServerName());
-            String credentialsId = src.getCredentialsId();
-            PersonalAccessToken credentials = StringUtils.isBlank(credentialsId)
-                    ? null
-                    : CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
-                            PersonalAccessToken.class,
-                            owner,
-                            Jenkins.getAuthentication(),
-                            fromUri(serverUrl).build()),
-                    CredentialsMatchers.withId(credentialsId)
-            );
-            if (owner != null) {
-                CredentialsProvider.track(owner, credentials);
-            }
-            GitLabApi gitLabApi;
-            if(credentials == null) {
-                gitLabApi = new GitLabApi(serverUrl, "");
-            } else {
-                gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
+            GitLabApi gitLabApi = null;
+            try {
+                gitLabApi = GitLabHelper.apiBuilder(src.getServerName());
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
             }
             // TODO needs review
             try {
-                return new GitLabSCMFileSystem(gitLabApi, gitLabApi.getProjectApi().getProject(projectOwner, project), ref, rev);
+                return new GitLabSCMFileSystem(gitLabApi, gitLabApi.getProjectApi().getProject(projectPath), ref, rev);
             } catch (GitLabApiException e) {
                 throw new IOException(e);
             }

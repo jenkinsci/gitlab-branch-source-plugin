@@ -17,8 +17,8 @@ public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuil
 
     public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverName,
                                   @CheckForNull String credentialsId, @NonNull String projectOwner,
-                                  @NonNull String projectName) {
-        super(GitLabSCMSource.class, projectName);
+                                  @NonNull String projectPath) {
+        super(GitLabSCMSource.class, projectPath);
         this.id = id;
         this.serverName = serverName;
         this.projectOwner = projectOwner;

@@ -49,16 +49,10 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     private final String serverUrl;
 
     /**
-     * The repository owner.
-     */
-    @NonNull
-    private final String projectOwner;
-
-    /**
      * The repository name.
      */
     @NonNull
-    private final String project;
+    private final String projectPath;
 
     private final String sshRemote;
 
@@ -73,16 +67,13 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         super(
                 head,
                 revision,
-                checkoutUriTemplate(null, GitLabHelper.getServerUrlFromName(source.getServerName()), null, null)
-                        .set("owner", source.getProjectOwner())
-                        .set("project", source.getProject())
+                checkoutUriTemplate(null, GitLabHelper.getServerUrlFromName(source.getServerName()), null, null, source.getProjectPath())
                         .expand(),
                 source.getCredentialsId()
         );
         this.context = source.getOwner();
         serverUrl = StringUtils.defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()), GitLabServer.GITLAB_SERVER_URL);
-        projectOwner = source.getProjectOwner();
-        project = source.getProject();
+        projectPath = source.getProjectPath();
         sshRemote = source.getSshRemote();
         // configure the ref specs
         withoutRefSpecs();
@@ -90,10 +81,10 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         if(head instanceof MergeRequestSCMHead) {
             MergeRequestSCMHead h = (MergeRequestSCMHead) head;
             withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
-            projectUrl = projectUrl(h.getOriginOwner(), h.getOriginProject());
+            projectUrl = projectUrl(h.getOriginProjectPath());
         } else {
             withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
-            projectUrl = projectUrl(projectOwner, project);
+            projectUrl = projectUrl(projectPath);
         }
         withBrowser(new GitLabBrowser(projectUrl));
     }
@@ -111,7 +102,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     public static UriTemplate checkoutUriTemplate(@CheckForNull Item context,
                                                   @NonNull String serverUrl,
                                                   @CheckForNull String sshRemote,
-                                                  @CheckForNull String credentialsId) {
+                                                  @CheckForNull String credentialsId,
+                                                  @NonNull String projectPath) {
         if (credentialsId != null && sshRemote != null) {
             URIRequirementBuilder builder = URIRequirementBuilder.create();
             URI serverUri = URI.create(serverUrl);
@@ -136,8 +128,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 URI sshUri = URI.create(sshRemote);
                 return UriTemplate.buildFromTemplate(
                         "ssh://git@" + sshUri.getHost() + (sshUri.getPort() != 22 ? ":" + sshUri.getPort() : ""))
-                        .path(UriTemplateBuilder.var("owner"))
-                        .path(UriTemplateBuilder.var("project"))
+                        .path(UriTemplateBuilder.var("projectPath"))
                         .literal(".git")
                         .build();
             }
@@ -153,8 +144,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                             serverUri.getFragment()
                     );
                     return UriTemplate.buildFromTemplate(tokenUri.toASCIIString())
-                            .path(UriTemplateBuilder.var("owner"))
-                            .path(UriTemplateBuilder.var("project"))
+                            .path(UriTemplateBuilder.var("projectPath"))
                             .literal(".git")
                             .build();
                 } catch (URISyntaxException e) {
@@ -162,20 +152,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 }
             }
         }
-        return UriTemplate.buildFromTemplate(serverUrl)
-                .path(UriTemplateBuilder.var("owner"))
-                .path(UriTemplateBuilder.var("project"))
+        return UriTemplate.buildFromTemplate(serverUrl+'/'+projectPath)
                 .literal(".git")
                 .build();
     }
 
-    private String projectUrl(String owner, String project) {
-        return UriTemplate.buildFromTemplate(serverUrl)
-                .path(UriTemplateBuilder.var("owner"))
-                .path(UriTemplateBuilder.var("project"))
+    private String projectUrl(String projectPath) {
+        return UriTemplate.buildFromTemplate(serverUrl+'/'+projectPath)
                 .build()
-                .set("owner", owner)
-                .set("project", project)
                 .expand();
     }
 
@@ -188,7 +172,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     @NonNull
     public final UriTemplate checkoutUriTemplate() {
         String credentialsId = credentialsId();
-        return checkoutUriTemplate(context, serverUrl, sshRemote, credentialsId);
+        return checkoutUriTemplate(context, serverUrl, sshRemote, credentialsId, projectPath);
     }
 
     /**
@@ -201,14 +185,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      */
     @NonNull
     public final GitLabSCMBuilder withGitLabRemote() {
-        withRemote(checkoutUriTemplate().set("owner", projectOwner).set("project", project).expand());
+        withRemote(checkoutUriTemplate().expand());
         final SCMHead h = head();
         String projectUrl;
         if (h instanceof MergeRequestSCMHead) {
             final MergeRequestSCMHead head = (MergeRequestSCMHead) h;
-            projectUrl = projectUrl(head.getOriginOwner(), head.getOriginProject());
+            projectUrl = projectUrl(head.getOriginProjectPath());
         } else {
-            projectUrl = projectUrl(projectOwner, project);
+            projectUrl = projectUrl(projectPath);
         }
         if (projectUrl != null) {
             withBrowser(new GitLabBrowser(projectUrl));

@@ -203,7 +203,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
-                if (request.process(p.getName(), new SCMNavigatorRequest.SourceLambda() {
+                if (request.process(p.getPathWithNamespace(), new SCMNavigatorRequest.SourceLambda() {
                     @NonNull
                     @Override
                     public SCMSource create(@NonNull String projectName) throws IOException, InterruptedException {
@@ -243,9 +243,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
     protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner, SCMNavigatorEvent event,
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
         LOGGER.info("retrieving actions..");
-        GitLabApi gitLabApi = null;
         try {
-            gitLabApi = GitLabHelper.apiBuilder(serverName);
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
             if (this.gitlabOwner == null) {
                 gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             }
