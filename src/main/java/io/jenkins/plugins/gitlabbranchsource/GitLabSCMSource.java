@@ -154,10 +154,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            // To verify the supplied PAT is valid
-            if(!gitLabApi.getAuthToken().equals("")) {
-                gitLabApi.getUserApi().getCurrentUser();
-            }
             LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
@@ -202,10 +198,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            // To verify the supplied PAT is valid
-            if (!gitLabApi.getAuthToken().equals("")) {
-                gitLabApi.getUserApi().getCurrentUser();
-            }
             if(gitlabProject == null) {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
             }
