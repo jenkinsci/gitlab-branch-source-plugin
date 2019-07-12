@@ -223,7 +223,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     if (gitlabProject.getForkedFromProject() == null) {
                         listener.getLogger()
                                 .format("%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
-                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject);
+                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
                         mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null).collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     }
