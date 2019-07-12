@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.scm.api.SCMFile;
@@ -216,8 +217,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     if (gitlabProject.getForkedFromProject() == null) {
                         listener.getLogger()
                                 .format("%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
-                        // TODO Fix this: cannot call getDiffRefs on requests since it will always return null
-                        request.setMergeRequests(gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject));
+                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi().getMergeRequests(gitlabProject);
+                        mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null).collect(Collectors.toList());
+                        request.setMergeRequests(mrs);
                     }
                     else {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
