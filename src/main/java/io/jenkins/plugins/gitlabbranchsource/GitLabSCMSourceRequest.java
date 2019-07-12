@@ -16,41 +16,77 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Tag;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
-
+    /**
+     * {@code true} if branch details need to be fetched.
+     */
     private final boolean fetchBranches;
+    /**
+     * {@code true} if tag details need to be fetched.
+     */
     private final boolean fetchTags;
+    /**
+     * {@code true} if origin merge requests need to be fetched.
+     */
     private final boolean fetchOriginMRs;
+    /**
+     * {@code true} if fork merge requests need to be fetched.
+     */
     private final boolean fetchForkMRs;
-
+    /**
+     * The {@link ChangeRequestCheckoutStrategy} to create for each origin merge request.
+     */
     @NonNull
     private final Set<ChangeRequestCheckoutStrategy> originMRStrategies;
+    /**
+     * The {@link ChangeRequestCheckoutStrategy} to create for each fork merge request.
+     */
     @NonNull
     private final Set<ChangeRequestCheckoutStrategy> forkMRStrategies;
+    /**
+     * The set of merge request numbers that the request is scoped to or {@code null} if the request is not limited.
+     */
     @CheckForNull
     private final Set<Long> requestedMergeRequestNumbers;
+    /**
+     * The set of origin branch names that the request is scoped to or {@code null} if the request is not limited.
+     */
     @CheckForNull
     private final Set<String> requestedOriginBranchNames;
+    /**
+     * The set of tag names that the request is scoped to or {@code null} if the request is not limited.
+     */
     @CheckForNull
     private final Set<String> requestedTagNames;
-
+    /**
+     * The pull request details or {@code null} if not {@link #isFetchMRs()}.
+     */
     @CheckForNull
     private Iterable<MergeRequest> mergeRequests;
+    /**
+     * The branch details or {@code null} if not {@link #isFetchBranches()}.
+     */
     @CheckForNull
     private Iterable<Branch> branches;
-
     /**
-     * The project collaborator names or {@code null} if not provided.
+     * The tag details or {@code null} if not {@link #isFetchTags()}.
+     */
+    @CheckForNull
+    private Iterable<Tag> tags;
+    /**
+     * The repository collaborator names or {@code null} if not provided.
      */
     @CheckForNull
     private Set<String> collaboratorNames;
-
+    /**
+     * A connection to the GitLab API or {@code null} if none established yet.
+     */
     @CheckForNull
     private GitLabApi gitLabApi;
 
@@ -86,7 +122,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
                     if (SCMHeadOrigin.DEFAULT.equals(h.getOrigin())) {
                         branchNames.add(((MergeRequestSCMHead) h).getOriginName());
                     }
-                } else if (h instanceof TagSCMHead) { // TODO replace with concrete class when tag support added
+                } else if (h instanceof GitLabTagSCMHead) {
                     tagNames.add(h.getName());
                 }
             }
@@ -264,6 +300,27 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     public final void setBranches(@CheckForNull Iterable<Branch> branches) {
         this.branches = branches;
     }
+
+    /**
+     * Provides the requests with the tag details.
+     *
+     * @param tags the tag details.
+     */
+    public final void setTags(@CheckForNull Iterable<Tag> tags) {
+        this.tags = tags;
+    }
+
+    /**
+     * Returns the tag details or an empty list if either the request did not specify to {@link #isFetchTags()} ()}
+     * or if the tag details have not been provided by {@link #setTags(Iterable)} yet.
+     *
+     * @return the tag details (may be empty)
+     */
+    @NonNull
+    public final Iterable<Tag> getTags() {
+        return Util.fixNull(tags);
+    }
+
 
     // TODO Iterable<Tag> getTags() and setTags(...)
 

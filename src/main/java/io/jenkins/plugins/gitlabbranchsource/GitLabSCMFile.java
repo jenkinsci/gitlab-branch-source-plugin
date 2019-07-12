@@ -95,7 +95,7 @@ public class GitLabSCMFile extends SCMFile {
         try {
             return gitLabApi.getRepositoryFileApi().getRawFile(project, ref, getPath());
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.info("Jenkinfile Not found: "+ref);
         }
         return null;
     }

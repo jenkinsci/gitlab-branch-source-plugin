@@ -82,7 +82,11 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
             MergeRequestSCMHead h = (MergeRequestSCMHead) head;
             withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(h.getOriginProjectPath());
-        } else {
+        } else if (head instanceof GitLabTagSCMHead) {
+            withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());
+            projectUrl = projectUrl(projectPath);
+        }  else {
+
             withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(projectPath);
         }
