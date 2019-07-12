@@ -214,9 +214,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                if (request.isFetchTags()) {
-                    request.setTags(gitLabApi.getTagsApi().getTags(gitlabProject));
-                }
                 if (request.isFetchMRs()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
                     // If `forkedFromProject` is null it doesn't mean anything
@@ -230,6 +227,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     else {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
                     }
+                }
+                if (request.isFetchTags()) {
+                    request.setTags(gitLabApi.getTagsApi().getTags(gitlabProject));
                 }
                 if (request.isFetchBranches()) {
                     int count = 0;
@@ -267,49 +267,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         }
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
-                }
-                if(request.isFetchTags()) {
-                    int count = 0;
-                    listener.getLogger().format("%nChecking tags..%n");
-                    Iterable<Tag> tags = request.getTags();
-                    for(Tag tag : tags) {
-                        count++;
-                        String tagName = tag.getName();
-                        Long tagDate = tag.getCommit().getCommittedDate().getTime();
-                        String sha = tag.getCommit().getId();
-                        listener.getLogger().format("%nChecking tag %s%n",
-                                HyperlinkNote.encodeTo(
-                                        UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
-                                                .literal("/tree")
-                                                .path("tag")
-                                                .build()
-                                                .set("tag", tag.getName())
-                                                .expand(),
-                                        tag.getName()
-                                )
-
-                        );
-                        GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
-                        if(request.process(head, new GitTagSCMRevision(head, sha),
-                                new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
-                                    @NonNull
-                                    @Override
-                                    public SCMSourceCriteria.Probe create(@NonNull GitLabTagSCMHead head,
-                                                                          @Nullable GitTagSCMRevision revision)
-                                            throws IOException, InterruptedException {
-                                        return createProbe(head, revision);
-                                    }
-                                }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
-                                    if (isMatch) {
-                                        listener.getLogger().format("Met criteria%n");
-                                    } else {
-                                        listener.getLogger().format("Does not meet criteria%n");
-                                    }
-                                }))
-                            listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
-                            return;
-                    }
-                    listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
                 }
                 if(request.isFetchMRs() && gitlabProject.getForkedFromProject() == null && !(request.getForkMRStrategies().isEmpty()
                         && request.getOriginMRStrategies().isEmpty())) {
@@ -383,6 +340,49 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         }
                     }
                     listener.getLogger().format("%n%d merge requests were processed%n", count);
+                }
+                if(request.isFetchTags()) {
+                    int count = 0;
+                    listener.getLogger().format("%nChecking tags..%n");
+                    Iterable<Tag> tags = request.getTags();
+                    for(Tag tag : tags) {
+                        count++;
+                        String tagName = tag.getName();
+                        Long tagDate = tag.getCommit().getCommittedDate().getTime();
+                        String sha = tag.getCommit().getId();
+                        listener.getLogger().format("%nChecking tag %s%n",
+                                HyperlinkNote.encodeTo(
+                                        UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
+                                                .literal("/tree")
+                                                .path("tag")
+                                                .build()
+                                                .set("tag", tag.getName())
+                                                .expand(),
+                                        tag.getName()
+                                )
+
+                        );
+                        GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
+                        if(request.process(head, new GitTagSCMRevision(head, sha),
+                                new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(@NonNull GitLabTagSCMHead head,
+                                                                          @Nullable GitTagSCMRevision revision)
+                                            throws IOException, InterruptedException {
+                                        return createProbe(head, revision);
+                                    }
+                                }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
+                                    if (isMatch) {
+                                        listener.getLogger().format("Met criteria%n");
+                                    } else {
+                                        listener.getLogger().format("Does not meet criteria%n");
+                                    }
+                                }))
+                            listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
+                        return;
+                    }
+                    listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
                 }
             }
         } catch (GitLabApiException | NoSuchFieldException e) {

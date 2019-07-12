@@ -92,6 +92,8 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
                 ref = ((MergeRequestSCMHead) head).getOriginName();
             } else if (head instanceof BranchSCMHead) {
                 ref = head.getName();
+            } else if (head instanceof GitLabTagSCMHead){
+                ref = head.getName();
             } else {
                 return null;
             }
