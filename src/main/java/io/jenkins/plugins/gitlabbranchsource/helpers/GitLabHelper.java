@@ -21,7 +21,7 @@ public class GitLabHelper {
 
     public static String getServerUrlFromName(String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
-        return server != null ? server.getServerUrl() : "";
+        return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
     }
 
 }

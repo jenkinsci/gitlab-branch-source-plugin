@@ -481,11 +481,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (builder == null) {
                 throw new AssertionError();
             }
-            final SCMFileSystem fs = builder.build(this, head, revision);
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            if(gitlabProject == null) {
+                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+            }
+            LOGGER.info("Creating a probe: "+ head.getName());
+            final SCMFileSystem fs = builder.build(head, revision, gitLabApi, gitlabProject);
             return new SCMProbe() {
                 @NonNull
                 @Override
                 public SCMProbeStat stat(@NonNull String path) throws IOException {
+                    LOGGER.info("Path of file: "+path );
                     try {
                         return SCMProbeStat.fromType(fs.child(path).getType());
                     } catch (InterruptedException e) {
@@ -517,7 +523,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return fs != null ? fs.getRoot() : null;
                 }
             };
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | NoSuchFieldException | GitLabApiException e) {
             throw new IOException(e);
         }
     }

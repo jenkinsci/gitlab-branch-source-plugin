@@ -6,7 +6,6 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import java.io.IOException;
 import java.util.Date;
 import jenkins.scm.api.SCMFile;
@@ -16,7 +15,6 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
@@ -87,33 +85,17 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
             return null;
         }
 
-        @Override
-        public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision rev)
+        public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev, @NonNull GitLabApi gitLabApi, @NonNull Project gitlabProject)
                 throws IOException, InterruptedException {
-            GitLabSCMSource src = (GitLabSCMSource) source;
-            String projectPath;
             String ref;
             if (head instanceof MergeRequestSCMHead) {
-                projectPath = ((MergeRequestSCMHead) head).getOriginProjectPath();
                 ref = ((MergeRequestSCMHead) head).getOriginName();
             } else if (head instanceof BranchSCMHead) {
-                projectPath = src.getProjectPath();
                 ref = head.getName();
             } else {
                 return null;
             }
-            GitLabApi gitLabApi = null;
-            try {
-                gitLabApi = GitLabHelper.apiBuilder(src.getServerName());
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-            // TODO needs review
-            try {
-                return new GitLabSCMFileSystem(gitLabApi, gitLabApi.getProjectApi().getProject(projectPath), ref, rev);
-            } catch (GitLabApiException e) {
-                throw new IOException(e);
-            }
+            return new GitLabSCMFileSystem(gitLabApi, gitlabProject, ref, rev);
         }
     }
 }
