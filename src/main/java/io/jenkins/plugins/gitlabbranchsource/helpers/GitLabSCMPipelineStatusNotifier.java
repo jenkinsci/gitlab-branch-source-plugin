@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
@@ -113,8 +114,11 @@ public class GitLabSCMPipelineStatusNotifier {
             listener.getLogger().format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
+        } else if (revision instanceof GitTagSCMRevision){
+            listener.getLogger().format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
+                    status.getStatus(), status.getDescription());
+            hash = ((GitTagSCMRevision) revision).getHash();
         } else {
-            // TODO tags
             return;
         }
         JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class).get(JobScheduledListener.class);
@@ -184,8 +188,10 @@ public class GitLabSCMPipelineStatusNotifier {
                         } else if (revision instanceof MergeRequestSCMRevision) {
                             LOGGER.log(Level.INFO, "Notifying merge request pending build {0}", job.getFullName());
                             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
+                        } else if (revision instanceof GitTagSCMRevision){
+                            LOGGER.log(Level.INFO, "Notifying tag pending build {0}", job.getFullName());
+                            hash = ((GitTagSCMRevision) revision).getHash();
                         } else {
-                            // TODO tags
                             return;
                         }
                         String url;
