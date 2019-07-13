@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -12,12 +11,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
-import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
-import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.ProjectHook;
@@ -104,8 +100,8 @@ public class GitLabWebhookListener {
         }
     }
 
-    public static void register(SCMSourceOwner owner, GitLabSCMSource source,
-                                WebhookRegistration mode, String credentialsId) {
+    public static void register(GitLabSCMSource source,
+                                WebhookRegistration mode) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
