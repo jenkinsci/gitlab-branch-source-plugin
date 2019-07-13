@@ -14,26 +14,31 @@ import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
 import jenkins.scm.api.SCMSourceOwner;
 import org.apache.commons.lang.StringUtils;
+import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.ProjectHook;
+import org.gitlab4j.api.models.Visibility;
 
 public class GitLabWebhookListener {
 
     public static final Logger LOGGER = Logger.getLogger(GitLabWebhookListener.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                WebhookRegistration mode, String credentialsId) {
+                                WebhookRegistration mode) {
         PersonalAccessToken credentials;
-        String serverUrl = GitLabHelper.getServerUrlFromName(navigator.getServerName());
+        GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
+        if(server == null) {
+            return;
+        }
         switch (mode) {
             case DISABLE:
                 return;
             case SYSTEM:
-                GitLabServer server = GitLabServers.get().findServer(serverUrl);
-                if (server == null || !server.isManageHooks()) {
+                if (!server.isManageHooks()) {
                     return;
                 }
                 credentials = server.getCredentials();
@@ -55,17 +60,17 @@ public class GitLabWebhookListener {
         String hookUrl =
                 UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
-            GitLabApi gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-            gitLabApi.getUserApi().getCurrentUser();
+            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
             List<Project> projects;
-            // TODO check if user can be supported
+            LOGGER.info("Project Owner: "+ gitLabOwner);
             if(gitLabOwner == GitLabOwner.USER) {
-                return;
+                projects = gitLabApi.getProjectApi().getUserProjects(navigator.getProjectOwner(), new ProjectFilter().withVisibility(
+                        Visibility.PUBLIC));
             } else {
-                Group gitLabGroup = gitLabApi.getGroupApi().getGroup(navigator.getProjectOwner());
-                projects = gitLabGroup.getProjects();
+                projects = gitLabApi.getGroupApi().getProjects(navigator.getProjectOwner());
             }
+            LOGGER.info(projects.toString());
             if(projects.isEmpty()) {
                 LOGGER.log(Level.WARNING,
                         "Group is empty!");
@@ -81,6 +86,7 @@ public class GitLabWebhookListener {
                                         .findFirst()
                                         .orElse(new ProjectHook()));
             }
+            LOGGER.info(validHooks.toString());
             for(ProjectHook hook : validHooks) {
                 if(hook.getId() == null) {
                     Project project = projects.get(validHooks.indexOf(hook));
@@ -94,20 +100,21 @@ public class GitLabWebhookListener {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
-                    "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + serverUrl, e);
+                    "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + server.getServerUrl(), e);
         }
     }
 
     public static void register(SCMSourceOwner owner, GitLabSCMSource source,
                                 WebhookRegistration mode, String credentialsId) {
         PersonalAccessToken credentials;
-        String serverUrl = GitLabHelper.getServerUrlFromName(source.getServerName());
-        switch (mode) {
+        GitLabServer server = GitLabServers.get().findServer(source.getServerName());
+        if(server == null) {
+            return;
+        }        switch (mode) {
             case DISABLE:
                 return;
             case SYSTEM:
-                GitLabServer server = GitLabServers.get().findServer(serverUrl);
-                if (server == null || !server.isManageHooks()) {
+                if (!server.isManageHooks()) {
                     return;
                 }
                 credentials = server.getCredentials();
@@ -129,9 +136,8 @@ public class GitLabWebhookListener {
         String hookUrl =
                 UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
-            GitLabApi gitLabApi = new GitLabApi(serverUrl, credentials.getToken().getPlainText());
-            gitLabApi.getUserApi().getCurrentUser();
-            Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectOwner());
+            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+            Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectPath());
             try {
                 gitLabApi.getRepositoryApi().getTree(gitlabProject);
             } catch (GitLabApiException e) {
@@ -139,9 +145,6 @@ public class GitLabWebhookListener {
                         "Project is empty!", e);
                 return;
             }
-            // Since GitLab doesn't allow API calls on Group WebHooks.
-            // So fetching a list of web hooks in individual projects inside the group
-            // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
             ProjectHook validHook = gitLabApi.getProjectApi().getHooksStream(gitlabProject)
                             .filter(hook -> hookUrl.equals(hook.getUrl()))
                             .findFirst()
@@ -156,7 +159,7 @@ public class GitLabWebhookListener {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
-                    "Could not manage project hooks for " + source.getProjectOwner() + " on " + serverUrl, e);
+                    "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
         }
     }
 
