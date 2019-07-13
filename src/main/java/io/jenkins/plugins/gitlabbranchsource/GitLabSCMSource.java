@@ -372,7 +372,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             throws IOException, InterruptedException {
                                         return createProbe(head, revision);
                                     }
-                                }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
+                                }, (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
                                     if (isMatch) {
                                         listener.getLogger().format("Met criteria%n");
                                     } else {
@@ -476,6 +476,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     mergeUrl
             ));
             result.add(new GitLabLink("icon-branch", mergeUrl));
+        } else if(head instanceof  GitLabTagSCMHead) {
+            String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+                    .path("tree")
+                    .path(UriTemplateBuilder.var("tag"))
+                    .build()
+                    .set("tag", ((GitLabTagSCMHead) head).getName())
+                    .expand();
+            result.add(new ObjectMetadataAction(
+                    null,
+                    null,
+                    tagUrl
+            ));
+            result.add(new GitLabLink("icon-branch", tagUrl));
         }
         return result;
     }
