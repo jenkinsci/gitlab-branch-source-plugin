@@ -483,12 +483,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     mergeUrl
             ));
             result.add(new GitLabLink("icon-branch", mergeUrl));
-        } else if(head instanceof  GitLabTagSCMHead) {
+        } else if(head instanceof GitLabTagSCMHead) {
             String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
                     .path("tree")
                     .path(UriTemplateBuilder.var("tag"))
                     .build()
-                    .set("tag", ((GitLabTagSCMHead) head).getName())
+                    .set("tag", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(
                     null,
