@@ -187,6 +187,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     listener.getLogger().format("Merge request #%s is CLOSED%n", h.getId());
                     return null;
                 }
+            } else if(head instanceof  GitLabTagSCMHead) {
+                listener.getLogger().format("Querying the current revision of tag %s...%n", head.getName());
+                String revision = gitLabApi.getTagsApi().getTag(gitlabProject, head.getName()).getCommit().getId();
+                listener.getLogger().format("Current revision of tag %s is %s%n", head.getName(), revision);
+                return new GitTagSCMRevision((GitLabTagSCMHead) head, revision);
             } else {
                 listener.getLogger().format("Unknown head: %s of type %s%n", head.getName(), head.getClass().getName());
                 return null;
@@ -372,7 +377,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             throws IOException, InterruptedException {
                                         return createProbe(head, revision);
                                     }
-                                }, (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
+                                }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
                                     if (isMatch) {
                                         listener.getLogger().format("Met criteria%n");
                                     } else {
