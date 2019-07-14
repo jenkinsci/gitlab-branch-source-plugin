@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/baymac/gitlab-branch-source-plugin.svg?branch=develop)](https://travis-ci.org/baymac/gitlab-branch-source-plugin)
-[![GitHub release](https://img.shields.io/github/release/baymac/gitlab-branch-source-plugin.svg?label=release)](https://github.com/baymac/gitlab-branch-source-plugin/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
 [![Gitter](https://badges.gitter.im/jenkinsci/gitlab-branch-source-plugin.svg)](https://gitter.im/jenkinsci/gitlab-branch-source-plugin)
 
 # GitLab Branch Source Plugin
