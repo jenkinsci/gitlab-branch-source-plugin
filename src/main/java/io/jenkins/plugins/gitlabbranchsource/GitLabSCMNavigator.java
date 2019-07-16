@@ -54,6 +54,7 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
+import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -64,6 +65,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
 public class GitLabSCMNavigator extends SCMNavigator {
 
@@ -290,7 +293,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             if (StringUtils.isNotBlank(avatarUrl)) {
                 result.add(new GitLabAvatar(avatarUrl));
             }
-            result.add(new GitLabLink("icon-gitlab", objectUrl));
+            result.add(new GitLabLink(ICON_GITLAB, objectUrl));
             if (gitlabOwner == GitLabOwner.USER) {
                 String website = null;
                 try {
@@ -334,12 +337,42 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     @Extension
-    public static class DescriptorImpl extends SCMNavigatorDescriptor {
+    public static class DescriptorImpl extends SCMNavigatorDescriptor implements IconSpec {
 
         @NonNull
         @Override
         public String getDisplayName() {
             return "GitLab Group";
+        }
+
+        @Override
+        public String getPronoun() {
+            return "GitLab Group";
+        }
+
+        @NonNull
+        @Override
+        public String getDescription() {
+            return "Scans a GitLab Group (or GitLab User) for all projects matching some defined markers.";
+        }
+
+        @Override
+        public String getIconClassName() {
+            return ICON_GITLAB;
+        }
+
+        @Override
+        public String getIconFilePathPattern() {
+            return iconFilePathPattern(getIconClassName());
+        }
+
+        @Override
+        public SCMNavigator newInstance(String name) {
+            LOGGER.info("Instantiating GitLabSCMNavigator..");
+            GitLabSCMNavigator navigator =
+                    new GitLabSCMNavigator("");
+            navigator.setTraits(getTraitsDefaults());
+            return navigator;
         }
 
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
@@ -391,31 +424,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     GitClient.CREDENTIALS_MATCHER
             );
             return result;
-        }
-
-        @NonNull
-        @Override
-        public String getDescription() {
-            return "Scans a GitLab Group (or GitLab User) for all projects matching some defined markers.";
-        }
-
-        @Override
-        public String getIconClassName() {
-            return "icon-gitlab";
-        }
-
-        @Override
-        public String getPronoun() {
-            return "GitLab Group";
-        }
-
-        @Override
-        public SCMNavigator newInstance(String name) {
-            LOGGER.info("Instantiating GitLabSCMNavigator..");
-            GitLabSCMNavigator navigator =
-                    new GitLabSCMNavigator("");
-            navigator.setTraits(getTraitsDefaults());
-            return navigator;
         }
 
         @SuppressWarnings("unused") // jelly
