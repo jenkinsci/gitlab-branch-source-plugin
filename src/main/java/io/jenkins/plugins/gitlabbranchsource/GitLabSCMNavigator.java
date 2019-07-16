@@ -65,8 +65,6 @@ import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
 public class GitLabSCMNavigator extends SCMNavigator {
 
@@ -293,7 +291,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             if (StringUtils.isNotBlank(avatarUrl)) {
                 result.add(new GitLabAvatar(avatarUrl));
             }
-            result.add(new GitLabLink(ICON_GITLAB, objectUrl));
+            result.add(new GitLabLink("icon-gitlab", objectUrl));
             if (gitlabOwner == GitLabOwner.USER) {
                 String website = null;
                 try {
@@ -337,7 +335,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     @Extension
-    public static class DescriptorImpl extends SCMNavigatorDescriptor implements IconSpec {
+    public static class DescriptorImpl extends SCMNavigatorDescriptor {
 
         @NonNull
         @Override
@@ -358,13 +356,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
         @Override
         public String getIconClassName() {
-            return ICON_GITLAB;
+            return "icon-gitlab";
         }
 
-        @Override
-        public String getIconFilePathPattern() {
-            return iconFilePathPattern(getIconClassName());
-        }
 
         @Override
         public SCMNavigator newInstance(String name) {

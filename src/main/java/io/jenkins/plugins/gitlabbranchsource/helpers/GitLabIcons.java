@@ -1,11 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
-import hudson.init.Initializer;
 import java.util.NoSuchElementException;
-import jenkins.model.Jenkins;
-import org.apache.commons.jelly.JellyContext;
 import org.jenkins.ui.icon.Icon;
-import org.kohsuke.stapler.Stapler;
+
 
 import static org.jenkins.ui.icon.Icon.ICON_LARGE_STYLE;
 import static org.jenkins.ui.icon.Icon.ICON_MEDIUM_STYLE;
@@ -49,7 +46,6 @@ public final class GitLabIcons {
     public static final String ICON_GITLAB = "icon-gitlab";
     private static final String ICON_PATH = "plugin/gitlab-branch-source/images/";
 
-    @Initializer
     public static void initialize() {
         addIcon(ICON_GITLAB);
         addIcon(ICON_PROJECT);
@@ -59,20 +55,6 @@ public final class GitLabIcons {
         addIcon(ICON_TAG);
     }
 
-    public static String iconFileName(String name, Size size) {
-        Icon icon = icons.getIconByClassSpec(classSpec(name, size));
-        if (icon == null) {
-            return null;
-        }
-
-        JellyContext ctx = new JellyContext();
-        ctx.setVariable("resURL", Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
-        return icon.getQualifiedUrl(ctx);
-    }
-
-    public static String iconFilePathPattern(String name) {
-        return ICON_PATH + ":size/" + name + ".png";
-    }
 
     private static String classSpec(String name, Size size) {
         return name + " " + size.className;

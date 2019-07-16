@@ -87,10 +87,6 @@ import org.slf4j.LoggerFactory;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_BRANCH;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_MERGE_REQUEST;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_TAG;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
@@ -469,7 +465,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     branchUrl
             ));
-            result.add(new GitLabLink(ICON_BRANCH, branchUrl));
+            result.add(new GitLabLink("icon-branch", branchUrl));
             if (head.getName().equals(gitlabProject.getDefaultBranch())) {
                 result.add(new PrimaryInstanceMetadataAction());
             }
@@ -485,7 +481,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     mergeUrl
             ));
-            result.add(new GitLabLink(ICON_MERGE_REQUEST, mergeUrl));
+            result.add(new GitLabLink("icon-merge-request", mergeUrl));
         } else if(head instanceof GitLabTagSCMHead) {
             String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
                     .path("tree")
@@ -498,7 +494,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     tagUrl
             ));
-            result.add(new GitLabLink(ICON_TAG, tagUrl));
+            result.add(new GitLabLink("icon-tag", tagUrl));
         }
         return result;
     }
@@ -592,11 +588,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Extension
-    public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
+    public static class DescriptorImpl extends SCMSourceDescriptor {
 
         @Override
         public String getIconClassName() {
-            return ICON_GITLAB;
+            return "icon-gitlab";
         }
 
         @NonNull
