@@ -75,6 +75,7 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Tag;
 import org.gitlab4j.api.models.Visibility;
+import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -86,6 +87,7 @@ import org.slf4j.LoggerFactory;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
@@ -587,11 +589,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Extension
-    public static class DescriptorImpl extends SCMSourceDescriptor {
+    public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
 
         @Override
         public String getIconClassName() {
-            return "gitlab-logo";
+            return ICON_GITLAB;
         }
 
         @NonNull

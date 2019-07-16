@@ -54,8 +54,6 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
-import org.jenkins.ui.icon.Icon;
-import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
@@ -67,6 +65,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
 public class GitLabSCMNavigator extends SCMNavigator {
 
@@ -358,7 +358,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
         @Override
         public String getIconClassName() {
-            return "gitlab-logo";
+            return ICON_GITLAB;
+        }
+
+        @Override
+        public String getIconFilePathPattern() {
+            return iconFilePathPattern(getIconClassName());
         }
 
 
@@ -456,60 +461,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
             List<SCMTrait<? extends SCMTrait<?>>> result = new ArrayList<>();
             result.addAll(delegate.getTraitsDefaults());
             return result;
-        }
-
-        static {
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-sm",
-                            "plugin/gitlab-branch-source/images/16x16/gitlab-logo.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-md",
-                            "plugin/gitlab-branch-source/images/24x24/github-logo.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-lg",
-                            "plugin/gitlab-branch-source/images/32x32/github-logo.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-logo icon-xlg",
-                            "plugin/gitlab-branch-source/images/48x48/github-logo.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-repo icon-sm",
-                            "plugin/gitlab-branch-source/images/16x16/gitlab-project.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-repo icon-md",
-                            "plugin/gitlab-branch-source/images/24x24/gitlab-project.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-repo icon-lg",
-                            "plugin/gitlab-branch-source/images/32x32/gitlab-project.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-github-repo icon-xlg",
-                            "plugin/gitlab-branch-source/images/48x48/gitlab-project.png",
-                            Icon.ICON_XLARGE_STYLE));
-
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-sm",
-                            "plugin/gitlab-branch-source/images/16x16/gitlab-branch.png",
-                            Icon.ICON_SMALL_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-md",
-                            "plugin/gitlab-branch-source/images/24x24/gitlab-branch.png",
-                            Icon.ICON_MEDIUM_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-lg",
-                            "plugin/gitlab-branch-source/images/32x32/gitlab-branch.png",
-                            Icon.ICON_LARGE_STYLE));
-            IconSet.icons.addIcon(
-                    new Icon("icon-gitlab-branch icon-xlg",
-                            "plugin/gitlab-branch-source/images/48x48/gitlab-branch.png",
-                            Icon.ICON_XLARGE_STYLE));
         }
     }
 
