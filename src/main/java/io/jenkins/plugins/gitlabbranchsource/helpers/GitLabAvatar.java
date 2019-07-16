@@ -22,7 +22,7 @@ public class GitLabAvatar extends AvatarMetadataAction {
             return image != null
                     ? image
                     : (Stapler.getCurrentRequest().getContextPath() + Hudson.RESOURCE_PATH
-                    + "/plugin/gitlab-branch-source/images/" + size + "/icon-gitlab.png");
+                    + "/plugin/gitlab-branch-source/images/" + size + "/gitlab-logo.png");
         } else {
             String[] xy = size.split("x");
             if (xy.length == 0) return avatar;
