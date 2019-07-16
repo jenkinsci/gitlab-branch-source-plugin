@@ -432,7 +432,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 e.printStackTrace();
             }
         }
-        result.add(new GitLabLink("icon-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+        result.add(new GitLabLink("gitlab-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
                 .build()
                 .expand()
         ));
@@ -466,7 +466,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     branchUrl
             ));
-            result.add(new GitLabLink("icon-branch", branchUrl));
+            result.add(new GitLabLink("gitlab-branch", branchUrl));
             if (head.getName().equals(gitlabProject.getDefaultBranch())) {
                 result.add(new PrimaryInstanceMetadataAction());
             }
@@ -482,7 +482,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     mergeUrl
             ));
-            result.add(new GitLabLink("icon-branch", mergeUrl));
+            result.add(new GitLabLink("gitlab-branch", mergeUrl));
         } else if(head instanceof GitLabTagSCMHead) {
             String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
                     .path("tree")
@@ -495,7 +495,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     tagUrl
             ));
-            result.add(new GitLabLink("icon-branch", tagUrl));
+            result.add(new GitLabLink("gitlab-branch", tagUrl));
         }
         return result;
     }
