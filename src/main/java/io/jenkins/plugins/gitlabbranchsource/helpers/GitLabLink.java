@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Util;
 import hudson.model.Action;
 import jenkins.model.Jenkins;
 import org.apache.commons.jelly.JellyContext;
