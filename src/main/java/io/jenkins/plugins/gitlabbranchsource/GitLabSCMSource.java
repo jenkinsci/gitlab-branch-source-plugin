@@ -258,7 +258,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         if (request.process(new BranchSCMHead(branchName),
                                 (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>) head ->
                                         new BranchSCMRevision(head, sha),
-
                                 this::createProbe,
                                 (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
                                     if (isMatch) {

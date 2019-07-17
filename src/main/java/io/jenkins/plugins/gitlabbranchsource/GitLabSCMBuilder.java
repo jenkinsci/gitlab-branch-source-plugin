@@ -6,7 +6,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
-import com.damnhandy.uri.template.UriTemplateBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
@@ -16,10 +15,8 @@ import hudson.plugins.git.GitSCM;
 import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
-import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -108,6 +105,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                                                   @CheckForNull String sshRemote,
                                                   @CheckForNull String credentialsId,
                                                   @NonNull String projectPath) {
+
         if (credentialsId != null && sshRemote != null) {
             URIRequirementBuilder builder = URIRequirementBuilder.create();
             URI serverUri = URI.create(serverUrl);
@@ -129,31 +127,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     )
             );
             if (credentials instanceof SSHUserPrivateKey) {
-                URI sshUri = URI.create(sshRemote);
-                return UriTemplate.buildFromTemplate(
-                        "ssh://git@" + sshUri.getHost() + (sshUri.getPort() != 22 ? ":" + sshUri.getPort() : ""))
-                        .path(UriTemplateBuilder.var("projectPath"))
-                        .literal(".git")
+                return UriTemplate.buildFromTemplate("ssh://" + sshRemote)
                         .build();
-            }
-            if (credentials instanceof PersonalAccessToken) {
-                try {
-                    URI tokenUri = new URI(
-                            serverUri.getScheme(),
-                            ((PersonalAccessToken) credentials).getToken().getPlainText(),
-                            serverUri.getHost(),
-                            serverUri.getPort(),
-                            serverUri.getPath(),
-                            serverUri.getQuery(),
-                            serverUri.getFragment()
-                    );
-                    return UriTemplate.buildFromTemplate(tokenUri.toASCIIString())
-                            .path(UriTemplateBuilder.var("projectPath"))
-                            .literal(".git")
-                            .build();
-                } catch (URISyntaxException e) {
-                    // ok we are at the end of the road
-                }
             }
         }
         return UriTemplate.buildFromTemplate(serverUrl+'/'+projectPath)
