@@ -482,7 +482,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     mergeUrl
             ));
-            result.add(new GitLabLink("gitlab-branch", mergeUrl));
+            result.add(new GitLabLink("gitlab-mr", mergeUrl));
         } else if(head instanceof GitLabTagSCMHead) {
             String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
                     .path("tree")
@@ -495,7 +495,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     null,
                     tagUrl
             ));
-            result.add(new GitLabLink("gitlab-branch", tagUrl));
+            result.add(new GitLabLink("gitlab-tag", tagUrl));
         }
         return result;
     }
