@@ -16,6 +16,7 @@ import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
@@ -50,6 +51,7 @@ import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
@@ -374,6 +376,35 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     new GitLabSCMNavigator("");
             navigator.setTraits(getTraitsDefaults());
             return navigator;
+        }
+
+        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner, @QueryParameter String serverName) {
+            if(projectOwner.equals("")) {
+                return FormValidation.ok();
+            }
+            GitLabApi gitLabApi = null;
+            try {
+                gitLabApi = GitLabHelper.apiBuilder(serverName);
+                User user = gitLabApi.getUserApi().getUser(projectOwner);
+                if(user == null) {
+                    throw new GitLabApiException("Invalid User");
+                }
+                return FormValidation.ok(projectOwner + " is a valid user");
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (GitLabApiException e) {
+                try {
+                    Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
+                    String groupNamespace = group.getFullName();
+                    if(groupNamespace.indexOf('/') == -1) {
+                        return FormValidation.ok(groupNamespace + " is a valid group");
+                    }
+                    return FormValidation.ok(groupNamespace + " is a valid subgroup");
+                } catch (GitLabApiException e1) {
+                    return FormValidation.error(projectOwner+" is neither a valid username/group/subgroup");
+                }
+            }
+            return FormValidation.ok("");
         }
 
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
