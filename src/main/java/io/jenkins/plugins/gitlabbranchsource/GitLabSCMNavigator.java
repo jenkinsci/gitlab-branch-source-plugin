@@ -194,7 +194,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     // skip the user repos which includes all groups that they are a member of
                     continue;
                 }
-                count++;
                 // TODO needs review
                 // If repository is empty it throws an exception
                 try {
@@ -204,6 +203,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
+                count++;
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                 if (request.process(p.getPathWithNamespace(), new SCMNavigatorRequest.SourceLambda() {
