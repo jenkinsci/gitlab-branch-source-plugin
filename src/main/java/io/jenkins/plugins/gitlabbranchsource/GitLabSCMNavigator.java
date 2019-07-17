@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -21,6 +20,7 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
@@ -52,7 +52,6 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -176,7 +175,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
             gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             List<Project> projects;
-            if(gitlabOwner == GitLabOwner.USER) {
+            if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
                 if(gitLabApi.getAuthToken().equals("")) {
                     projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withVisibility(Visibility.PUBLIC));
@@ -190,7 +189,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
-                if(gitlabOwner == GitLabOwner.USER && p.getNamespace().getKind().equals("group")) {
+                if(gitlabOwner instanceof GitLabUser && p.getNamespace().getKind().equals("group")) {
                     // skip the user repos which includes all groups that they are a member of
                     continue;
                 }
@@ -248,67 +247,28 @@ public class GitLabSCMNavigator extends SCMNavigator {
         LOGGER.info("retrieving actions..");
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
-            if (this.gitlabOwner == null) {
+            if (gitlabOwner == null) {
                 gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             }
-            String fullName = "";
-            if (gitlabOwner == GitLabOwner.USER) {
-                try {
-                    fullName = gitLabApi.getUserApi().getUser(projectOwner).getName();
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                try {
-                    fullName = gitLabApi.getGroupApi().getGroup(projectOwner).getFullName();
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-            }
+            String fullName = gitlabOwner.getFullName();
+            String webUrl = gitlabOwner.getWebUrl();
+            String avatarUrl = gitlabOwner.getAvatarUrl();
             List<Action> result = new ArrayList<>();
-            String objectUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
-                    .path("owner")
-                    .build()
-                    .set("owner", projectOwner)
-                    .expand();
             result.add(new ObjectMetadataAction(
                     Util.fixEmpty(fullName),
                     null,
-                    objectUrl)
+                    webUrl)
             );
-            String avatarUrl = "";
-            if (gitlabOwner == GitLabOwner.USER) {
-                try {
-                    avatarUrl = gitLabApi.getUserApi().getUser(projectOwner).getAvatarUrl();
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                try {
-                    avatarUrl = gitLabApi.getGroupApi().getGroup(projectOwner).getAvatarUrl();
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-            }
             if (StringUtils.isNotBlank(avatarUrl)) {
                 result.add(new GitLabAvatar(avatarUrl));
             }
-            result.add(new GitLabLink("gitlab-logo", objectUrl));
-            if (gitlabOwner == GitLabOwner.USER) {
-                String website = null;
-                try {
-                    // This is a hack since getting a user via username finds user from a list of users
-                    // and list of users contain limited info about users which doesn't include website url
-                    User user = gitLabApi.getUserApi().getUser(projectOwner);
-                    website = gitLabApi.getUserApi().getUser(user.getId()).getWebsiteUrl();
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-                if (StringUtils.isBlank(website)) {
-                    listener.getLogger().println("User Website URL: unspecified");
-                    listener.getLogger().printf("User Website URL: %s%n",
-                            HyperlinkNote.encodeTo(website, StringUtils.defaultIfBlank(fullName, website)));
-                }
+            result.add(new GitLabLink("gitlab-logo", webUrl));
+            if (StringUtils.isBlank(webUrl)) {
+                listener.getLogger().println("Web URL unspecified");
+            } else {
+                listener.getLogger().printf("%s URL: %s%n", gitlabOwner.getWord(),
+                    HyperlinkNote
+                        .encodeTo(webUrl, StringUtils.defaultIfBlank(fullName, webUrl)));
             }
             return result;
         } catch (NoSuchFieldException e) {

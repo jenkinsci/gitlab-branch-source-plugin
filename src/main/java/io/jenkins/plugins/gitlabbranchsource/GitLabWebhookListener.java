@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import com.damnhandy.uri.template.UriTemplate;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -60,7 +61,7 @@ public class GitLabWebhookListener {
             GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
             List<Project> projects;
             // TODO check if user can be supported
-            if(gitLabOwner == GitLabOwner.USER) {
+            if(gitLabOwner instanceof GitLabUser) {
                 return;
             } else {
                 Group gitLabGroup = gitLabApi.getGroupApi().getGroup(navigator.getProjectOwner());
