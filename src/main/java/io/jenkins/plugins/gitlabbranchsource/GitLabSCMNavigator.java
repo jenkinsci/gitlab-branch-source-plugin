@@ -35,11 +35,10 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
 import jenkins.scm.api.SCMNavigatorEvent;
 import jenkins.scm.api.SCMNavigatorOwner;
-import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
-import jenkins.scm.api.trait.SCMNavigatorRequest;
+import jenkins.scm.api.trait.SCMNavigatorRequest.Witness;
 import jenkins.scm.api.trait.SCMNavigatorTrait;
 import jenkins.scm.api.trait.SCMNavigatorTraitDescriptor;
 import jenkins.scm.api.trait.SCMSourceTrait;
@@ -196,8 +195,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     // skip the user repos which includes all groups that they are a member of
                     continue;
                 }
-                // TODO needs review
                 // If repository is empty it throws an exception
+                count++;
                 try {
                     gitLabApi.getRepositoryApi().getTree(p);
                 } catch (GitLabApiException e) {
@@ -205,31 +204,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
-                count++;
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
-                if (request.process(p.getPathWithNamespace(), new SCMNavigatorRequest.SourceLambda() {
-                    @NonNull
-                    @Override
-                    public SCMSource create(@NonNull String projectPath) throws IOException, InterruptedException {
-                        return new GitLabSCMSourceBuilder(
+                if (request.process(p.getPathWithNamespace(),
+                        projectPath -> new GitLabSCMSourceBuilder(
                                 getId() + "::" + projectPath,
                                 serverName,
                                 credentialsId,
                                 projectOwner,
                                 projectPath
-                        )
-                                .withTraits(traits)
-                                .build();
-                    }
-                }, null, new SCMNavigatorRequest.Witness() {
-                    @Override
-                    public void record(@NonNull String projectPath, boolean isMatch) {
-                        if (isMatch) {
-                            observer.getListener().getLogger().format("Proposing %s%n", projectPath);
-                        } else {
-                            observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
-                        }
+                        ).withTraits(traits).build(),
+                        null,
+                        (Witness) (projectPath, isMatch) -> {
+                    if (isMatch) {
+                        observer.getListener().getLogger().format("Proposing %s%n", projectPath);
+                    } else {
+                        observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
                     }
                 })) {
                     observer.getListener().getLogger().format("%n%d projects were processed (query complete)%n",
