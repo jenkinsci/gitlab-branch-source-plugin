@@ -43,9 +43,9 @@ import org.gitlab4j.api.models.CommitStatus;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
-* Publishes Build-Status to GitLab using separate threads so it does not block while sending messages
-* TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better way to do this built into Jenkins
-*/
+ * Publishes Build-Status to GitLab using separate threads so it does not block while sending messages
+ * TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better way to do this built into Jenkins
+ */
 public class GitLabSCMPipelineStatusNotifier {
     private static final Logger LOGGER = Logger.getLogger(GitLabSCMPipelineStatusNotifier.class.getName());
 
@@ -80,26 +80,25 @@ public class GitLabSCMPipelineStatusNotifier {
         CommitStatus status = new CommitStatus();
         Constants.CommitBuildState state;
         status.setTargetUrl(url);
-        status.setName(build.getParent().getFullName());
 
         if (Result.SUCCESS.equals(result)) {
-            status.setDescription("This commit looks good");
+            status.setDescription(build.getParent().getFullName() + ": This commit looks good");
             status.setStatus("SUCCESS");
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
-            status.setDescription("This commit has test failures");
+            status.setDescription(build.getParent().getFullName() + ": This commit has test failures");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (Result.FAILURE.equals(result)) {
-            status.setDescription("There was a failure building this commit");
+            status.setDescription(build.getParent().getFullName() + ": There was a failure building this commit");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (result != null) { // ABORTED, NOT_BUILT.
-            status.setDescription("Something is wrong with the build of this commit");
+            status.setDescription(build.getParent().getFullName() + ": Something is wrong with the build of this commit");
             status.setStatus("CANCELED");
             state = Constants.CommitBuildState.CANCELED;
         } else {
-            status.setDescription("Build started...");
+            status.setDescription(build.getParent().getFullName() + ": Build started...");
             status.setStatus("RUNNING");
             state = Constants.CommitBuildState.RUNNING;
         }
@@ -110,14 +109,17 @@ public class GitLabSCMPipelineStatusNotifier {
             listener.getLogger().format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((BranchSCMRevision) revision).getHash();
+            status.setName("jenkinsci/branch");
         } else if (revision instanceof MergeRequestSCMRevision) {
             listener.getLogger().format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
+            status.setName("jenkinsci/mr");
         } else if (revision instanceof GitTagSCMRevision){
             listener.getLogger().format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((GitTagSCMRevision) revision).getHash();
+            status.setName("jenkinsci/tag");
         } else {
             return;
         }
@@ -182,15 +184,19 @@ public class GitLabSCMPipelineStatusNotifier {
                     try {
                         SCMRevision revision = source.fetch(head, new LogTaskListener(LOGGER, Level.INFO));
                         String hash;
+                        CommitStatus status = new CommitStatus();
                         if (revision instanceof BranchSCMRevision) {
                             LOGGER.log(Level.INFO, "Notifying branch pending build {0}", job.getFullName());
                             hash = ((BranchSCMRevision) revision).getHash();
+                            status.setName("jenkinsci/branch");
                         } else if (revision instanceof MergeRequestSCMRevision) {
                             LOGGER.log(Level.INFO, "Notifying merge request pending build {0}", job.getFullName());
                             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
+                            status.setName("jenkinsci/mr");
                         } else if (revision instanceof GitTagSCMRevision){
                             LOGGER.log(Level.INFO, "Notifying tag pending build {0}", job.getFullName());
                             hash = ((GitTagSCMRevision) revision).getHash();
+                            status.setName("jenkinsci/tag");
                         } else {
                             return;
                         }
@@ -201,10 +207,8 @@ public class GitLabSCMPipelineStatusNotifier {
                             // no root url defined, cannot notify, let's get out of here
                             return;
                         }
-                        CommitStatus status = new CommitStatus();
                         status.setTargetUrl(url);
-                        status.setName(job.getFullName());
-                        status.setDescription("Build queued...");
+                        status.setDescription(job.getFullName() + ": Build queued...");
                         status.setStatus("PENDING");
                         Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                         try {
@@ -248,7 +252,7 @@ public class GitLabSCMPipelineStatusNotifier {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
                                SCMRevisionState pollingBaseline) throws Exception {
-            LOGGER.info("SCMListener: Checkout"+build.getFullDisplayName());
+            LOGGER.info("SCMListener: Checkout" + build.getFullDisplayName());
             try {
                 sendNotifications(build, listener);
             } catch (IOException | InterruptedException e) {
@@ -265,7 +269,7 @@ public class GitLabSCMPipelineStatusNotifier {
 
         @Override
         public void onCompleted(Run<?, ?> build, TaskListener listener) {
-            LOGGER.info("RunListener: Complete"+build.getFullDisplayName());
+            LOGGER.info("RunListener: Complete" + build.getFullDisplayName());
             try {
                 sendNotifications(build, listener);
             } catch (IOException | InterruptedException e) {
