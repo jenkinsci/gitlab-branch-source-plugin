@@ -209,24 +209,24 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 if (request.process(p.getPathWithNamespace(), new SCMNavigatorRequest.SourceLambda() {
                     @NonNull
                     @Override
-                    public SCMSource create(@NonNull String projectName) throws IOException, InterruptedException {
+                    public SCMSource create(@NonNull String projectPath) throws IOException, InterruptedException {
                         return new GitLabSCMSourceBuilder(
-                                getId() + "::" + projectName,
+                                getId() + "::" + projectPath,
                                 serverName,
                                 credentialsId,
                                 projectOwner,
-                                projectName
+                                projectPath
                         )
                                 .withTraits(traits)
                                 .build();
                     }
                 }, null, new SCMNavigatorRequest.Witness() {
                     @Override
-                    public void record(@NonNull String projectName, boolean isMatch) {
+                    public void record(@NonNull String projectPath, boolean isMatch) {
                         if (isMatch) {
-                            observer.getListener().getLogger().format("Proposing %s%n", projectName);
+                            observer.getListener().getLogger().format("Proposing %s%n", projectPath);
                         } else {
-                            observer.getListener().getLogger().format("Ignoring %s%n", projectName);
+                            observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
                         }
                     }
                 })) {
