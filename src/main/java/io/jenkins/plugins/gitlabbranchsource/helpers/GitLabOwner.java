@@ -67,13 +67,15 @@ public abstract class GitLabOwner {
         } catch (GitLabApiException e) {
             try {
                 User user = gitLabApi.getUserApi().getUser(projectOwner);
-                if (user.getId() == null) {
-                    throw new IllegalStateException("Failed to find GitLab group", e);
+                // If invalid projectOwner, null is returned and doesn't throw an exception
+                // TODO: New GitLab4J API release after fixing https://github.com/gitlab4j/gitlab4j-api/issues/408
+                if (user == null) {
+                    throw new IllegalStateException("Owner is neither a user/group/subgroup", e);
                 }
                 return new GitLabUser(user.getName(), user.getWebUrl(), user.getAvatarUrl(),
                     user.getId());
             } catch (GitLabApiException e1) {
-                throw new IllegalStateException("Failed to find GitLab user", e);
+                throw new IllegalStateException("Unable to fetch User", e);
             }
         }
     }
