@@ -106,7 +106,8 @@ public class GitLabWebhookListener {
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
             return;
-        }        switch (mode) {
+        }
+        switch (mode) {
             case DISABLE:
                 return;
             case SYSTEM:
