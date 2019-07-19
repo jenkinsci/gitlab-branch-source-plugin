@@ -50,7 +50,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
-    @Symbol("gitHubTagDiscovery")
+    @Symbol("gitLabTagDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
