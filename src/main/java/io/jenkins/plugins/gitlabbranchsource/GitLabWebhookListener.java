@@ -10,9 +10,16 @@ public class GitLabWebhookListener implements WebHookListener {
 
     public static final Logger LOGGER = Logger.getLogger(GitLabWebhookListener.class.getName());
 
+    private String origin;
+
+    public GitLabWebhookListener(String origin) {
+        this.origin = origin;
+    }
+
     @Override
     public void onMergeRequestEvent(MergeRequestEvent event) {
         LOGGER.info("MR EVENT");
+        new GitLabMergeRequestSCMEvent(event, origin);
     }
 
     @Override

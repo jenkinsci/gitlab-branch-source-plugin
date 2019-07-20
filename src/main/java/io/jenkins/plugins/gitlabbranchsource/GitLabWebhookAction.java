@@ -10,6 +10,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import jenkins.scm.api.SCMEvent;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.webhook.WebHookManager;
@@ -63,8 +64,9 @@ public final class GitLabWebhookAction extends CrumbExclusion implements Unprote
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST,
                     "Expecting a GitLab event, missing expected X-Gitlab-Event header");
         }
+        String origin = SCMEvent.originOf(request);
         WebHookManager webHookManager = new WebHookManager();
-        webHookManager.addListener(new GitLabWebhookListener());
+        webHookManager.addListener(new GitLabWebhookListener(origin));
         webHookManager.handleEvent(request);
         return HttpResponses.ok(); // TODO find a better response
     }
