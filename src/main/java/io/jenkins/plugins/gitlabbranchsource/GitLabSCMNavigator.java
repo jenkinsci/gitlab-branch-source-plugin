@@ -316,7 +316,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @Override
     public void afterSave(@NonNull SCMNavigatorOwner owner) {
-        WebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+        GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
         LOGGER.info(mode.toString());

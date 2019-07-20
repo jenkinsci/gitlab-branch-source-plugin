@@ -571,7 +571,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public void afterSave() {
-        WebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+        GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
         LOGGER.info("Mode of wh: " + mode.toString());

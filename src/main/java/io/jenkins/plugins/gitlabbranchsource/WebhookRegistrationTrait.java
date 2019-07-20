@@ -22,7 +22,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * The mode of registration to apply.
      */
     @NonNull
-    private final WebhookRegistration mode;
+    private final GitLabWebhookRegistration mode;
 
     /**
      * Constructor.
@@ -31,7 +31,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public WebhookRegistrationTrait(@NonNull String mode) {
-        this(WebhookRegistration.valueOf(mode));
+        this(GitLabWebhookRegistration.valueOf(mode));
     }
 
     /**
@@ -39,7 +39,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      *
      * @param mode the mode of registration to apply.
      */
-    public WebhookRegistrationTrait(@NonNull WebhookRegistration mode) {
+    public WebhookRegistrationTrait(@NonNull GitLabWebhookRegistration mode) {
         this.mode = mode;
     }
 
@@ -49,7 +49,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * @return the mode of registration to apply.
      */
     @NonNull
-    public final WebhookRegistration getMode() {
+    public final GitLabWebhookRegistration getMode() {
         return mode;
     }
 
@@ -100,8 +100,8 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         @SuppressWarnings("unused") // stapler form binding
         public ListBoxModel doFillModeItems() {
             ListBoxModel result = new ListBoxModel();
-            result.add(Messages.WebhookRegistrationTrait_disableHook(), WebhookRegistration.DISABLE.toString());
-            result.add(Messages.WebhookRegistrationTrait_useItemHook(), WebhookRegistration.ITEM.toString());
+            result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabWebhookRegistration.DISABLE.toString());
+            result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabWebhookRegistration.ITEM.toString());
             return result;
         }
 

@@ -24,7 +24,7 @@ public class GitLabWebhookCreator {
     public static final Logger LOGGER = Logger.getLogger(GitLabWebhookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                WebhookRegistration mode) {
+                                GitLabWebhookRegistration mode) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if(server == null) {
@@ -101,7 +101,7 @@ public class GitLabWebhookCreator {
     }
 
     public static void register(GitLabSCMSource source,
-                                WebhookRegistration mode) {
+                                GitLabWebhookRegistration mode) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
