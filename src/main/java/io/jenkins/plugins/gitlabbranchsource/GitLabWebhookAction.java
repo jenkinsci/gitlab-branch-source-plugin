@@ -60,7 +60,7 @@ public final class GitLabWebhookAction extends CrumbExclusion implements Unprote
         String type = request.getHeader("X-Gitlab-Event");
         if (StringUtils.isBlank(type)) {
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST,
-                    "Expecting a Gitea event, missing expected X-Gitlab-Event header");
+                    "Expecting a GitLab event, missing expected X-Gitlab-Event header");
         }
         String origin = SCMEvent.originOf(request);
         boolean processed = false;
