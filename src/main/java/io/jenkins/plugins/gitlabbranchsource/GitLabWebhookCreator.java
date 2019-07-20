@@ -148,9 +148,9 @@ public class GitLabWebhookCreator {
                             .orElse(new ProjectHook());
             if(validHook.getId() == null) {
                 ProjectHook enabledHooks = new ProjectHook();
-                enabledHooks.setIssuesEvents(true);
                 enabledHooks.setPushEvents(true);
                 enabledHooks.setMergeRequestsEvents(true);
+                enabledHooks.setTagPushEvents(true);
                 // TODO add secret token, add more events give option for sslVerification
                 gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, true, "");
             }
