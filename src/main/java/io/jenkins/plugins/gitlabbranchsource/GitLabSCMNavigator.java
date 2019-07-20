@@ -320,7 +320,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
         LOGGER.info(mode.toString());
-        GitLabWebhookListener.register(owner, this, mode);
+        GitLabWebhookCreator.register(owner, this, mode);
     }
 
     public PersonalAccessToken credentials(SCMSourceOwner owner) {

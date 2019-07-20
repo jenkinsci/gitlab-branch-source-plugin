@@ -575,7 +575,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
         LOGGER.info("Mode of wh: " + mode.toString());
-        GitLabWebhookListener.register(this, mode);
+        GitLabWebhookCreator.register(this, mode);
     }
 
     public PersonalAccessToken credentials() {

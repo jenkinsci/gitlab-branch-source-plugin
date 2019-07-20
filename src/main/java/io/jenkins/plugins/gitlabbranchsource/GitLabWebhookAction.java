@@ -10,8 +10,9 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import jenkins.scm.api.SCMEvent;
 import org.apache.commons.lang.StringUtils;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.webhook.WebHookManager;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -46,7 +47,7 @@ public final class GitLabWebhookAction extends CrumbExclusion implements Unprote
         return false;
     }
 
-    public HttpResponse doPost(StaplerRequest request) throws IOException {
+    public HttpResponse doPost(StaplerRequest request) throws IOException, GitLabApiException {
         if (!request.getMethod().equals("POST")) {
             return HttpResponses
                     .error(HttpServletResponse.SC_BAD_REQUEST,
@@ -62,16 +63,9 @@ public final class GitLabWebhookAction extends CrumbExclusion implements Unprote
             return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST,
                     "Expecting a GitLab event, missing expected X-Gitlab-Event header");
         }
-        String origin = SCMEvent.originOf(request);
-        boolean processed = false;
-//        for (GiteaWebhookHandler<?, ?> h : ExtensionList.lookup(GiteaWebhookHandler.class)) {
-//            if (h.matches(type)) {
-//                h.process(request.getInputStream(), origin);
-//                processed = true;
-//            }
-//        }
-        LOGGER.info("ORIGIN: "+ origin);
-        LOGGER.info("Request: "+request.getInputStream().toString());
-        return HttpResponses.text(processed ? "Processed" : "Ignored");
+        WebHookManager webHookManager = new WebHookManager();
+        webHookManager.addListener(new GitLabWebhookListener());
+        webHookManager.handleEvent(request);
+        return HttpResponses.ok(); // TODO find a better response
     }
 }
