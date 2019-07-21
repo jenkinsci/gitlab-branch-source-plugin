@@ -19,12 +19,15 @@ public class GitLabWebhookListener implements WebHookListener {
     @Override
     public void onMergeRequestEvent(MergeRequestEvent event) {
         LOGGER.info("MR EVENT");
+        LOGGER.info(event.toString());
         new GitLabMergeRequestSCMEvent(event, origin);
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
         LOGGER.info("PUSH EVENT");
+        LOGGER.info(pushEvent.toString());
+        new GitLabPushSCMEvent(pushEvent, origin);
     }
 
     @Override

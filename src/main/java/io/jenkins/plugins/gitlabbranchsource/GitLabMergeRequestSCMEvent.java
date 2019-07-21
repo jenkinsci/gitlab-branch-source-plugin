@@ -62,7 +62,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
     @NonNull
     @Override
     public String getSourceName() {
-        return getPayload().getProject().getName();
+        return getPayload().getProject().getPathWithNamespace();
     }
 
     @Override
@@ -111,8 +111,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             String originOwner = getPayload().getUser().getUsername();
             String originProjectPath = m.getSource().getPathWithNamespace();
             Set<ChangeRequestCheckoutStrategy> strategies = request.getMRStrategies(
-                    source.getProjectOwner().equalsIgnoreCase(originOwner)
-                            && source.getProjectPath().equalsIgnoreCase(originProjectPath)
+                    source.getProjectPath().equalsIgnoreCase(originProjectPath)
             );
             for (ChangeRequestCheckoutStrategy strategy : strategies) {
                 MergeRequestSCMHead h = new MergeRequestSCMHead(
@@ -121,16 +120,15 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         m.getId(),
                         new BranchSCMHead(m.getTargetBranch()),
                         ChangeRequestCheckoutStrategy.MERGE,
-                        originOwner.equalsIgnoreCase(source.getProjectOwner()) && originProjectPath
-                                .equalsIgnoreCase(source.getProjectPath())
+                        originProjectPath.equalsIgnoreCase(source.getProjectPath())
                                 ? SCMHeadOrigin.DEFAULT
                                 : new SCMHeadOrigin.Fork(originProjectPath),
                         originOwner,
                         originProjectPath,
                         m.getSourceBranch());
                 GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-                // Since rn there is no way to get the commit hash of target branch
-                // Can be done by searching for the target branch head and getting the commit hash
+                // Since rn there is no way to get the commit hash of target branch fetch the mr again
+                // A better way can be searching for the target branch head and getting the commit hash
                 MergeRequest mr = gitLabApi.getMergeRequestApi().getMergeRequest(source.getProjectPath(), m.getIid());
                 result.put(h, m.getState().equals("closed")
                         ? null

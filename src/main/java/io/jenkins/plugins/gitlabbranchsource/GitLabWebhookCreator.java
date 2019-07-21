@@ -83,7 +83,7 @@ public class GitLabWebhookCreator {
             for(ProjectHook hook : validHooks) {
                 if(hook.getId() == null) {
                     Project project = projects.get(validHooks.indexOf(hook));
-                    ProjectHook enabledHooks = createHook(project, hookUrl);
+                    ProjectHook enabledHooks = createHook();
                     // TODO add secret token, add more events give option for sslVerification
                     gitLabApi.getProjectApi().addHook(project, hookUrl, enabledHooks, false, "");
                 }
@@ -138,7 +138,7 @@ public class GitLabWebhookCreator {
                             .findFirst()
                             .orElse(new ProjectHook());
             if(validHook.getId() == null) {
-                ProjectHook enabledHooks = createHook(gitlabProject, hookUrl);
+                ProjectHook enabledHooks = createHook();
                 gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, false, "");
             }
         } catch (GitLabApiException e) {
@@ -156,13 +156,13 @@ public class GitLabWebhookCreator {
         return UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
     }
 
-    public static ProjectHook createHook(Project project, String hookurl) {
+    public static ProjectHook createHook() {
         ProjectHook enabledHooks = new ProjectHook();
         enabledHooks.setPushEvents(true);
         enabledHooks.setMergeRequestsEvents(true);
         enabledHooks.setTagPushEvents(true);
+        enabledHooks.setEnableSslVerification(false);
         // TODO add secret token, add more events give option for sslVerification
         return enabledHooks;
     }
-
 }

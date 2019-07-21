@@ -10,9 +10,8 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
-import org.gitlab4j.api.webhook.AbstractEvent;
 
-public abstract class AbstractGitLabSCMHeadEvent<E extends AbstractEvent> extends SCMHeadEvent<E> {
+public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
 
     public AbstractGitLabSCMHeadEvent(Type type, E createEvent, String origin) {
         super(type, createEvent, origin);
