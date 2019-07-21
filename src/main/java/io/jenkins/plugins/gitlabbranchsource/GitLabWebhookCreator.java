@@ -48,13 +48,10 @@ public class GitLabWebhookCreator {
         if (credentials == null) {
             return;
         }
-        JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
-        String rootUrl = locationConfiguration.getUrl();
-        if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
+        String hookUrl = getHookUrl();
+        if(hookUrl.equals("")) {
             return;
         }
-        String hookUrl =
-                UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
@@ -86,12 +83,9 @@ public class GitLabWebhookCreator {
             for(ProjectHook hook : validHooks) {
                 if(hook.getId() == null) {
                     Project project = projects.get(validHooks.indexOf(hook));
-                    ProjectHook enabledHooks = new ProjectHook();
-                    enabledHooks.setPushEvents(true);
-                    enabledHooks.setMergeRequestsEvents(true);
-                    enabledHooks.setTagPushEvents(true);
+                    ProjectHook enabledHooks = createHook(project, hookUrl);
                     // TODO add secret token, add more events give option for sslVerification
-                    gitLabApi.getProjectApi().addHook(project, hookUrl, enabledHooks, true, "");
+                    gitLabApi.getProjectApi().addHook(project, hookUrl, enabledHooks, false, "");
                 }
             }
         } catch (GitLabApiException e) {
@@ -125,13 +119,10 @@ public class GitLabWebhookCreator {
         if (credentials == null) {
             return;
         }
-        JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
-        String rootUrl = locationConfiguration.getUrl();
-        if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
+        String hookUrl = getHookUrl();
+        if(hookUrl.equals("")) {
             return;
         }
-        String hookUrl =
-                UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectPath());
@@ -147,17 +138,31 @@ public class GitLabWebhookCreator {
                             .findFirst()
                             .orElse(new ProjectHook());
             if(validHook.getId() == null) {
-                ProjectHook enabledHooks = new ProjectHook();
-                enabledHooks.setPushEvents(true);
-                enabledHooks.setMergeRequestsEvents(true);
-                enabledHooks.setTagPushEvents(true);
-                // TODO add secret token, add more events give option for sslVerification
-                gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, true, "");
+                ProjectHook enabledHooks = createHook(gitlabProject, hookUrl);
+                gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, false, "");
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
                     "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
         }
+    }
+
+    public static String getHookUrl() {
+        JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
+        String rootUrl = locationConfiguration.getUrl();
+        if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
+            return "";
+        }
+        return UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
+    }
+
+    public static ProjectHook createHook(Project project, String hookurl) {
+        ProjectHook enabledHooks = new ProjectHook();
+        enabledHooks.setPushEvents(true);
+        enabledHooks.setMergeRequestsEvents(true);
+        enabledHooks.setTagPushEvents(true);
+        // TODO add secret token, add more events give option for sslVerification
+        return enabledHooks;
     }
 
 }
