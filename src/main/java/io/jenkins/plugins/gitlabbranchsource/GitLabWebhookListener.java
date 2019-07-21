@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import java.util.logging.Logger;
+import jenkins.scm.api.SCMHeadEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.PushEvent;
 import org.gitlab4j.api.webhook.TagPushEvent;
@@ -27,7 +28,8 @@ public class GitLabWebhookListener implements WebHookListener {
     public void onPushEvent(PushEvent pushEvent) {
         LOGGER.info("PUSH EVENT");
         LOGGER.info(pushEvent.toString());
-        new GitLabPushSCMEvent(pushEvent, origin);
+        GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
+        SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
