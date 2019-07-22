@@ -340,7 +340,7 @@ documentation for better security.
 
 ### Setting up GitLab for jobs
 
-This section is a **Work in Progress**. Will be updated upon release.
+Alpha release can be found from Jenkins Experimental Update Center or download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi).
 
 ## Issues
 
