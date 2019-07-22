@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMHeadEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent;

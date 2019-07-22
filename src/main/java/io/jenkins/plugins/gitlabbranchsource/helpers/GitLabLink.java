@@ -9,6 +9,8 @@ import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconSpec;
 import org.kohsuke.stapler.Stapler;
 
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+
 /**
  * Link to GitLab
  */
@@ -25,9 +27,16 @@ public class GitLabLink implements Action, IconSpec {
     @NonNull
     private final String url;
 
+    private String displayName;
+
     public GitLabLink(@NonNull String iconClassName, @NonNull String url) {
         this.iconClassName = iconClassName;
         this.url = url;
+        this.displayName = "";
+    }
+
+    public void setDisplayName(@NonNull String displayName) {
+        this.displayName = displayName;
     }
 
     @NonNull
@@ -56,7 +65,7 @@ public class GitLabLink implements Action, IconSpec {
 
     @Override
     public String getDisplayName() {
-        return "GitLab";
+        return defaultIfBlank(displayName, "GitLab");
     }
 
     @Override

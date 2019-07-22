@@ -40,13 +40,12 @@ public final class GitLabIcons {
         }
     }
 
-    public static final String ICON_PROJECT = "icon-project";
-    public static final String ICON_BRANCH = "icon-branch";
-    public static final String ICON_COMMIT = "icon-commit";
-    public static final String ICON_MERGE_REQUEST = "icon-merge-request";
-    public static final String ICON_TAG = "icon-tag";
-
-    public static final String ICON_GITLAB = "icon-gitlab";
+    public static final String ICON_PROJECT = "gitlab-project";
+    public static final String ICON_BRANCH = "gitlab-branch";
+    public static final String ICON_GITLAB = "gitlab-logo";
+    public static final String ICON_COMMIT = "gitlab-commit";
+    public static final String ICON_MR = "gitlab-mr";
+    public static final String ICON_TAG = "gitlab-tag";
     private static final String ICON_PATH = "plugin/gitlab-branch-source/images/";
 
     @Initializer
@@ -55,7 +54,7 @@ public final class GitLabIcons {
         addIcon(ICON_PROJECT);
         addIcon(ICON_BRANCH);
         addIcon(ICON_COMMIT);
-        addIcon(ICON_MERGE_REQUEST);
+        addIcon(ICON_MR);
         addIcon(ICON_TAG);
     }
 
@@ -86,3 +85,4 @@ public final class GitLabIcons {
 
     private GitLabIcons() { /* no instances allowed */}
 }
+
