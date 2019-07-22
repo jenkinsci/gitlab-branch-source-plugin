@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -9,15 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.ProjectHook;
-import org.gitlab4j.api.models.Visibility;
+
 
 public class GitLabWebhookCreator {
 
@@ -57,9 +59,11 @@ public class GitLabWebhookCreator {
             GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
             List<Project> projects;
             LOGGER.info("Project Owner: "+ gitLabOwner);
-            if(gitLabOwner == GitLabOwner.USER) {
-                projects = gitLabApi.getProjectApi().getUserProjects(navigator.getProjectOwner(), new ProjectFilter().withVisibility(
-                        Visibility.PUBLIC));
+            if(gitLabOwner instanceof GitLabUser) {
+                Stream<Project> projectsStream = gitLabApi.getProjectApi().getOwnedProjectsStream();
+                projects = projectsStream
+                        .filter(project -> !project.getNamespace().getKind().equals("group"))
+                        .collect(Collectors.toList());
             } else {
                 projects = gitLabApi.getGroupApi().getProjects(navigator.getProjectOwner());
             }
@@ -75,9 +79,9 @@ public class GitLabWebhookCreator {
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
             for(Project p : projects) {
                 validHooks.add(gitLabApi.getProjectApi().getHooksStream(p)
-                                        .filter(hook -> hookUrl.equals(hook.getUrl()))
-                                        .findFirst()
-                                        .orElse(new ProjectHook()));
+                        .filter(hook -> hookUrl.equals(hook.getUrl()))
+                        .findFirst()
+                        .orElse(new ProjectHook()));
             }
             LOGGER.info(validHooks.toString());
             for(ProjectHook hook : validHooks) {
@@ -134,9 +138,9 @@ public class GitLabWebhookCreator {
                 return;
             }
             ProjectHook validHook = gitLabApi.getProjectApi().getHooksStream(gitlabProject)
-                            .filter(hook -> hookUrl.equals(hook.getUrl()))
-                            .findFirst()
-                            .orElse(new ProjectHook());
+                    .filter(hook -> hookUrl.equals(hook.getUrl()))
+                    .findFirst()
+                    .orElse(new ProjectHook());
             if(validHook.getId() == null) {
                 ProjectHook enabledHooks = createHook();
                 gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, false, "");
