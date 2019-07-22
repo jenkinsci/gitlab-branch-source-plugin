@@ -5,7 +5,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 /**
  * Enumeration of the different webhook registration modes.
  */
-public enum WebhookRegistration {
+public enum GitLabWebhookRegistration {
     /**
      * Disable webhook registration.
      */

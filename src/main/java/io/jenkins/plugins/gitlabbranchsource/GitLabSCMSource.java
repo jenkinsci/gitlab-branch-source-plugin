@@ -576,10 +576,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public void afterSave() {
-        WebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+        GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
-        GitLabWebhookListener.register(getOwner(), this, mode, credentialsId);
+        LOGGER.info("Mode of wh: " + mode.toString());
+        GitLabWebhookCreator.register(this, mode);
     }
 
     public PersonalAccessToken credentials() {
