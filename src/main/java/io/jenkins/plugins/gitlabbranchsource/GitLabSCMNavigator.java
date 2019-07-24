@@ -337,24 +337,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
             GitLabApi gitLabApi = null;
             try {
                 gitLabApi = GitLabHelper.apiBuilder(serverName);
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
-                if(user == null) {
-                    throw new GitLabApiException("Invalid User");
-                }
-                return FormValidation.ok(projectOwner + " is a valid user");
+                GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+                return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
-            } catch (GitLabApiException e) {
-                try {
-                    Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
-                    String groupNamespace = group.getFullName();
-                    if(groupNamespace.indexOf('/') == -1) {
-                        return FormValidation.ok(groupNamespace + " is a valid group");
-                    }
-                    return FormValidation.ok(groupNamespace + " is a valid subgroup");
-                } catch (GitLabApiException e1) {
-                    return FormValidation.error(projectOwner+" is neither a valid username/group/subgroup");
-                }
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e, e.getMessage());
             }
             return FormValidation.ok("");
         }
