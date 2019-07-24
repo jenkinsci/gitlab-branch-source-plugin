@@ -6,9 +6,24 @@ import jenkins.scm.api.SCMSourceObserver;
 import jenkins.scm.api.trait.SCMNavigatorContext;
 
 public class GitLabSCMNavigatorContext extends SCMNavigatorContext<GitLabSCMNavigatorContext, GitLabSCMNavigatorRequest> {
+
+    private boolean wantSubgroupProjects;
+
     @NonNull
     @Override
     public GitLabSCMNavigatorRequest newRequest(@NonNull SCMNavigator navigator, @NonNull SCMSourceObserver observer) {
         return new GitLabSCMNavigatorRequest(navigator, this, observer);
+    }
+
+    /**
+     * @return whether to include subgroup projects
+     */
+    public boolean wantSubgroupProjects() {
+        return wantSubgroupProjects;
+    }
+
+    public GitLabSCMNavigatorContext wantSubgroupProjects(boolean include) {
+        this.wantSubgroupProjects = include;
+        return this;
     }
 }

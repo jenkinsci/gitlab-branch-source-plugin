@@ -51,6 +51,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
@@ -185,8 +186,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     projects = gitLabApi.getProjectApi().getOwnedProjects();
                 }
             } else {
+                GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
+                groupProjectsFilter.withIncludeSubGroups(request.wantSubgroupProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
-                projects = gitLabApi.getGroupApi().getProjects(projectOwner);
+                projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
             }
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
