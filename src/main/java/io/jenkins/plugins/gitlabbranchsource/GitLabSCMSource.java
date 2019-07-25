@@ -457,7 +457,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
             String branchUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
-                    .path("tree")
+                    .literal("/tree")
                     .path(UriTemplateBuilder.var("branch"))
                     .build()
                     .set("branch", head.getName())
@@ -475,7 +475,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } else if (head instanceof MergeRequestSCMHead) {
             String mergeUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
-                    .path("merge_requests")
+                    .literal("/merge_requests")
                     .path(UriTemplateBuilder.var("iid"))
                     .build()
                     .set("iid", ((MergeRequestSCMHead) head).getId())
@@ -490,7 +490,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             result.add(gitLabLink);
         } else if(head instanceof GitLabTagSCMHead) {
             String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
-                    .path("tree")
+                    .literal("/tree")
                     .path(UriTemplateBuilder.var("tag"))
                     .build()
                     .set("tag", head.getName())
