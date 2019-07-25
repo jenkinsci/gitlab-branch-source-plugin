@@ -26,8 +26,11 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSourceRequest.class);
     /**
      * {@code true} if branch details need to be fetched.
      */
@@ -388,7 +391,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @throws IOException if the permissions could not be retrieved.
      * @throws InterruptedException if interrupted while retrieving the permissions.
      */
-    public AccessLevel getPermissions(String username){
+    public AccessLevel getPermission(String username){
         if(getGitLabApi() == null || getMembers() == null) {
             return null;
         }
@@ -396,6 +399,13 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
             return getMembers().get(username);
         }
         return null;
+    }
+
+    public boolean isMember(String username) {
+        if(getMembers() == null) {
+            throw new NullPointerException("No members! :O");
+        }
+        return getMembers().containsKey(username);
     }
 
     /**

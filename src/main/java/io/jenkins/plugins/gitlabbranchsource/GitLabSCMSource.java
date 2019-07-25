@@ -304,6 +304,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                 projectOwner.equalsIgnoreCase(originOwner)
                                         && projectPath.equalsIgnoreCase(originProjectPath)
                         );
+                        LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -730,7 +731,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     new BranchDiscoveryTrait(true, false),
                     new OriginMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
-                            new ForkMergeRequestDiscoveryTrait.TrustContributors())
+                            new ForkMergeRequestDiscoveryTrait.TrustMembers())
             );
         }
 
