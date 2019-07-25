@@ -27,7 +27,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A {@link Discovery} trait for GitLab that will discover merge requests from forks of the repository.
+ * A {@link Discovery} trait for GitLab that will discover merge requests from forks of the project.
  */
 public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
@@ -198,7 +198,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         @NonNull
         @SuppressWarnings("unused") // stapler
         public SCMHeadAuthority<?, ?, ?> getDefaultTrust() {
-            return new TrustContributors();
+            return new TrustPermission();
         }
     }
 
@@ -248,15 +248,15 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * An {@link SCMHeadAuthority} that trusts contributors to the project.
+     * An {@link SCMHeadAuthority} that trusts Members to the project.
      */
-    public static class TrustContributors
+    public static class TrustMembers
             extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
         /**
          * Constructor.
          */
         @DataBoundConstructor
-        public TrustContributors() {
+        public TrustMembers() {
         }
 
         /**
@@ -290,9 +290,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             if(head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
                return false;
             }
-
             assert request.getMembers() != null;
-            return request.getMembers().containsKey(head.getOriginOwner());
+            return request.isMember(head.getOriginOwner());
         }
     }
 
@@ -316,13 +315,13 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head)
                 throws IOException, InterruptedException {
             if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
-                AccessLevel permission = request.getPermissions(head.getOriginOwner());
+                AccessLevel permission = request.getPermission(head.getOriginOwner());
                 switch (permission) {
                     case MAINTAINER:
                     case DEVELOPER:
                     case OWNER:
                         return true;
-                    default:return false;
+                    default: return false;
                 }
             }
             return false;

@@ -13,22 +13,28 @@
     <dl>
         <dt>Nobody</dt>
         <dd>
-            merge requests from forks will all be treated as untrusted. This means that where Jenkins requires a
+            Merge requests from forks will all be treated as untrusted. This means that where Jenkins requires a
             trusted file (e.g. <code>Jenkinsfile</code>) the contents of that file will be retrieved from the
             target branch on the origin project and not from the merge request branch on the fork project.
         </dd>
-        <dt>Contributors</dt>
+        <dt>Members</dt>
         <dd>
-            merge requests from collaborators to the origin project will be treated as trusted, all other merge
+            Merge requests from collaborators to the origin project will be treated as trusted, all other merge
             requests from fork repositories will be treated as untrusted.
             Note that if credentials used by Jenkins for scanning the project does not have permission to
             query the list of contributors to the origin project then only the origin account will be treated
             as trusted - i.e. this will fall back to <code>Nobody</code>.
         </dd>
+        <dt>Trusted Members</dt>
+        <dd>
+            Merge requests forks will be treated as trusted if and only if the fork owner has either Developer or
+            Maintainer or Owner Access Level in the origin project.
+            <strong>This is the recommended policy.</strong>
+        </dd>
         <dt>Everyone</dt>
         <dd>
             All merge requests from forks will be treated as trusted. <strong>NOTE:</strong> this option can be dangerous
-            if used on a public project hosted on a Gitea instance that allows signup.
+            if used on a public project hosted on a GitLab instance.
         </dd>
     </dl>
 </div>
