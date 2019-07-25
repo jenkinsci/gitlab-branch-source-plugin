@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jenkins.scm.api.SCMHead;
@@ -17,9 +18,13 @@ import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceRequest;
+import net.jcip.annotations.GuardedBy;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
@@ -80,15 +85,26 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     @CheckForNull
     private Iterable<Tag> tags;
     /**
-     * The repository collaborator names or {@code null} if not provided.
+     * The list of project {@link Member} or {@code null} if not provided.
      */
     @CheckForNull
-    private Set<String> collaboratorNames;
+    private HashMap<String, AccessLevel> members;
+    /**
+     * The project.
+     */
+    @CheckForNull
+    private Project gitlabProject;
     /**
      * A connection to the GitLab API or {@code null} if none established yet.
      */
     @CheckForNull
     private GitLabApi gitLabApi;
+    /**
+     * The resolved permissions keyed by user.
+     */
+    @NonNull
+    @GuardedBy("self")
+    private final Map<String, AccessLevel> permissions = new HashMap<>();
 
     /**
      * Constructor.
@@ -321,25 +337,27 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
         return Util.fixNull(tags);
     }
 
-
-    // TODO Iterable<Tag> getTags() and setTags(...)
-
     /**
-     * Returns the names of the project collaborators or {@code null} if those details have not been provided yet.
+     * Returns the project {@link Member} or {@code null} if those details have not been provided yet.
      *
-     * @return the names of the project collaborators or {@code null} if those details have not been provided yet.
+     * @return the project {@link Member} or {@code null} if those details have not been provided yet.
      */
-    public final Set<String> getCollaboratorNames() {
-        return collaboratorNames;
+    public final HashMap<String, AccessLevel> getMembers() {
+        return members;
     }
 
     /**
-     * Provides the request with the names of the project collaborators.
+     * Provides the set of project {@link Member}.
      *
-     * @param collaboratorNames the names of the project collaborators.
+     * @param members the set of project {@link Member}.
      */
-    public final void setCollaboratorNames(@CheckForNull Set<String> collaboratorNames) {
-        this.collaboratorNames = collaboratorNames;
+    public final void setMembers(@CheckForNull List<Member> members) {
+        this.members = new HashMap<>();
+        if(members != null) {
+            for(Member m : members) {
+                this.members.put(m.getUsername(), m.getAccessLevel());
+            }
+        }
     }
 
     /**
@@ -362,6 +380,24 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
         this.gitLabApi = gitLabApi;
     }
 
+
+    /**
+     * Returns the permissions of the supplied user.
+     *
+     * @return the permissions of the supplied user.
+     * @throws IOException if the permissions could not be retrieved.
+     * @throws InterruptedException if interrupted while retrieving the permissions.
+     */
+    public AccessLevel getPermissions(String username){
+        if(getGitLabApi() == null || getMembers() == null) {
+            return null;
+        }
+        if(getMembers().containsKey(username)) {
+            return getMembers().get(username);
+        }
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -376,4 +412,17 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
         super.close();
     }
 
+    /**
+     * Sets the {@link Project}.
+     *
+     * @param gitlabProject the {@link Project}.
+     */
+    public void setProject(Project gitlabProject) {
+        this.gitlabProject = gitlabProject;
+    }
+
+    @CheckForNull
+    public Project getGitlabProject() {
+        return gitlabProject;
+    }
 }
