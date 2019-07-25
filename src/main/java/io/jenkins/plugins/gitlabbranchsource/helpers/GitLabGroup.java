@@ -18,7 +18,10 @@ public class GitLabGroup extends GitLabOwner {
 
     @Override
     public String getWord() {
-        return "Group";
+        if(fullName.indexOf('/') == -1) {
+            return "Group";
+        }
+        return "Subgroup";
     }
 
     public void setFullName(String fullName) {

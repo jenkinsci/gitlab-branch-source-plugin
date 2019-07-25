@@ -173,7 +173,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 .withTraits(traits)
                 .newRequest(this, observer)) {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
-            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            if (gitlabOwner == null) {
+                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            }
             List<Project> projects;
             if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
