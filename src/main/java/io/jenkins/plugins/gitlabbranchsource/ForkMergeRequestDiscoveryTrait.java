@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
+import org.gitlab4j.api.models.AccessLevel;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -246,7 +248,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * An {@link SCMHeadAuthority} that trusts contributors to the repository.
+     * An {@link SCMHeadAuthority} that trusts contributors to the project.
      */
     public static class TrustContributors
             extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
@@ -266,6 +268,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.ForkMergeRequestDiscoveryTrait_contributorsDisplayName();
@@ -284,11 +287,68 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
          */
         @Override
         protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head) {
-            return !head.getOrigin().equals(SCMHeadOrigin.DEFAULT)
-                    && request.getCollaboratorNames().contains(head.getOriginOwner());
+            if(head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
+               return false;
+            }
+
+            assert request.getMembers() != null;
+            return request.getMembers().containsKey(head.getOriginOwner());
+        }
+    }
+
+    /**
+     * An {@link SCMHeadAuthority} that trusts those with write permission to the repository.
+     */
+    public static class TrustPermission
+            extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
+
+        /**
+         * Constructor.
+         */
+        @DataBoundConstructor
+        public TrustPermission() {
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head)
+                throws IOException, InterruptedException {
+            if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
+                AccessLevel permission = request.getPermissions(head.getOriginOwner());
+                switch (permission) {
+                    case MAINTAINER:
+                    case DEVELOPER:
+                    case OWNER:
+                        return true;
+                    default:return false;
+                }
+            }
+            return false;
+        }
 
+        /**
+         * Our descriptor.
+         */
+        @Extension
+        public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String getDisplayName() {
+                return Messages.ForkMergeRequestDiscoveryTrait_permissionsDisplayName();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+                return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
+            }
+        }
     }
 
     /**

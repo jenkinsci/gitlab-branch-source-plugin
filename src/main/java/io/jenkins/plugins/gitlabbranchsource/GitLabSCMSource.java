@@ -218,6 +218,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     .withTraits(getTraits())
                     .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
+                request.setProject(gitlabProject);
+                request.setMembers(gitLabApi.getProjectApi().getMembers(gitlabProject.getPathWithNamespace()));
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
@@ -612,6 +614,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         @Override
         public String getPronoun() {
             return Messages.GitLabSCMSource_Pronoun();
+        }
+
+        public String getSelectedServer(@QueryParameter String serverName) {
+            return serverName;
         }
 
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
