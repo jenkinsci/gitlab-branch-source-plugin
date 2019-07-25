@@ -27,9 +27,13 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
@@ -406,6 +410,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
             all.addAll(SCMNavigatorTrait._for(this, GitLabSCMNavigatorContext.class, GitLabSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, GitLabSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, GitLabSCMBuilder.class));
+            Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
+            for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
+                SCMTraitDescriptor<?> d = iterator.next();
+                if (dedup.contains(d)
+                        || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
+                    // remove any we have seen already and ban the browser configuration as it will always be github
+                    iterator.remove();
+                } else {
+                    dedup.add(d);
+                }
+            }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
             NamedArrayList.select(all, "Projects", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
                         @Override
