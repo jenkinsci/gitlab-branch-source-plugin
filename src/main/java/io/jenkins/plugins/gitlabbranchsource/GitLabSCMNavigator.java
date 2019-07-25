@@ -54,7 +54,6 @@ import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
