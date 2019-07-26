@@ -387,9 +387,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Returns the permissions of the supplied user.
      *
-     * @return the permissions of the supplied user.
-     * @throws IOException if the permissions could not be retrieved.
-     * @throws InterruptedException if interrupted while retrieving the permissions.
+     * @param username the username of MR author
+     * @return {@link AccessLevel} the permissions of the supplied user.
      */
     public AccessLevel getPermission(String username){
         if(getGitLabApi() == null || getMembers() == null) {
