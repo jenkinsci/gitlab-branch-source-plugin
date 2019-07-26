@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -282,7 +281,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
             }
 
-        }        /**
+        }
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -296,7 +296,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * An {@link SCMHeadAuthority} that trusts those with write permission to the repository.
+     * An {@link SCMHeadAuthority} that trusts those with required permission to the project.
      */
     public static class TrustPermission
             extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
@@ -312,16 +312,17 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head)
-                throws IOException, InterruptedException {
+        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head) {
             if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
                 AccessLevel permission = request.getPermission(head.getOriginOwner());
-                switch (permission) {
-                    case MAINTAINER:
-                    case DEVELOPER:
-                    case OWNER:
-                        return true;
-                    default: return false;
+                if(permission != null) {
+                    switch (permission) {
+                        case MAINTAINER:
+                        case DEVELOPER:
+                        case OWNER:
+                            return true;
+                        default: return false;
+                    }
                 }
             }
             return false;
