@@ -27,9 +27,13 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import jenkins.model.Jenkins;
+import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
@@ -50,11 +54,9 @@ import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -176,7 +178,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 .withTraits(traits)
                 .newRequest(this, observer)) {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
-            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            if (gitlabOwner == null) {
+                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            }
             List<Project> projects;
             if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
@@ -340,24 +344,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
             GitLabApi gitLabApi = null;
             try {
                 gitLabApi = GitLabHelper.apiBuilder(serverName);
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
-                if(user == null) {
-                    throw new GitLabApiException("Invalid User");
-                }
-                return FormValidation.ok(projectOwner + " is a valid user");
+                GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+                return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
-            } catch (GitLabApiException e) {
-                try {
-                    Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
-                    String groupNamespace = group.getFullName();
-                    if(groupNamespace.indexOf('/') == -1) {
-                        return FormValidation.ok(groupNamespace + " is a valid group");
-                    }
-                    return FormValidation.ok(groupNamespace + " is a valid subgroup");
-                } catch (GitLabApiException e1) {
-                    return FormValidation.error(projectOwner+" is neither a valid username/group/subgroup");
-                }
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e, e.getMessage());
             }
             return FormValidation.ok("");
         }
@@ -421,6 +413,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
             all.addAll(SCMNavigatorTrait._for(this, GitLabSCMNavigatorContext.class, GitLabSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, GitLabSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, GitLabSCMBuilder.class));
+            Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
+            for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
+                SCMTraitDescriptor<?> d = iterator.next();
+                if (dedup.contains(d)
+                        || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
+                    // remove any we have seen already and ban the browser configuration as it will always be github
+                    iterator.remove();
+                } else {
+                    dedup.add(d);
+                }
+            }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
             NamedArrayList.select(all, "Projects", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
                         @Override
