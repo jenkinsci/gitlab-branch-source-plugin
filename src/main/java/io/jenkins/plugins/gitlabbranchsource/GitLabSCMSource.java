@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -260,7 +261,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         if (request.process(new BranchSCMHead(branchName),
                                 (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>) head ->
                                         new BranchSCMRevision(head, sha),
-                                this::createProbe,
+                                new SCMSourceRequest.ProbeLambda<BranchSCMHead, BranchSCMRevision>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(@NonNull BranchSCMHead head,
+                                                                          @Nullable BranchSCMRevision revision)
+                                            throws IOException {
+                                        return createProbe(head, revision);
+                                    }
+                                },
                                 (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
                                     if (isMatch) {
                                         listener.getLogger().format("Met criteria%n");
@@ -274,13 +283,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
                 }
-                if (request.isFetchMRs() && gitlabProject.getForkedFromProject() == null &&
-                        !(request.getForkMRStrategies().isEmpty()
-                                && request.getOriginMRStrategies().isEmpty())) {
+                if (request.isFetchMRs() && !request.isComplete()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
-                    Iterable<MergeRequest> mrs = request.getMergeRequests();
-                    for (MergeRequest mr : mrs) {
+                    for (MergeRequest mr : request.getMergeRequests()) {
                         // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
                         // It is required to get the individual diffRef using the Iid.
                         final MergeRequest m =
@@ -300,12 +306,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String originOwner = m.getAuthor().getUsername();
                         // Origin project name will always the same as the source project name
                         String originProjectPath = projectPath;
-                        Set<ChangeRequestCheckoutStrategy> strategies = request.getMRStrategies(
-                                projectOwner.equalsIgnoreCase(originOwner)
-                                        && projectPath.equalsIgnoreCase(originProjectPath)
-                        );
+                        Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
+                        boolean fork = !gitlabProject.getOwner().getUsername().equals(originOwner);
                         LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
-                        for (ChangeRequestCheckoutStrategy strategy : strategies) {
+                        for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
                                                     .toLowerCase(Locale.ENGLISH) : ""),
@@ -332,7 +336,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                             m.getDiffRefs().getHeadSha()
                                                     )
                                             ),
-                                    this::createProbe,
+                                    new SCMSourceRequest.ProbeLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(@NonNull MergeRequestSCMHead head,
+                                                                              @Nullable MergeRequestSCMRevision revision)
+                                                throws IOException, InterruptedException {
+                                            boolean trusted = request.isTrusted(head);
+                                            if (!trusted) {
+                                                listener.getLogger().format("(not from a trusted source)%n");
+                                            }
+                                            return createProbe(trusted ? head : head.getTarget(), revision);
+                                        }
+                                    },
                                     (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
                                         if (isMatch) {
                                             listener.getLogger().format("Met criteria%n");
@@ -420,8 +436,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
-    protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener)
-            throws IOException, InterruptedException {
+    protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) {
         LOGGER.info(String.format("e, l..%s", Thread.currentThread().getName()));
         List<Action> result = new ArrayList<>();
         if (gitlabProject == null) {
@@ -443,8 +458,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
-    protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener)
-            throws IOException, InterruptedException {
+    protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
         LOGGER.info(String.format("h, e, l..%s", Thread.currentThread().getName()));
         if (gitlabProject == null) {
             try {

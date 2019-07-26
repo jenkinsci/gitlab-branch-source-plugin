@@ -132,6 +132,7 @@ public class GitLabSCMPipelineStatusNotifier {
         }
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            LOGGER.info("COMMIT: " + hash);
             gitLabApi.getCommitsApi().addCommitStatus(
                     source.getProjectPath(),
                     hash,
