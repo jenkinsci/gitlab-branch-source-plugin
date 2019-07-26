@@ -92,12 +92,12 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
 
     /**
      * Returns a {@link UriTemplate} for checkout according to credentials configuration.
-     * Expects the parameters {@code owner} and {@code repository} to be populated before expansion.
      *
      * @param context       the context within which to resolve the credentials.
      * @param serverUrl     the server url
      * @param sshRemote     any valid SSH remote URL for the server.
      * @param credentialsId the credentials.
+     * @param projectPath   the full path to the project (with namespace).
      * @return a {@link UriTemplate}
      */
     public static UriTemplate checkoutUriTemplate(@CheckForNull Item context,

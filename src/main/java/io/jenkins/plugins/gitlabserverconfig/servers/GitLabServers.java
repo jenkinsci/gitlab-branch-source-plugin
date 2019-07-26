@@ -83,7 +83,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     /**
      * Gets descriptor of {@link GitLabPersonalAccessTokenCreator}
      *
-     * returns the list of descriptors
+     * @return the list of descriptors
      */
     public List<Descriptor> actions() {
         return Collections.singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
