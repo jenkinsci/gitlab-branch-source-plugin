@@ -57,7 +57,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
-import org.gitlab4j.api.models.Visibility;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
@@ -184,10 +183,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
             List<Project> projects;
             if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
-                if(gitLabApi.getAuthToken().equals("")) {
-                    projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withVisibility(Visibility.PUBLIC));
-                } else {
+                if(request.wantSubgroupProjects()) {
                     projects = gitLabApi.getProjectApi().getOwnedProjects();
+                } else {
+                    projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
                 }
             } else {
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
