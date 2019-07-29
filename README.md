@@ -374,6 +374,17 @@ We have a workaround for this. Jenkins will build the MRs from forked projects i
 
 As the webhook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the required build in Jenkins. Currently this feature is a work in progress and will be landing very soon. 🚀 Will be ready once [JENKINS-58593](https://issues.jenkins-ci.org/browse/JENKINS-58593) is fixed.
 
+### Folder Organization
+
+Folders Organization enable Jenkins to monitor an entire GitLab `User`/`Group`/`Subgroup` and automatically create new Multibranch Pipelines for projects which contain branches/merge requests/tags containing a `Jenkinsfile`.
+
+### SCM Trait APIs
+
+* Skip Notification - Do not notify GitLab about pipeline status.
+* WebHook Mode - Override default webhook management mode.
+* Checkout Over SSH - Use this mode to checkout over ssh.
+* Tag Discovery - Discover tags in the repository.
+
 ## Issues
 
 This project uses Jenkins [JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under `gitlab-branch-source-plugin` component.
