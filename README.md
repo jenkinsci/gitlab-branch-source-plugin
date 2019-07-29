@@ -21,10 +21,28 @@ you require the following plugins:
 
 ## Building the plugin
 
-No binaries are available for this plugin as the plugin is in the very early alpha stage, and not ready for the general
-public quite yet.  If you want to jump in early, you can try building it yourself from source.
+This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` release has been made to Jenkins Experimental
+Update Center. You can try it out by following ways:
 
-### Installation:
+i. [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
+
+```bash
+$ java -jar plugin-management-tool.jar
+    -p gitlab-branch-source:experimental
+    -d <path-to-default-jenkins-plugins-directory>
+    -w <path-to-jenkins-war>
+```
+
+ii. Changing update center URL
+
+You can install plugins from Experimental Update Center by changing the JSON URL used to fetch plugins data.
+Go to `Plugin Manager`, then to the `Advanced` tab, and configure the update center URL
+`https://updates.jenkins.io/experimental/update-center.json` then `submit`, and then select `Check Now`.
+Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
+
+iii. Download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi).
+
+To try the latest version, you can try building it yourself from source:
 
 1) Checkout out source code to your local machine:
 
@@ -340,7 +358,7 @@ documentation for better security.
 
 ### Setting up GitLab for jobs
 
-Alpha release can be found from Jenkins Experimental Update Center or download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi).
+
 
 ## Issues
 
