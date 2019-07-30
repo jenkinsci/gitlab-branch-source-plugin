@@ -342,7 +342,7 @@ To create a `Multibranch Pipeline Job`:
     
     i. Select `Server` configured in the initial server setup.
     
-    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password). It is only required for some cases but if you have a Personal Access Token configured in initial server setup, you do not need to add any more credentials.
+    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) if there is any private projects that will be built by the plugin.
     
     iii. Add path to the owner where the project you want to build exists. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
     
@@ -376,7 +376,7 @@ To create a `GitLab Group Job`:
     
     i. Select `Server` configured in the initial server setup.
 
-    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password). It is only required for some cases but if you have a Personal Access Token configured in initial server setup, you do not need to add any more credentials.
+    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) if there is any private projects that will be built by the plugin.
 
     iii. Add path to the owner whose projects you want to build. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
 
@@ -386,15 +386,38 @@ Currently there is a bug which doesn't show proper projects indexing log in Jenk
 
 ### SCM Trait APIs
 
-The following Behaviours apply to both `Multibranch Pipeline Jobs` and `Folder Organization` (except when mentioned otherwise).
+The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder Organization` (unless otherwise stated).
 
 #### Default Traits:
 
 * `Discover branches` - To discover branches.
 
+	* `Only Branches that are not also filed as MRs` - If you are discovering origin merge requests, it may not make sense to discover the same changes both as a merge request and as a branch.
+	* `Only Branches that are filed as MRs` - This option exists to preserve legacy behaviour when upgrading from older versions of the plugin. NOTE: If you have an actual use case for this option please file a merge request against this text.
+	* `All Branches` - Ignores whether the branch is also filed as a merge request and instead discovers all branches on the origin project.
+
 * `Discover merge requests from origin` - To discover merge requests made from origin branches.
+	
+	* `Merging the merge request merged with current target revision` - Discover each merge request once with the discovered revision corresponding to the result of merging with the current revision of the target branch.
+	* `The current merge request revision` - Discover each merge request once with the discovered revision corresponding to the merge request head revision without merging.
+	* `Both current mr revision and the mr merged with current target revision` - Discover each merge request twice. The first discovered revision corresponds to the result of merging with the current revision of the target branch in each scan. The second parallel discovered revision corresponds to the merge request head revision without merging.
 
 * `Discover merge requests from forks` - To discover merge requests made from forked project branches.
+
+	* Strategy:
+	
+		* `Merging the merge request merged with current target revision` - Discover each merge request once with the discovered revision corresponding to the result of merging with the current revision of the target branch.
+		* `The current merge request revision` - Discover each merge request once with the discovered revision corresponding to the merge request head revision without merging.
+		* `Both current mr revision and the mr merged with current target revision` - Discover each merge request twice. The first discovered revision corresponds to the result of merging with the current revision of the target branch in each scan. The second parallel discovered revision corresponds to the merge request head revision without merging.
+		
+	* Trust
+	
+		* `Members` - Discover MRs from Forked Projects whose author is a member of the origin project.
+		* `Trusted Members` - [Recommended] Discover MRs from Forked Projects whose author is has Developer/Maintainer/Owner accesslevel in the origin project.
+		* `Everyone` - Discover MRs from Forked Projects filed by anybody. For security reasons you should never use this option. It may be used to reveal your Pipeline secrets environment variables.
+		* `Nobody` - Discover no MRs from Forked Projects at all. Equivalent to removing the trait altogether.
+		
+	If `Members` or `Trusted Members` is selected, plugin will build the MRs from Forked Projects with untrusted owners based on their target branch.
 
 #### Additional Traits:
 
@@ -404,11 +427,11 @@ These traits can be selected by clicking `Add` button in the `Behaviours` sectio
 
 * `WebHook mode` - Override default webhook management mode.
 
-* `Checkout over SSH` - Use this mode to checkout over ssh.
+* `Checkout over SSH` - Use this mode to checkout over ssh. It is recommended to use `Checkout Credentials` instead.
 
 * `Tag discovery` - Discover tags in the project.
 
-* `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only available for `GitLab Group` Job type.
+* `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only applicable to `GitLab Group` Job type.
 
 ## Issues
 
