@@ -1,8 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -10,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
@@ -55,18 +51,10 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
-            List<Project> projects;
-            LOGGER.info("Project Owner: "+ gitLabOwner);
-            if(gitLabOwner instanceof GitLabUser) {
-                Stream<Project> projectsStream = gitLabApi.getProjectApi().getOwnedProjectsStream();
-                projects = projectsStream
-                        .filter(project -> !project.getNamespace().getKind().equals("group"))
-                        .collect(Collectors.toList());
-            } else {
-                projects = gitLabApi.getGroupApi().getProjects(navigator.getProjectOwner());
+            List<Project> projects = new ArrayList<>();
+            for(String projectPathWithNamespace : navigator.getNavigatorProjects()) {
+                projects.add(gitLabApi.getProjectApi().getProject(projectPathWithNamespace));
             }
-            LOGGER.info(projects.toString());
             if(projects.isEmpty()) {
                 LOGGER.log(Level.WARNING,
                         "Group is empty!");
