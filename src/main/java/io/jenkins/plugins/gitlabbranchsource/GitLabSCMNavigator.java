@@ -93,6 +93,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
      */
     private List<SCMTrait<? extends SCMTrait<?>>> traits;
 
+    /**
+     * The path with namespace of Navigator projects.
+     */
+    HashSet<String> navigatorProjects;
+
+    public HashSet<String> getNavigatorProjects() {
+        return navigatorProjects;
+    }
+
     private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
     @DataBoundConstructor
@@ -197,13 +206,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
-                if(gitlabOwner instanceof GitLabUser && p.getNamespace().getKind().equals("group")) {
-                    // skip the user repos which includes all groups that they are a member of
-                    continue;
-                }
-                // If repository is empty it throws an exception
+                navigatorProjects.add(p.getPathWithNamespace());
                 count++;
                 try {
+                    // If repository is empty it throws an exception
                     gitLabApi.getRepositoryApi().getTree(p);
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",

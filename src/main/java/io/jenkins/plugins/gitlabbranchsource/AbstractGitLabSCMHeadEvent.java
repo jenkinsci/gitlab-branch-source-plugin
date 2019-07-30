@@ -20,14 +20,18 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
     // TODO: improve check
     @Override
     public boolean isMatch(@NonNull SCMNavigator navigator) {
-        return navigator instanceof GitLabSCMNavigator;
+        return navigator instanceof GitLabSCMNavigator && isMatch((GitLabSCMNavigator) navigator);
     }
+
+    public abstract boolean isMatch(@NonNull GitLabSCMNavigator navigator);
 
     // TODO: improve check
     @Override
     public boolean isMatch(@NonNull SCMSource source) {
-        return source instanceof GitLabSCMSource;
+        return source instanceof GitLabSCMSource && isMatch((GitLabSCMSource) source);
     }
+
+    public abstract boolean isMatch(@NonNull GitLabSCMSource source);
 
     // TODO: improve check
     @Nonnull

@@ -20,7 +20,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectHook;
 
-
 public class GitLabWebhookCreator {
 
     public static final Logger LOGGER = Logger.getLogger(GitLabWebhookCreator.class.getName());

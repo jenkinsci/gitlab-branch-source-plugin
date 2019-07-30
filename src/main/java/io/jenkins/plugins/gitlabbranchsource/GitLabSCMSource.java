@@ -104,6 +104,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     private transient String httpRemote;
     private transient Project gitlabProject;
+    private int projectId = -1;
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
@@ -154,6 +155,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public String getRemote() {
         return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getHttpRemote(), getSshRemote(), getCredentialsId(), projectPath)
                 .expand();
+    }
+
+    public int getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(int projectId) {
+        this.projectId = projectId;
     }
 
     @NonNull
@@ -224,6 +233,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (gitlabProject == null) {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
             }
+            setProjectId(gitlabProject.getId());
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();

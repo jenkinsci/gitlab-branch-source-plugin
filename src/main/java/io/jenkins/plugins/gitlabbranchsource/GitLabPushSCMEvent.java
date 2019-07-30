@@ -67,6 +67,16 @@ public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
                 getPayload().getProject().getPathWithNamespace();
     }
 
+    @Override
+    public boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
+        return navigator.getNavigatorProjects().contains(getPayload().getProject().getPathWithNamespace());
+    }
+
+    @Override
+    public boolean isMatch(@NonNull GitLabSCMSource source) {
+        return getPayload().getProject().getId().equals(source.getProjectId());
+    }
+
     @NonNull
     @Override
     public Map<SCMHead, SCMRevision> headsFor(GitLabSCMSource source) {
