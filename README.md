@@ -274,7 +274,7 @@ via a `yaml` file. If you are a first time user, you can learn more about JCasC
 
 #### Prerequisite:
 
-Installed `Configuration as Code` Plugin on your Jenkins instance.
+Install `Configuration as Code` Plugin on your Jenkins instance.
 
 Refer to [Installing a new plugin in Jenkins](https://jenkins.io/doc/book/managing/plugins/#installing-a-plugin).
 
@@ -309,9 +309,9 @@ credentials:
 unclassified:
   gitLabServers:
     servers:
-      - credentialsId: "i<3GitLab"
+      - credentialsId: "i<3GitLab" # same as id specified for gitlab personal access token credentials
         manageHooks: true
-        name: "gitlab.com"
+        name: "gitlab-1024"
         serverUrl: "https://gitlab.com"
 ```
 
@@ -326,7 +326,7 @@ GitLab Branch Source Plugin allows you to create 2 type of jobs:
 
 ### Multibranch Pipeline Jobs
 
-The Multibranch Pipeline project type enables you to implement different Jenkinsfiles for different branches of the same project. In a Multibranch Pipeline project, Jenkins automatically discovers, manages and executes Pipelines for Branches/Merge Requests/Tags which contain a `Jenkinsfile` in source control. This eliminates the need for manual Pipeline creation and management.
+The Multibranch Pipeline job type enables you to implement different Jenkinsfiles for different branches of the same project. In a Multibranch Pipeline job, Jenkins automatically discovers, manages and executes Pipelines for Branches/Merge Requests/Tags which contain a `Jenkinsfile` in source control. This eliminates the need for manual Pipeline creation and management.
 
 To create a `Multibranch Pipeline Job`:
 
