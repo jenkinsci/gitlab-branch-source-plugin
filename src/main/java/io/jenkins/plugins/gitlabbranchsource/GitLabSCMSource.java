@@ -101,6 +101,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
+
+    private transient String httpRemote;
     private transient Project gitlabProject;
 
     @DataBoundConstructor
@@ -120,6 +122,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     public String getProjectPath() {
         return projectPath;
+    }
+
+    public String getHttpRemote() {
+        return httpRemote;
+    }
+
+    public void setHttpRemote(String httpRemote) {
+        this.httpRemote = httpRemote;
     }
 
     public String getSshRemote() {
@@ -142,7 +152,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public String getRemote() {
-        return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getSshRemote(), getCredentialsId(), projectPath)
+        return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getHttpRemote(), getSshRemote(), getCredentialsId(), projectPath)
                 .expand();
     }
 
@@ -216,6 +226,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
+            httpRemote = gitlabProject.getHttpUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
                     .withTraits(getTraits())
                     .newRequest(this, listener)) {
@@ -430,7 +441,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected Set<String> retrieveRevisions(@NonNull TaskListener listener) throws IOException, InterruptedException {
         // don't pass through to git, instead use the super.super behaviour
-        Set<String> revisions = new HashSet<String>();
+        Set<String> revisions = new HashSet<>();
         for (SCMHead head : retrieve(listener)) {
             revisions.add(head.getName());
         }
