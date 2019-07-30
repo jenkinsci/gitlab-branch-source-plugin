@@ -127,7 +127,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     )
             );
             if (credentials instanceof SSHUserPrivateKey) {
-                return UriTemplate.buildFromTemplate("ssh://" + sshRemote)
+                return UriTemplate.buildFromTemplate(sshRemote)
                         .build();
             }
         }
