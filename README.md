@@ -18,72 +18,64 @@ you require the following plugins:
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
      Merge Requests) and Folder organisation.
 
-## Building the plugin
+## Installing plugin
 
 This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
 
 1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
-```bash
-$ java -jar plugin-management-tool.jar
-    -p gitlab-branch-source:experimental
-    -d <path-to-default-jenkins-plugins-directory>
-    -w <path-to-jenkins-war>
-```
+    ```bash
+    $ java -jar plugin-management-tool.jar
+        -p gitlab-branch-source:experimental
+        -d <path-to-default-jenkins-plugins-directory>
+        -w <path-to-jenkins-war>
+    ```
 
 2. Changing update center URL on Jenkins Instance
 
-You can install plugins from Experimental Update Center by changing the JSON URL used to fetch plugins data. Go to `Plugin Manager`, then to the `Advanced` tab, and configure the update center URL `https://updates.jenkins.io/experimental/update-center.json` then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
+    You can install plugins from Experimental Update Center by changing the JSON URL used to fetch plugins data. Go to `Plugin Manager`, then to the `Advanced` tab, and configure the update center URL:
+     ```
+     https://updates.jenkins.io/experimental/update-center.json
+     ``` 
+     then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
 
 3. Download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi) and manually install.
 
-To try the latest version, you can try building it yourself from source:
+4. From Source:
 
-1) Checkout out source code to your local machine:
+    i. Checkout out source code to your local machine:
+    
+         git clone https://github.com/baymac/gitlab-branch-source-plugin.git\
+    
+         cd gitlab-branch-source-plugin
+    
+    ii. Install the plugin:
+    
+        mvn clean install
+        
+        mvn clean install -DskipTests # to skip tests
+    
+    iii. Run the Plugin:
+    
+        mvn hpi:run # runs a Jenkins instance at localhost:8080
+    
+        mvn hpi:run -Djetty.port={port} # to run on your desired port number
+    
+    iv. Now the `*.hpi` generated can be manually installed on your Jenkins instance:
 
-     ```bash
-     git clone https://github.com/baymac/gitlab-branch-source-plugin.git\
-
-     cd gitlab-branch-source-plugin
-     ```
-
-2) Install the plugin:
-
-    ```bash
-    mvn clean install
-    ```
-    or
-    ```bash
-    mvn clean install -DskipTests # to skip tests
-    ```
-
-3) Run the Plugin:
-
-    ```bash
-    mvn hpi:run # runs a Jenkins instance at localhost:8080
-    ```
-
-    or
-
-    ```bash
-    mvn hpi:run -Djetty.port={port} # to run on your desired port number
-    ```
-
-    Now the `*.hpi` generated can be manually installed on your Jenkins instance:<br><br>
-
-    1. Select `Manage Jenkins`.
-
-    2. Select `Manage Plugins`.
-
-    3. Select `Advanced` tab.
-
-    3. In `Upload Plugin` section, select `Choose file`.
-
-    4. Select `${root_dir}/target/gitlab-branch-source.hpi`.
-
-    5. Select `Upload`.
-
-    6. Select `Install without restart`.
+        1. Select `Manage Jenkins`
+    
+        2. Select `Manage Plugins`
+    
+        3. Select `Advanced` tab
+    
+        3. In `Upload Plugin` section, select `Choose file`
+    
+        4. Select `${root_dir}/target/gitlab-branch-source.hpi`
+    
+        5. Select `Upload`
+    
+        6. Select `Install without restart`
 
 ## Getting Started
 
