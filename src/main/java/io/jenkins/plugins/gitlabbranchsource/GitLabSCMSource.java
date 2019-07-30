@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
+import com.damnhandy.uri.template.impl.Operator;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
@@ -449,8 +450,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 e.printStackTrace();
             }
         }
-        result.add(new GitLabLink("gitlab-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+        result.add(new GitLabLink("gitlab-project", UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
+                .template("{/project*}")
                 .build()
+                .set("project", projectPath.split(Operator.PATH.getSeparator()))
                 .expand()
         ));
         return result;
