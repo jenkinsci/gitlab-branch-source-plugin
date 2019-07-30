@@ -54,6 +54,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
 
     private final String sshRemote;
 
+    private final String httpRemote;
+
     /**
      * Constructor
      *
@@ -65,14 +67,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         super(
                 head,
                 revision,
-                checkoutUriTemplate(null, GitLabHelper.getServerUrlFromName(source.getServerName()), null, null, source.getProjectPath())
-                        .expand(),
+                source.getHttpRemote(),
                 source.getCredentialsId()
         );
         this.context = source.getOwner();
         serverUrl = StringUtils.defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()), GitLabServer.GITLAB_SERVER_URL);
         projectPath = source.getProjectPath();
         sshRemote = source.getSshRemote();
+        httpRemote = source.getHttpRemote();
         // configure the ref specs
         withoutRefSpecs();
         String projectUrl;
@@ -103,6 +105,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      */
     public static UriTemplate checkoutUriTemplate(@CheckForNull Item context,
                                                   @NonNull String serverUrl,
+                                                  @CheckForNull String httpRemote,
                                                   @CheckForNull String sshRemote,
                                                   @CheckForNull String credentialsId,
                                                   @NonNull String projectPath) {
@@ -132,6 +135,10 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         .build();
             }
         }
+        if(httpRemote != null) {
+            return UriTemplate.buildFromTemplate(httpRemote)
+                    .build();
+        }
         return UriTemplate.buildFromTemplate(serverUrl + '/' + projectPath)
                 .literal(".git")
                 .build();
@@ -153,8 +160,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      */
     @NonNull
     public final UriTemplate checkoutUriTemplate() {
-        String credentialsId = credentialsId();
-        return checkoutUriTemplate(context, serverUrl, sshRemote, credentialsId, projectPath);
+        return checkoutUriTemplate(context, serverUrl, httpRemote, sshRemote, credentialsId(), projectPath);
     }
 
     /**
