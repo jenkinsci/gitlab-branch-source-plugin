@@ -345,12 +345,12 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Provides the Map of project {@link Member} username and {@link Member}.
      *
-     * @param members the list of project {@link Member}.
+     * @param membersList the list of project {@link Member}.
      */
-    public final void setMembers(@CheckForNull List<Member> members) {
+    public final void setMembers(@CheckForNull List<Member> membersList) {
         this.members = new HashMap<>();
-        if(members != null) {
-            for(Member m : members) {
+        if(membersList != null) {
+            for(Member m : membersList) {
                 this.members.put(m.getUsername(), m.getAccessLevel());
             }
         }
