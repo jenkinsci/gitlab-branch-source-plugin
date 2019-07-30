@@ -102,12 +102,6 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      */
     @CheckForNull
     private GitLabApi gitLabApi;
-    /**
-     * The resolved permissions keyed by user.
-     */
-    @NonNull
-    @GuardedBy("self")
-    private final Map<String, AccessLevel> permissions = new HashMap<>();
 
     /**
      * Constructor.
