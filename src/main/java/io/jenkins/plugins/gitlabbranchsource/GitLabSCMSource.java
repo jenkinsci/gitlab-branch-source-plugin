@@ -557,7 +557,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                     .withTraits(traits)
                     .newRequest(this, listener)) {
-                if(request.getMembers() == null) {
+                if(request.getMembers().isEmpty()) {
                     GitLabApi gitLabApi;
                     try {
                         gitLabApi = apiBuilder(serverName);
