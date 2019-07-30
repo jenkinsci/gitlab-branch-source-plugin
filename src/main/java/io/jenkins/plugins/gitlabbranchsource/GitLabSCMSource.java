@@ -220,7 +220,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
-                request.setMembers(gitLabApi.getProjectApi().getMembers(gitlabProject.getPathWithNamespace()));
+                request.setMembers(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
