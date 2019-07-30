@@ -9,6 +9,9 @@ public class MergeRequestSCMRevision extends ChangeRequestSCMRevision<MergeReque
 
     private BranchSCMRevision origin;
 
+    private final @NonNull String baseHash;
+    private final @NonNull String headHash;
+
     /**
      * Constructor.
      *
@@ -21,7 +24,19 @@ public class MergeRequestSCMRevision extends ChangeRequestSCMRevision<MergeReque
             @NonNull BranchSCMRevision target,
             @NonNull BranchSCMRevision origin) {
         super(head, target);
+        this.baseHash = target.getHash();
+        this.headHash = origin.getHash();
         this.origin = origin;
+    }
+
+    @NonNull
+    public String getBaseHash() {
+        return baseHash;
+    }
+
+    @NonNull
+    public String getHeadHash() {
+        return headHash;
     }
 
     @Exported

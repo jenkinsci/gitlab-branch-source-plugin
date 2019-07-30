@@ -444,9 +444,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @NonNull
         @SuppressWarnings("unused") // jelly
         public List<SCMTrait<? extends SCMTrait<?>>> getTraitsDefaults() {
-            List<SCMTrait<? extends SCMTrait<?>>> result = new ArrayList<>();
-            result.addAll(delegate.getTraitsDefaults());
-            return result;
+            return new ArrayList<>(delegate.getTraitsDefaults());
         }
     }
 

@@ -88,6 +88,7 @@ import org.slf4j.LoggerFactory;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
@@ -393,7 +394,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                     @Override
                                     public SCMSourceCriteria.Probe create(@NonNull GitLabTagSCMHead head,
                                                                           @Nullable GitTagSCMRevision revision)
-                                            throws IOException, InterruptedException {
+                                            throws IOException {
                                         return createProbe(head, revision);
                                     }
                                 }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
@@ -538,6 +539,42 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
+    public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener)
+            throws IOException {
+        if(revision instanceof MergeRequestSCMRevision) {
+            MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
+            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                    .withTraits(traits)
+                    .newRequest(this, listener)) {
+                if(request.getMembers() == null) {
+                    GitLabApi gitLabApi;
+                    try {
+                        gitLabApi = apiBuilder(serverName);
+                        if(gitlabProject == null) {
+                            gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+                        }
+                        request.setMembers(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
+                        if (request.isTrusted(head)) {
+                            return revision;
+                        }
+                    } catch (NoSuchFieldException | GitLabApiException | InterruptedException e) {
+                        listener.getLogger()
+                                .format("It seems %s is unreachable, assuming no trusted members%n",
+                                        getServerUrlFromName(serverName));
+                        e.printStackTrace();
+                    }
+                }
+            }
+            MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
+            listener.getLogger().format("Loading trusted files from target branch %s at %s rather than %s%n",
+                    head.getTarget().getName(), rev.getBaseHash(), rev.getHeadHash());
+            return new SCMRevisionImpl(head.getTarget(), rev.getBaseHash());
+        }
+        return revision;
+    }
+
+    @NonNull
+    @Override
     protected List<Action> retrieveActions(@NonNull SCMRevision revision, SCMHeadEvent event,
                                            @NonNull TaskListener listener) throws IOException, InterruptedException {
         return super.retrieveActions(revision, event, listener);
@@ -604,7 +641,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
                 .webhookRegistration();
-        LOGGER.info("Mode of wh: " + mode.toString());
+        LOGGER.info("Mode of web hook: " + mode.toString());
         GitLabWebhookCreator.register(this, mode);
     }
 
@@ -752,7 +789,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     new BranchDiscoveryTrait(true, false),
                     new OriginMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
-                            new ForkMergeRequestDiscoveryTrait.TrustMembers())
+                            new ForkMergeRequestDiscoveryTrait.TrustPermission())
             );
         }
 
