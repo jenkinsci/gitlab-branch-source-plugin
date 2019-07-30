@@ -334,18 +334,18 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the project {@link Member} or {@code null} if those details have not been provided yet.
+     * Returns the Map of project {@link Member} or {@code null} if those details have not been provided yet.
      *
-     * @return the project {@link Member} or {@code null} if those details have not been provided yet.
+     * @return the Map of project {@link Member} or {@code null} if those details have not been provided yet.
      */
     public final HashMap<String, AccessLevel> getMembers() {
         return members;
     }
 
     /**
-     * Provides the set of project {@link Member}.
+     * Provides the Map of project {@link Member} username and {@link Member}.
      *
-     * @param members the set of project {@link Member}.
+     * @param members the list of project {@link Member}.
      */
     public final void setMembers(@CheckForNull List<Member> members) {
         this.members = new HashMap<>();
