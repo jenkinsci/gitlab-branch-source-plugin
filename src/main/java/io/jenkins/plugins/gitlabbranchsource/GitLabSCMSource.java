@@ -78,7 +78,6 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Tag;
-import org.gitlab4j.api.models.Visibility;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
@@ -476,10 +475,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
-            String branchUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+            String branchUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
+                    .template("{/project*}")
                     .literal("/tree")
                     .path(UriTemplateBuilder.var("branch"))
                     .build()
+                    .set("project", projectPath.split(Operator.PATH.getSeparator()))
                     .set("branch", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(
@@ -494,10 +495,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 result.add(new PrimaryInstanceMetadataAction());
             }
         } else if (head instanceof MergeRequestSCMHead) {
-            String mergeUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+            String mergeUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
+                    .template("{/project*}")
                     .literal("/merge_requests")
                     .path(UriTemplateBuilder.var("iid"))
                     .build()
+                    .set("project", projectPath.split(Operator.PATH.getSeparator()))
                     .set("iid", ((MergeRequestSCMHead) head).getId())
                     .expand();
             result.add(new ObjectMetadataAction(
@@ -509,10 +512,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             gitLabLink.setDisplayName("Merge Request");
             result.add(gitLabLink);
         } else if(head instanceof GitLabTagSCMHead) {
-            String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName)+'/'+projectPath)
+            String tagUrl = UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
+                    .template("{/project*}")
                     .literal("/tree")
                     .path(UriTemplateBuilder.var("tag"))
                     .build()
+                    .set("project", projectPath.split(Operator.PATH.getSeparator()))
                     .set("tag", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(

@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
+import com.damnhandy.uri.template.impl.Operator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
@@ -131,14 +132,16 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         .build();
             }
         }
-        return UriTemplate.buildFromTemplate(serverUrl+'/'+projectPath)
+        return UriTemplate.buildFromTemplate(serverUrl + '/' + projectPath)
                 .literal(".git")
                 .build();
     }
 
     private String projectUrl(String projectPath) {
-        return UriTemplate.buildFromTemplate(serverUrl+'/'+projectPath)
+        return UriTemplate.buildFromTemplate(serverUrl)
+                .template("{/project*}")
                 .build()
+                .set("project", projectPath.split(Operator.PATH.getSeparator()))
                 .expand();
     }
 
