@@ -9,14 +9,12 @@
 To be fully able to run a Jenkins Continuous Integration on a GitLab repository or project,
 you require the following plugins:
 
-1. [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitLab Java API.<br><br>
+* [GitLab API Plugin](https://github.com/jenkinsci/gitlab-api-plugin) - Wraps GitLab Java API.
 
-2. GitLab Branch Source Plugin:<br><br>
+* GitLab Branch Source Plugin - Contains two packages:
 
-    Contains two packages:<br><br>
-
-     * `io.jenkins.plugins.gitlabserverconfig` - Manages server configuration and web hooks management. Ideally should reside inside another plugin with name `GitLab Plugin`. In future, this package will be moved into a new plugin.<br><br>
-
+     * `io.jenkins.plugins.gitlabserverconfig` - Manages server configuration and web hooks management. Ideally should reside inside another plugin with name `GitLab Plugin`. In future, this package will be moved into a new plugin.
+     
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
      Merge Requests) and Folder organisation.
 
@@ -24,7 +22,7 @@ you require the following plugins:
 
 This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
 
-i. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
+1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
 ```bash
 $ java -jar plugin-management-tool.jar
@@ -33,11 +31,11 @@ $ java -jar plugin-management-tool.jar
     -w <path-to-jenkins-war>
 ```
 
-ii. Changing update center URL on Jenkins Instance
+2. Changing update center URL on Jenkins Instance
 
 You can install plugins from Experimental Update Center by changing the JSON URL used to fetch plugins data. Go to `Plugin Manager`, then to the `Advanced` tab, and configure the update center URL `https://updates.jenkins.io/experimental/update-center.json` then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
 
-iii. Download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi) and manually install.
+3. Download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi) and manually install.
 
 To try the latest version, you can try building it yourself from source:
 
@@ -73,17 +71,17 @@ To try the latest version, you can try building it yourself from source:
 
     Now the `*.hpi` generated can be manually installed on your Jenkins instance:<br><br>
 
-    1. Select `Manage Jenkins`.<br><br>
+    1. Select `Manage Jenkins`.
 
-    2. Select `Manage Plugins`.<br><br>
+    2. Select `Manage Plugins`.
 
-    3. Select `Advanced` tab.<br><br>
+    3. Select `Advanced` tab.
 
-    3. In `Upload Plugin` section, select `Choose file`.<br><br>
+    3. In `Upload Plugin` section, select `Choose file`.
 
-    4. Select `${root_dir}/target/gitlab-branch-source.hpi`.<br><br>
+    4. Select `${root_dir}/target/gitlab-branch-source.hpi`.
 
-    5. Select `Upload`.<br><br>
+    5. Select `Upload`.
 
     6. Select `Install without restart`.
 
@@ -101,11 +99,11 @@ Jenkins has more than a 1000 plugins so a vast set of functionality has already 
 
 Here are a few ways to setup your own Jenkins server:
 
-1. Using a Jenkins docker:<br><br>
+1. Using a Jenkins docker:
 
-    i. Download docker image from [here](https://hub.docker.com/r/jenkins/jenkins).<br><br>
+    i. Download docker image from [here](https://hub.docker.com/r/jenkins/jenkins).
 
-    ii. Open up a terminal/command prompt window to the download directory.<br><br>
+    ii. Open up a terminal/command prompt window to the download directory.
 
     iii. Run command:
 
@@ -124,13 +122,13 @@ Here are a few ways to setup your own Jenkins server:
 
     iv. Browse to `http://localhost:8080`.
 
-    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/#on-macos-and-linux).<br><br>
+    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/#on-macos-and-linux).
 
-2. Using a Jenkins Web application Archive (WAR):<br><br>
+2. Using a Jenkins Web application Archive (WAR):
 
-    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).<br><br>
+    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
 
-    ii. Open up a terminal/command prompt window to the download directory.<br><br>
+    ii. Open up a terminal/command prompt window to the download directory.
 
     iii. Run command:
 
@@ -138,36 +136,36 @@ Here are a few ways to setup your own Jenkins server:
     java -jar jenkins.war
     ```
 
-    iv. Browse to `http://localhost:8080/jenkins`.<br><br>
+    iv. Browse to `http://localhost:8080/jenkins`.
 
-3. Using a Azure Jenkins solution:<br><br>
+3. Using a Azure Jenkins solution:
 
-    Refer to Azure [docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/jenkins).<br><br>
+    Refer to Azure [docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/jenkins).
 
-4. Using a Bitnami Jenkins Stack:<br><br>
+4. Using a Bitnami Jenkins Stack:
 
-    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).<br><br>
+    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
 
 ### Post installation:
 
-1. Unlock your Jenkins instance:<br><br>
+1. Unlock your Jenkins instance:
 
-    i. From the Jenkins console log output, copy the automatically-generated alphanumeric password.<br><br>
+    i. From the Jenkins console log output, copy the automatically-generated alphanumeric password.
 
-    ii. On the Unlock Jenkins page, paste this password into the Administrator password field and click `Continue`.<br><br>
+    ii. On the Unlock Jenkins page, paste this password into the Administrator password field and click `Continue`.
 
-2. Customizing Jenkins with plugins. Choose one option:<br><br>
+2. Customizing Jenkins with plugins. Choose one option:
 
-    i. `Install suggested plugins` - to install the recommended set of plugins, which are based on most common use cases.<br><br>
+    i. `Install suggested plugins` - to install the recommended set of plugins, which are based on most common use cases.
 
     ii. `Select plugins to install` - to choose which set of plugins to initially install. When you first access the
-    plugin selection page, the suggested plugins are selected by default.<br><br>
+    plugin selection page, the suggested plugins are selected by default.
 
-3. Create an admin user<br><br>
+3. Create an admin user:
 
-    i. When the Create First Admin User page appears, specify the details for your administrator user in the respective fields and click Save and Finish.<br><br>
+    i. When the Create First Admin User page appears, specify the details for your administrator user in the respective fields and click Save and Finish.
 
-    ii. When the Jenkins is ready page appears, click Start using Jenkins.<br><br>
+    ii. When the Jenkins is ready page appears, click Start using Jenkins.
 
     iii. If required, log in to Jenkins with the credentials of the user you just created and you are ready to start using Jenkins!
 
@@ -177,37 +175,36 @@ Assuming plugin installation has been done already.
 
 ### Setting up GitLab Server Configuration on Jenkins
 
-1. On jenkins, select `Manage Jenkins`.<br><br>
+1. On jenkins, select `Manage Jenkins`.
 
-2. Select `Configure System`.<br><br>
+2. Select `Configure System`.
 
-3. Scroll down to find the `GitLab` section.<br><br>
+3. Scroll down to find the `GitLab` section.
 
-   ![gitlab-section](https://user-images.githubusercontent.com/23079344/61185124-1d07a180-a673-11e9-898c-cd4e8c3e279f.png)<br><br>
+   ![gitlab-section](https://user-images.githubusercontent.com/23079344/61185124-1d07a180-a673-11e9-898c-cd4e8c3e279f.png)
 
-4. Select `Add GitLab Server` | Select `GitLab Server`.<br><br>
+4. Select `Add GitLab Server` | Select `GitLab Server`.
 
-5. Now you will now see the GitLab Server Configuration options<br><br>
+5. Now you will now see the GitLab Server Configuration options
 
-   ![gitlab-server](https://user-images.githubusercontent.com/23079344/61185125-1e38ce80-a673-11e9-9aad-24b56b43745f.png)<br><br>
+   ![gitlab-server](https://user-images.githubusercontent.com/23079344/61185125-1e38ce80-a673-11e9-9aad-24b56b43745f.png)
 
    There are 4 fields that needs to be configured:
 
-    i. `Name` - Plugin automatically generates an unique server name for you. User may want to configure this field to suit their needs but should make sure it is sufficiently unique. We recommend to keep it as it is.<br><br>
+    i. `Name` - Plugin automatically generates an unique server name for you. User may want to configure this field to suit their needs but should make sure it is sufficiently unique. We recommend to keep it as it is.
 
-    ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User canmodify it to enter their GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.<br><br>
+    ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User canmodify it to enter their GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.
 
-    iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.<br><br>
+    iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
 
-    iv. `Web Hook` - This field is a checkbox. If you want the plugin to setup a webhook on your GitLab project(s) related jobs, check this box. The plugin listens to a URL for the concerned GitLab project(s) and when an event
-    occurs in the GitLab Server, the server sends an event trigger to the URL where the web hook is setup. If you want continuous integration (or continuous delivery) on your GitLab project then you may want to automatically set it up.<br><br>
+    iv. `Web Hook` - This field is a checkbox. If you want the plugin to setup a webhook on your GitLab project(s) related jobs, check this box. The plugin listens to a URL for the concerned GitLab project(s) and when an event occurs in the GitLab Server, the server sends an event trigger to the URL where the web hook is setup. If you want continuous integration (or continuous delivery) on your GitLab project then you may want to automatically set it up.
 
 6. Adding a Personal Access Token Credentials:
 
-   This is a manual setup. To automatically generate Personal Access Token see [next section](#creating-personal-access-token-within-jenkins).<br><br>
+   This is a manual setup. To automatically generate Personal Access Token see [next section](#creating-personal-access-token-within-jenkins).
 
     i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token
-    inside Jenkins.<br><br>
+    inside Jenkins.
 
     ii. Generate a `Personal Access Token` on your GitLab Server
 
@@ -223,56 +220,56 @@ Assuming plugin installation has been done already.
 
         f. Copy the token generated
 
-    iii. Return to Jenkins | Select `Add` in Credentials field | Select `Jenkins`.<br><br>
+    iii. Return to Jenkins | Select `Add` in Credentials field | Select `Jenkins`.
 
-    iv. Set `Kind` to GitLab Personal Access Token.<br><br>
+    iv. Set `Kind` to GitLab Personal Access Token.
 
-    v. Enter `Token`.<br><br>
+    v. Enter `Token`.
 
-    vi. Enter a unique id in `ID`.<br><br>
+    vi. Enter a unique id in `ID`.
 
-    vii. Enter a human readable description.<br><br>
+    vii. Enter a human readable description.
 
-      ![gitlab-credentials](https://user-images.githubusercontent.com/23079344/61185123-1bd67480-a673-11e9-97dc-83b0f4c4bcf9.png)<br><br>
+      ![gitlab-credentials](https://user-images.githubusercontent.com/23079344/61185123-1bd67480-a673-11e9-97dc-83b0f4c4bcf9.png)
 
-    viii. Select `Add`.<br><br>
+    viii. Select `Add`.
 
-7. Testing connection:<br><br>
+7. Testing connection:
 
-    i. Select your desired token in the `Credentials` dropdown.<br><br>
+    i. Select your desired token in the `Credentials` dropdown.
 
-    ii. Select `Test Connection`.<br><br>
+    ii. Select `Test Connection`.
 
-    iii. It should return something like `Credentials verified for user {username}`.<br><br>
+    iii. It should return something like `Credentials verified for user {username}`.
 
-8. Select `Apply` (at the bottom).<br><br>
+8. Select `Apply` (at the bottom).
 
-9. GitLab Server is now setup on Jenkins.<br>
+9. GitLab Server is now setup on Jenkins.
 
-#### Creating Personal Access Token within Jenkins
+### Creating Personal Access Token within Jenkins
 
 Alternatively, users can generate a GitLab Personal Access Token within Jenkins itself and automatically add the
 GitLab Personal Access Token credentials to Jenkins server credentials.
 
-1. Select `Advanced` at the bottom of `GitLab` Section.<br><br>
+1. Select `Advanced` at the bottom of `GitLab` Section.
 
-2. Select `Manage Additional GitLab Actions`.<br><br>
+2. Select `Manage Additional GitLab Actions`.
 
-3. Select `Convert login and password to token`.<br><br>
+3. Select `Convert login and password to token`.
 
-4. Set the `GitLab Server URL`.<br><br>
+4. Set the `GitLab Server URL`.
 
-5. There are 2 options to generate token:<br><br>
+5. There are 2 options to generate token:
 
     i. `From credentials` - To select an already persisting Username Password Credentials or add an Username Password
-    credential to persist it.<br><br>
+    credential to persist it.
 
     ii. `From login and password` - If this is a one time thing then you can directly enter you credentials to the text boxes
-    and the username/password credential is not persisted.<br><br>
+    and the username/password credential is not persisted.
 
-6. After setting your username/password credential, select `Create token credentials`.<br><br>
+6. After setting your username/password credential, select `Create token credentials`.
 
-7. The token creator will create a Personal Access Token in your GitLab Server for the given user with the required scope and also create a credentials for the same inside Jenkins server. You can go back to the GitLab Server Configuration to select the new credentials generated (select "-none-" first then new credentials will appear). For security reasons this token is not revealed as plain text rather returns an `id`. It is a 128-bit long UUID-4 string (36 characters).<br><br>
+7. The token creator will create a Personal Access Token in your GitLab Server for the given user with the required scope and also create a credentials for the same inside Jenkins server. You can go back to the GitLab Server Configuration to select the new credentials generated (select "-none-" first then new credentials will appear). For security reasons this token is not revealed as plain text rather returns an `id`. It is a 128-bit long UUID-4 string (36 characters).
 
     ![gitlab-token-creator](https://user-images.githubusercontent.com/23079344/61185126-1f69fb80-a673-11e9-9c82-c24c6c132347.png)
 
@@ -293,17 +290,17 @@ Refer to [Installing a new plugin in Jenkins](https://jenkins.io/doc/book/managi
 
 There are multiple ways to load JCasC yaml file to configure Jenkins:
 
-* JCasC by default searches for a file with the name `jenkins.yaml` in `$JENKINS_ROOT`.<br><br>
+* JCasC by default searches for a file with the name `jenkins.yaml` in `$JENKINS_ROOT`.
 
-* The JCasC looks for an environment variable `CASC_JENKINS_CONFIG` which contains the path for the configuration `yaml` file.<br><br>
+* The JCasC looks for an environment variable `CASC_JENKINS_CONFIG` which contains the path for the configuration `yaml` file.
 
-    * A path to a folder containing a set of config files e.g. `/var/jenkins_home/casc_configs`.<br><br>
+    * A path to a folder containing a set of config files e.g. `/var/jenkins_home/casc_configs`.
 
-    * A full path to a single file e.g. `/var/jenkins_home/casc_configs/jenkins.yaml`.<br><br>
+    * A full path to a single file e.g. `/var/jenkins_home/casc_configs/jenkins.yaml`.
 
-    * A URL pointing to a file served on the web e.g. `https://<your-domain>/jenkins.yaml`.<br><br>
+    * A URL pointing to a file served on the web e.g. `https://<your-domain>/jenkins.yaml`.
 
-* You can also set the configuration yaml path in the UI. Go to `<your-jenkins-domain>/configuration-as-code`. Enter path or URL to `jenkins.yaml` and select `Apply New Configuration`.<br><br>
+* You can also set the configuration yaml path in the UI. Go to `<your-jenkins-domain>/configuration-as-code`. Enter path or URL to `jenkins.yaml` and select `Apply New Configuration`.
 
 To configure your GitLab Server in Jenkins add the following to `jenkins.yaml`:
 
@@ -332,35 +329,34 @@ See handling secrets [section](https://github.com/jenkinsci/configuration-as-cod
 
 GitLab Branch Source Plugin allows you to create 2 type of jobs:
 
-* `Multibranch Pipeline Jobs` - For single project.<br><br>
-
+* `Multibranch Pipeline Jobs` - For single project.
 * `Folder Organisation` - For multiple projects inside a owner (user/group/subgroup).
 
 ### Multibranch Pipeline Jobs
 
 The Multibranch Pipeline project type enables you to implement different Jenkinsfiles for different branches of the same project. In a Multibranch Pipeline project, Jenkins automatically discovers, manages and executes Pipelines for Branches/Merge Requests/Tags which contain a `Jenkinsfile` in source control. This eliminates the need for manual Pipeline creation and management.
 
-To create a Multibranch Pipeline Job:
+To create a `Multibranch Pipeline Job`:
 
-1. Select `New Item` on Jenkins home page.<br><br>
+1. Select `New Item` on Jenkins home page.
 
-2. Enter a name for your job, select `Multibranch Pipeline` | select `Ok`.<br><br>
+2. Enter a name for your job, select `Multibranch Pipeline` | select `Ok`.
 
-3. In `Branch Sources` sections, select `Add source` | select `GitLab Project`.<br><br>
+3. In `Branch Sources` sections, select `Add source` | select `GitLab Project`.
 
-4. Now you need to configure your jobs.<br><br>
+4. Now you need to configure your jobs.
  
-    ![branch-source](/docs/img/branch-source.png)<br><br>
+    ![branch-source](/docs/img/branch-source.png)
     
-    i. Select `Server` configured in the initial server setup.<br><br>
+    i. Select `Server` configured in the initial server setup.
     
-    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password). It is only required for some cases but if you have a Personal Access Token configured in initial server setup, you do not need to add any more credentials.<br><br>
+    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password). It is only required for some cases but if you have a Personal Access Token configured in initial server setup, you do not need to add any more credentials.
     
-    iii. Add path to the owner where the project you want to build exists. If user, enter `username`. If group, enter `group`. If subgroup, enter path to the `subgroup`.<br><br>
+    iii. Add path to the owner where the project you want to build exists. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
     
-    iv. Based on the owner provided. All the projects are discovered in the path and added to the `Projects` listbox. You can now choose the project you want to build.<br><br>
+    iv. Based on the owner provided. All the projects are discovered in the path and added to the `Projects` listbox. You can now choose the project you want to build.
     
-    v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.<br><br>
+    v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
 
 5. Now you can go ahead and save the job.
 
@@ -376,14 +372,51 @@ As the webhook is now setup on your Jenkins CI by the GitLab server. Any push-ev
 
 ### Folder Organization
 
-Folders Organization enable Jenkins to monitor an entire GitLab `User`/`Group`/`Subgroup` and automatically create new Multibranch Pipelines for projects which contain branches/merge requests/tags containing a `Jenkinsfile`.
+Folders Organization enable Jenkins to monitor an entire GitLab `User`/`Group`/`Subgroup` and automatically create new Multibranch Pipelines for projects which contain branches/merge requests/tags containing a `Jenkinsfile`. In our plugin this type of job is called `GitLab Group`.
+
+To create a `GitLab Group Job`:
+
+1. Select `New Item` on Jenkins home page.
+
+2. Enter a name for your job, select `GitLab Group` | select `Ok`.
+
+3. Now you need to configure your jobs.
+    
+    i. Select `Server` configured in the initial server setup.
+
+    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password). It is only required for some cases but if you have a Personal Access Token configured in initial server setup, you do not need to add any more credentials.
+
+    iii. Add path to the owner whose projects you want to build. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
+
+    v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
+
+Currently there is a bug which doesn't show proper projects indexing log in Jenkins. But behind the scenes indexing is done properly. Will be fixed in [JENKINS-58446](https://issues.jenkins-ci.org/browse/JENKINS-58446).
 
 ### SCM Trait APIs
 
-* Skip Notification - Do not notify GitLab about pipeline status.
-* WebHook Mode - Override default webhook management mode.
-* Checkout Over SSH - Use this mode to checkout over ssh.
-* Tag Discovery - Discover tags in the repository.
+The following Behaviours apply to both `Multibranch Pipeline Jobs` and `Folder Organization` (except when mentioned otherwise).
+
+#### Default Traits:
+
+* `Discover branches` - To discover branches.
+
+* `Discover merge requests from origin` - To discover merge requests made from origin branches.
+
+* `Discover merge requests from forks` - To discover merge requests made from forked project branches.
+
+#### Additional Traits:
+
+These traits can be selected by clicking `Add` button in the `Behaviours` section.
+
+* `Skip notification` - Do not notify GitLab about pipeline status.
+
+* `WebHook mode` - Override default webhook management mode.
+
+* `Checkout over SSH` - Use this mode to checkout over ssh.
+
+* `Tag discovery` - Discover tags in the project.
+
+* `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only available for `GitLab Group` Job type.
 
 ## Issues
 
