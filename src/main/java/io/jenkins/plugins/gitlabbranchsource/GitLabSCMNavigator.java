@@ -96,7 +96,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     /**
      * The path with namespace of Navigator projects.
      */
-    HashSet<String> navigatorProjects;
+    private HashSet<String> navigatorProjects = new HashSet<>();
 
     public HashSet<String> getNavigatorProjects() {
         return navigatorProjects;
