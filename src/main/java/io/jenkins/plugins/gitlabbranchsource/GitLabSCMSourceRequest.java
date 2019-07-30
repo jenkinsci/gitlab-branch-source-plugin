@@ -89,8 +89,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * The list of project {@link Member} or {@code null} if not provided.
      */
-    @CheckForNull
-    private HashMap<String, AccessLevel> members;
+    private HashMap<String, AccessLevel> members = new HashMap<>();
     /**
      * The project.
      */
@@ -348,7 +347,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @param membersList the list of project {@link Member}.
      */
     public final void setMembers(@CheckForNull List<Member> membersList) {
-        this.members = new HashMap<>();
+        this.members.clear();
         if(membersList != null) {
             for(Member m : membersList) {
                 this.members.put(m.getUsername(), m.getAccessLevel());
