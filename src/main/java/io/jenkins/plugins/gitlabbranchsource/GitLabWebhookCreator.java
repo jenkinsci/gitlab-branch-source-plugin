@@ -13,7 +13,6 @@ import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectHook;
 
 public class GitLabWebhookCreator {
@@ -100,8 +99,7 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectPath());
-            createHookWhenMissing(gitLabApi, gitlabProject.getPathWithNamespace(), hookUrl);
+            createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
                     "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
