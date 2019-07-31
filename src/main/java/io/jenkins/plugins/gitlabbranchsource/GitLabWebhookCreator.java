@@ -22,6 +22,12 @@ public class GitLabWebhookCreator {
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
                                 GitLabWebhookRegistration mode) {
+        List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
+        if(projects.isEmpty()) {
+            LOGGER.log(Level.WARNING,
+                "Group is empty!");
+            return;
+        }
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if(server == null) {
@@ -51,12 +57,6 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
-            if(projects.isEmpty()) {
-                LOGGER.log(Level.WARNING,
-                        "Group is empty!");
-                return;
-            }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
