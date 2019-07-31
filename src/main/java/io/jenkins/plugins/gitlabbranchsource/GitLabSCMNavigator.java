@@ -201,11 +201,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     // skip the user repos which includes all groups that they are a member of
                     continue;
                 }
-                // If repository is empty it throws an exception
                 count++;
-                try {
-                    gitLabApi.getRepositoryApi().getTree(p);
-                } catch (GitLabApiException e) {
+                // If repository is empty, then default branch is also empty.
+                if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
