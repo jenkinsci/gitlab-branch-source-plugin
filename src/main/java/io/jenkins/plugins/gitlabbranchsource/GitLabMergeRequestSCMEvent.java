@@ -124,9 +124,9 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                                 m.getIid(),
                                 new BranchSCMHead(m.getTargetBranch()),
                                 ChangeRequestCheckoutStrategy.MERGE,
-                                !fork
-                                        ? SCMHeadOrigin.DEFAULT
-                                        : new SCMHeadOrigin.Fork(originProjectPath),
+                                fork
+                                        ? new SCMHeadOrigin.Fork(originProjectPath)
+                                        : SCMHeadOrigin.DEFAULT,
                                 originOwner,
                                 originProjectPath,
                                 m.getSourceBranch()
