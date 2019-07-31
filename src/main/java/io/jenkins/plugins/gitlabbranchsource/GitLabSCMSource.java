@@ -332,7 +332,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String originProjectPath = projectPath;
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
                         boolean fork = !gitlabProject.getOwner().getUsername().equals(originOwner);
-                        LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()

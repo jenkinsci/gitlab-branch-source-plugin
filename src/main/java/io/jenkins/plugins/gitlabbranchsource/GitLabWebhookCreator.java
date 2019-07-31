@@ -70,7 +70,6 @@ public class GitLabWebhookCreator {
                         .findFirst()
                         .orElse(new ProjectHook()));
             }
-            LOGGER.info(validHooks.toString());
             for(ProjectHook hook : validHooks) {
                 if(hook.getId() == null) {
                     Project project = projects.get(validHooks.indexOf(hook));
