@@ -328,10 +328,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                 )
                         );
                         String originOwner = m.getAuthor().getUsername();
-                        // Origin project name will always the same as the source project name
-                        String originProjectPath = projectPath;
+                        // This is a hack to get the namespace from the path with namespace
+                        String originProjectPath = gitLabApi.getProjectApi().getProject(m.getProjectId()).getPathWithNamespace();
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
-                        boolean fork = !gitlabProject.getOwner().getUsername().equals(originOwner);
+                        boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -339,8 +339,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             m.getIid(),
                                             new BranchSCMHead(m.getTargetBranch()),
                                             ChangeRequestCheckoutStrategy.MERGE,
-                                            originOwner.equalsIgnoreCase(projectOwner) && originProjectPath
-                                                    .equalsIgnoreCase(projectPath)
+                                            !fork
                                                     ? SCMHeadOrigin.DEFAULT
                                                     : new SCMHeadOrigin.Fork(originProjectPath),
                                             originOwner,
