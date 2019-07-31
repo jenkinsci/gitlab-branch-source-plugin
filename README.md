@@ -21,7 +21,7 @@ you require the following plugins:
 ## Getting Started
 
 <details>
-<summary>Getting Started with Jenkins:</summary>
+<summary>Getting Started with Jenkins:</summary><br>
 
 Jenkins is an open source, self hosting automation server for continuous integration and continuous delivery. The source code of the core Jenkins and its plugins are written in Java. There have been developments on a modern Jenkins Server (see: [Blueocean Plugin](https://github.com/jenkinsci/blueocean-plugin)) using React and other modern front end tools to provide rich user experience.
 
