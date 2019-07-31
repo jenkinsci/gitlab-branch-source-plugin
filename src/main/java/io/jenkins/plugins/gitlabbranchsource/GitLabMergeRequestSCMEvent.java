@@ -119,7 +119,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             int namespaceLength = originProjectPath.lastIndexOf("/");
             originProjectPath = originProjectPath.substring(0, namespaceLength);
             Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
-            boolean fork = !getPayload().getUser().getUsername().equals(originOwner);
+            boolean fork = !getPayload().getObjectAttributes().getSourceProjectId().equals(getPayload().getObjectAttributes().getTargetProjectId());
             for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                MergeRequestSCMHead h = new MergeRequestSCMHead(
                                 "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -127,8 +127,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                                 m.getIid(),
                                 new BranchSCMHead(m.getTargetBranch()),
                                 ChangeRequestCheckoutStrategy.MERGE,
-                                originProjectPath
-                                        .equalsIgnoreCase(source.getProjectPath())
+                                !fork
                                         ? SCMHeadOrigin.DEFAULT
                                         : new SCMHeadOrigin.Fork(originProjectPath),
                                 originOwner,
