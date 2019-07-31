@@ -101,13 +101,6 @@ public class GitLabWebhookCreator {
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             Project gitlabProject = gitLabApi.getProjectApi().getProject(source.getProjectPath());
-            try {
-                gitLabApi.getRepositoryApi().getTree(gitlabProject);
-            } catch (GitLabApiException e) {
-                LOGGER.log(Level.WARNING,
-                        "Project is empty!", e);
-                return;
-            }
             createHookWhenMissing(gitLabApi, gitlabProject.getPathWithNamespace(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
