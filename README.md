@@ -79,6 +79,9 @@ This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` releas
 
 ## Getting Started
 
+<details>
+<summary>Getting Started with Jenkins:</summary>
+
 Jenkins is an open source, self hosting automation server for continuous integration and continuous delivery. The source code of the core Jenkins and its plugins are written in Java. There have been developments on a modern Jenkins Server (see: [Blueocean Plugin](https://github.com/jenkinsci/blueocean-plugin)) using React and other modern front end tools to provide rich user experience.
 
 For more Jenkins related information, see [documentation](https://jenkins.io/doc/).
@@ -87,7 +90,7 @@ For more Jenkins related information, see [documentation](https://jenkins.io/doc
 
 Jenkins has more than a 1000 plugins so a vast set of functionality has already been implemented and this can be used to leverage new plugins. Jenkins has an extensibility feature that allows plugin to use other plugins or core features simply by extending their classes. To define or create an extension in Jenkins,we use the `@Extension` annotation type. This annotation is picked up by Jenkins, and the new extension will be added to an `ExtensionList` object, where the extension can then be found via `ExtensionFinder`.
 
-### Running your Jenkins server:
+### Running Jenkins server:
 
 Here are a few ways to setup your own Jenkins server:
 
@@ -138,7 +141,7 @@ Here are a few ways to setup your own Jenkins server:
 
     Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
 
-### Post installation:
+### Configuring Jenkins instance:
 
 1. Unlock your Jenkins instance:
 
@@ -160,6 +163,8 @@ Here are a few ways to setup your own Jenkins server:
     ii. When the Jenkins is ready page appears, click Start using Jenkins.
 
     iii. If required, log in to Jenkins with the credentials of the user you just created and you are ready to start using Jenkins!
+
+</details>
 
 ## Initial Setup
 
