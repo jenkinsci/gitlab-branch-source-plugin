@@ -311,7 +311,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchMRs() && !request.isComplete()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
-                    HashMap<Integer, String> mrSources = new HashMap<>();
+                    HashMap<Integer, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
                         // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
                         // It is required to get the individual diffRef using the Iid.
@@ -333,13 +333,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
                         String originOwner = m.getAuthor().getUsername();
                         String originProjectPath = projectPath;
-                        if (fork && !mrSources.containsKey(mr.getSourceProjectId())) {
+                        if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
                             // This is a hack to get the path with namespace of source project for forked mrs
                             originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
+                            forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
                         } else if(fork) {
-                            originProjectPath = mrSources.get(mr.getSourceProjectId());
+                            originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
-                        mrSources.put(mr.getSourceProjectId(), originProjectPath);
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
