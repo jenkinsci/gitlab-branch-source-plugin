@@ -207,6 +207,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
             observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
                 count++;
+                String projectPathWithNamespace = p.getPathWithNamespace();
+                navigatorProjects.add(projectPathWithNamespace);
                 try {
                     // If repository is empty it throws an exception
                     gitLabApi.getRepositoryApi().getTree(p);
@@ -217,8 +219,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
-                String projectPathWithNamespace = p.getPathWithNamespace();
-                navigatorProjects.add(projectPathWithNamespace);
                 int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
                 String projectOwner = projectPathWithNamespace.substring(0, namespaceLength);
                 if (request.process(projectPathWithNamespace,
