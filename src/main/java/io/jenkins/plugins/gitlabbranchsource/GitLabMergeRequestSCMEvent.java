@@ -114,15 +114,10 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                 .newRequest(source, null)) {
             MergeRequestEvent.ObjectAttributes m = getPayload().getObjectAttributes();
             String originOwner = getPayload().getUser().getUsername();
+            // This is a hack to get the namespace from the path with namespace
             String originProjectPath = m.getSource().getPathWithNamespace();
-            int count = originProjectPath.length();
-            for(int i = originProjectPath.length()-1; i >= 0; i--) {
-                count--;
-                if(originProjectPath.charAt(i) == '/') {
-                    break;
-                }
-            }
-            originProjectPath = originProjectPath.substring(0, count);
+            int namespaceLength = originProjectPath.lastIndexOf("/");
+            originProjectPath = originProjectPath.substring(0, namespaceLength);
             Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
             boolean fork = !getPayload().getUser().getUsername().equals(originOwner);
             for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
