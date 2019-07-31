@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -310,6 +311,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchMRs() && !request.isComplete()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
+                    HashMap<Integer, String> mrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
                         // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
                         // It is required to get the individual diffRef using the Iid.
@@ -331,10 +333,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
                         String originOwner = m.getAuthor().getUsername();
                         String originProjectPath = projectPath;
-                        if (fork) {
+                        if (fork && !mrSources.containsKey(mr.getSourceProjectId())) {
                             // This is a hack to get the path with namespace of source project for forked mrs
                             originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
                         }
+                        mrSources.put(mr.getSourceProjectId(), originProjectPath);
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
