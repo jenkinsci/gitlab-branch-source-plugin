@@ -51,10 +51,7 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            List<Project> projects = new ArrayList<>();
-            for(String projectPathWithNamespace : navigator.getNavigatorProjects()) {
-                projects.add(gitLabApi.getProjectApi().getProject(projectPathWithNamespace));
-            }
+            List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
             if(projects.isEmpty()) {
                 LOGGER.log(Level.WARNING,
                         "Group is empty!");
@@ -62,21 +59,9 @@ public class GitLabWebhookCreator {
             }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
-            List<ProjectHook> validHooks = new ArrayList<>();
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
-            for(Project p : projects) {
-                validHooks.add(gitLabApi.getProjectApi().getHooksStream(p)
-                        .filter(hook -> hookUrl.equals(hook.getUrl()))
-                        .findFirst()
-                        .orElse(new ProjectHook()));
-            }
-            for(ProjectHook hook : validHooks) {
-                if(hook.getId() == null) {
-                    Project project = projects.get(validHooks.indexOf(hook));
-                    ProjectHook enabledHooks = createHook();
-                    // TODO add secret token, add more events give option for sslVerification
-                    gitLabApi.getProjectApi().addHook(project, hookUrl, enabledHooks, false, "");
-                }
+            for(String p : projects) {
+                createHookWhenMissing(gitLabApi, p, hookUrl);
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
@@ -123,14 +108,7 @@ public class GitLabWebhookCreator {
                         "Project is empty!", e);
                 return;
             }
-            ProjectHook validHook = gitLabApi.getProjectApi().getHooksStream(gitlabProject)
-                    .filter(hook -> hookUrl.equals(hook.getUrl()))
-                    .findFirst()
-                    .orElse(new ProjectHook());
-            if(validHook.getId() == null) {
-                ProjectHook enabledHooks = createHook();
-                gitLabApi.getProjectApi().addHook(gitlabProject, hookUrl, enabledHooks, false, "");
-            }
+            createHookWhenMissing(gitLabApi, gitlabProject.getPathWithNamespace(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
                     "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
@@ -154,5 +132,16 @@ public class GitLabWebhookCreator {
         enabledHooks.setEnableSslVerification(false);
         // TODO add secret token, add more events give option for sslVerification
         return enabledHooks;
+    }
+
+    private static void createHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
+        throws GitLabApiException {
+        ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
+            .filter(hook -> hookUrl.equals(hook.getUrl()))
+            .findFirst()
+            .orElseGet(GitLabWebhookCreator::createHook);
+        if(projectHook.getId() == null) {
+            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
+        }
     }
 }
