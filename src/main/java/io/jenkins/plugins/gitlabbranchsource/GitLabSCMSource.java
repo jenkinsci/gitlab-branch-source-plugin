@@ -327,11 +327,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         "!" + m.getIid()
                                 )
                         );
-                        String originOwner = m.getAuthor().getUsername();
-                        // This is a hack to get the namespace from the path with namespace
-                        String originProjectPath = gitLabApi.getProjectApi().getProject(m.getProjectId()).getPathWithNamespace();
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
                         boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
+                        String originOwner = m.getAuthor().getUsername();
+                        String originProjectPath = projectPath;
+                        if (fork) {
+                            // This is a hack to get the path with namespace of the source project mr
+                            originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
+                        }
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
