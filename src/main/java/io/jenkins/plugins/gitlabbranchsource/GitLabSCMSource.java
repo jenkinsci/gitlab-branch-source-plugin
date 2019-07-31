@@ -318,10 +318,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                 )
                         );
                         String originOwner = m.getAuthor().getUsername();
-                        // Origin project name will always the same as the source project name
-                        String originProjectPath = projectPath;
+                        // This is a hack to get the namespace from the path with namespace
+                        String originProjectPath = gitLabApi.getProjectApi().getProject(m.getProjectId()).getPathWithNamespace();
+                        int namespaceLength = originProjectPath.lastIndexOf("/");
+                        originProjectPath = originProjectPath.substring(0, namespaceLength);
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
-                        boolean fork = !gitlabProject.getOwner().getUsername().equals(originOwner);
+                        boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
                         LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
@@ -330,8 +332,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             m.getIid(),
                                             new BranchSCMHead(m.getTargetBranch()),
                                             ChangeRequestCheckoutStrategy.MERGE,
-                                            originOwner.equalsIgnoreCase(projectOwner) && originProjectPath
-                                                    .equalsIgnoreCase(projectPath)
+                                            !fork
                                                     ? SCMHeadOrigin.DEFAULT
                                                     : new SCMHeadOrigin.Fork(originProjectPath),
                                             originOwner,
@@ -357,7 +358,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                                               @Nullable MergeRequestSCMRevision revision)
                                                 throws IOException, InterruptedException {
                                             boolean trusted = request.isTrusted(head);
-                                            if (!trusted) {
+                                            if (!trusted && fork) {
                                                 listener.getLogger().format("(not from a trusted source)%n");
                                             }
                                             return createProbe(trusted ? head : head.getTarget(), revision);
