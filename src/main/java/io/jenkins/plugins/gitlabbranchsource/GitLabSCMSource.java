@@ -332,7 +332,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String originOwner = m.getAuthor().getUsername();
                         String originProjectPath = projectPath;
                         if (fork) {
-                            // This is a hack to get the path with namespace of the source project mr
+                            // This is a hack to get the path with namespace of source project for forked mrs
                             originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
                         }
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
