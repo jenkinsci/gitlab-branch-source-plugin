@@ -128,7 +128,7 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.6-beta-1` releas
      ``` 
      then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
 
-3. Download *.hpi from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.6-beta%255C/gitlab-branch-source-0.0.6-beta%255C.hpi) and manually install.
+3. Download `gitlab-branch-source-0.0.6-beta.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.6-beta%255C/gitlab-branch-source-0.0.6-beta%255C.hpi) and manually install.
 
 4. From Source:
 
