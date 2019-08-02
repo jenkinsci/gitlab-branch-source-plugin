@@ -18,6 +18,95 @@ you require the following plugins:
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
      Merge Requests) and Folder organisation.
 
+## Getting Started
+
+<details>
+<summary>Getting Started with Jenkins:</summary><br>
+
+Jenkins is an open source, self hosting automation server for continuous integration and continuous delivery. The source code of the core Jenkins and its plugins are written in Java. There have been developments on a modern Jenkins Server (see: [Blueocean Plugin](https://github.com/jenkinsci/blueocean-plugin)) using React and other modern front end tools to provide rich user experience.
+
+For more Jenkins related information, see [documentation](https://jenkins.io/doc/).
+
+### Extending Jenkins
+
+Jenkins has more than a 1000 plugins so a vast set of functionality has already been implemented and this can be used to leverage new plugins. Jenkins has an extensibility feature that allows plugin to use other plugins or core features simply by extending their classes. To define or create an extension in Jenkins,we use the `@Extension` annotation type. This annotation is picked up by Jenkins, and the new extension will be added to an `ExtensionList` object, where the extension can then be found via `ExtensionFinder`.
+
+### Running Jenkins server:
+
+Here are a few ways to setup your own Jenkins server:
+
+1. Using a Jenkins docker:
+
+    i. Download docker image from [here](https://hub.docker.com/r/jenkins/jenkins).
+
+    ii. Open up a terminal/command prompt window to the download directory.
+
+    iii. Run command:
+
+    ```bash
+    docker run \
+      -u root \
+      --rm \
+      -d \
+      -p 8080:8080 \
+      -p 50000:50000 \
+      -v jenkins-data:/var/jenkins_home \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+	  --name jenkins \
+      jenkinsci/blueocean
+    ```
+
+    iv. Browse to `http://localhost:8080`.
+
+    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/#on-macos-and-linux).
+
+2. Using a Jenkins Web application Archive (WAR):
+
+    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
+
+    ii. Open up a terminal/command prompt window to the download directory.
+
+    iii. Run command:
+
+    ```bash
+    java -jar jenkins.war
+    ```
+
+    iv. Browse to `http://localhost:8080/jenkins`.
+
+3. Using a Azure Jenkins solution:
+
+    Refer to Azure [docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/jenkins).
+
+4. Using a Bitnami Jenkins Stack:
+
+    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
+
+### Configuring Jenkins instance:
+
+1. Unlock your Jenkins instance:
+
+    i. From the Jenkins console log output, copy the automatically-generated alphanumeric password.
+
+    ii. On the Unlock Jenkins page, paste this password into the Administrator password field and click `Continue`.
+
+2. Customizing Jenkins with plugins. Choose one option:
+
+    i. `Install suggested plugins` - to install the recommended set of plugins, which are based on most common use cases.
+
+    ii. `Select plugins to install` - to choose which set of plugins to initially install. When you first access the
+    plugin selection page, the suggested plugins are selected by default.
+
+3. Create an admin user:
+
+    i. When the Create First Admin User page appears, specify the details for your administrator user in the respective fields and click Save and Finish.
+
+    ii. When the Jenkins is ready page appears, click Start using Jenkins.
+
+    iii. If required, log in to Jenkins with the credentials of the user you just created and you are ready to start using Jenkins!
+
+</details>
+
 ## Installing plugin
 
 This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
@@ -77,93 +166,9 @@ This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` releas
     
         6. Select `Install without restart`
 
-## Getting Started
-
-Jenkins is an open source, self hosting automation server for continuous integration and continuous delivery. The source code of the core Jenkins and its plugins are written in Java. There have been developments on a modern Jenkins Server (see: [Blueocean Plugin](https://github.com/jenkinsci/blueocean-plugin)) using React and other modern front end tools to provide rich user experience.
-
-For more Jenkins related information, see [documentation](https://jenkins.io/doc/).
-
-### Extending Jenkins
-
-Jenkins has more than a 1000 plugins so a vast set of functionality has already been implemented and this can be used to leverage new plugins. Jenkins has an extensibility feature that allows plugin to use other plugins or core features simply by extending their classes. To define or create an extension in Jenkins,we use the `@Extension` annotation type. This annotation is picked up by Jenkins, and the new extension will be added to an `ExtensionList` object, where the extension can then be found via `ExtensionFinder`.
-
-### Running your Jenkins server:
-
-Here are a few ways to setup your own Jenkins server:
-
-1. Using a Jenkins docker:
-
-    i. Download docker image from [here](https://hub.docker.com/r/jenkins/jenkins).
-
-    ii. Open up a terminal/command prompt window to the download directory.
-
-    iii. Run command:
-
-    ```bash
-    docker run \
-      -u root \
-      --rm \
-      -d \
-      -p 8080:8080 \
-      -p 50000:50000 \
-      -v jenkins-data:/var/jenkins_home \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-	  --name jenkins \
-      jenkinsci/blueocean
-    ```
-
-    iv. Browse to `http://localhost:8080`.
-
-    If you need more information about docker commands, see [here](https://jenkins.io/doc/book/installing/#on-macos-and-linux).
-
-2. Using a Jenkins Web application Archive (WAR):
-
-    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
-
-    ii. Open up a terminal/command prompt window to the download directory.
-
-    iii. Run command:
-
-    ```bash
-    java -jar jenkins.war
-    ```
-
-    iv. Browse to `http://localhost:8080/jenkins`.
-
-3. Using a Azure Jenkins solution:
-
-    Refer to Azure [docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/apps/jenkins).
-
-4. Using a Bitnami Jenkins Stack:
-
-    Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
-
-### Post installation:
-
-1. Unlock your Jenkins instance:
-
-    i. From the Jenkins console log output, copy the automatically-generated alphanumeric password.
-
-    ii. On the Unlock Jenkins page, paste this password into the Administrator password field and click `Continue`.
-
-2. Customizing Jenkins with plugins. Choose one option:
-
-    i. `Install suggested plugins` - to install the recommended set of plugins, which are based on most common use cases.
-
-    ii. `Select plugins to install` - to choose which set of plugins to initially install. When you first access the
-    plugin selection page, the suggested plugins are selected by default.
-
-3. Create an admin user:
-
-    i. When the Create First Admin User page appears, specify the details for your administrator user in the respective fields and click Save and Finish.
-
-    ii. When the Jenkins is ready page appears, click Start using Jenkins.
-
-    iii. If required, log in to Jenkins with the credentials of the user you just created and you are ready to start using Jenkins!
-
 ## Initial Setup
 
-Assuming plugin installation has been done already.
+After installing the plugin on your Jenkins instance, you need configure your GitLab Server settings.
 
 ### Setting up GitLab Server Configuration on Jenkins
 
