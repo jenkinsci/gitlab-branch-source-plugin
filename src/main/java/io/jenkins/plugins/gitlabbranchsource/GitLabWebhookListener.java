@@ -49,6 +49,7 @@ public class GitLabWebhookListener implements WebHookListener, SystemHookListene
     @Override
     public void onProjectEvent(ProjectSystemHookEvent projectSystemHookEvent) {
         LOGGER.info("PROJECT EVENT");
+        LOGGER.info(projectSystemHookEvent.toString());
         // TODO: implement handling `project_transfer` and `project_renamed`
         if(!projectSystemHookEvent.getEventName().equals("project_transfer") && !projectSystemHookEvent.getEventName().equals("project_renamed")) {
             GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
@@ -57,7 +58,8 @@ public class GitLabWebhookListener implements WebHookListener, SystemHookListene
     }
 
     @Override
-    public void onGroupEvent(GroupSystemHookEvent event) {
+    public void onGroupEvent(GroupSystemHookEvent groupSystemHookEvent) {
         LOGGER.info("GROUP EVENT");
+        LOGGER.info(groupSystemHookEvent.toString());
     }
 }
