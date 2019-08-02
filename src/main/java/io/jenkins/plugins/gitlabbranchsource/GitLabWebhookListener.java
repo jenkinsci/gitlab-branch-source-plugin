@@ -22,7 +22,8 @@ public class GitLabWebhookListener implements WebHookListener {
     public void onMergeRequestEvent(MergeRequestEvent event) {
         LOGGER.info("MR EVENT");
         LOGGER.info(event.toString());
-        new GitLabMergeRequestSCMEvent(event, origin);
+        GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(event, origin);
+        SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
@@ -36,5 +37,8 @@ public class GitLabWebhookListener implements WebHookListener {
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
         LOGGER.info("TAG EVENT");
+        LOGGER.info(tagPushEvent.toString());
+        GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
+        SCMHeadEvent.fireNow(trigger);
     }
 }

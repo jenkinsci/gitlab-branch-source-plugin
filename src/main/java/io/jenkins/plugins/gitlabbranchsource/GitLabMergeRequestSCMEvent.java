@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -14,9 +13,6 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 
 public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<MergeRequestEvent> {
@@ -24,7 +20,6 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
     public GitLabMergeRequestSCMEvent(MergeRequestEvent mrEvent, String origin) {
         super(typeOf(mrEvent), mrEvent, origin);
     }
-
 
     // TODO: Take care of "locked" state
     private static Type typeOf(MergeRequestEvent mrEvent) {
@@ -57,6 +52,16 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
         }
         return "Merge request !" + getPayload().getObjectAttributes().getIid()+ " event in project " + getPayload().getProject()
                 .getName();
+    }
+
+    @Override
+    public boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
+        return navigator.getNavigatorProjects().contains(getPayload().getProject().getPathWithNamespace());
+    }
+
+    @Override
+    public boolean isMatch(@NonNull GitLabSCMSource source) {
+        return getPayload().getObjectAttributes().getTargetProjectId().equals(source.getProjectId());
     }
 
     @NonNull
@@ -108,35 +113,31 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                 .withTraits(source.getTraits())
                 .newRequest(source, null)) {
             MergeRequestEvent.ObjectAttributes m = getPayload().getObjectAttributes();
+            Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
+            boolean fork = !getPayload().getObjectAttributes().getSourceProjectId().equals(getPayload().getObjectAttributes().getTargetProjectId());
             String originOwner = getPayload().getUser().getUsername();
             String originProjectPath = m.getSource().getPathWithNamespace();
-            Set<ChangeRequestCheckoutStrategy> strategies = request.getMRStrategies(
-                    source.getProjectPath().equalsIgnoreCase(originProjectPath)
-            );
-            for (ChangeRequestCheckoutStrategy strategy : strategies) {
-                MergeRequestSCMHead h = new MergeRequestSCMHead(
-                        "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
-                                .toLowerCase(Locale.ENGLISH) : ""),
-                        m.getId(),
-                        new BranchSCMHead(m.getTargetBranch()),
-                        ChangeRequestCheckoutStrategy.MERGE,
-                        originProjectPath.equalsIgnoreCase(source.getProjectPath())
-                                ? SCMHeadOrigin.DEFAULT
-                                : new SCMHeadOrigin.Fork(originProjectPath),
-                        originOwner,
-                        originProjectPath,
-                        m.getSourceBranch());
-                GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-                // Since rn there is no way to get the commit hash of target branch fetch the mr again
-                // A better way can be searching for the target branch head and getting the commit hash
-                MergeRequest mr = gitLabApi.getMergeRequestApi().getMergeRequest(source.getProjectPath(), m.getIid());
+            for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
+               MergeRequestSCMHead h = new MergeRequestSCMHead(
+                                "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
+                                        .toLowerCase(Locale.ENGLISH) : ""),
+                                m.getIid(),
+                                new BranchSCMHead(m.getTargetBranch()),
+                                ChangeRequestCheckoutStrategy.MERGE,
+                                fork
+                                        ? new SCMHeadOrigin.Fork(originProjectPath)
+                                        : SCMHeadOrigin.DEFAULT,
+                                originOwner,
+                                originProjectPath,
+                                m.getSourceBranch()
+                        );
                 result.put(h, m.getState().equals("closed")
                         ? null
                         : new MergeRequestSCMRevision(
                         h,
                         new BranchSCMRevision(
                                 h.getTarget(),
-                                mr.getDiffRefs().getBaseSha()
+                                "HEAD"
                         ),
                         new BranchSCMRevision(
                                 new BranchSCMHead(h.getOriginName()),
@@ -144,7 +145,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         )
                 ));
             }
-        } catch (IOException | NoSuchFieldException | GitLabApiException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return result;

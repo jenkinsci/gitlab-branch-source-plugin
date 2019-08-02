@@ -93,6 +93,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
      */
     private List<SCMTrait<? extends SCMTrait<?>>> traits;
 
+    /**
+     * The path with namespace of Navigator projects.
+     */
+    private HashSet<String> navigatorProjects = new HashSet<>();
+
+    public HashSet<String> getNavigatorProjects() {
+        return navigatorProjects;
+    }
+
     private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
     @DataBoundConstructor
@@ -197,20 +206,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
             for(Project p : projects) {
-                if(gitlabOwner instanceof GitLabUser && p.getNamespace().getKind().equals("group")) {
-                    // skip the user repos which includes all groups that they are a member of
-                    continue;
-                }
                 count++;
-                // If repository is empty, then default branch is also empty.
-                if (StringUtils.isEmpty(p.getDefaultBranch())) {
+                String projectPathWithNamespace = p.getPathWithNamespace();
+                navigatorProjects.add(projectPathWithNamespace);
+                try {
+                    // If repository is empty it throws an exception
+                    gitLabApi.getRepositoryApi().getTree(p);
+                } catch (GitLabApiException e) {
                     observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
-                if (request.process(p.getPathWithNamespace(),
+                int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
+                String projectOwner = projectPathWithNamespace.substring(0, namespaceLength);
+                if (request.process(projectPathWithNamespace,
                         projectPath -> new GitLabSCMSourceBuilder(
                                 getId() + "::" + projectPath,
                                 serverName,

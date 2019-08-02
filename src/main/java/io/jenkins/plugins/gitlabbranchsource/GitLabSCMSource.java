@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -104,6 +105,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     private transient String httpRemote;
     private transient Project gitlabProject;
+    private int projectId = -1;
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
@@ -154,6 +156,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public String getRemote() {
         return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getHttpRemote(), getSshRemote(), getCredentialsId(), projectPath)
                 .expand();
+    }
+
+    public int getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(int projectId) {
+        this.projectId = projectId;
     }
 
     @NonNull
@@ -224,6 +234,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (gitlabProject == null) {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
             }
+            setProjectId(gitlabProject.getId());
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();
@@ -300,6 +311,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchMRs() && !request.isComplete()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
+                    HashMap<Integer, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
                         // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
                         // It is required to get the individual diffRef using the Iid.
@@ -317,12 +329,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         "!" + m.getIid()
                                 )
                         );
-                        String originOwner = m.getAuthor().getUsername();
-                        // Origin project name will always the same as the source project name
-                        String originProjectPath = projectPath;
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
-                        boolean fork = !gitlabProject.getOwner().getUsername().equals(originOwner);
-                        LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
+                        boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
+                        String originOwner = m.getAuthor().getUsername();
+                        String originProjectPath = projectPath;
+                        if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
+                            // This is a hack to get the path with namespace of source project for forked mrs
+                            originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
+                            forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                        } else if(fork) {
+                            originProjectPath = forkMrSources.get(mr.getSourceProjectId());
+                        }
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -330,10 +347,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             m.getIid(),
                                             new BranchSCMHead(m.getTargetBranch()),
                                             ChangeRequestCheckoutStrategy.MERGE,
-                                            originOwner.equalsIgnoreCase(projectOwner) && originProjectPath
-                                                    .equalsIgnoreCase(projectPath)
-                                                    ? SCMHeadOrigin.DEFAULT
-                                                    : new SCMHeadOrigin.Fork(originProjectPath),
+                                            fork
+                                                    ? new SCMHeadOrigin.Fork(originProjectPath)
+                                                    : SCMHeadOrigin.DEFAULT,
                                             originOwner,
                                             originProjectPath,
                                             m.getSourceBranch()
