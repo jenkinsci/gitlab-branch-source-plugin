@@ -24,7 +24,7 @@ public class GitLabWebhookCreator {
         List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
         if(projects.isEmpty()) {
             LOGGER.log(Level.WARNING,
-                "Group is empty!");
+                    "Group is empty!");
             return;
         }
         PersonalAccessToken credentials;
@@ -56,6 +56,8 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
+                    false, false, false);
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
@@ -99,6 +101,8 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
+                    false, false, false);
             createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
@@ -126,11 +130,11 @@ public class GitLabWebhookCreator {
     }
 
     private static void createHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
-        throws GitLabApiException {
+            throws GitLabApiException {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
-            .filter(hook -> hookUrl.equals(hook.getUrl()))
-            .findFirst()
-            .orElseGet(GitLabWebhookCreator::createHook);
+                .filter(hook -> hookUrl.equals(hook.getUrl()))
+                .findFirst()
+                .orElseGet(GitLabWebhookCreator::createHook);
         if(projectHook.getId() == null) {
             gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
         }
