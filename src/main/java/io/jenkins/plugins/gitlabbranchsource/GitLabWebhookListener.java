@@ -37,5 +37,8 @@ public class GitLabWebhookListener implements WebHookListener {
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
         LOGGER.info("TAG EVENT");
+        LOGGER.info(tagPushEvent.toString());
+        GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
+        SCMHeadEvent.fireNow(trigger);
     }
 }
