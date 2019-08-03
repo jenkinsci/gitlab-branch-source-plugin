@@ -11,6 +11,7 @@ import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A {@link SCMSourceTrait} for {@link GitLabSCMSource} that overrides the {@link GitLabServers}
@@ -23,6 +24,19 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      */
     @NonNull
     private final GitLabWebhookRegistration mode;
+    /**
+     * If authenticated user is admin.
+     */
+    private boolean isAdmin;
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    @DataBoundSetter
+    public void setIsAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
 
     /**
      * Constructor.
@@ -58,7 +72,9 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((GitLabSCMSourceContext) context).webhookRegistration(getMode());
+        GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
+        ctx.webhookRegistration(getMode());
+        ctx.withSystemHooksDisabled(isAdmin());
     }
 
     /**
@@ -101,6 +117,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         public ListBoxModel doFillModeItems() {
             ListBoxModel result = new ListBoxModel();
             result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabWebhookRegistration.DISABLE.toString());
+            result.add(Messages.WebhookRegistrationTrait_useSystemHook(), GitLabWebhookRegistration.SYSTEM.toString());
             result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabWebhookRegistration.ITEM.toString());
             return result;
         }

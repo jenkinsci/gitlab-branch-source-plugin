@@ -667,11 +667,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public void afterSave() {
-        GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
-                .webhookRegistration();
+        GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
+        GitLabWebhookRegistration mode = ctx.webhookRegistration();
+        boolean systemHookDisabled = ctx.systemHookDisabled();
         LOGGER.info("Mode of web hook: " + mode.toString());
-        GitLabWebhookCreator.register(this, mode);
+        GitLabWebhookCreator.register(this, mode, systemHookDisabled);
     }
 
     public PersonalAccessToken credentials() {

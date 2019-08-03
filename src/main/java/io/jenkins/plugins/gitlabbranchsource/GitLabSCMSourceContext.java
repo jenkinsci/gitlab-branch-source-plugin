@@ -26,6 +26,7 @@ public class GitLabSCMSourceContext
     @NonNull
     private GitLabWebhookRegistration webhookRegistration = GitLabWebhookRegistration.SYSTEM;
     private boolean notificationsDisabled;
+    private boolean systemHookDisabled;
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -70,6 +71,11 @@ public class GitLabSCMSourceContext
         return notificationsDisabled;
     }
 
+    public final boolean systemHookDisabled() {
+        return systemHookDisabled;
+    }
+
+
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
         wantBranches = wantBranches || include;
@@ -109,6 +115,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext webhookRegistration(GitLabWebhookRegistration mode) {
         webhookRegistration = mode;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withSystemHooksDisabled(boolean disabled) {
+        this.systemHookDisabled = disabled;
         return this;
     }
 

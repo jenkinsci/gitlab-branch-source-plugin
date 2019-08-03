@@ -20,7 +20,7 @@ public class GitLabWebhookCreator {
     public static final Logger LOGGER = Logger.getLogger(GitLabWebhookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                GitLabWebhookRegistration mode) {
+                                GitLabWebhookRegistration mode, boolean isAdmin) {
         List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
         if(projects.isEmpty()) {
             LOGGER.log(Level.WARNING,
@@ -56,8 +56,9 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
-                    false, false, false);
+            if(isAdmin) {
+                createSystemHook(gitLabApi);
+            }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
@@ -71,7 +72,7 @@ public class GitLabWebhookCreator {
     }
 
     public static void register(GitLabSCMSource source,
-                                GitLabWebhookRegistration mode) {
+                                GitLabWebhookRegistration mode, boolean isAdmin) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
@@ -101,8 +102,9 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
-                    false, false, false);
+            if(isAdmin) {
+                createSystemHook(gitLabApi);
+            }
             createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
@@ -110,6 +112,15 @@ public class GitLabWebhookCreator {
         }
     }
 
+    private static void createSystemHook(GitLabApi gitLabApi) {
+        try {
+            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
+                    false, false, false);
+        } catch (GitLabApiException e) {
+            LOGGER.info("User is not admin so cannot set system hooks");
+            e.printStackTrace();
+        }
+    }
     public static String getHookUrl() {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
