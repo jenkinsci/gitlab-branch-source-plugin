@@ -571,6 +571,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if(revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
+            LOGGER.info("Trusted Revision: "+isTrusted);
             if (isTrusted) {
                 return revision;
             }
