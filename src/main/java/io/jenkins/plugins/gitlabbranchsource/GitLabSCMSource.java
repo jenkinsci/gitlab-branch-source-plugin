@@ -91,7 +91,6 @@ import org.slf4j.LoggerFactory;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
@@ -102,7 +101,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
-
+    private transient boolean isTrusted; // used to test if the revision is trusted
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;
@@ -333,13 +332,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
                         String originOwner = m.getAuthor().getUsername();
                         String originProjectPath = projectPath;
-                        if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
+                        if (fork && !forkMrSources.containsKey(m.getSourceProjectId())) {
                             // This is a hack to get the path with namespace of source project for forked mrs
                             originProjectPath = gitLabApi.getProjectApi().getProject(m.getSourceProjectId()).getPathWithNamespace();
-                            forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                            forkMrSources.put(m.getSourceProjectId(), originProjectPath);
                         } else if(fork) {
-                            originProjectPath = forkMrSources.get(mr.getSourceProjectId());
+                            originProjectPath = forkMrSources.get(m.getSourceProjectId());
                         }
+                        LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE" : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                             "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -372,11 +372,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         public SCMSourceCriteria.Probe create(@NonNull MergeRequestSCMHead head,
                                                                               @Nullable MergeRequestSCMRevision revision)
                                                 throws IOException, InterruptedException {
-                                            boolean trusted = request.isTrusted(head);
-                                            if (!trusted) {
+                                            isTrusted = request.isTrusted(head);
+                                            if (!isTrusted) {
                                                 listener.getLogger().format("(not from a trusted source)%n");
                                             }
-                                            return createProbe(trusted ? head : head.getTarget(), revision);
+                                            return createProbe(isTrusted ? head : head.getTarget(), revision);
                                         }
                                     },
                                     (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
@@ -568,31 +568,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @NonNull
     @Override
-    public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener)
-            throws IOException {
+    public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if(revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits(traits)
-                    .newRequest(this, listener)) {
-                if(request.getMembers().isEmpty()) {
-                    GitLabApi gitLabApi;
-                    try {
-                        gitLabApi = apiBuilder(serverName);
-                        if(gitlabProject == null) {
-                            gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-                        }
-                        request.setMembers(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
-                        if (request.isTrusted(head)) {
-                            return revision;
-                        }
-                    } catch (NoSuchFieldException | GitLabApiException | InterruptedException e) {
-                        listener.getLogger()
-                                .format("It seems %s is unreachable, assuming no trusted members%n",
-                                        getServerUrlFromName(serverName));
-                        e.printStackTrace();
-                    }
-                }
+            if (isTrusted) {
+                return revision;
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger().format("Loading trusted files from target branch %s at %s rather than %s%n",
