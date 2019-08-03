@@ -22,7 +22,7 @@ public class GitLabMergeRequestSCMCommentEvent extends AbstractGitLabSCMHeadEven
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
 
-    public static String TRIGGER_COMMENT = "jenkins rebuild";
+    public static final String TRIGGER_COMMENT = "jenkins rebuild";
 
     public GitLabMergeRequestSCMCommentEvent(NoteEvent noteEvent, String origin) {
         super(Type.UPDATED, noteEvent, origin);
