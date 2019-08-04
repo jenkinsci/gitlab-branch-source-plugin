@@ -130,12 +130,21 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns {@code true} if Jenkins is supposed to auto-manage hooks for this end-point.
+     * Returns {@code true} if Jenkins is supposed to auto-manage web hooks for this end-point.
      *
-     * @return {@code true} if Jenkins is supposed to auto-manage hooks for this end-point.
+     * @return {@code true} if Jenkins is supposed to auto-manage web hooks for this end-point.
      */
     public boolean isManageHooks() {
         return manageHooks;
+    }
+
+    /**
+     * Returns {@code true} if Jenkins is supposed to auto-manage system hooks for this end-point.
+     *
+     * @return {@code true} if Jenkins is supposed to auto-manage system hooks for this end-point.
+     */
+    public boolean isManageSystemHooks() {
+        return manageSystemHooks;
     }
 
     /**

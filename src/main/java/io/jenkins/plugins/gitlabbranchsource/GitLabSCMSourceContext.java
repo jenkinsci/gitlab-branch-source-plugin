@@ -24,7 +24,7 @@ public class GitLabSCMSourceContext
     @NonNull
     private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
-    private GitLabWebhookRegistration webhookRegistration = GitLabWebhookRegistration.SYSTEM;
+    private GitLabHookRegistration webhookRegistration = GitLabHookRegistration.SYSTEM;
     private boolean notificationsDisabled;
     private boolean systemHookDisabled;
 
@@ -63,7 +63,7 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public final GitLabWebhookRegistration webhookRegistration() {
+    public final GitLabHookRegistration webhookRegistration() {
         return webhookRegistration;
     }
 
@@ -113,7 +113,7 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public final GitLabSCMSourceContext webhookRegistration(GitLabWebhookRegistration mode) {
+    public final GitLabSCMSourceContext webhookRegistration(GitLabHookRegistration mode) {
         webhookRegistration = mode;
         return this;
     }

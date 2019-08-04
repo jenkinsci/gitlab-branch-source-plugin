@@ -23,7 +23,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * The mode of registration to apply.
      */
     @NonNull
-    private final GitLabWebhookRegistration mode;
+    private final GitLabHookRegistration mode;
     /**
      * If authenticated user is admin.
      */
@@ -45,7 +45,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public WebhookRegistrationTrait(@NonNull String mode) {
-        this(GitLabWebhookRegistration.valueOf(mode));
+        this(GitLabHookRegistration.valueOf(mode));
     }
 
     /**
@@ -53,7 +53,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      *
      * @param mode the mode of registration to apply.
      */
-    public WebhookRegistrationTrait(@NonNull GitLabWebhookRegistration mode) {
+    public WebhookRegistrationTrait(@NonNull GitLabHookRegistration mode) {
         this.mode = mode;
     }
 
@@ -63,7 +63,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * @return the mode of registration to apply.
      */
     @NonNull
-    public final GitLabWebhookRegistration getMode() {
+    public final GitLabHookRegistration getMode() {
         return mode;
     }
 
@@ -116,9 +116,9 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         @SuppressWarnings("unused") // stapler form binding
         public ListBoxModel doFillModeItems() {
             ListBoxModel result = new ListBoxModel();
-            result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabWebhookRegistration.DISABLE.toString());
-            result.add(Messages.WebhookRegistrationTrait_useSystemHook(), GitLabWebhookRegistration.SYSTEM.toString());
-            result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabWebhookRegistration.ITEM.toString());
+            result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabHookRegistration.DISABLE.toString());
+            result.add(Messages.WebhookRegistrationTrait_useSystemHook(), GitLabHookRegistration.SYSTEM.toString());
+            result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabHookRegistration.ITEM.toString());
             return result;
         }
 

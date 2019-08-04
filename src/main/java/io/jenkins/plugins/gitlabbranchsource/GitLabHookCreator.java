@@ -15,12 +15,12 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
 
-public class GitLabWebhookCreator {
+public class GitLabHookCreator {
 
-    public static final Logger LOGGER = Logger.getLogger(GitLabWebhookCreator.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabHookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                GitLabWebhookRegistration mode, boolean isAdmin) {
+                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode, boolean isAdmin) {
         List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
         if(projects.isEmpty()) {
             LOGGER.log(Level.WARNING,
@@ -32,7 +32,7 @@ public class GitLabWebhookCreator {
         if(server == null) {
             return;
         }
-        switch (mode) {
+        switch (webhookMode) {
             case DISABLE:
                 return;
             case SYSTEM:
@@ -54,11 +54,9 @@ public class GitLabWebhookCreator {
         if(hookUrl.equals("")) {
             return;
         }
+        // add web hooks
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            if(isAdmin) {
-                createSystemHook(gitLabApi);
-            }
             // Since GitLab doesn't allow API calls on Group WebHooks.
             // So fetching a list of web hooks in individual projects inside the group
             // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
@@ -69,16 +67,33 @@ public class GitLabWebhookCreator {
             LOGGER.log(Level.WARNING,
                     "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + server.getServerUrl(), e);
         }
+        switch (systemhookMode) {
+            case DISABLE:
+                return;
+            case SYSTEM:
+                if (!server.isManageSystemHooks()) {
+                    return;
+                }
+                credentials = server.getCredentials();
+                break;
+            case ITEM:
+                credentials = navigator.credentials(owner);
+                break;
+            default:
+                return;
+        }
+        // add system hooks
+        createSystemHook(server, credentials);
     }
 
     public static void register(GitLabSCMSource source,
-                                GitLabWebhookRegistration mode, boolean isAdmin) {
+                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode, boolean isAdmin) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
             return;
         }
-        switch (mode) {
+        switch (webhookMode) {
             case DISABLE:
                 return;
             case SYSTEM:
@@ -102,18 +117,33 @@ public class GitLabWebhookCreator {
         }
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            if(isAdmin) {
-                createSystemHook(gitLabApi);
-            }
             createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING,
                     "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
         }
+        switch (systemhookMode) {
+            case DISABLE:
+                return;
+            case SYSTEM:
+                if (!server.isManageSystemHooks()) {
+                    return;
+                }
+                credentials = server.getCredentials();
+                break;
+            case ITEM:
+                credentials = source.credentials();
+                break;
+            default:
+                return;
+        }
+        // add system hooks
+        createSystemHook(server, credentials);
     }
 
-    private static void createSystemHook(GitLabApi gitLabApi) {
+    private static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
         try {
+            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
                     false, false, false);
         } catch (GitLabApiException e) {
@@ -145,7 +175,7 @@ public class GitLabWebhookCreator {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
                 .filter(hook -> hookUrl.equals(hook.getUrl()))
                 .findFirst()
-                .orElseGet(GitLabWebhookCreator::createHook);
+                .orElseGet(GitLabHookCreator::createHook);
         if(projectHook.getId() == null) {
             gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
         }
