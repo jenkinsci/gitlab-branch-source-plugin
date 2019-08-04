@@ -40,9 +40,15 @@ public class GitLabHookCreator {
                     break;
                 }
                 credentials = server.getCredentials();
+                if(credentials == null) {
+                    LOGGER.info("No System credentials added, cannot create web hook");
+                }
                 break;
             case ITEM:
                 credentials = navigator.credentials(owner);
+                if(credentials == null) {
+                    LOGGER.info("No Item credentials added, cannot create web hook");
+                }
                 break;
             default:
                 return;
@@ -74,15 +80,23 @@ public class GitLabHookCreator {
                     return;
                 }
                 credentials = server.getCredentials();
+                if(credentials == null) {
+                    LOGGER.info("No System credentials added, cannot create system hook");
+                }
                 break;
             case ITEM:
                 credentials = navigator.credentials(owner);
+                if(credentials == null) {
+                    LOGGER.info("No Item credentials added, cannot create system hook");
+                }
                 break;
             default:
                 return;
         }
         // add system hooks
-        createSystemHook(server, credentials);
+        if(credentials != null) {
+            createSystemHook(server, credentials);
+        }
     }
 
     public static void register(GitLabSCMSource source,
@@ -100,9 +114,15 @@ public class GitLabHookCreator {
                     break;
                 }
                 credentials = server.getCredentials();
+                if(credentials == null) {
+                    LOGGER.info("No System credentials added, cannot create web hook");
+                }
                 break;
             case ITEM:
                 credentials = source.credentials();
+                if(credentials == null) {
+                    LOGGER.info("No Item credentials added, cannot create web hook");
+                }
                 break;
             default:
                 return;
@@ -128,15 +148,23 @@ public class GitLabHookCreator {
                     return;
                 }
                 credentials = server.getCredentials();
+                if(credentials == null) {
+                    LOGGER.info("No System credentials added, cannot create system hook");
+                }
                 break;
             case ITEM:
                 credentials = source.credentials();
+                if(credentials == null) {
+                    LOGGER.info("No Item credentials added, cannot create system hook");
+                }
                 break;
             default:
                 return;
         }
         // add system hooks
-        createSystemHook(server, credentials);
+        if(credentials != null) {
+            createSystemHook(server, credentials);
+        }
     }
 
     private static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
