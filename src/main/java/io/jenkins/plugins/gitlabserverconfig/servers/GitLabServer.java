@@ -88,9 +88,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private final String serverUrl;
 
     /**
-     * {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     * {@code true} if and only if Jenkins is supposed to auto-manage web hooks for this end-point.
      */
     private boolean manageHooks;
+
+    /**
+     * {@code true} if and only if Jenkins is supposed to auto-manage system hooks for this end-point.
+     */
+    private boolean manageSystemHooks;
 
     /**
      * The {@link PersonalAccessToken#getId()} of the credentials to use for auto-management of hooks.
@@ -162,11 +167,21 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for auto management of web hooks
      *
-     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage hooks for this end-point.
+     * @param manageHooks   {@code true} if and only if Jenkins is supposed to auto-manage web hooks for this end-point.
      */
     @DataBoundSetter
     public void setManageHooks(boolean manageHooks) {
         this.manageHooks = manageHooks;
+    }
+
+    /**
+     * Data Bound Setter for auto management of system hooks
+     *
+     * @param manageSystemHooks   {@code true} if and only if Jenkins is supposed to auto-manage system hooks for this end-point.
+     */
+    @DataBoundSetter
+    public void setManageSystemHooks(boolean manageSystemHooks) {
+        this.manageSystemHooks = manageSystemHooks;
     }
 
     /**

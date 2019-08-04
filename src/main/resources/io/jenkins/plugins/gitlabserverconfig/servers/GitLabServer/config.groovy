@@ -25,6 +25,11 @@ f.entry(title: _("Web Hook"), "description": "Do you want to automatically manag
     f.checkbox(title: _("Manage Web Hooks"), field: "manageHooks")
 }
 
+f.entry(title: _("System Hook"), "description": "Do you want to automatically manage GitLab System Hooks on Jenkins Server?",
+        help:descriptor.getHelpFile("manageSystemHooks")) {
+    f.checkbox(title: _("Manage System Hooks"), field: "manageSystemHooks")
+}
+
 // Add advance fields if user needs some meta data to send to the api
 //f.advanced() {
 //    f.entry("title": "Advanced configurations") {
