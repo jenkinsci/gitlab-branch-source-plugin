@@ -27,17 +27,17 @@ public class GitLabHookCreator {
                     "Group is empty!");
             return;
         }
-        PersonalAccessToken credentials;
+        PersonalAccessToken credentials = null;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if(server == null) {
             return;
         }
         switch (webhookMode) {
             case DISABLE:
-                return;
+                break;
             case SYSTEM:
                 if (!server.isManageWebHooks()) {
-                    return;
+                    break;
                 }
                 credentials = server.getCredentials();
                 break;
@@ -47,25 +47,24 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        if (credentials == null) {
-            return;
-        }
         String hookUrl = getHookUrl();
         if(hookUrl.equals("")) {
             return;
         }
         // add web hooks
-        try {
-            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            // Since GitLab doesn't allow API calls on Group WebHooks.
-            // So fetching a list of web hooks in individual projects inside the group
-            // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
-            for(String p : projects) {
-                createHookWhenMissing(gitLabApi, p, hookUrl);
+        if(credentials != null) {
+            try {
+                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+                // Since GitLab doesn't allow API calls on Group WebHooks.
+                // So fetching a list of web hooks in individual projects inside the group
+                // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
+                for(String p : projects) {
+                    createHookWhenMissing(gitLabApi, p, hookUrl);
+                }
+            } catch (GitLabApiException e) {
+                LOGGER.log(Level.WARNING,
+                        "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + server.getServerUrl(), e);
             }
-        } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING,
-                    "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + server.getServerUrl(), e);
         }
         switch (systemhookMode) {
             case DISABLE:
@@ -88,17 +87,17 @@ public class GitLabHookCreator {
 
     public static void register(GitLabSCMSource source,
                                 GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
-        PersonalAccessToken credentials;
+        PersonalAccessToken credentials = null;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {
             return;
         }
         switch (webhookMode) {
             case DISABLE:
-                return;
+                break;
             case SYSTEM:
                 if (!server.isManageWebHooks()) {
-                    return;
+                    break;
                 }
                 credentials = server.getCredentials();
                 break;
@@ -108,19 +107,18 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        if (credentials == null) {
-            return;
-        }
         String hookUrl = getHookUrl();
         if(hookUrl.equals("")) {
             return;
         }
-        try {
-            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
-        } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING,
-                    "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
+        if(credentials != null) {
+            try {
+                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+                createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
+            } catch (GitLabApiException e) {
+                LOGGER.log(Level.WARNING,
+                        "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
+            }
         }
         switch (systemhookMode) {
             case DISABLE:
