@@ -194,7 +194,9 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
 
-    iv. `Web Hook` - This field is a checkbox. If you want the plugin to setup a webhook on your GitLab project(s) related jobs, check this box. The plugin listens to a URL for the concerned GitLab project(s) and when an event occurs in the GitLab Server, the server sends an event trigger to the URL where the web hook is setup. If you want continuous integration (or continuous delivery) on your GitLab project then you may want to automatically set it up.
+    iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box. 
+    
+    iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token as `Admin` access. 
 
 6. Adding a Personal Access Token Credentials:
 
@@ -315,7 +317,8 @@ unclassified:
   gitLabServers:
     servers:
       - credentialsId: "i<3GitLab" # same as id specified for gitlab personal access token credentials
-        manageHooks: true
+        manageWebHooks: true
+        manageSystemHooks: true
         name: "gitlab-1024"
         serverUrl: "https://gitlab.com"
 ```
@@ -359,13 +362,13 @@ To create a `Multibranch Pipeline Job`:
 
 For more info see [this](https://jenkins.io/doc/book/pipeline/multibranch/).
 
-After saving, a new webhook is created in your GitLab Server if a `GitLab Access Token` is specified in the server configuration. Then the branch indexing starts based on what options behaviours you selected. As the indexing proceeds new jobs are started and queued for each branches with a `Jenkinsfile` in their root directory.
+After saving, a new web hook is created in your GitLab Server if a `GitLab Access Token` is specified in the server configuration. Then the branch indexing starts based on what options behaviours you selected. As the indexing proceeds new jobs are started and queued for each branches with a `Jenkinsfile` in their root directory.
 
 The Job results are notified to the GitLab Server as Pipeline Status for the HEAD commit of each branches built. The build for forked MR cannot be notified to GitLab Server as GitLab doesn't provide Pipeline status for Merge Requests from forks for security concerns. See [this](https://docs.gitlab.com/ee/ci/merge_request_pipelines/#important-notes-about-merge-requests-from-forked-projects).
 
 We have a workaround for this. Jenkins will build the MRs from forked projects if the MR author is a trusted owner i.e. has `Developer`/`Maintainer`/`Owner` access level. More about it in the SCM Trait APIs section.
 
-As the webhook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the required build in Jenkins. Currently this feature is a work in progress and will be landing very soon. 🚀 Will be ready once [JENKINS-58593](https://issues.jenkins-ci.org/browse/JENKINS-58593) is fixed.
+As the web hook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the required build in Jenkins. Currently this feature is a work in progress and will be landing very soon. 🚀 Will be ready once [JENKINS-58593](https://issues.jenkins-ci.org/browse/JENKINS-58593) is fixed.
 
 ### Folder Organization
 

@@ -11,7 +11,7 @@ unclassified:
   gitLabServers:
     servers:
       - credentialsId: "i<3GitLab"
-        manageHooks: true
+        manageWebHooks: true
         manageSystemHooks: true
         name: gitlab-3213
         serverUrl: "https://gitlab.com"

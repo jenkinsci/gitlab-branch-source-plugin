@@ -36,7 +36,7 @@ public class GitLabHookCreator {
             case DISABLE:
                 return;
             case SYSTEM:
-                if (!server.isManageHooks()) {
+                if (!server.isManageWebHooks()) {
                     return;
                 }
                 credentials = server.getCredentials();
@@ -97,7 +97,7 @@ public class GitLabHookCreator {
             case DISABLE:
                 return;
             case SYSTEM:
-                if (!server.isManageHooks()) {
+                if (!server.isManageWebHooks()) {
                     return;
                 }
                 credentials = server.getCredentials();
