@@ -109,7 +109,7 @@ Here are a few ways to setup your own Jenkins server:
 
 ## Installing plugin
 
-This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
+This plugin is in Beta testing stage. `gitlab-branch-source-0.0.6-beta-1` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
 
 1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
@@ -128,13 +128,13 @@ This plugin is still in Alpha stage. `gitlab-branch-source-0.0.5-alpha-2` releas
      ``` 
      then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
 
-3. Download *.hpi from [here](http://updates.jenkins-ci.org/download/plugins/gitlab-branch-source/0.0.5-alpha-2/gitlab-branch-source.hpi) and manually install.
+3. Download `gitlab-branch-source-0.0.6-beta.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.6-beta%255C/gitlab-branch-source-0.0.6-beta%255C.hpi) and manually install.
 
 4. From Source:
 
     i. Checkout out source code to your local machine:
     
-         git clone https://github.com/baymac/gitlab-branch-source-plugin.git\
+         git clone https://github.com/baymac/gitlab-branch-source-plugin.git -b develop
     
          cd gitlab-branch-source-plugin
     
