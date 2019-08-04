@@ -18,9 +18,9 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 
 @Extension
-public final class GitLabWebhookAction extends CrumbExclusion implements UnprotectedRootAction {
+public final class GitLabHookAction extends CrumbExclusion implements UnprotectedRootAction {
 
-    public static final Logger LOGGER = Logger.getLogger(GitLabWebhookAction.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabHookAction.class.getName());
 
     @Override
     public String getIconFileName() {
@@ -66,7 +66,7 @@ public final class GitLabWebhookAction extends CrumbExclusion implements Unprote
         }
         String origin = SCMEvent.originOf(request);
         WebHookManager webHookManager = new WebHookManager();
-        webHookManager.addListener(new GitLabWebhookListener(origin));
+        webHookManager.addListener(new GitLabHookListener(origin));
         webHookManager.handleEvent(request);
         return HttpResponses.ok(); // TODO find a better response
     }

@@ -11,61 +11,66 @@ import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A {@link SCMSourceTrait} for {@link GitLabSCMSource} that overrides the {@link GitLabServers}
- * settings for webhook registration.
+ * settings for web hook & system hook registration.
  */
 public class WebhookRegistrationTrait extends SCMSourceTrait {
 
     /**
-     * The mode of registration to apply.
+     * The web hook mode of registration to apply.
      */
     @NonNull
-    private final GitLabHookRegistration mode;
+    private final GitLabHookRegistration webHookMode;
+
     /**
-     * If authenticated user is admin.
+     * The system hook mode of registration to apply.
      */
-    private boolean isAdmin;
-
-    public boolean isAdmin() {
-        return isAdmin;
-    }
-
-    @DataBoundSetter
-    public void setIsAdmin(boolean isAdmin) {
-        this.isAdmin = isAdmin;
-    }
+    @NonNull
+    private GitLabHookRegistration systemHookMode;
 
     /**
      * Constructor.
      *
-     * @param mode the mode of registration to apply.
+     * @param webHookMode the mode of registration to apply.
      */
     @DataBoundConstructor
-    public WebhookRegistrationTrait(@NonNull String mode) {
-        this(GitLabHookRegistration.valueOf(mode));
+    public WebhookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
+        this(GitLabHookRegistration.valueOf(webHookMode), GitLabHookRegistration.valueOf(systemHookMode));
     }
 
     /**
      * Constructor.
      *
-     * @param mode the mode of registration to apply.
+     * @param webHookMode the web hook mode of registration to apply.
+     * @param systemHookMode the system hook mode of registration to apply.
      */
-    public WebhookRegistrationTrait(@NonNull GitLabHookRegistration mode) {
-        this.mode = mode;
+    public WebhookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode, @NonNull GitLabHookRegistration systemHookMode) {
+        this.webHookMode = webHookMode;
+        this.systemHookMode = systemHookMode;
     }
 
     /**
-     * Gets the mode of registration to apply.
+     * Gets the web hook mode of registration to apply.
      *
-     * @return the mode of registration to apply.
+     * @return the web hook mode of registration to apply.
      */
     @NonNull
-    public final GitLabHookRegistration getMode() {
-        return mode;
+    public final GitLabHookRegistration getWebHookMode() {
+        return webHookMode;
     }
+
+    /**
+     * Gets the system hook mode of registration to apply.
+     *
+     * @return the system hook mode of registration to apply.
+     */
+    @NonNull
+    public final GitLabHookRegistration getSystemHookMode() {
+        return systemHookMode;
+    }
+
 
     /**
      * {@inheritDoc}
@@ -73,8 +78,8 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
-        ctx.webhookRegistration(getMode());
-        ctx.withSystemHooksDisabled(isAdmin());
+        ctx.webhookRegistration(getWebHookMode());
+        ctx.systemhookRegistration(getSystemHookMode());
     }
 
     /**
@@ -110,15 +115,31 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         /**
          * Form completion.
          *
-         * @return the mode options.
+         * @return the web hook mode options.
          */
         @Restricted(NoExternalUse.class)
         @SuppressWarnings("unused") // stapler form binding
-        public ListBoxModel doFillModeItems() {
+        public ListBoxModel doFillWebHookModeItems() {
+            return getOptions(true);
+        }
+
+        /**
+        * Form completion.
+        *
+        * @return the system hook mode options.
+        */
+        @Restricted(NoExternalUse.class)
+        @SuppressWarnings("unused") // stapler form binding
+        public ListBoxModel doFillSystemHookModeItems() {
+            return getOptions(false);
+        }
+
+        private ListBoxModel getOptions(boolean isWebHook) {
             ListBoxModel result = new ListBoxModel();
-            result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabHookRegistration.DISABLE.toString());
-            result.add(Messages.WebhookRegistrationTrait_useSystemHook(), GitLabHookRegistration.SYSTEM.toString());
-            result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabHookRegistration.ITEM.toString());
+            String pronoun = isWebHook ? "Web Hook" : "System Hook";
+            result.add(Messages.WebhookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
+            result.add(Messages.WebhookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
+            result.add(Messages.WebhookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
             return result;
         }
 

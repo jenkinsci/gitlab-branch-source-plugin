@@ -20,7 +20,7 @@ public class GitLabHookCreator {
     public static final Logger LOGGER = Logger.getLogger(GitLabHookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode, boolean isAdmin) {
+                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
         List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
         if(projects.isEmpty()) {
             LOGGER.log(Level.WARNING,
@@ -87,7 +87,7 @@ public class GitLabHookCreator {
     }
 
     public static void register(GitLabSCMSource source,
-                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode, boolean isAdmin) {
+                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if(server == null) {

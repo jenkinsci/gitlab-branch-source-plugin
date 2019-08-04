@@ -12,13 +12,13 @@ import org.gitlab4j.api.webhook.PushEvent;
 import org.gitlab4j.api.webhook.TagPushEvent;
 import org.gitlab4j.api.webhook.WebHookListener;
 
-public class GitLabWebhookListener implements WebHookListener, SystemHookListener {
+public class GitLabHookListener implements WebHookListener, SystemHookListener {
 
-    public static final Logger LOGGER = Logger.getLogger(GitLabWebhookListener.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabHookListener.class.getName());
 
     private String origin;
 
-    public GitLabWebhookListener(String origin) {
+    public GitLabHookListener(String origin) {
         this.origin = origin;
     }
 

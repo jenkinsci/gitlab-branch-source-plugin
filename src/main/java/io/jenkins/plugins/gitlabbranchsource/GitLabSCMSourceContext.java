@@ -25,8 +25,10 @@ public class GitLabSCMSourceContext
     private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
     private GitLabHookRegistration webhookRegistration = GitLabHookRegistration.SYSTEM;
+    @NonNull
+    private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
+
     private boolean notificationsDisabled;
-    private boolean systemHookDisabled;
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -67,14 +69,14 @@ public class GitLabSCMSourceContext
         return webhookRegistration;
     }
 
+    @NonNull
+    public final GitLabHookRegistration systemhookRegistration() {
+        return systemhookRegistration;
+    }
+
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
     }
-
-    public final boolean systemHookDisabled() {
-        return systemHookDisabled;
-    }
-
 
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
@@ -119,8 +121,8 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public final GitLabSCMSourceContext withSystemHooksDisabled(boolean disabled) {
-        this.systemHookDisabled = disabled;
+    public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
+        systemhookRegistration = mode;
         return this;
     }
 
