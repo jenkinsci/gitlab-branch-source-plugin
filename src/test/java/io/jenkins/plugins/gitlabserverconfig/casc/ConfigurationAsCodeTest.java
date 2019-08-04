@@ -38,6 +38,7 @@ public class ConfigurationAsCodeTest {
         assertThat(server.getServerUrl(), is("https://gitlab.com"));
         assertThat(server.getName(), matchesPattern("gitlab-[0-9]{4}"));
         assertThat(server.isManageHooks(), is(true));
+        assertThat(server.isManageSystemHooks(), is(true));
 
         List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
             PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM,
