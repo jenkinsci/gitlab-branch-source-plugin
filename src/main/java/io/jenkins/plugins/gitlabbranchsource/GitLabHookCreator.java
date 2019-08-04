@@ -191,6 +191,7 @@ public class GitLabHookCreator {
         enabledHooks.setPushEvents(true);
         enabledHooks.setMergeRequestsEvents(true);
         enabledHooks.setTagPushEvents(true);
+        enabledHooks.setNoteEvents(true);
         enabledHooks.setEnableSslVerification(false);
         // TODO add secret token, add more events give option for sslVerification
         return enabledHooks;
