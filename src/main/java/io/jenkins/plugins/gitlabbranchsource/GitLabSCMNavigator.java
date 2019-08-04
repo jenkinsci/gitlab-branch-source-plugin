@@ -287,11 +287,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @Override
     public void afterSave(@NonNull SCMNavigatorOwner owner) {
-        GitLabWebhookRegistration mode = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits())
-                .webhookRegistration();
-        LOGGER.info(mode.toString());
-        GitLabWebhookCreator.register(owner, this, mode);
+        GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
+        GitLabHookRegistration webhookMode = ctx.webhookRegistration();
+        GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
+        LOGGER.info("Mode of web hook: " + webhookMode.toString());
+        LOGGER.info("Mode of system hook: " + systemhookMode.toString());
+        GitLabHookCreator.register(owner,this, webhookMode, systemhookMode);
     }
 
     public PersonalAccessToken credentials(SCMSourceOwner owner) {

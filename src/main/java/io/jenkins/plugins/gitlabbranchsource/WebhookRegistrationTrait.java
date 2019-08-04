@@ -14,51 +14,73 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A {@link SCMSourceTrait} for {@link GitLabSCMSource} that overrides the {@link GitLabServers}
- * settings for webhook registration.
+ * settings for web hook and system hook registration.
  */
 public class WebhookRegistrationTrait extends SCMSourceTrait {
 
     /**
-     * The mode of registration to apply.
+     * The web hook mode of registration to apply.
      */
     @NonNull
-    private final GitLabWebhookRegistration mode;
+    private final GitLabHookRegistration webHookMode;
+
+    /**
+     * The system hook mode of registration to apply.
+     */
+    @NonNull
+    private GitLabHookRegistration systemHookMode;
 
     /**
      * Constructor.
      *
-     * @param mode the mode of registration to apply.
+     * @param webHookMode the web hook mode of registration to apply.
+     * @param systemHookMode the system hook mode of registration to apply.
      */
     @DataBoundConstructor
-    public WebhookRegistrationTrait(@NonNull String mode) {
-        this(GitLabWebhookRegistration.valueOf(mode));
+    public WebhookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
+        this(GitLabHookRegistration.valueOf(webHookMode), GitLabHookRegistration.valueOf(systemHookMode));
     }
 
     /**
      * Constructor.
      *
-     * @param mode the mode of registration to apply.
+     * @param webHookMode the web hook mode of registration to apply.
+     * @param systemHookMode the system hook mode of registration to apply.
      */
-    public WebhookRegistrationTrait(@NonNull GitLabWebhookRegistration mode) {
-        this.mode = mode;
+    public WebhookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode, @NonNull GitLabHookRegistration systemHookMode) {
+        this.webHookMode = webHookMode;
+        this.systemHookMode = systemHookMode;
     }
 
     /**
-     * Gets the mode of registration to apply.
+     * Gets the web hook mode of registration to apply.
      *
-     * @return the mode of registration to apply.
+     * @return the web hook mode of registration to apply.
      */
     @NonNull
-    public final GitLabWebhookRegistration getMode() {
-        return mode;
+    public final GitLabHookRegistration getWebHookMode() {
+        return webHookMode;
     }
+
+    /**
+     * Gets the system hook mode of registration to apply.
+     *
+     * @return the system hook mode of registration to apply.
+     */
+    @NonNull
+    public final GitLabHookRegistration getSystemHookMode() {
+        return systemHookMode;
+    }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        ((GitLabSCMSourceContext) context).webhookRegistration(getMode());
+        GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
+        ctx.webhookRegistration(getWebHookMode());
+        ctx.systemhookRegistration(getSystemHookMode());
     }
 
     /**
@@ -94,14 +116,31 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         /**
          * Form completion.
          *
-         * @return the mode options.
+         * @return the web hook mode options.
          */
         @Restricted(NoExternalUse.class)
         @SuppressWarnings("unused") // stapler form binding
-        public ListBoxModel doFillModeItems() {
+        public ListBoxModel doFillWebHookModeItems() {
+            return getOptions(true);
+        }
+
+        /**
+        * Form completion.
+        *
+        * @return the system hook mode options.
+        */
+        @Restricted(NoExternalUse.class)
+        @SuppressWarnings("unused") // stapler form binding
+        public ListBoxModel doFillSystemHookModeItems() {
+            return getOptions(false);
+        }
+
+        private ListBoxModel getOptions(boolean isWebHook) {
             ListBoxModel result = new ListBoxModel();
-            result.add(Messages.WebhookRegistrationTrait_disableHook(), GitLabWebhookRegistration.DISABLE.toString());
-            result.add(Messages.WebhookRegistrationTrait_useItemHook(), GitLabWebhookRegistration.ITEM.toString());
+            String pronoun = isWebHook ? "Web Hook" : "System Hook";
+            result.add(Messages.WebhookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
+            result.add(Messages.WebhookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
+            result.add(Messages.WebhookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
             return result;
         }
 
