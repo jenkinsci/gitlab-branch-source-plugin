@@ -98,7 +98,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      *
      * @param context       the context within which to resolve the credentials.
      * @param serverUrl     the server url
-     * @param sshRemote     any valid SSH remote URL for the server.
+     * @param sshRemote     the SSH remote URL for the project.
+     * @param httpRemote    the HTTPS remote URL for the project.
      * @param credentialsId the credentials.
      * @param projectPath   the full path to the project (with namespace).
      * @return a {@link UriTemplate}

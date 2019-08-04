@@ -14,7 +14,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A {@link SCMSourceTrait} for {@link GitLabSCMSource} that overrides the {@link GitLabServers}
- * settings for web hook & system hook registration.
+ * settings for web hook and system hook registration.
  */
 public class WebhookRegistrationTrait extends SCMSourceTrait {
 
@@ -33,7 +33,8 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
     /**
      * Constructor.
      *
-     * @param webHookMode the mode of registration to apply.
+     * @param webHookMode the web hook mode of registration to apply.
+     * @param systemHookMode the system hook mode of registration to apply.
      */
     @DataBoundConstructor
     public WebhookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
