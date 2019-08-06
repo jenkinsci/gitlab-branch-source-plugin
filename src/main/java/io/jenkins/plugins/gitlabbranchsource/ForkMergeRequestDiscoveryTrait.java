@@ -21,6 +21,7 @@ import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.trait.Discovery;
 import org.gitlab4j.api.models.AccessLevel;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -129,6 +130,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitLabForkDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
@@ -225,6 +227,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * Our descriptor.
          */
+        @Symbol("gitLabTrustNobody")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
 
@@ -261,6 +264,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * Our descriptor.
          */
+        @Symbol("gitLabTrustMembers")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
 
@@ -331,6 +335,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * Our descriptor.
          */
+        @Symbol("gitLabTrustPermissions")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
             /**
@@ -365,6 +370,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * Our descriptor.
          */
+        @Symbol("gitLabTrustEveryone")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
 
