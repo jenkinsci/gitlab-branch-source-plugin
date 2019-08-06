@@ -17,6 +17,7 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
 import org.gitlab4j.api.models.MergeRequest;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -116,6 +117,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitLabBranchDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
@@ -177,6 +179,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
          * Out descriptor.
          */
         @Extension
+        @Symbol("gitLabBranchHeadAuthority")
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
             /**
              * {@inheritDoc}
