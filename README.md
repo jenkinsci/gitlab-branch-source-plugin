@@ -425,25 +425,33 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 		* `Everyone` - Discover MRs from Forked Projects filed by anybody. For security reasons you should never use this option. It may be used to reveal your Pipeline secrets environment variables.
 		* `Nobody` - Discover no MRs from Forked Projects at all. Equivalent to removing the trait altogether.
 		
-	If `Members` or `Trusted Members` is selected, plugin will build the MRs from Forked Projects with untrusted owners based on their target branch.
+	If `Members` or `Trusted Members` is selected, plugin will build the target branch of MRs from non/untrusted members.
 
 #### Additional Traits:
 
 These traits can be selected by clicking `Add` button in the `Behaviours` section.
 
-* `Skip notification` - Do not notify GitLab about pipeline status.
+* `Skip notification` - Skip GitLab server pipeline status.
 
-* `WebHook mode` - Override default webhook management mode.
+* `WebHook mode` - Override default hook management mode.
 
-* `Checkout over SSH` - Use this mode to checkout over ssh. It is recommended to use `Checkout Credentials` instead.
+* `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
-* `Tag discovery` - Discover tags in the project.
+* `Tag discovery` - Discover tags in the project. To automatically build tags install `basic-branch-build-plugin`.
 
 * `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only applicable to `GitLab Group` Job type.
 
-## Issues
+* `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
-This project uses Jenkins [JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under `gitlab-branch-source-plugin` component.
+* `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
+
+## How to talk to us?
+
+* This project uses [Jenkins JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under [`gitlab-branch-source-plugin`](https://issues.jenkins-ci.org/issues/?jql=project+%3D+JENKINS+AND+component+%3D+gitlab-branch-source-plugin) component.
+
+* Send your mail in the [Developer Mailing list](https://groups.google.com/forum/#!forum/jenkinsci-dev).
+
+* Join our [Gitter channel](https://gitter.im/jenkinsci/gitlab-branch-source-plugin).
 
 ## Acknowledgements
 
@@ -458,7 +466,7 @@ Maintainers:
 
 External Support:
 
-* [Oleg](https://github.com/oleg-nenashev) (Helped with technical issues and reviews)
+* [Oleg](https://github.com/oleg-nenashev) 
 * [Greg](https://github.com/gmessner) (The maintainer of GitLab4J APIs)
 * [Stephen](https://github.com/stephenc) (The maintainer of SCM related Jenkins Plugins)
 
