@@ -178,13 +178,13 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
 3. Scroll down to find the `GitLab` section.
 
-   ![gitlab-section](https://user-images.githubusercontent.com/23079344/61185124-1d07a180-a673-11e9-898c-cd4e8c3e279f.png)
+   ![gitlab-section](/docs/img/add-server.png)
 
 4. Select `Add GitLab Server` | Select `GitLab Server`.
 
 5. Now you will now see the GitLab Server Configuration options
 
-   ![gitlab-server](https://user-images.githubusercontent.com/23079344/61185125-1e38ce80-a673-11e9-9aad-24b56b43745f.png)
+   ![gitlab-server](/docs/img/server-config.png)
 
    There are 4 fields that needs to be configured:
 
@@ -229,7 +229,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     vii. Enter a human readable description.
 
-      ![gitlab-credentials](https://user-images.githubusercontent.com/23079344/61185123-1bd67480-a673-11e9-97dc-83b0f4c4bcf9.png)
+      ![gitlab-credentials](/docs/img/gitlab-credentials.png)
 
     viii. Select `Add`.
 
@@ -270,7 +270,7 @@ GitLab Personal Access Token credentials to Jenkins server credentials.
 
 7. The token creator will create a Personal Access Token in your GitLab Server for the given user with the required scope and also create a credentials for the same inside Jenkins server. You can go back to the GitLab Server Configuration to select the new credentials generated (select "-none-" first then new credentials will appear). For security reasons this token is not revealed as plain text rather returns an `id`. It is a 128-bit long UUID-4 string (36 characters).
 
-    ![gitlab-token-creator](https://user-images.githubusercontent.com/23079344/61185126-1f69fb80-a673-11e9-9c82-c24c6c132347.png)
+    ![gitlab-token-creator](/docs/img/gitlab-token-creator.png)
 
 ### Configuration as Code
 
