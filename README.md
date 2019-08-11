@@ -109,7 +109,7 @@ Here are a few ways to setup your own Jenkins server:
 
 ## Installing plugin
 
-This plugin is in Beta testing stage. `gitlab-branch-source-0.0.6-beta-1` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
+This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
 
 1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
@@ -128,7 +128,7 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.6-beta-1` releas
      ``` 
      then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
 
-3. Download `gitlab-branch-source-0.0.6-beta.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.6-beta%255C/gitlab-branch-source-0.0.6-beta%255C.hpi) and manually install.
+3. Download `gitlab-branch-source-0.0.7-beta.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.7-beta/gitlab-branch-source-0.0.7-beta.hpi) and manually install.
 
 4. From Source:
 
@@ -263,8 +263,7 @@ GitLab Personal Access Token credentials to Jenkins server credentials.
     i. `From credentials` - To select an already persisting Username Password Credentials or add an Username Password
     credential to persist it.
 
-    ii. `From login and password` - If this is a one time thing then you can directly enter you credentials to the text boxes
-    and the username/password credential is not persisted.
+    ii. `From login and password` - If this is a one time thing then you can directly enter you credentials to the text boxes and the username/password credential is not persisted.
 
 6. After setting your username/password credential, select `Create token credentials`.
 
@@ -368,7 +367,7 @@ The Job results are notified to the GitLab Server as Pipeline Status for the HEA
 
 We have a workaround for this. Jenkins will build the MRs from forked projects if the MR author is a trusted owner i.e. has `Developer`/`Maintainer`/`Owner` access level. More about it in the SCM Trait APIs section.
 
-As the web hook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the required build in Jenkins. Currently this feature is a work in progress and will be landing very soon. 🚀 Will be ready once [JENKINS-58593](https://issues.jenkins-ci.org/browse/JENKINS-58593) is fixed.
+As the web hook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the concerned build in Jenkins. 
 
 ### Folder Organization
 
@@ -390,7 +389,7 @@ To create a `GitLab Group Job`:
 
     v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
 
-Currently there is a bug which doesn't show proper projects indexing log in Jenkins. But behind the scenes indexing is done properly. Will be fixed in [JENKINS-58446](https://issues.jenkins-ci.org/browse/JENKINS-58446).
+The indexing in this group job type only needs to discover one branch with`Jenkinsfile` and thus it only shows the partial indexing log. You need to visit individual projects to see their full indexing.
 
 ### SCM Trait APIs
 
