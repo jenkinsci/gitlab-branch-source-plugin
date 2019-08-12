@@ -89,7 +89,7 @@ public class GitLabSCMPipelineStatusNotifier {
             return;
         }
         final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
-        if (!sourceContext.logComment()) {
+        if (!sourceContext.logCommentEnabled()) {
             return;
         }
         String url = getRootUrl(build);
@@ -120,6 +120,10 @@ public class GitLabSCMPipelineStatusNotifier {
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            String sudoUsername = sourceContext.getSudoUser();
+            if(!sudoUsername.isEmpty()) {
+                gitLabApi.sudo(sudoUsername);
+            }
             String hash;
             if (revision instanceof BranchSCMRevision) {
                 hash = ((BranchSCMRevision) revision).getHash();
