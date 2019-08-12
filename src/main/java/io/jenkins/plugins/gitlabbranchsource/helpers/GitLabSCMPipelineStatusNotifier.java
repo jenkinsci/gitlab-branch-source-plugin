@@ -96,43 +96,47 @@ public class GitLabSCMPipelineStatusNotifier {
         String note = "";
         String symbol = "";
         if (Result.SUCCESS.equals(result)) {
-            symbol = ":heavy_check_mark: ";
-            note = "`This commit looks good`";
+            symbol = ":heavy_check_mark:   ";
+            note = "The Jenkins CI build passed             ";
         } else if (Result.UNSTABLE.equals(result)) {
-            symbol = ":heavy_multiplication_x: ";
-            note = "`This commit has test failures`";
+            symbol = ":heavy_multiplication_x:   ";
+            note = "The Jenkins CI build failed             ";
         } else if (Result.FAILURE.equals(result)) {
-            symbol = ":heavy_multiplication_x: ";
-            note = "`There was a failure building this commit`";
+            symbol = ":heavy_multiplication_x:   ";
+            note = "The Jenkins CI build failed             ";
         } else if (result != null) { // ABORTED, NOT_BUILT.
-            symbol = ":no_entry_sign: ";
-            note = "`Something is wrong with the build of this commit`";
+            symbol = ":no_entry_sign:   ";
+            note = "The Jenkins CI build aborted             ";
         }
-        String suffix = "[details](" + url + ")";
+        String suffix = "[Details](" + url + ")";
+        String buildName = "";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             String hash;
             if (revision instanceof BranchSCMRevision) {
                 hash = ((BranchSCMRevision) revision).getHash();
+                buildName = "**jenkinsci/branch:** ";
                 gitLabApi.getCommitsApi().addComment(
                         source.getProjectPath(),
                         hash,
-                        symbol + note + suffix
+                        symbol + buildName + note + suffix
                 );
             } else if (revision instanceof MergeRequestSCMRevision) {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
+                buildName = "**jenkinsci/mr:** ";
                 gitLabApi.getNotesApi().createMergeRequestNote(
                         source.getProjectPath(),
                         Integer.valueOf(head.getId()),
-                        symbol + note + suffix
+                        symbol + buildName + note + suffix
                 );
             } else if (revision instanceof GitTagSCMRevision){
                 hash = ((GitTagSCMRevision) revision).getHash();
+                buildName = "**jenkinsci/tag:** ";
                 gitLabApi.getCommitsApi().addComment(
                         source.getProjectPath(),
                         hash,
-                        symbol + note + suffix
+                        symbol + buildName + note + suffix
                 );
             }
         } catch (NoSuchFieldException | GitLabApiException e) {
