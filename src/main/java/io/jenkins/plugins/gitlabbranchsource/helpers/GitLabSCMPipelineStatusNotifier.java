@@ -81,7 +81,7 @@ public class GitLabSCMPipelineStatusNotifier {
             return;
         }
         final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
-        if (sourceContext.logComment()) {
+        if (!sourceContext.logComment()) {
             return;
         }
         String url = getRootUrl(build);
@@ -94,16 +94,21 @@ public class GitLabSCMPipelineStatusNotifier {
         Result result = build.getResult();
         LOGGER.info("Log Comment Result: " + result);
         String note = "";
+        String symbol = "";
         if (Result.SUCCESS.equals(result)) {
-            note = build.getParent().getFullName() + ": This commit looks good\n" + url;
+            symbol = ":heavy_check_mark: ";
+            note = "`This commit looks good`";
         } else if (Result.UNSTABLE.equals(result)) {
-            note = build.getParent().getFullName() + ": This commit has test failures\n" + url;
+            symbol = ":heavy_multiplication_x: ";
+            note = "`This commit has test failures`";
         } else if (Result.FAILURE.equals(result)) {
-            note = build.getParent().getFullName() + ": There was a failure building this commit\n" + url;
+            symbol = ":heavy_multiplication_x: ";
+            note = "`There was a failure building this commit`";
         } else if (result != null) { // ABORTED, NOT_BUILT.
-            note = build.getParent().getFullName() + ": Something is wrong with the build of this commit\n" + url;
+            symbol = ":no_entry_sign: ";
+            note = "`Something is wrong with the build of this commit`";
         }
-
+        String suffix = "[details](" + url + ")";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
@@ -113,27 +118,26 @@ public class GitLabSCMPipelineStatusNotifier {
                 gitLabApi.getCommitsApi().addComment(
                         source.getProjectPath(),
                         hash,
-                        note
+                        symbol + note + suffix
                 );
             } else if (revision instanceof MergeRequestSCMRevision) {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
                 gitLabApi.getNotesApi().createMergeRequestNote(
                         source.getProjectPath(),
                         Integer.valueOf(head.getId()),
-                        note
+                        symbol + note + suffix
                 );
             } else if (revision instanceof GitTagSCMRevision){
                 hash = ((GitTagSCMRevision) revision).getHash();
                 gitLabApi.getCommitsApi().addComment(
                         source.getProjectPath(),
                         hash,
-                        note
+                        symbol + note + suffix
                 );
             }
         } catch (NoSuchFieldException | GitLabApiException e) {
             e.printStackTrace();
         }
-
     }
 
     /**
