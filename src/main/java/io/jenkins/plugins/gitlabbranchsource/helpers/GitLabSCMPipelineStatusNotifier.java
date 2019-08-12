@@ -72,6 +72,14 @@ public class GitLabSCMPipelineStatusNotifier {
         return null;
     }
 
+    private static String getMrBuildName(String buildName) {
+        String suffix = "jenkinsci/";
+        if(buildName.contains("merge")) {
+            return suffix + "mr-merge";
+        }
+        return suffix + "mr-head";
+    }
+
     /**
      * Log comment on Commits and Merge Requests upon build complete.
      */
@@ -123,7 +131,7 @@ public class GitLabSCMPipelineStatusNotifier {
                 );
             } else if (revision instanceof MergeRequestSCMRevision) {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-                String buildName = "**jenkinsci/mr:** ";
+                String buildName = "**" + getMrBuildName(build.getFullDisplayName()) + "**: ";
                 gitLabApi.getNotesApi().createMergeRequestNote(
                         source.getProjectPath(),
                         Integer.valueOf(head.getId()),
@@ -202,7 +210,7 @@ public class GitLabSCMPipelineStatusNotifier {
             listener.getLogger().format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
-            status.setName("jenkinsci/mr");
+            status.setName(getMrBuildName(build.getFullDisplayName()));
         } else if (revision instanceof GitTagSCMRevision){
             listener.getLogger().format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
                     status.getStatus(), status.getDescription());
@@ -246,7 +254,7 @@ public class GitLabSCMPipelineStatusNotifier {
                 return;
             }
             final Job<?, ?> job = (Job) wi.task;
-            LOGGER.info("QueueListener: Waiting"+job.getFullDisplayName());
+            LOGGER.info("QueueListener: Waiting" + job.getFullDisplayName());
             final SCMSource src = SCMSource.SourceByItem.findSource(job);
             if (!(src instanceof GitLabSCMSource)) {
                 return;
@@ -281,7 +289,7 @@ public class GitLabSCMPipelineStatusNotifier {
                         } else if (revision instanceof MergeRequestSCMRevision) {
                             LOGGER.log(Level.INFO, "Notifying merge request pending build {0}", job.getFullName());
                             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
-                            status.setName("jenkinsci/mr");
+                            status.setName(getMrBuildName(job.getFullDisplayName()));
                         } else if (revision instanceof GitTagSCMRevision){
                             LOGGER.log(Level.INFO, "Notifying tag pending build {0}", job.getFullName());
                             hash = ((GitTagSCMRevision) revision).getHash();
