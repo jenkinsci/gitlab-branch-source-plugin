@@ -20,6 +20,7 @@ import hudson.util.LogTaskListener;
 import io.jenkins.plugins.gitlabbranchsource.BranchSCMRevision;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
+import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -49,26 +51,105 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 public class GitLabSCMPipelineStatusNotifier {
     private static final Logger LOGGER = Logger.getLogger(GitLabSCMPipelineStatusNotifier.class.getName());
 
+    private static String getRootUrl(Run<?,?> build) {
+        try {
+            return DisplayURLProvider.get().getRunURL(build);
+        } catch (IllegalStateException e) {
+            return "";
+        }
+    }
+
+    private static GitLabSCMSourceContext getSourceContext(Run<?,?> build, GitLabSCMSource source) {
+        return new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits((source.getTraits()));
+    }
+
+    private static GitLabSCMSource getSource(Run<?, ?> build) {
+        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
+        if (s instanceof GitLabSCMSource) {
+            return (GitLabSCMSource) s;
+        }
+        return null;
+    }
+
+    /**
+     * Log comment on Commits and Merge Requests upon build complete.
+     */
+    private static void logComment(Run<?,?> build, TaskListener listener) {
+        GitLabSCMSource source = getSource(build);
+        if(source == null) {
+            return;
+        }
+        final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
+        if (sourceContext.logComment()) {
+            return;
+        }
+        String url = getRootUrl(build);
+        if(url.isEmpty()) {
+            listener.getLogger().println(
+                    "Can not determine Jenkins root URL. Comments are disabled until a root URL is"
+                            + " configured in Jenkins global configuration.");
+            return;
+        }
+        Result result = build.getResult();
+        LOGGER.info("Log Comment Result: " + result);
+        String note = "";
+        if (Result.SUCCESS.equals(result)) {
+            note = build.getParent().getFullName() + ": This commit looks good\n" + url;
+        } else if (Result.UNSTABLE.equals(result)) {
+            note = build.getParent().getFullName() + ": This commit has test failures\n" + url;
+        } else if (Result.FAILURE.equals(result)) {
+            note = build.getParent().getFullName() + ": There was a failure building this commit\n" + url;
+        } else if (result != null) { // ABORTED, NOT_BUILT.
+            note = build.getParent().getFullName() + ": Something is wrong with the build of this commit\n" + url;
+        }
+
+        SCMRevision revision = SCMRevisionAction.getRevision(source, build);
+        try {
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            String hash;
+            if (revision instanceof BranchSCMRevision) {
+                hash = ((BranchSCMRevision) revision).getHash();
+                gitLabApi.getCommitsApi().addComment(
+                        source.getProjectPath(),
+                        hash,
+                        note
+                );
+            } else if (revision instanceof MergeRequestSCMRevision) {
+                MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
+                gitLabApi.getNotesApi().createMergeRequestNote(
+                        source.getProjectPath(),
+                        Integer.valueOf(head.getId()),
+                        note
+                );
+            } else if (revision instanceof GitTagSCMRevision){
+                hash = ((GitTagSCMRevision) revision).getHash();
+                gitLabApi.getCommitsApi().addComment(
+                        source.getProjectPath(),
+                        hash,
+                        note
+                );
+            }
+        } catch (NoSuchFieldException | GitLabApiException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
      */
-    private static void sendNotifications(Run<?, ?> build, TaskListener listener)
-            throws IOException, InterruptedException {
-        final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
-        if (!(s instanceof GitLabSCMSource)) {
+    private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
+        GitLabSCMSource source = getSource(build);
+        if(source == null) {
             return;
         }
-        GitLabSCMSource source = (GitLabSCMSource) s;
-        final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits((source.getTraits()));
-        if (sourceContext
-                .notificationsDisabled()) {
+        final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
+        if (sourceContext.notificationsDisabled()) {
             return;
         }
-        String url;
-        try {
-            url = DisplayURLProvider.get().getRunURL(build);
-        } catch (IllegalStateException e) {
+        String url = getRootUrl(build);
+        if(url.isEmpty()) {
             listener.getLogger().println(
                     "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
                             + " configured in Jenkins global configuration.");
@@ -252,13 +333,9 @@ public class GitLabSCMPipelineStatusNotifier {
     public static class JobCheckOutListener extends SCMListener {
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
-                               SCMRevisionState pollingBaseline) throws Exception {
+                               SCMRevisionState pollingBaseline) {
             LOGGER.info("SCMListener: Checkout" + build.getFullDisplayName());
-            try {
                 sendNotifications(build, listener);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace(listener.error("Could not send notifications"));
-            }
         }
     }
 
@@ -269,23 +346,17 @@ public class GitLabSCMPipelineStatusNotifier {
     public static class JobCompletedListener extends RunListener<Run<?, ?>> {
 
         @Override
-        public void onCompleted(Run<?, ?> build, TaskListener listener) {
+        public void onCompleted(Run<?, ?> build, @Nonnull TaskListener listener) {
             LOGGER.info("RunListener: Complete" + build.getFullDisplayName());
-            try {
-                sendNotifications(build, listener);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace(listener.error("Could not send notifications"));
-            }
+            sendNotifications(build, listener);
+            logComment(build, listener);
+
         }
 
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
-            try {
-                LOGGER.info("RunListener: Started"+run.getFullDisplayName());
-                sendNotifications(run, listener);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace(listener.error("Could not send notifications"));
-            }
+            LOGGER.info("RunListener: Started"+run.getFullDisplayName());
+            sendNotifications(run, listener);
         }
     }
 }
