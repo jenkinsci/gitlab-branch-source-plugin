@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
 import hudson.model.TaskListener;
 import java.util.EnumSet;
 import java.util.Set;
@@ -30,7 +31,9 @@ public class GitLabSCMSourceContext
 
     private boolean notificationsDisabled;
 
-    private boolean logComment;
+    private boolean logCommentEnabled;
+
+    private String sudoUser = "";
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -80,8 +83,12 @@ public class GitLabSCMSourceContext
         return notificationsDisabled;
     }
 
-    public final boolean logComment() {
-        return logComment;
+    public final boolean logCommentEnabled() {
+        return logCommentEnabled;
+    }
+
+    public final String getSudoUser() {
+        return sudoUser;
     }
 
     @NonNull
@@ -139,8 +146,14 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public final GitLabSCMSourceContext witLogComment(boolean logComment) {
-        this.logComment = logComment;
+    public final GitLabSCMSourceContext witLogCommentEnabled(boolean enabled) {
+        this.logCommentEnabled = enabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withSudoUser(String sudoUser) {
+        this.sudoUser = Util.fixNull(sudoUser);
         return this;
     }
 
