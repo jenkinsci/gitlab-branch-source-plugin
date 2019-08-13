@@ -378,7 +378,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @return {@link AccessLevel} the permissions of the supplied user.
      */
     public AccessLevel getPermission(String username){
-        if(getGitLabApi() == null || getMembers() == null) {
+        if(getMembers() == null) {
             return null;
         }
         if(getMembers().containsKey(username)) {

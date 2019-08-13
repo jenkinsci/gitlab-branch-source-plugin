@@ -594,7 +594,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     request.setMembers(members);
                 }
-                LOGGER.info(request.getPermission(head.getOriginOwner()).toString());
                 boolean isTrusted = request.isTrusted(head);
                 LOGGER.info("Trusted Revision: "+ head.getOriginOwner() + " -> " + isTrusted);
                 if(isTrusted) {
