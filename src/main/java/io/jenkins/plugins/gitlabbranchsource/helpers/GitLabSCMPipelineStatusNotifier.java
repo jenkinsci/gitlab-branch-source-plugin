@@ -104,6 +104,9 @@ public class GitLabSCMPipelineStatusNotifier {
         String note = "";
         String symbol = "";
         if (Result.SUCCESS.equals(result)) {
+            if(!sourceContext.doLogSuccess()) {
+                return;
+            }
             symbol = ":heavy_check_mark: ";
             note = "The Jenkins CI build passed ";
         } else if (Result.UNSTABLE.equals(result)) {

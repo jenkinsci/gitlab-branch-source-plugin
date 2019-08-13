@@ -35,6 +35,8 @@ public class GitLabSCMSourceContext
 
     private String sudoUser = "";
 
+    private boolean logSuccess;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
@@ -89,6 +91,10 @@ public class GitLabSCMSourceContext
 
     public final String getSudoUser() {
         return sudoUser;
+    }
+
+    public boolean doLogSuccess() {
+        return logSuccess;
     }
 
     @NonNull
@@ -146,7 +152,7 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public final GitLabSCMSourceContext witLogCommentEnabled(boolean enabled) {
+    public final GitLabSCMSourceContext withLogCommentEnabled(boolean enabled) {
         this.logCommentEnabled = enabled;
         return this;
     }
@@ -154,6 +160,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext withSudoUser(String sudoUser) {
         this.sudoUser = Util.fixNull(sudoUser);
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withLogSuccess(boolean enabled) {
+        this.logSuccess = enabled;
         return this;
     }
 
