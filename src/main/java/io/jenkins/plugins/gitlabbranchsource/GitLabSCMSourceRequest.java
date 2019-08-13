@@ -342,18 +342,14 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Provides the Map of project {@link Member} username and {@link Member}.
+     * Provides the Map of project {@link Member} username and {@link AccessLevel} of the member.
      *
-     * @param membersList the list of project {@link Member}.
+     * @param members the Map of project {@link Member} username and {@link AccessLevel} of the member.
      */
-    public final void setMembers(@CheckForNull List<Member> membersList) {
-        this.members.clear();
-        if(membersList != null) {
-            for(Member m : membersList) {
-                this.members.put(m.getUsername(), m.getAccessLevel());
-            }
-        }
+    public final void setMembers(@CheckForNull HashMap<String, AccessLevel> members) {
+        this.members = members;
     }
+
 
     /**
      * Returns the {@link GitLabApi} to use for the request.
