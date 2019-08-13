@@ -101,7 +101,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
-    private transient boolean isTrusted; // used to test if the revision is trusted
+    private HashSet<String> trustedMrHeads = new HashSet<>(); // used to test if the revision is trusted
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;
@@ -372,8 +372,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         public SCMSourceCriteria.Probe create(@NonNull MergeRequestSCMHead head,
                                                                               @Nullable MergeRequestSCMRevision revision)
                                                 throws IOException, InterruptedException {
-                                            isTrusted = request.isTrusted(head);
-                                            if (!isTrusted) {
+                                            boolean isTrusted = request.isTrusted(head);
+                                            if (isTrusted) {
+                                                trustedMrHeads.add(head.getOriginOwner());
+                                            } else {
                                                 listener.getLogger().format("(not from a trusted source)%n");
                                             }
                                             return createProbe(isTrusted ? head : head.getTarget(), revision);
@@ -571,8 +573,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if(revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-            LOGGER.info("Trusted Revision: "+isTrusted);
-            if (isTrusted) {
+            if(trustedMrHeads.contains(head.getOriginOwner())) {
                 return revision;
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
