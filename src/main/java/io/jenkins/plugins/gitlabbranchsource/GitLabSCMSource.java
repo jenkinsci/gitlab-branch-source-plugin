@@ -594,7 +594,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     request.setMembers(members);
                 }
-                if(request.isTrusted(head)) {
+                LOGGER.info(request.getPermission(head.getOriginOwner()).toString());
+                boolean isTrusted = request.isTrusted(head);
+                LOGGER.info("Trusted Revision: "+ head.getOriginOwner() + " -> " + isTrusted);
+                if(isTrusted) {
                     return revision;
                 }
             } catch (IOException | NoSuchFieldException | InterruptedException e) {
