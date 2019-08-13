@@ -72,7 +72,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     @CheckForNull
     private final Set<String> requestedTagNames;
     /**
-     * The pull request details or {@code null} if not {@link #isFetchMRs()}.
+     * The merge request details or {@code null} if not {@link #isFetchMRs()}.
      */
     @CheckForNull
     private Iterable<MergeRequest> mergeRequests;
