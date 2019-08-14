@@ -106,10 +106,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;
-    /**
-     * The trusted head owners used to determine if merge requests are from trusted authors
-     */
-    private HashMap<String, AccessLevel> members = new HashMap<>();
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
@@ -162,7 +158,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 .expand();
     }
 
+    // This method always returns the latest list of members of the project
     public HashMap<String, AccessLevel> getMembers() {
+        HashMap<String, AccessLevel> members = new HashMap<>();
+        try {
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            for(Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
+                members.put(m.getUsername(), m.getAccessLevel());
+            }
+        } catch (GitLabApiException | NoSuchFieldException e) {
+            e.printStackTrace();
+            return new HashMap<>();
+        }
         return members;
     }
 
@@ -254,8 +261,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
-                buildMembersMap(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
-                request.setMembers(members);
+                request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
@@ -587,23 +593,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                     .withTraits(traits)
                     .newRequest(this, listener)) {
-                if(!members.isEmpty()) {
-                    request.setMembers(members);
-                } else {
-                    GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
-                    try {
-                        buildMembersMap(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
-                    } catch (GitLabApiException e) {
-                        e.printStackTrace();
-                    }
-                    request.setMembers(members);
-                }
+                request.setMembers(getMembers());
                 boolean isTrusted = request.isTrusted(head);
                 LOGGER.info("Trusted Revision: "+ head.getOriginOwner() + " -> " + isTrusted);
                 if(isTrusted) {
                     return revision;
                 }
-            } catch (IOException | NoSuchFieldException | InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
@@ -612,15 +608,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return new SCMRevisionImpl(head.getTarget(), rev.getBaseHash());
         }
         return revision;
-    }
-
-    private void buildMembersMap(List<Member> membersList) {
-        if(membersList != null) {
-            this.members = new HashMap<>();
-            for(Member m : membersList) {
-                this.members.put(m.getUsername(), m.getAccessLevel());
-            }
-        }
     }
 
     @NonNull
