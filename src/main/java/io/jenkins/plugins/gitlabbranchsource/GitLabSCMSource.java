@@ -188,6 +188,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
+            if (gitlabProject == null) {
+                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+            }
             LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());

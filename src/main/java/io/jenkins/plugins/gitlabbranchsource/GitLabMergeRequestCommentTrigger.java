@@ -32,6 +32,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
             ACL.impersonate(ACL.SYSTEM, () -> {
                 boolean jobFound = false;
                 for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
+                    LOGGER.info("Source Owner: " + owner.getFullDisplayName());
                     for (SCMSource source : owner.getSCMSources()) {
                         if (!(source instanceof GitLabSCMSource)) {
                             continue;
