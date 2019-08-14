@@ -52,31 +52,31 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                             for (Job<?, ?> job : owner.getAllJobs()) {
                                 if (mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
                                     String expectedCommentBody = sourceContext.getCommentBody();
-                                        Pattern pattern = Pattern.compile(expectedCommentBody,
-                                                Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-                                        if (commentBody == null || pattern.matcher(commentBody).matches()) {
-                                            ParameterizedJobMixIn.scheduleBuild2(job, 0,
-                                                    new CauseAction(new GitLabMergeRequestCommentCause(commentUrl)));
-                                            LOGGER.log(Level.INFO,
-                                                    "Triggered build for {0} due to MR comment on {1}",
-                                                    new Object[] {
-                                                            job.getFullName(),
-                                                            getPayload().getProject().getPathWithNamespace()
-                                                    }
-                                            );
-                                        } else {
-                                            LOGGER.log(Level.INFO,
-                                                    "MR comment does not match the trigger build string ({0}) for {1}",
-                                                    new Object[] { expectedCommentBody, job.getFullName() }
-                                            );
-                                        }
-                                        break;
+                                    Pattern pattern = Pattern.compile(expectedCommentBody,
+                                            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+                                    if (commentBody == null || pattern.matcher(commentBody).matches()) {
+                                        ParameterizedJobMixIn.scheduleBuild2(job, 0,
+                                                new CauseAction(new GitLabMergeRequestCommentCause(commentUrl)));
+                                        LOGGER.log(Level.INFO,
+                                                "Triggered build for {0} due to MR comment on {1}",
+                                                new Object[] {
+                                                        job.getFullName(),
+                                                        getPayload().getProject().getPathWithNamespace()
+                                                }
+                                        );
+                                    } else {
+                                        LOGGER.log(Level.INFO,
+                                                "MR comment does not match the trigger build string ({0}) for {1}",
+                                                new Object[] { expectedCommentBody, job.getFullName() }
+                                        );
                                     }
-                                    jobFound = true;
+                                    break;
                                 }
+                                jobFound = true;
                             }
                         }
                     }
+                }
                 if (!jobFound) {
                     LOGGER.log(Level.INFO, "MR comment on {0} did not match any job",
                             new Object[] {
