@@ -30,6 +30,10 @@ public class GitLabSCMSourceContext
 
     private boolean notificationsDisabled;
 
+    private boolean mrCommentTriggerEnabled;
+
+    private String commentBody = "jenkins rebuild";
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
@@ -76,6 +80,14 @@ public class GitLabSCMSourceContext
 
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
+    }
+
+    public final boolean mrCommentTriggerEnabled() {
+        return mrCommentTriggerEnabled;
+    }
+
+    public final String getCommentBody() {
+        return commentBody;
     }
 
     @NonNull
@@ -129,6 +141,18 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext withNotificationsDisabled(boolean disabled) {
         this.notificationsDisabled = disabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withMRCommentTriggerEnabled(boolean enabled) {
+        this.mrCommentTriggerEnabled = enabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withCommentBody(String commentBody) {
+        this.commentBody = commentBody;
         return this;
     }
 

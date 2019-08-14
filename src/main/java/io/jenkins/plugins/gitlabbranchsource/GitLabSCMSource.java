@@ -104,7 +104,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
-
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;

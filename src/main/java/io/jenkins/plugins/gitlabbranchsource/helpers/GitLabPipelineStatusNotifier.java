@@ -60,7 +60,7 @@ public class GitLabPipelineStatusNotifier {
         }
         GitLabSCMSource source = (GitLabSCMSource) s;
         final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits((source.getTraits()));
+                .withTraits(source.getTraits());
         if (sourceContext
                 .notificationsDisabled()) {
             return;
