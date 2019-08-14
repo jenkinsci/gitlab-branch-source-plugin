@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitTagSCMRevision;
@@ -110,8 +109,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     /**
      * The trusted head owners used to determine if merge requests are from trusted authors
      */
-    @CheckForNull
-    private transient HashMap<String, AccessLevel> members;
+    private HashMap<String, AccessLevel> members = new HashMap<>();
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
@@ -162,6 +160,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public String getRemote() {
         return GitLabSCMBuilder.checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName), getHttpRemote(), getSshRemote(), getCredentialsId(), projectPath)
                 .expand();
+    }
+
+    public HashMap<String, AccessLevel> getMembers() {
+        return members;
     }
 
     public int getProjectId() {
@@ -585,7 +587,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                     .withTraits(traits)
                     .newRequest(this, listener)) {
-                if(members != null) {
+                if(!members.isEmpty()) {
                     request.setMembers(members);
                 } else {
                     GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);

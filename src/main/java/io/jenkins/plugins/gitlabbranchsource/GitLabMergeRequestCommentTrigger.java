@@ -11,6 +11,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.webhook.NoteEvent;
 
 public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<NoteEvent> {
@@ -44,11 +45,10 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         GitLabSCMSource gitLabSCMSource = (GitLabSCMSource) source;
                         final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                                 .withTraits(gitLabSCMSource.getTraits());
-                        if (!sourceContext
-                                .mrCommentTriggerEnabled()) {
+                        if (!sourceContext.mrCommentTriggerEnabled()) {
                             return;
                         }
-                        if (gitLabSCMSource.getProjectId() == getPayload().getMergeRequest().getTargetProjectId()) {
+                        if (gitLabSCMSource.getProjectId() == getPayload().getMergeRequest().getTargetProjectId() && isTrustedMember(gitLabSCMSource)) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
                                 if (mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
                                     String expectedCommentBody = sourceContext.getCommentBody();
@@ -86,5 +86,19 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                 }
             });
         }
+    }
+
+    private boolean isTrustedMember(GitLabSCMSource gitLabSCMSource) {
+        AccessLevel permission = gitLabSCMSource.getMembers().get(getPayload().getUser().getUsername());
+        if(permission != null) {
+            switch (permission) {
+                case MAINTAINER:
+                case DEVELOPER:
+                case OWNER:
+                    return true;
+                default: return false;
+            }
+        }
+        return false;
     }
 }
