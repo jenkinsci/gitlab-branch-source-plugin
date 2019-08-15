@@ -163,6 +163,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * Our descriptor.
          */
+        @Symbol("gitLabOriginHeadAuthority")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
             /**
