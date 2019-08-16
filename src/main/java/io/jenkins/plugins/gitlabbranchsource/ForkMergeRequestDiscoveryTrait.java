@@ -33,12 +33,12 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * The strategy encoded as a bit-field.
      */
-    private final int strategyId;
+    private int strategyId;
     /**
      * The authority.
      */
     @NonNull
-    private final SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends
+    private SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends
             SCMRevision>
             trust;
 
