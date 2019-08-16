@@ -96,6 +96,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
         /**
          * Out descriptor.
          */
+        @Symbol("gitLabTagHeadAuthority")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
             /**
