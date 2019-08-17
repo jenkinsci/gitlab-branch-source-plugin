@@ -37,6 +37,10 @@ public class GitLabSCMSourceContext
 
     private boolean logSuccess;
 
+    private boolean mrCommentTriggerEnabled;
+
+    private String commentBody = "";
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
@@ -95,6 +99,14 @@ public class GitLabSCMSourceContext
 
     public boolean doLogSuccess() {
         return logSuccess;
+    }
+
+    public final boolean mrCommentTriggerEnabled() {
+        return mrCommentTriggerEnabled;
+    }
+
+    public final String getCommentBody() {
+        return commentBody;
     }
 
     @NonNull
@@ -157,6 +169,11 @@ public class GitLabSCMSourceContext
         return this;
     }
 
+    public final GitLabSCMSourceContext withMRCommentTriggerEnabled(boolean enabled) {
+        this.mrCommentTriggerEnabled = enabled;
+        return this;
+    }
+
     @NonNull
     public final GitLabSCMSourceContext withSudoUser(String sudoUser) {
         this.sudoUser = Util.fixNull(sudoUser);
@@ -166,6 +183,11 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext withLogSuccess(boolean enabled) {
         this.logSuccess = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withCommentBody(String commentBody) {
+        this.commentBody = commentBody;
         return this;
     }
 

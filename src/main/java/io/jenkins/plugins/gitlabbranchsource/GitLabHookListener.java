@@ -1,6 +1,5 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSourceEvent;
@@ -27,13 +26,8 @@ public class GitLabHookListener implements WebHookListener, SystemHookListener {
     public void onNoteEvent(NoteEvent event) {
         LOGGER.info("NOTE EVENT");
         LOGGER.info(event.toString());
-        if(event.getObjectAttributes().getNoteableType().equals(NoteEvent.NoteableType.MERGE_REQUEST)
-                && event.getObjectAttributes().getNote().equalsIgnoreCase(
-                        GitLabMergeRequestSCMCommentEvent.TRIGGER_COMMENT
-        )) {
-            GitLabMergeRequestSCMCommentEvent trigger = new GitLabMergeRequestSCMCommentEvent(event, origin);
-            SCMHeadEvent.fireNow(trigger);
-        }
+        GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(event);
+        AbstractGitLabJobTrigger.fireNow(trigger);
     }
 
     @Override

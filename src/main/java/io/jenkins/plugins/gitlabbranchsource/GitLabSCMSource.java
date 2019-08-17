@@ -74,7 +74,9 @@ import jenkins.scm.impl.trait.Selection;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
@@ -101,7 +103,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
-    private transient boolean isTrusted; // used to test if the revision is trusted
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;
@@ -157,6 +158,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 .expand();
     }
 
+    // This method always returns the latest list of members of the project
+    public HashMap<String, AccessLevel> getMembers() {
+        HashMap<String, AccessLevel> members = new HashMap<>();
+        try {
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            for(Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
+                members.put(m.getUsername(), m.getAccessLevel());
+            }
+        } catch (GitLabApiException | NoSuchFieldException e) {
+            e.printStackTrace();
+            return new HashMap<>();
+        }
+        return members;
+    }
+
     public int getProjectId() {
         return projectId;
     }
@@ -181,6 +197,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
+            if (gitlabProject == null) {
+                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+            }
             LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if(head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
@@ -242,7 +261,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
-                request.setMembers(gitLabApi.getProjectApi().getAllMembers(gitlabProject.getPathWithNamespace()));
+                request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
@@ -372,7 +391,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         public SCMSourceCriteria.Probe create(@NonNull MergeRequestSCMHead head,
                                                                               @Nullable MergeRequestSCMRevision revision)
                                                 throws IOException, InterruptedException {
-                                            isTrusted = request.isTrusted(head);
+                                            boolean isTrusted = request.isTrusted(head);
                                             if (!isTrusted) {
                                                 listener.getLogger().format("(not from a trusted source)%n");
                                             }
@@ -571,9 +590,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if(revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-            LOGGER.info("Trusted Revision: "+isTrusted);
-            if (isTrusted) {
-                return revision;
+            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                    .withTraits(traits)
+                    .newRequest(this, listener)) {
+                request.setMembers(getMembers());
+                boolean isTrusted = request.isTrusted(head);
+                LOGGER.info("Trusted Revision: "+ head.getOriginOwner() + " -> " + isTrusted);
+                if(isTrusted) {
+                    return revision;
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger().format("Loading trusted files from target branch %s at %s rather than %s%n",

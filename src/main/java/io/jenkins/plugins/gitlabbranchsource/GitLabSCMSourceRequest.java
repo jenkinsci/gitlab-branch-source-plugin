@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jenkins.scm.api.SCMHead;
@@ -72,7 +71,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     @CheckForNull
     private final Set<String> requestedTagNames;
     /**
-     * The pull request details or {@code null} if not {@link #isFetchMRs()}.
+     * The merge request details or {@code null} if not {@link #isFetchMRs()}.
      */
     @CheckForNull
     private Iterable<MergeRequest> mergeRequests;
@@ -342,18 +341,14 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Provides the Map of project {@link Member} username and {@link Member}.
+     * Provides the Map of project {@link Member} username and {@link AccessLevel} of the member.
      *
-     * @param membersList the list of project {@link Member}.
+     * @param members the Map of project {@link Member} username and {@link AccessLevel} of the member.
      */
-    public final void setMembers(@CheckForNull List<Member> membersList) {
-        this.members.clear();
-        if(membersList != null) {
-            for(Member m : membersList) {
-                this.members.put(m.getUsername(), m.getAccessLevel());
-            }
-        }
+    public final void setMembers(@CheckForNull HashMap<String, AccessLevel> members) {
+        this.members = members;
     }
+
 
     /**
      * Returns the {@link GitLabApi} to use for the request.
@@ -383,7 +378,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @return {@link AccessLevel} the permissions of the supplied user.
      */
     public AccessLevel getPermission(String username){
-        if(getGitLabApi() == null || getMembers() == null) {
+        if(getMembers() == null) {
             return null;
         }
         if(getMembers().containsKey(username)) {
