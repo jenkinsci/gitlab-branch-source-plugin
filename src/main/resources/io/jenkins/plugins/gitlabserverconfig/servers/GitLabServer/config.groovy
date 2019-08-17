@@ -21,8 +21,8 @@ f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Per
 }
 
 f.entry(title: _("Web Hook"), "description": "Do you want to automatically manage GitLab Web Hooks on Jenkins Server?",
-        help:descriptor.getHelpFile("manageHooks")) {
-    f.checkbox(title: _("Manage Web Hooks"), field: "manageHooks")
+        help:descriptor.getHelpFile("manageWebHooks")) {
+    f.checkbox(title: _("Manage Web Hooks"), field: "manageWebHooks")
 }
 
 f.entry(title: _("System Hook"), "description": "Do you want to automatically manage GitLab System Hooks on Jenkins Server?",
