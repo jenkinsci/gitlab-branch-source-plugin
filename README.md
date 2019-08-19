@@ -430,23 +430,23 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 
 These traits can be selected by selecting `Add` in the `Behaviours` section.
 
-* `Skip pipeline status notifications` - To disable notifiying GitLab server about the pipeline status.
-
-* `Override hook management modes` - Override default hook management mode of web hook and system hook.
-
-* `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
-
 * `Tag discovery` - Discover tags in the project. To automatically build tags install `basic-branch-build-plugin`.
 
 * `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only applicable to `GitLab Group` Job type.
 
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
 
-* `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`).
+* `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel.
 
 * `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
 * `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
+
+* `Skip pipeline status notifications` - To disable notifiying GitLab server about the pipeline status.
+
+* `Override hook management modes` - Override default hook management mode of web hook and system hook.
+
+* `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
 ## Job DSL seed job configuration
 
@@ -566,7 +566,7 @@ http://localhost:8080/jenkins/plugin/job-dsl/api-viewer/index.html#path/organiza
 
 ## JCasC configuration to create job
 
-You can also use JCasC to directly create job from a Job DSL seed job. Here's an example the yaml config:
+You can also use JCasC to directly create job from a Job DSL seed job. Here's an example of the yaml config:
 
 ```groovy
 jobs:
