@@ -317,7 +317,7 @@ unclassified:
     servers:
       - credentialsId: "i<3GitLab" # same as id specified for gitlab personal access token credentials
         manageWebHooks: true
-        manageSystemHooks: true
+        manageSystemHooks: true # access token should have admin access to set system hooks
         name: "gitlab-1024"
         serverUrl: "https://gitlab.com"
 ```
@@ -355,7 +355,7 @@ To create a `Multibranch Pipeline Job`:
     
     iv. Based on the owner provided. All the projects are discovered in the path and added to the `Projects` listbox. You can now choose the project you want to build.
     
-    v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
+    v. `Behaviours` (a.k.a. SCM Traits) allow different configurations option to your build. More about it in the SCM Trait APIs section.
 
 5. Now you can go ahead and save the job.
 
@@ -424,15 +424,15 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 		* `Everyone` - Discover MRs from Forked Projects filed by anybody. For security reasons you should never use this option. It may be used to reveal your Pipeline secrets environment variables.
 		* `Nobody` - Discover no MRs from Forked Projects at all. Equivalent to removing the trait altogether.
 		
-	If `Members` or `Trusted Members` is selected, plugin will build the target branch of MRs from non/untrusted members.
+	If `Members` or `Trusted Members` is selected, then plugin will build the target branch of MRs from non/untrusted members.
 
 #### Additional Traits:
 
-These traits can be selected by clicking `Add` button in the `Behaviours` section.
+These traits can be selected by selecting `Add` in the `Behaviours` section.
 
-* `Skip notification` - Skip GitLab server pipeline status.
+* `Skip pipeline status notifications` - To disable notifiying GitLab server about the pipeline status.
 
-* `WebHook mode` - Override default hook management mode.
+* `Override hook management modes` - Override default hook management mode of web hook and system hook.
 
 * `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
@@ -440,11 +440,131 @@ These traits can be selected by clicking `Add` button in the `Behaviours` sectio
 
 * `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only applicable to `GitLab Group` Job type.
 
-* `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed.
+* `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
+
+* `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`).
 
 * `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
 * `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
+
+## Job DSL seed job configuration
+
+To create a Job DSL seed job see this [tutorial](https://github.com/jenkinsci/job-dsl-plugin/wiki/Tutorial---Using-the-Jenkins-Job-DSL).
+
+Here is a sample seed job script for folder organisation job:
+
+```groovy
+private boolean isSandbox() {
+  def locationConfig = jenkins.model.JenkinsLocationConfiguration.get()
+  if (locationConfig != null && locationConfig.getUrl() != null) {
+    locationConfig.getUrl().contains("staging")
+  } else {
+    System.getenv("ENVIRONMENT") == "sandbox"
+  }
+}
+
+List<Map> gitlab = []
+if (isSandbox()) {
+  gitlab = [
+    [name: 'tests', displayName: 'Jenkins Tests', group: 'jenkins/tests'],
+  ]
+} else {
+
+  gitlab = [
+    [name: 'DevOps'],
+    [name: 'DentalDesktop'],
+    [name: 'Shared'],
+    [name: 'Ortho', folder: 'Ortho'],
+    [name: 'OrthoClinic', folder: 'Ortho'],
+    [name: 'InternalTools', displayName: 'Internal Tools'],
+  ]
+}
+
+def folders = gitlab.collect { it.folder }.unique() - null
+
+folders.each {
+  folder(it) {
+  }
+}
+
+gitlab.each { Map org ->
+  gitlabOrgs(org).call()
+}
+
+Closure gitlabOrgs(Map args = [:]) {
+  def config = [
+    displayName: args.name,
+    group: args.name,
+    suppressDefaultJenkinsfile: false,
+  ] << args
+  def name = config.folder ? "${config.folder}/${config.name}" : config.name
+  GString orgDescription = "<br>${config.displayName} group projects"
+
+  return {
+    organizationFolder(name) {
+      organizations {
+        displayName(config.displayName)
+        description(orgDescription)
+        gitLabSCMNavigator {
+          projectOwner(config.group)
+          credentialsId('gitlab_ssh_key')
+          serverName('git.3shape.local')
+          traits {
+            subGroupProjectDiscoveryTrait() // discover projects inside subgroups
+            gitLabBranchDiscovery {
+              strategyId(3) // discover all branches
+            }
+            originMergeRequestDiscoveryTrait {
+              strategyId(1) // discover MRs and merge them with target branch
+            }
+            gitLabTagDiscovery() // discover tags
+            gitLFSPullTrait()
+          }
+        }
+      }
+
+        // "Traits" ("Behaviours" in the GUI) that are NOT "declarative-compatible"
+        // For some 'traits, we need to configure this stuff by hand until JobDSL handles it
+        // https://issues.jenkins.io/browse/JENKINS-45504
+        configure {
+            def traits = it / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
+            traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
+                strategyId 2
+                trust(class: 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait$TrustPermission')
+            }
+        }
+
+      orphanedItemStrategy {
+        discardOldItems {
+          daysToKeep(7)
+          numToKeep(10)
+        }
+      }
+      if (!isSandbox()) {
+        triggers {
+          periodicFolderTrigger {
+            interval('1d')
+          }
+        }
+      }
+      projectFactories {
+        workflowMultiBranchProjectFactory {
+          scriptPath('Jenkinsfile')
+        }
+      }
+    }
+  }
+}
+```
+
+To see all the APIs supported by Job DSL you can visit the following link:
+
+```
+http://localhost:8080/jenkins/plugin/job-dsl/api-viewer/index.html#path/organizationFolder-organizations-gitLabSCMNavigator-traits
+```
+
+You can also use JCasC to create the Job DSL seed job. See example for bitbucket [here](https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/demos/jobs/bitbucket.yaml).
 
 ## How to talk to us?
 
