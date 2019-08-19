@@ -564,7 +564,68 @@ To see all the APIs supported by Job DSL you can visit the following link:
 http://localhost:8080/jenkins/plugin/job-dsl/api-viewer/index.html#path/organizationFolder-organizations-gitLabSCMNavigator-traits
 ```
 
-You can also use JCasC to create the Job DSL seed job. See example for bitbucket [here](https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/demos/jobs/bitbucket.yaml).
+## JCasC configuration to create job
+
+You can also use JCasC to directly create job from a Job DSL seed job. Here's an example the yaml config:
+
+```groovy
+jobs:
+  - script: >
+      organizationFolder('GitLab Organization Folder') {
+        description("GitLab org folder configured with JCasC")
+        displayName('My Project')
+        // "Projects"
+        organizations {
+          gitLabSCMNavigator {
+            projectOwner("baymac")
+            credentialsId("i<3GitLab")
+            serverName("gitlab-3214")
+            // "Traits" ("Behaviours" in the GUI) that are "declarative-compatible"
+            traits {
+              subGroupProjectDiscoveryTrait() // discover projects inside subgroups
+              gitLabBranchDiscovery {
+                strategyId(3) // discover all branches
+              }
+              originMergeRequestDiscoveryTrait {
+                strategyId(1) // discover MRs and merge them with target branch
+              }
+              gitLabTagDiscovery() // discover tags
+            }
+          }
+        }
+        // "Traits" ("Behaviours" in the GUI) that are NOT "declarative-compatible"
+        // For some 'traits, we need to configure this stuff by hand until JobDSL handles it
+        // https://issues.jenkins.io/browse/JENKINS-45504
+        configure { node ->
+            def traits = node / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
+            traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
+                strategyId('2')
+                trust(class: 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait$TrustPermission')
+            }
+        }
+        // "Project Recognizers"
+        projectFactories {
+            workflowMultiBranchProjectFactory {
+                scriptPath 'Jenkinsfile'
+            }
+        }
+        // "Orphaned Item Strategy"
+        orphanedItemStrategy {
+          discardOldItems {
+            daysToKeep(-1)
+            numToKeep(-1)
+          }
+        }
+        // "Scan Organization Folder Triggers" : 1 day
+        // We need to configure this stuff by hand because JobDSL only allow 'periodic(int min)' for now
+        configure { node ->
+          node / triggers / 'com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger' {
+            spec('H H * * *')
+            interval(86400000)
+          }
+        }
+      }
+```
 
 ## How to talk to us?
 
