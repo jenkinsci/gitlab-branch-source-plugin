@@ -36,6 +36,7 @@ public class LogCommentTrait extends SCMSourceTrait {
     /**
      * Setter for stapler to enable logging of successful builds.
      */
+    @DataBoundSetter
     public void setLogSuccess(boolean logSuccess) {
         this.logSuccess = logSuccess;
     }
