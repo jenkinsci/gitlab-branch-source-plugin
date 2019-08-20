@@ -4,8 +4,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -21,10 +20,10 @@ public class GitLabHookCreator {
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
                                 GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
-        List<String> projects = new ArrayList<>(navigator.getNavigatorProjects());
+        HashSet<String> projects = navigator.getNavigatorProjects();
         if(projects.isEmpty()) {
-            LOGGER.log(Level.WARNING,
-                    "Group is empty!");
+            LOGGER.log(Level.SEVERE,
+                    "Group is empty! No hooks created.");
             return;
         }
         PersonalAccessToken credentials = null;
@@ -181,6 +180,7 @@ public class GitLabHookCreator {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
         if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
+            LOGGER.severe("Invalid root url" + rootUrl);
             return "";
         }
         String pronoun = "gitlab-systemhook";
