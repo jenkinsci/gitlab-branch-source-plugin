@@ -208,7 +208,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
             for(Project p : projects) {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
-                navigatorProjects.add(projectPathWithNamespace);
                 try {
                     // If repository is empty it throws an exception
                     gitLabApi.getRepositoryApi().getTree(p);
@@ -287,13 +286,53 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @Override
     public void afterSave(@NonNull SCMNavigatorOwner owner) {
+        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(traits);
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
+                .withTraits(navigatorContext.traits());
         GitLabHookRegistration webhookMode = ctx.webhookRegistration();
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
         LOGGER.info("Mode of web hook: " + webhookMode.toString());
         LOGGER.info("Mode of system hook: " + systemhookMode.toString());
-        GitLabHookCreator.register(owner,this, webhookMode, systemhookMode);
+        // This section of code can also be moved to GitLab Hook Creator
+        try {
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            if (gitlabOwner == null) {
+                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            }
+            List<Project> projects = new ArrayList<>();
+            if(gitlabOwner instanceof GitLabUser) {
+                // Even returns the group projects owned by the user
+                if(navigatorContext.wantSubgroupProjects()) {
+                    try {
+                        projects = gitLabApi.getProjectApi().getOwnedProjects();
+                    } catch (GitLabApiException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
+                    } catch (GitLabApiException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
+                groupProjectsFilter.withIncludeSubGroups(navigatorContext.wantSubgroupProjects());
+                // If projectOwner is a subgroup, it will only return projects in the subgroup
+                try {
+                    projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
+                } catch (GitLabApiException e) {
+                    e.printStackTrace();
+                }
+            }
+            for(Project p : projects) {
+                String projectPathWithNamespace = p.getPathWithNamespace();
+                navigatorProjects.add(projectPathWithNamespace);
+            }
+            GitLabHookCreator.register(owner,this, webhookMode, systemhookMode);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
     }
 
     public PersonalAccessToken credentials(SCMSourceOwner owner) {
