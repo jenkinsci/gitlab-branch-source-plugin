@@ -580,6 +580,8 @@ jobs:
       }
 ```
 
+You can also use file or url to load the script, see [this](https://github.com/jenkinsci/job-dsl-plugin/wiki/JCasC).
+
 ## How to talk to us?
 
 * This project uses [Jenkins JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under [`gitlab-branch-source-plugin`](https://issues.jenkins-ci.org/issues/?jql=project+%3D+JENKINS+AND+component+%3D+gitlab-branch-source-plugin) component.
