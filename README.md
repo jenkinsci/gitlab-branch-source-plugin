@@ -196,7 +196,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box. 
     
-    iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token as `Admin` access. 
+    iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token has `Admin` access. 
 
 6. Adding a Personal Access Token Credentials:
 
