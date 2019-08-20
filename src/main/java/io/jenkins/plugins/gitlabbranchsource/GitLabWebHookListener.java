@@ -2,23 +2,19 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMHeadEvent;
-import jenkins.scm.api.SCMSourceEvent;
-import org.gitlab4j.api.systemhooks.GroupSystemHookEvent;
-import org.gitlab4j.api.systemhooks.ProjectSystemHookEvent;
-import org.gitlab4j.api.systemhooks.SystemHookListener;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.NoteEvent;
 import org.gitlab4j.api.webhook.PushEvent;
 import org.gitlab4j.api.webhook.TagPushEvent;
 import org.gitlab4j.api.webhook.WebHookListener;
 
-public class GitLabHookListener implements WebHookListener, SystemHookListener {
+public class GitLabWebHookListener implements WebHookListener {
 
-    public static final Logger LOGGER = Logger.getLogger(GitLabHookListener.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabWebHookListener.class.getName());
 
     private String origin;
 
-    public GitLabHookListener(String origin) {
+    public GitLabWebHookListener(String origin) {
         this.origin = origin;
     }
 
@@ -54,20 +50,4 @@ public class GitLabHookListener implements WebHookListener, SystemHookListener {
         SCMHeadEvent.fireNow(trigger);
     }
 
-    @Override
-    public void onProjectEvent(ProjectSystemHookEvent projectSystemHookEvent) {
-        LOGGER.info("PROJECT EVENT");
-        LOGGER.info(projectSystemHookEvent.toString());
-        // TODO: implement handling `project_transfer` and `project_renamed`
-        if(!projectSystemHookEvent.getEventName().equals("project_transfer") && !projectSystemHookEvent.getEventName().equals("project_renamed")) {
-            GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
-            SCMSourceEvent.fireNow(trigger);
-        }
-    }
-
-    @Override
-    public void onGroupEvent(GroupSystemHookEvent groupSystemHookEvent) {
-        LOGGER.info("GROUP EVENT");
-        LOGGER.info(groupSystemHookEvent.toString());
-    }
 }

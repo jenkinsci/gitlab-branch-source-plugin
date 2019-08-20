@@ -53,7 +53,7 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        String hookUrl = getHookUrl();
+        String hookUrl = getHookUrl(true);
         if(hookUrl.equals("")) {
             return;
         }
@@ -65,7 +65,7 @@ public class GitLabHookCreator {
                 // So fetching a list of web hooks in individual projects inside the group
                 // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
                 for(String p : projects) {
-                    createHookWhenMissing(gitLabApi, p, hookUrl);
+                    createWebHookWhenMissing(gitLabApi, p, hookUrl);
                 }
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
@@ -127,14 +127,14 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        String hookUrl = getHookUrl();
+        String hookUrl = getHookUrl(true);
         if(hookUrl.equals("")) {
             return;
         }
         if(credentials != null) {
             try {
                 GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-                createHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
+                createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
                         "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
@@ -170,23 +170,27 @@ public class GitLabHookCreator {
     private static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(), "",
+            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(false), "",
                     false, false, false);
         } catch (GitLabApiException e) {
             LOGGER.info("User is not admin so cannot set system hooks");
             e.printStackTrace();
         }
     }
-    public static String getHookUrl() {
+    public static String getHookUrl(boolean isWebHook) {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
         if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
             return "";
         }
-        return UriTemplate.buildFromTemplate(rootUrl).literal("gitlab-webhook").literal("/post").build().expand();
+        String pronoun = "gitlab-systemhook";
+        if(isWebHook) {
+            pronoun = "gitlab-webhook";
+        }
+        return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build().expand();
     }
 
-    public static ProjectHook createHook() {
+    public static ProjectHook createWebHook() {
         ProjectHook enabledHooks = new ProjectHook();
         enabledHooks.setPushEvents(true);
         enabledHooks.setMergeRequestsEvents(true);
@@ -197,12 +201,12 @@ public class GitLabHookCreator {
         return enabledHooks;
     }
 
-    private static void createHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
+    private static void createWebHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
             throws GitLabApiException {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
                 .filter(hook -> hookUrl.equals(hook.getUrl()))
                 .findFirst()
-                .orElseGet(GitLabHookCreator::createHook);
+                .orElseGet(GitLabHookCreator::createWebHook);
         if(projectHook.getId() == null) {
             gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
         }
