@@ -483,7 +483,7 @@ organizationFolder('GitLab Organization Folder') {
     configure { 
         def traits = it / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
         traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
-            strategyId('2')
+            strategyId(2)
             trust(class: 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait$TrustPermission')
         }
     }
@@ -502,10 +502,9 @@ organizationFolder('GitLab Organization Folder') {
     }
     // "Scan Organization Folder Triggers" : 1 day
     // We need to configure this stuff by hand because JobDSL only allow 'periodic(int min)' for now
-    configure { 
-        it / triggers / 'com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger' {
-            spec('H H * * *')
-            interval(86400000)
+    triggers {
+        periodicFolderTrigger {
+            interval('1d')
         }
     }
 }
