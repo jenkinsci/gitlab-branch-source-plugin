@@ -270,6 +270,26 @@ GitLab Personal Access Token credentials to Jenkins server credentials.
 7. The token creator will create a Personal Access Token in your GitLab Server for the given user with the required scope and also create a credentials for the same inside Jenkins server. You can go back to the GitLab Server Configuration to select the new credentials generated (select "-none-" first then new credentials will appear). For security reasons this token is not revealed as plain text rather returns an `id`. It is a 128-bit long UUID-4 string (36 characters).
 
     ![gitlab-token-creator](/docs/img/gitlab-token-creator.png)
+    
+### Manually create hooks on GitLab Server
+
+Use the following end points for web hooks and system hooks setup on your GitLab Server. The `Jenkins Url` needs to be a fully qualified domain name (FQDN).
+
+#### WebHook
+
+```
+<jenkins_url>/gitlab-webhook/post
+```
+
+with `push`, `tag`, `merge request` and `note` events.
+
+
+#### SystemHook
+
+```
+<jenkins_url>/gitlab-systemhook/post
+```
+with `repository update` event.
 
 ### Configuration as Code
 
