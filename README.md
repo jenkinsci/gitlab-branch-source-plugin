@@ -318,7 +318,7 @@ unclassified:
       - credentialsId: "i<3GitLab" # same as id specified for gitlab personal access token credentials
         manageWebHooks: true
         manageSystemHooks: true # access token should have admin access to set system hooks
-        name: "gitlab-1024"
+        name: "gitlab-3214"
         serverUrl: "https://gitlab.com"
 ```
 
@@ -383,7 +383,7 @@ To create a `GitLab Group Job`:
     
     i. Select `Server` configured in the initial server setup.
 
-    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) if there is any private projects that will be built by the plugin.
+    ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) only if there are any private projects required to be built.
 
     iii. Add path to the owner whose projects you want to build. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
 
@@ -455,106 +455,59 @@ To create a Job DSL seed job see this [tutorial](https://github.com/jenkinsci/jo
 Here is a sample seed job script for folder organisation job:
 
 ```groovy
-private boolean isSandbox() {
-  def locationConfig = jenkins.model.JenkinsLocationConfiguration.get()
-  if (locationConfig != null && locationConfig.getUrl() != null) {
-    locationConfig.getUrl().contains("staging")
-  } else {
-    System.getenv("ENVIRONMENT") == "sandbox"
-  }
-}
-
-List<Map> gitlab = []
-if (isSandbox()) {
-  gitlab = [
-    [name: 'tests', displayName: 'Jenkins Tests', group: 'jenkins/tests'],
-  ]
-} else {
-
-  gitlab = [
-    [name: 'DevOps'],
-    [name: 'DentalDesktop'],
-    [name: 'Shared'],
-    [name: 'Ortho', folder: 'Ortho'],
-    [name: 'OrthoClinic', folder: 'Ortho'],
-    [name: 'InternalTools', displayName: 'Internal Tools'],
-  ]
-}
-
-def folders = gitlab.collect { it.folder }.unique() - null
-
-folders.each {
-  folder(it) {
-  }
-}
-
-gitlab.each { Map org ->
-  gitlabOrgs(org).call()
-}
-
-Closure gitlabOrgs(Map args = [:]) {
-  def config = [
-    displayName: args.name,
-    group: args.name,
-    suppressDefaultJenkinsfile: false,
-  ] << args
-  def name = config.folder ? "${config.folder}/${config.name}" : config.name
-  GString orgDescription = "<br>${config.displayName} group projects"
-
-  return {
-    organizationFolder(name) {
-      organizations {
-        displayName(config.displayName)
-        description(orgDescription)
+organizationFolder('GitLab Organization Folder') {
+    description("GitLab org folder created with Job DSL")
+    displayName('My Project')
+    // "Projects"
+    organizations {
         gitLabSCMNavigator {
-          projectOwner(config.group)
-          credentialsId('gitlab_ssh_key')
-          serverName('git.3shape.local')
-          traits {
-            subGroupProjectDiscoveryTrait() // discover projects inside subgroups
-            gitLabBranchDiscovery {
-              strategyId(3) // discover all branches
-            }
-            originMergeRequestDiscoveryTrait {
-              strategyId(1) // discover MRs and merge them with target branch
-            }
-            gitLabTagDiscovery() // discover tags
-            gitLFSPullTrait()
-          }
-        }
-      }
-
-        // "Traits" ("Behaviours" in the GUI) that are NOT "declarative-compatible"
-        // For some 'traits, we need to configure this stuff by hand until JobDSL handles it
-        // https://issues.jenkins.io/browse/JENKINS-45504
-        configure {
-            def traits = it / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
-            traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
-                strategyId 2
-                trust(class: 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait$TrustPermission')
+            projectOwner("baymac")
+            credentialsId("i<3GitLab")
+            serverName("gitlab-3214")
+            // "Traits" ("Behaviours" in the GUI) that are "declarative-compatible"
+            traits {
+                subGroupProjectDiscoveryTrait() // discover projects inside subgroups
+                gitLabBranchDiscovery {
+                    strategyId(3) // discover all branches
+                }
+                originMergeRequestDiscoveryTrait {
+                    strategyId(1) // discover MRs and merge them with target branch
+                }
+                gitLabTagDiscovery() // discover tags
             }
         }
-
-      orphanedItemStrategy {
-        discardOldItems {
-          daysToKeep(7)
-          numToKeep(10)
-        }
-      }
-      if (!isSandbox()) {
-        triggers {
-          periodicFolderTrigger {
-            interval('1d')
-          }
-        }
-      }
-      projectFactories {
-        workflowMultiBranchProjectFactory {
-          scriptPath('Jenkinsfile')
-        }
-      }
     }
-  }
+    // "Traits" ("Behaviours" in the GUI) that are NOT "declarative-compatible"
+    // For some 'traits, we need to configure this stuff by hand until JobDSL handles it
+    // https://issues.jenkins.io/browse/JENKINS-45504
+    configure { 
+        def traits = it / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
+        traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
+            strategyId('2')
+            trust(class: 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait$TrustPermission')
+        }
+    }
+    // "Project Recognizers"
+    projectFactories {
+        workflowMultiBranchProjectFactory {
+            scriptPath 'Jenkinsfile'
+        }
+    }
+    // "Orphaned Item Strategy"
+    orphanedItemStrategy {
+        discardOldItems {
+            daysToKeep(10)
+            numToKeep(5)
+        }
+    }
+    // "Scan Organization Folder Triggers" : 1 day
+    // We need to configure this stuff by hand because JobDSL only allow 'periodic(int min)' for now
+    configure { 
+        it / triggers / 'com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger' {
+            spec('H H * * *')
+            interval(86400000)
+        }
+    }
 }
 ```
 
