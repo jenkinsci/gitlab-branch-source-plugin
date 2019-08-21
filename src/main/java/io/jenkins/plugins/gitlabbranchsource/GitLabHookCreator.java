@@ -19,57 +19,17 @@ public class GitLabHookCreator {
     public static final Logger LOGGER = Logger.getLogger(GitLabHookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
+                                GitLabHookRegistration systemhookMode) {
         HashSet<String> projects = navigator.getNavigatorProjects();
         if(projects.isEmpty()) {
             LOGGER.log(Level.SEVERE,
                     "Group is empty! No hooks created.");
             return;
         }
-        PersonalAccessToken credentials = null;
+        PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if(server == null) {
             return;
-        }
-        switch (webhookMode) {
-            case DISABLE:
-                break;
-            case SYSTEM:
-                if (!server.isManageWebHooks()) {
-                    break;
-                }
-                credentials = server.getCredentials();
-                if(credentials == null) {
-                    LOGGER.info("No System credentials added, cannot create web hook");
-                }
-                break;
-            case ITEM:
-                credentials = navigator.credentials(owner);
-                if(credentials == null) {
-                    LOGGER.info("No Item credentials added, cannot create web hook");
-                }
-                break;
-            default:
-                return;
-        }
-        String hookUrl = getHookUrl(true);
-        if(hookUrl.equals("")) {
-            return;
-        }
-        // add web hooks
-        if(credentials != null) {
-            try {
-                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-                // Since GitLab doesn't allow API calls on Group WebHooks.
-                // So fetching a list of web hooks in individual projects inside the group
-                // Filters all projectHooks and returns an empty Project Hook or valid project hook per project
-                for(String p : projects) {
-                    createWebHookWhenMissing(gitLabApi, p, hookUrl);
-                }
-            } catch (GitLabApiException e) {
-                LOGGER.log(Level.WARNING,
-                        "Could not manage groups hooks for " + navigator.getProjectOwner() + " on " + server.getServerUrl(), e);
-            }
         }
         switch (systemhookMode) {
             case DISABLE:
@@ -166,7 +126,7 @@ public class GitLabHookCreator {
         }
     }
 
-    private static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
+    public static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
             gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(false), "",
@@ -201,7 +161,7 @@ public class GitLabHookCreator {
         return enabledHooks;
     }
 
-    private static void createWebHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
+    public static String createWebHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
             throws GitLabApiException {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
                 .filter(hook -> hookUrl.equals(hook.getUrl()))
@@ -209,6 +169,8 @@ public class GitLabHookCreator {
                 .orElseGet(GitLabHookCreator::createWebHook);
         if(projectHook.getId() == null) {
             gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
+            return "created";
         }
+        return "already created";
     }
 }

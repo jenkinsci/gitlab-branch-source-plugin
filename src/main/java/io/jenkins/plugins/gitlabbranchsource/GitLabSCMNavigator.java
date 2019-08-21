@@ -23,6 +23,7 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
      */
     @Override
     public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
-        this.traits = traits != null ? new ArrayList<>(traits) : new ArrayList<SCMTrait<? extends SCMTrait<?>>>();
+        this.traits = traits != null ? new ArrayList<>(traits) : new ArrayList<>();
 
     }
 
@@ -205,9 +206,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
+            PersonalAccessToken webHookCredentials = getWebHookCredentials();
+            GitLabApi webhookGitLabApi = null;
+            if(webHookCredentials != null) {
+                webhookGitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName), webHookCredentials.getToken().getPlainText());
+            }
+            String webHookUrl = GitLabHookCreator.getHookUrl(true);
             for(Project p : projects) {
-                count++;
-                String projectPathWithNamespace = p.getPathWithNamespace();
                 try {
                     // If repository is empty it throws an exception
                     gitLabApi.getRepositoryApi().getTree(p);
@@ -218,6 +223,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
+                count++;
+                String projectPathWithNamespace = p.getPathWithNamespace();
+                getNavigatorProjects().add(projectPathWithNamespace);
+                if(webhookGitLabApi != null) {
+                    observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator.createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace, webHookUrl));
+                }
                 int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
                 String projectOwner = projectPathWithNamespace.substring(0, namespaceLength);
                 if (request.process(projectPathWithNamespace,
@@ -245,6 +256,41 @@ public class GitLabSCMNavigator extends SCMNavigator {
         } catch (GitLabApiException | NoSuchFieldException e) {
             e.printStackTrace();
         }
+    }
+
+    private PersonalAccessToken getWebHookCredentials() {
+        PersonalAccessToken credentials = null;
+        GitLabServer server = GitLabServers.get().findServer(getServerName());
+        if(server == null) {
+            return null;
+        }
+        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(traits);
+        GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                .withTraits(navigatorContext.traits());
+        GitLabHookRegistration webhookMode = ctx.webhookRegistration();
+        switch (webhookMode) {
+            case DISABLE:
+                break;
+            case SYSTEM:
+                if (!server.isManageWebHooks()) {
+                    break;
+                }
+                credentials = server.getCredentials();
+                if(credentials == null) {
+                    LOGGER.info("No System credentials added, cannot create web hook");
+                }
+                break;
+                // Unable to fetch SCMNavigatorOwner so skipping ITEM credentials webhook
+//            case ITEM:
+//                credentials = owner.credentials();
+//                if(credentials == null) {
+//                    LOGGER.info("No Item credentials added, cannot create web hook");
+//                }
+//                break;
+            default:
+                return null;
+        }
+        return credentials;
     }
 
     @NonNull
@@ -289,50 +335,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(traits);
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(navigatorContext.traits());
-        GitLabHookRegistration webhookMode = ctx.webhookRegistration();
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
-        LOGGER.info("Mode of web hook: " + webhookMode.toString());
         LOGGER.info("Mode of system hook: " + systemhookMode.toString());
-        // This section of code can also be moved to GitLab Hook Creator
-        try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
-            if (gitlabOwner == null) {
-                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
-            }
-            List<Project> projects = new ArrayList<>();
-            if(gitlabOwner instanceof GitLabUser) {
-                // Even returns the group projects owned by the user
-                if(navigatorContext.wantSubgroupProjects()) {
-                    try {
-                        projects = gitLabApi.getProjectApi().getOwnedProjects();
-                    } catch (GitLabApiException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    try {
-                        projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
-                    } catch (GitLabApiException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
-                groupProjectsFilter.withIncludeSubGroups(navigatorContext.wantSubgroupProjects());
-                // If projectOwner is a subgroup, it will only return projects in the subgroup
-                try {
-                    projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
-                } catch (GitLabApiException e) {
-                    e.printStackTrace();
-                }
-            }
-            for(Project p : projects) {
-                String projectPathWithNamespace = p.getPathWithNamespace();
-                navigatorProjects.add(projectPathWithNamespace);
-            }
-            GitLabHookCreator.register(owner,this, webhookMode, systemhookMode);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
+        GitLabHookCreator.register(owner,this, systemhookMode);
     }
 
     public PersonalAccessToken credentials(SCMSourceOwner owner) {
@@ -341,8 +346,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         PersonalAccessToken.class,
                         owner,
                         Jenkins.getAuthentication(),
-                        fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()),
-                credentials -> credentials instanceof PersonalAccessToken
+                        fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()
+                ), credentials -> credentials instanceof PersonalAccessToken
         );
     }
 
