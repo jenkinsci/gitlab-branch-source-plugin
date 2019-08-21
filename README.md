@@ -601,6 +601,12 @@ jobs:
 
 You can also use file or url to load the script, see [this](https://github.com/jenkinsci/job-dsl-plugin/wiki/JCasC).
 
+## Known Issues
+
+1. Web Hook cannot be setup for `ITEM` scoped credentials.
+
+2. System Hook feature is still in beta and plugin is not able to detect new projects created/old projects updated or removed.
+
 ## How to talk to us?
 
 * This project uses [Jenkins JIRA](https://issues.jenkins-ci.org/) to track issues. You can file issues under [`gitlab-branch-source-plugin`](https://issues.jenkins-ci.org/issues/?jql=project+%3D+JENKINS+AND+component+%3D+gitlab-branch-source-plugin) component.
