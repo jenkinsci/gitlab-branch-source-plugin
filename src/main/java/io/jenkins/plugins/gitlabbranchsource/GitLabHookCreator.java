@@ -4,7 +4,6 @@ import com.damnhandy.uri.template.UriTemplate;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -20,12 +19,6 @@ public class GitLabHookCreator {
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
                                 GitLabHookRegistration systemhookMode) {
-        HashSet<String> projects = navigator.getNavigatorProjects();
-        if(projects.isEmpty()) {
-            LOGGER.log(Level.SEVERE,
-                    "Group is empty! No hooks created.");
-            return;
-        }
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if(server == null) {
