@@ -206,9 +206,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             PersonalAccessToken.class,
                             jenkins,
                             ACL.SYSTEM,
-                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
-                            withId(credentialsId)
-                    );
+                            fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                    ), withId(credentialsId));
     }
 
     /**
