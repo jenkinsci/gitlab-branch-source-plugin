@@ -21,9 +21,16 @@ public class GitLabSystemHookListener implements SystemHookListener {
         LOGGER.info("PROJECT EVENT");
         LOGGER.info(projectSystemHookEvent.toString());
         // TODO: implement handling `project_transfer` and `project_renamed`
-        if(!projectSystemHookEvent.getEventName().equals("project_transfer") && !projectSystemHookEvent.getEventName().equals("project_renamed")) {
-            GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
-            SCMSourceEvent.fireNow(trigger);
+
+        switch (projectSystemHookEvent.getEventName()) {
+            case ProjectSystemHookEvent.PROJECT_CREATE_EVENT:
+            case ProjectSystemHookEvent.PROJECT_DESTROY_EVENT:
+            case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
+                GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
+                SCMSourceEvent.fireNow(trigger);
+                break;
+            default:
+                LOGGER.info("unsupported System hook event");
         }
     }
 
