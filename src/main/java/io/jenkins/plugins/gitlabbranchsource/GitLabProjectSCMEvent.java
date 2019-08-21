@@ -59,8 +59,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
 
     @Override
     public boolean isMatch(@NonNull SCMSource source) {
-        // Alternative to check project id as no project id is provided by project event
-        return source instanceof GitLabSCMSource && getPayload().getPathWithNamespace().equals(((GitLabSCMSource) source).getProjectPath());
+        return source instanceof GitLabSCMSource && getPayload().getProjectId().equals(((GitLabSCMSource) source).getProjectId());
     }
 
 }
