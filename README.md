@@ -407,7 +407,7 @@ To create a `GitLab Group Job`:
 
     iii. Add path to the owner whose projects you want to build. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
 
-    v. `Behaviours` (a.k.a SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
+    v. `Behaviours` (a.k.a. SCM Traits) are allow different configuration option to your build. More about it in the SCM Trait APIs section.
 
 The indexing in this group job type only needs to discover one branch with`Jenkinsfile` and thus it only shows the partial indexing log. You need to visit individual projects to see their full indexing.
 
@@ -464,7 +464,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Skip pipeline status notifications` - To disable notifiying GitLab server about the pipeline status.
 
-* `Override hook management modes` - Override default hook management mode of web hook and system hook.
+* `Override hook management modes` - Override default hook management mode of web hook and system hook. `ITEM` credentials for webhook is currently not supported.
 
 * `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
