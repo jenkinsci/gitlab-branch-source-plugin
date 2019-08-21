@@ -1,11 +1,15 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
@@ -13,6 +17,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
 import org.gitlab4j.api.models.SystemHook;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 public class GitLabHookCreator {
 
@@ -142,16 +147,34 @@ public class GitLabHookCreator {
     public static String getHookUrl(boolean isWebHook) {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
-        if (StringUtils.isBlank(rootUrl) || rootUrl.startsWith("http://localhost:")) {
-            LOGGER.severe("Invalid root url" + rootUrl);
+        if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
+        checkURL(rootUrl);
         String pronoun = "gitlab-systemhook";
         if(isWebHook) {
             pronoun = "gitlab-webhook";
         }
         return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build().expand();
     }
+
+    static void checkURL(String url) {
+        try {
+            URL anURL = new URL(url);
+            if ("localhost".equals(anURL.getHost())) {
+                throw new IllegalStateException(
+                    "Jenkins URL cannot start with http://localhost \nURL is:" + url);
+            }
+            if (!anURL.getHost().contains(".")) {
+                throw new IllegalStateException(
+                    "You must use a fully qualified domain name for Jenkins URL, this is required by GitLab"
+                        + "\nURL is:" + url);
+            }
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("Bad Jenkins URL\nURL is:" + url);
+        }
+    }
+
 
     public static ProjectHook createWebHook() {
         ProjectHook enabledHooks = new ProjectHook();
