@@ -213,10 +213,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             String webHookUrl = GitLabHookCreator.getHookUrl(true);
             for(Project p : projects) {
-                try {
-                    // If repository is empty it throws an exception
-                    gitLabApi.getRepositoryApi().getTree(p);
-                } catch (GitLabApiException e) {
+                if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
