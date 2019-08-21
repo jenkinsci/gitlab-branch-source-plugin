@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
+import org.gitlab4j.api.models.SystemHook;
 
 public class GitLabHookCreator {
 
@@ -47,7 +48,7 @@ public class GitLabHookCreator {
         }
         // add system hooks
         if(credentials != null) {
-            createSystemHook(server, credentials);
+            createSystemHookWhenMissing(server, credentials);
         }
     }
 
@@ -115,20 +116,29 @@ public class GitLabHookCreator {
         }
         // add system hooks
         if(credentials != null) {
-            createSystemHook(server, credentials);
+            createSystemHookWhenMissing(server, credentials);
         }
     }
 
-    public static void createSystemHook(GitLabServer server, PersonalAccessToken credentials) {
+    public static void createSystemHookWhenMissing(GitLabServer server, PersonalAccessToken credentials) {
+        String systemHookUrl = getHookUrl(false);
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-            gitLabApi.getSystemHooksApi().addSystemHook(getHookUrl(false), "",
-                    false, false, false);
+            SystemHook systemHook = gitLabApi.getSystemHooksApi()
+                    .getSystemHookStream()
+                    .filter(hook -> systemHookUrl.equals(hook.getUrl()))
+                    .findFirst()
+                    .orElse(null);
+            if(systemHook == null) {
+                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, "",
+                        false, false, false);
+            }
         } catch (GitLabApiException e) {
             LOGGER.info("User is not admin so cannot set system hooks");
             e.printStackTrace();
         }
     }
+
     public static String getHookUrl(boolean isWebHook) {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
