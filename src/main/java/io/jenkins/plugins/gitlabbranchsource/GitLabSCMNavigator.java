@@ -206,7 +206,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
-            PersonalAccessToken webHookCredentials = getWebHookCredentials();
+            PersonalAccessToken webHookCredentials = getWebHookCredentials(observer.getContext());
             GitLabApi webhookGitLabApi = null;
             if(webHookCredentials != null) {
                 webhookGitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName), webHookCredentials.getToken().getPlainText());
@@ -255,7 +255,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
     }
 
-    private PersonalAccessToken getWebHookCredentials() {
+    private PersonalAccessToken getWebHookCredentials(SCMSourceOwner owner) {
         PersonalAccessToken credentials = null;
         GitLabServer server = GitLabServers.get().findServer(getServerName());
         if(server == null) {
@@ -277,13 +277,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     LOGGER.info("No System credentials added, cannot create web hook");
                 }
                 break;
-                // Unable to fetch SCMNavigatorOwner so skipping ITEM credentials webhook
-//            case ITEM:
-//                credentials = owner.credentials();
-//                if(credentials == null) {
-//                    LOGGER.info("No Item credentials added, cannot create web hook");
-//                }
-//                break;
+            case ITEM:
+                credentials = credentials(owner);
+                if(credentials == null) {
+                    LOGGER.info("No Item credentials added, cannot create web hook");
+                }
+                break;
             default:
                 return null;
         }
