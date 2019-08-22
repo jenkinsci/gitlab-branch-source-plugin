@@ -99,8 +99,26 @@ public class GitLabSCMNavigator extends SCMNavigator {
      */
     private HashSet<String> navigatorProjects = new HashSet<>();
 
+    /**
+     * To store if project owner is group
+     */
+    private boolean isGroup;
+
+    /**
+     * To store the full name of the owner
+     */
+    private String ownerName = "";
+
     public HashSet<String> getNavigatorProjects() {
         return navigatorProjects;
+    }
+
+    public boolean isGroup() {
+        return isGroup;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
     }
 
     private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
@@ -193,12 +211,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
             List<Project> projects;
             if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
+                ownerName = gitlabOwner.getName();
                 if(request.wantSubgroupProjects()) {
                     projects = gitLabApi.getProjectApi().getOwnedProjects();
                 } else {
                     projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
                 }
             } else {
+                isGroup = true;
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
                 groupProjectsFilter.withIncludeSubGroups(request.wantSubgroupProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup

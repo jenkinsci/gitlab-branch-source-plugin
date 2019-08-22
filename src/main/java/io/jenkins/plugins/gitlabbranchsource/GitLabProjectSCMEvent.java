@@ -1,19 +1,10 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
-import java.util.List;
 import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceEvent;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.GroupProjectsFilter;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.systemhooks.ProjectSystemHookEvent;
 
 public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent> {
@@ -73,46 +64,37 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
         switch (getType()) {
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();
-                GitLabApi gitLabApi = null;
-                try {
-                    gitLabApi = GitLabHelper.apiBuilder(navigator.getServerName());
-                    GitLabOwner gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
-                    GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(navigator.getTraits());
-                    List<Project> projects;
-                    // Cannot check the navigator projects because there could be empty projects/empty groups/new group or subgroups altogether
-                    if(gitlabOwner instanceof GitLabUser) {
-                        // Even returns the group projects owned by the user
-                        if(navigatorContext.wantSubgroupProjects()) {
-                            projects = gitLabApi.getProjectApi().getOwnedProjects();
-                        } else {
-                            projects = gitLabApi.getProjectApi().getUserProjects(navigator.getProjectOwner(), new ProjectFilter().withOwned(true));
-                        }
+                String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
+                GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(navigator.getTraits());
+                if(navigator.isGroup()) {
+                    // checks when project owner is a Group
+                    if(navigatorContext.wantSubgroupProjects()) {
+                        // can be a subgroup so needs to at least start with the project owner when subgroup projects are required
+                        return projectOwner.startsWith(navigator.getProjectOwner());
                     } else {
-                        GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
-                        groupProjectsFilter.withIncludeSubGroups(navigatorContext.wantSubgroupProjects());
-                        // If projectOwner is a subgroup, it will only return projects in the subgroup
-                        projects = gitLabApi.getGroupApi().getProjects(navigator.getProjectOwner(), groupProjectsFilter);
+                        // when subgroup projects are not required, project owner should match project owner
+                        return projectOwner.equals(navigator.getProjectOwner());
                     }
-                    for(Project project : projects) {
-                        if(project.getPathWithNamespace().equals(projectPathWithNamespace)) {
-                            return true;
-                        }
+                } else {
+                    // checks when project owner is a User
+                    if(navigatorContext.wantSubgroupProjects()) {
+                        // check if owner name is same as owner name stored when subgroup projects are required
+                        // this is done as username is not supplied in the system hook
+                        return navigator.getOwnerName().equals(getPayload().getOwnerName());
+                    } else {
+                        // check if username matches when subgroup projects are not required
+                        // project owner is derived from project namespace
+                        return projectOwner.equals(navigator.getProjectOwner());
                     }
-                    return false;
-                } catch (NoSuchFieldException | GitLabApiException e) {
-                    e.printStackTrace();
                 }
-                break;
             case UPDATED:
                 if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
                     // TODO: Not sure if this is the way to do it, need to check
-                    navigator.getNavigatorProjects().remove(getPayload().getPathWithNamespace());
                     return true;
                 }
                 break;
             case REMOVED:
                 if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
-                    navigator.getNavigatorProjects().remove(getPayload().getPathWithNamespace());
                     return true;
                 }
                 break;
@@ -120,6 +102,11 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                 return false;
         }
         return false;
+    }
+
+    private String getProjectOwnerFromNamespace(String projectPathWithNamespace) {
+        int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
+        return projectPathWithNamespace.substring(0, namespaceLength);
     }
 
     @Override
