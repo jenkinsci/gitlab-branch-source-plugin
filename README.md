@@ -603,7 +603,7 @@ You can also use file or url to load the script, see [this](https://github.com/j
 
 ## Known Issues
 
-* System Hook feature is still in beta and plugin is not able to detect new projects created/old projects updated or removed.
+* System Hook feature is still in beta. The plugin only detects when a new project is created. It doesn't detect when a project is destroyed or updated. For the changes to reflect branch indexing needs to be performed manually or wait for the automatic trigger of branch indexing (configured in the job).
 
 ## How to talk to us?
 
