@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import javassist.NotFoundException;
 import jenkins.scm.api.SCMFile;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -57,13 +58,12 @@ public class GitLabSCMFile extends SCMFile {
 
     @NonNull
     @Override
-    protected Type type() throws IOException, InterruptedException {
+    protected Type type() {
         // TODO needs review
         if (isFile == null) {
             try {
                 isFile = checkFile();
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
+            } catch (NotFoundException e) {
                 isFile = false;
                 return Type.NONEXISTENT;
             }
@@ -71,8 +71,14 @@ public class GitLabSCMFile extends SCMFile {
         return isFile ? Type.REGULAR_FILE : Type.NONEXISTENT;
     }
 
-    private Boolean checkFile() throws GitLabApiException {
-        RepositoryFile file = gitLabApi.getRepositoryFileApi().getFileInfo(project, getPath(), ref);
+    private Boolean checkFile() throws NotFoundException {
+        RepositoryFile file = null;
+        try {
+            file = gitLabApi.getRepositoryFileApi().getFileInfo(project, getPath(), ref);
+        } catch (GitLabApiException e) {
+            throw new NotFoundException(
+                    "No Jenkinsfile found in the root of the repository, skipping " + ref);
+        }
         return file != null;
     }
 

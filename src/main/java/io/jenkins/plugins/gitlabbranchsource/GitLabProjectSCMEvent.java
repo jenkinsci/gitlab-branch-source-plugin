@@ -26,7 +26,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
             return Type.CREATED;
         }
         if (projectSystemHookEvent.getEventName().equals(ProjectSystemHookEvent.PROJECT_DESTROY_EVENT)) {
-            return Type.REMOVED;
+            return Type.UPDATED;
         }
         if (projectSystemHookEvent.getEventName().equals(ProjectSystemHookEvent.PROJECT_UPDATE_EVENT)) {
             return Type.UPDATED;
@@ -106,9 +106,9 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                 }
                 break;
             case UPDATED:
-                if(navigator.getNavigatorProjects().contains(getPayload().getOldPathWithNamespace())) {
+                if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
                     // TODO: Not sure if this is the way to do it, need to check
-                    navigator.getNavigatorProjects().remove(getPayload().getOldPathWithNamespace());
+                    navigator.getNavigatorProjects().remove(getPayload().getPathWithNamespace());
                     return true;
                 }
                 break;
