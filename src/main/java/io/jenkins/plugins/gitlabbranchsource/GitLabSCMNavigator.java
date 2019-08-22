@@ -105,9 +105,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private boolean isGroup;
 
     /**
-     * To store the full name of the owner
+     * To store if navigator should include subgroup projects
      */
-    private String ownerName = "";
+    private boolean wantSubGroupProjects;
 
     public HashSet<String> getNavigatorProjects() {
         return navigatorProjects;
@@ -117,8 +117,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return isGroup;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public boolean isWantSubGroupProjects() {
+        return wantSubGroupProjects;
     }
 
     private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
@@ -211,16 +211,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
             List<Project> projects;
             if(gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
-                ownerName = gitlabOwner.getName();
-                if(request.wantSubgroupProjects()) {
-                    projects = gitLabApi.getProjectApi().getOwnedProjects();
-                } else {
-                    projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
-                }
+                projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
             } else {
                 isGroup = true;
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
-                groupProjectsFilter.withIncludeSubGroups(request.wantSubgroupProjects());
+                wantSubGroupProjects = request.wantSubgroupProjects();
+                groupProjectsFilter.withIncludeSubGroups(wantSubGroupProjects);
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
                 projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
             }

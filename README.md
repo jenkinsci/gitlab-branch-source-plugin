@@ -452,7 +452,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Tag discovery` - Discover tags in the project. To automatically build tags install `basic-branch-build-plugin`.
 
-* `Discover group/subgroup projects` - Discovers group/subgroup projects inside the owner. For example, discovers subgroups' projects. Only applicable to `GitLab Group` Job type.
+* `Discover group/subgroup projects` - Discovers subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
 
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
 
@@ -462,7 +462,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
 
-* `Skip pipeline status notifications` - To disable notifiying GitLab server about the pipeline status.
+* `Skip pipeline status notifications` - To disable notifying GitLab server about the pipeline status.
 
 * `Override hook management modes` - Override default hook management mode of web hook and system hook. `ITEM` credentials for webhook is currently not supported.
 
@@ -603,7 +603,7 @@ You can also use file or url to load the script, see [this](https://github.com/j
 
 ## Known Issues
 
-* System Hook feature is still in beta. The plugin only detects when a new project is created. It doesn't detect when a project is destroyed or updated. For the changes to reflect branch indexing needs to be performed manually or wait for the automatic trigger of branch indexing (configured in the job).
+* System Hook feature is still in beta. The plugin only detects when a new project is created. It is not able to detect when a project is destroyed or updated. For the changes to reflect branch indexing needs to be performed manually or wait for the automatic trigger of branch indexing (configured in the job).
 
 ## How to talk to us?
 

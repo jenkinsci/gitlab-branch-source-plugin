@@ -16,7 +16,7 @@
  * <li>{@link io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait}</li>
  * <li>{@link io.jenkins.plugins.gitlabbranchsource.OriginMergeRequestDiscoveryTrait}</li>
  * <li>{@link io.jenkins.plugins.gitlabbranchsource.SSHCheckoutTrait}</li>
- * <li>{@link io.jenkins.plugins.gitlabbranchsource.WebhookRegistrationTrait}</li>
+ * <li>{@link io.jenkins.plugins.gitlabbranchsource.HookRegistrationTrait}</li>
  * </ul>
  *
  * Extension plugins wanting to add GitLab-specific traits should target at least one of:

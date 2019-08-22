@@ -65,10 +65,9 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
-                GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(navigator.getTraits());
                 if(navigator.isGroup()) {
                     // checks when project owner is a Group
-                    if(navigatorContext.wantSubgroupProjects()) {
+                    if(navigator.isWantSubGroupProjects()) {
                         // can be a subgroup so needs to at least start with the project owner when subgroup projects are required
                         return projectOwner.startsWith(navigator.getProjectOwner());
                     } else {
@@ -76,16 +75,9 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                         return projectOwner.equals(navigator.getProjectOwner());
                     }
                 } else {
-                    // checks when project owner is a User
-                    if(navigatorContext.wantSubgroupProjects()) {
-                        // check if owner name is same as owner name stored when subgroup projects are required
-                        // this is done as username is not supplied in the system hook
-                        return navigator.getOwnerName().equals(getPayload().getOwnerName());
-                    } else {
-                        // check if username matches when subgroup projects are not required
-                        // project owner is derived from project namespace
-                        return projectOwner.equals(navigator.getProjectOwner());
-                    }
+                    // check if username matches when subgroup projects are not required
+                    // project owner is derived from project namespace
+                    return projectOwner.equals(navigator.getProjectOwner());
                 }
             case UPDATED:
                 if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
