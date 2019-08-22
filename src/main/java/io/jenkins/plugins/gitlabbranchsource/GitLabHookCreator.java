@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -9,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
@@ -17,7 +15,6 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
 import org.gitlab4j.api.models.SystemHook;
-import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 public class GitLabHookCreator {
 
