@@ -64,7 +64,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
         switch (getType()) {
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();
-                String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
+                String projectOwner = GitLabSCMNavigator.getProjectOwnerFromNamespace(projectPathWithNamespace);
                 if(navigator.isGroup()) {
                     // checks when project owner is a Group
                     if(navigator.isWantSubGroupProjects()) {
@@ -94,11 +94,6 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                 return false;
         }
         return false;
-    }
-
-    private String getProjectOwnerFromNamespace(String projectPathWithNamespace) {
-        int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
-        return projectPathWithNamespace.substring(0, namespaceLength);
     }
 
     @Override
