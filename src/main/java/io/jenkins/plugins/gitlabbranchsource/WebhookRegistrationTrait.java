@@ -140,9 +140,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
             String pronoun = isWebHook ? "Web Hook" : "System Hook";
             result.add(Messages.WebhookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
             result.add(Messages.WebhookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
-            if(!isWebHook) {
-                result.add(Messages.WebhookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
-            }
+            result.add(Messages.WebhookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
             return result;
         }
 
