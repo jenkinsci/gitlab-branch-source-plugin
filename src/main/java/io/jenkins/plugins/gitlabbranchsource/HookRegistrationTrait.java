@@ -16,7 +16,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * A {@link SCMSourceTrait} for {@link GitLabSCMSource} that overrides the {@link GitLabServers}
  * settings for web hook and system hook registration.
  */
-public class WebhookRegistrationTrait extends SCMSourceTrait {
+public class HookRegistrationTrait extends SCMSourceTrait {
 
     /**
      * The web hook mode of registration to apply.
@@ -37,7 +37,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * @param systemHookMode the system hook mode of registration to apply.
      */
     @DataBoundConstructor
-    public WebhookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
+    public HookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
         this(GitLabHookRegistration.valueOf(webHookMode), GitLabHookRegistration.valueOf(systemHookMode));
     }
 
@@ -47,7 +47,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
      * @param webHookMode the web hook mode of registration to apply.
      * @param systemHookMode the system hook mode of registration to apply.
      */
-    public WebhookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode, @NonNull GitLabHookRegistration systemHookMode) {
+    public HookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode, @NonNull GitLabHookRegistration systemHookMode) {
         this.webHookMode = webHookMode;
         this.systemHookMode = systemHookMode;
     }
@@ -94,7 +94,7 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
          */
         @Override
         public String getDisplayName() {
-            return Messages.WebhookRegistrationTrait_displayName();
+            return Messages.HookRegistrationTrait_displayName();
         }
 
         /**
@@ -138,9 +138,9 @@ public class WebhookRegistrationTrait extends SCMSourceTrait {
         private ListBoxModel getOptions(boolean isWebHook) {
             ListBoxModel result = new ListBoxModel();
             String pronoun = isWebHook ? "Web Hook" : "System Hook";
-            result.add(Messages.WebhookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
-            result.add(Messages.WebhookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
-            result.add(Messages.WebhookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
+            result.add(Messages.HookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
+            result.add(Messages.HookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
+            result.add(Messages.HookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
             return result;
         }
 
