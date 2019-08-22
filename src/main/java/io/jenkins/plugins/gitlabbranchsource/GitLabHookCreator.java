@@ -160,15 +160,15 @@ public class GitLabHookCreator {
             URL anURL = new URL(url);
             if ("localhost".equals(anURL.getHost())) {
                 throw new IllegalStateException(
-                    "Jenkins URL cannot start with http://localhost \nURL is:" + url);
+                    "Jenkins URL cannot start with http://localhost \nURL is: " + url);
             }
             if (!anURL.getHost().contains(".")) {
                 throw new IllegalStateException(
                     "You must use a fully qualified domain name for Jenkins URL, this is required by GitLab"
-                        + "\nURL is:" + url);
+                        + "\nURL is: " + url);
             }
         } catch (MalformedURLException e) {
-            throw new IllegalStateException("Bad Jenkins URL\nURL is:" + url);
+            throw new IllegalStateException("Bad Jenkins URL\nURL is: " + url);
         }
     }
 
