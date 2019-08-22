@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMSourceEvent;
 import org.gitlab4j.api.systemhooks.GroupSystemHookEvent;
@@ -27,7 +28,7 @@ public class GitLabSystemHookListener implements SystemHookListener {
             case ProjectSystemHookEvent.PROJECT_DESTROY_EVENT:
             case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
                 GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
-                SCMSourceEvent.fireNow(trigger);
+                SCMSourceEvent.fireLater(trigger, 5, TimeUnit.SECONDS);
                 break;
             default:
                 LOGGER.info("unsupported System hook event");
