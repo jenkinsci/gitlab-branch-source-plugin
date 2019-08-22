@@ -22,17 +22,15 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
     }
 
     private static Type typeOf(ProjectSystemHookEvent projectSystemHookEvent) {
-        if (projectSystemHookEvent.getEventName().equals(ProjectSystemHookEvent.PROJECT_CREATE_EVENT)) {
-            return Type.CREATED;
+        switch (projectSystemHookEvent.getEventName()) {
+            case ProjectSystemHookEvent.PROJECT_CREATE_EVENT:
+                return Type.CREATED;
+            case ProjectSystemHookEvent.PROJECT_DESTROY_EVENT:
+                return Type.REMOVED;
+            case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
+                return Type.UPDATED;
+            default: throw new IllegalArgumentException("cannot handle system-hook " + projectSystemHookEvent);
         }
-        if (projectSystemHookEvent.getEventName().equals(ProjectSystemHookEvent.PROJECT_DESTROY_EVENT)) {
-            return Type.UPDATED;
-        }
-        if (projectSystemHookEvent.getEventName().equals(ProjectSystemHookEvent.PROJECT_UPDATE_EVENT)) {
-            return Type.UPDATED;
-        }
-
-        throw new IllegalArgumentException("cannot handle system-hook " + projectSystemHookEvent);
     }
 
     /**
