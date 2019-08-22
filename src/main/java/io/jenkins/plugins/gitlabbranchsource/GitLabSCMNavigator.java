@@ -198,6 +198,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return GitLabHelper.getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
+    public static String getProjectOwnerFromNamespace(String projectPathWithNamespace) {
+        int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
+        return projectPathWithNamespace.substring(0, namespaceLength);
+    }
+
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
         LOGGER.info("visiting sources..");
@@ -242,8 +247,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 if(webhookGitLabApi != null) {
                     observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator.createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace, webHookUrl));
                 }
-                int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
-                String projectOwner = projectPathWithNamespace.substring(0, namespaceLength);
+                String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 if (request.process(projectPathWithNamespace,
                         projectPath -> new GitLabSCMSourceBuilder(
                                 getId() + "::" + projectPath,
