@@ -80,20 +80,12 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                     return projectOwner.equals(navigator.getProjectOwner());
                 }
             case UPDATED:
-                if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
-                    // TODO: Not sure if this is the way to do it, need to check
-                    return true;
-                }
-                break;
+                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
             case REMOVED:
-                if(navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace())) {
-                    return true;
-                }
-                break;
+                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
             default:
                 return false;
         }
-        return false;
     }
 
     @Override
