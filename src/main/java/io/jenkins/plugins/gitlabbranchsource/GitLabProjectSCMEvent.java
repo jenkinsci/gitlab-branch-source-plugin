@@ -79,7 +79,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                     GitLabOwner gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, navigator.getProjectOwner());
                     GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(navigator.getTraits());
                     List<Project> projects;
-                    // Cannpt check the navigator projects because there could be empty projects/empty groups/new group or subgroups altogether
+                    // Cannot check the navigator projects because there could be empty projects/empty groups/new group or subgroups altogether
                     if(gitlabOwner instanceof GitLabUser) {
                         // Even returns the group projects owned by the user
                         if(navigatorContext.wantSubgroupProjects()) {
