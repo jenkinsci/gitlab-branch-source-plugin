@@ -120,17 +120,9 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release 
         -w <path-to-jenkins-war>
     ```
 
-2. Changing update center URL on Jenkins Instance
+2. Download `gitlab-branch-source-1.0.0.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.0.0/gitlab-branch-source-1.0.0.hpi) and manually install.
 
-    You can install plugins from Experimental Update Center by changing the JSON URL used to fetch plugins data. Go to `Plugin Manager`, then to the `Advanced` tab, and configure the update center URL:
-     ```
-     https://updates.jenkins.io/experimental/update-center.json
-     ``` 
-     then `submit`, and then select `Check Now`. Experimental plugin updates will be marked as such on the `Available` and `Updates` tabs of the Plugin Manager.
-
-3. Download `gitlab-branch-source-0.0.7-beta.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/0.0.7-beta/gitlab-branch-source-0.0.7-beta.hpi) and manually install.
-
-4. From Source:
+3. From Source:
 
     i. Checkout out source code to your local machine:
     
