@@ -244,8 +244,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                         HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
-                if(webhookGitLabApi != null) {
-                    observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator.createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace, webHookUrl));
+                try {
+                    if(webhookGitLabApi != null) {
+                        observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator.createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace, webHookUrl));
+                    }
+                } catch (GitLabApiException e) {
+                    observer.getListener().getLogger().format("Cannot set web hook: %s%n", e.getReason());
                 }
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 if (request.process(projectPathWithNamespace,
