@@ -115,12 +115,12 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release 
 
     ```bash
     $ java -jar plugin-management-tool.jar
-        -p gitlab-branch-source:experimental
+        -p gitlab-branch-source
         -d <path-to-default-jenkins-plugins-directory>
         -w <path-to-jenkins-war>
     ```
-
-2. Download `gitlab-branch-source-1.0.0.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.0.0/gitlab-branch-source-1.0.0.hpi) and manually install.
+    
+2. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Avalailable and search for `gitlab branch source plugin` then select Install.
 
 3. From Source:
 
@@ -157,6 +157,8 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release 
         5. Select `Upload`
     
         6. Select `Install without restart`
+	
+4. Download `gitlab-branch-source-1.0.0.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.0.0/gitlab-branch-source-1.0.0.hpi) and manually install.
 
 ## Initial Setup
 
