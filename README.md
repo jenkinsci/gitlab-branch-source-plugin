@@ -107,6 +107,11 @@ Here are a few ways to setup your own Jenkins server:
 
 </details>
 
+## Minimum Requirements
+
+1. Jenkins - 2.176.2 LTS or above
+2. GitLab - 11.0 or above
+
 ## Installing plugin
 
 This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
@@ -207,7 +212,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
         c. Select `Access Token` from left column
 
-        d. Enter a name | Set Scope to `api`,`read_user`, `read_repository`
+        d. Enter a name | Set Scope to `api` (If admin also give `sudo` which required for systemhooks and mr comment trigger)
 
         e. Select `Create Personal Access Token`
 
