@@ -6,7 +6,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
-import com.damnhandy.uri.template.impl.Operator;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
@@ -15,7 +14,6 @@ import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.net.URI;
 import java.util.HashSet;
@@ -26,9 +24,13 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
-import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
+
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
@@ -73,9 +75,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
             source.getCredentialsId()
         );
         this.context = source.getOwner();
-        serverUrl = StringUtils
-            .defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()),
-                GitLabServer.GITLAB_SERVER_URL);
+        serverUrl = defaultIfBlank(getServerUrlFromName(source.getServerName()),
+            GitLabServer.GITLAB_SERVER_URL);
         projectPath = source.getProjectPath();
         sshRemote = source.getSshRemote();
         httpRemote = source.getHttpRemote();
@@ -152,10 +153,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     }
 
     private String projectUrl(String projectPath) {
-        return UriTemplate.buildFromTemplate(serverUrl)
-            .template("{/project*}")
-            .build()
-            .set("project", projectPath.split(Operator.PATH.getSeparator()))
+        return projectUriTemplate(serverUrl)
+            .set("project", splitPath(projectPath))
             .expand();
     }
 

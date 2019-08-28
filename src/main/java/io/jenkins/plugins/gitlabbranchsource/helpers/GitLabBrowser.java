@@ -1,6 +1,5 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
-import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -12,9 +11,12 @@ import hudson.scm.RepositoryBrowser;
 import java.io.IOException;
 import java.net.URL;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getUriTemplateFromServer;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
 
 public class GitLabBrowser extends GitRepositoryBrowser {
 
@@ -30,11 +32,8 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         return new URL(
-            UriTemplate.buildFromTemplate(getProjectUrl())
-                .literal("/commit")
-                .path(UriTemplateBuilder.var("changeSet"))
-                .build()
-                .set("changeSet", changeSet.getId())
+            commitUriTemplate(getProjectUrl())
+                .set("hash", changeSet.getId())
                 .expand()
         );
     }
@@ -55,13 +54,13 @@ public class GitLabBrowser extends GitRepositoryBrowser {
             return diffLink(path);
         } else {
             return new URL(
-                UriTemplate.buildFromTemplate(getProjectUrl())
+                getUriTemplateFromServer(getProjectUrl())
                     .literal("/blob")
                     .path(UriTemplateBuilder.var("changeSet"))
                     .path(UriTemplateBuilder.var("path", true))
                     .build()
                     .set("changeSet", path.getChangeSet().getId())
-                    .set("path", StringUtils.split(path.getPath(), '/'))
+                    .set("path", splitPath(path.getPath()))
                     .expand()
             );
         }
@@ -69,7 +68,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
         return new URL(
-            UriTemplate.buildFromTemplate(getProjectUrl())
+            getUriTemplateFromServer(getProjectUrl())
                 .literal("/commit")
                 .path(UriTemplateBuilder.var("changeSet"))
                 .fragment(UriTemplateBuilder.var("diff"))
