@@ -13,7 +13,7 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceContext;
 
 public class GitLabSCMSourceContext
-        extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
+    extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
 
     private boolean wantBranches;
     private boolean wantTags;
@@ -21,9 +21,11 @@ public class GitLabSCMSourceContext
     private boolean wantForkMRs;
 
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> originMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+    private Set<ChangeRequestCheckoutStrategy> originMRStrategies = EnumSet
+        .noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+    private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet
+        .noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
     private GitLabHookRegistration webhookRegistration = GitLabHookRegistration.SYSTEM;
     @NonNull
@@ -41,7 +43,8 @@ public class GitLabSCMSourceContext
 
     private String commentBody = "";
 
-    public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
+    public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
+        @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
 
@@ -134,13 +137,15 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public GitLabSCMSourceContext withOriginMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withOriginMRStrategies(
+        Set<ChangeRequestCheckoutStrategy> strategies) {
         originMRStrategies.addAll(strategies);
         return this;
     }
 
     @NonNull
-    public GitLabSCMSourceContext withForkMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withForkMRStrategies(
+        Set<ChangeRequestCheckoutStrategy> strategies) {
         forkMRStrategies.addAll(strategies);
         return this;
     }
@@ -193,7 +198,8 @@ public class GitLabSCMSourceContext
 
     @NonNull
     @Override
-    public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source, @CheckForNull TaskListener listener) {
+    public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
+        @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
     }
 }

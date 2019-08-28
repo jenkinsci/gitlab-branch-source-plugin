@@ -20,14 +20,19 @@ public class GitLabAvatar extends AvatarMetadataAction {
             // fall back to the generic github org icon
             String image = avatarIconClassNameImageOf(getAvatarIconClassName(), size);
             return image != null
-                    ? image
-                    : (Stapler.getCurrentRequest().getContextPath() + Hudson.RESOURCE_PATH
+                ? image
+                : (Stapler.getCurrentRequest().getContextPath() + Hudson.RESOURCE_PATH
                     + "/plugin/gitlab-branch-source/images/" + size + "/gitlab-logo.png");
         } else {
             String[] xy = size.split("x");
-            if (xy.length == 0) return avatar;
-            if (avatar.contains("?")) return avatar + "&s=" + xy[0];
-            else return avatar + "?s=" + xy[0];
+            if (xy.length == 0) {
+                return avatar;
+            }
+            if (avatar.contains("?")) {
+                return avatar + "&s=" + xy[0];
+            } else {
+                return avatar + "?s=" + xy[0];
+            }
         }
     }
 

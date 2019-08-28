@@ -76,14 +76,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMNavigator.class);
     /**
-     * The GitLab server name configured in Jenkins.
-     */
-    private String serverName;
-    /**
      * The owner of the projects to navigate.
      */
     private final String projectOwner;
-
+    /**
+     * The GitLab server name configured in Jenkins.
+     */
+    private String serverName;
     /**
      * The default credentials to use for checking out).
      */
@@ -108,6 +107,18 @@ public class GitLabSCMNavigator extends SCMNavigator {
      * To store if navigator should include subgroup projects
      */
     private boolean wantSubGroupProjects;
+    private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
+
+    @DataBoundConstructor
+    public GitLabSCMNavigator(String projectOwner) {
+        this.projectOwner = projectOwner;
+        this.traits = new ArrayList<>();
+    }
+
+    public static String getProjectOwnerFromNamespace(String projectPathWithNamespace) {
+        int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
+        return projectPathWithNamespace.substring(0, namespaceLength);
+    }
 
     public HashSet<String> getNavigatorProjects() {
         return navigatorProjects;
@@ -121,20 +132,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return wantSubGroupProjects;
     }
 
-    private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
-
-    @DataBoundConstructor
-    public GitLabSCMNavigator(String projectOwner) {
-        this.projectOwner = projectOwner;
-        this.traits = new ArrayList<>();
-    }
-
     public String getCredentialsId() {
         return credentialsId;
     }
 
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
     public String getServerName() {
         return serverName;
+    }
+
+    @DataBoundSetter
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
     }
 
     public String getProjectOwner() {
@@ -142,9 +155,21 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
-     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     * Gets the behavioural traits that are applied to this navigator and any {@link
+     * GitLabSCMSource} instances it discovers.
+     *
+     * @return the behavioural traits.
+     */
+    @NonNull
+    public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
+        return Collections.unmodifiableList(traits);
+    }
+
+    /**
+     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
+     * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
+     * #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
      */
@@ -159,9 +184,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
-     * discovers. The new traits will take affect on the next navigation through any of the
-     * {@link #visitSources(SCMSourceObserver)} overloads or {@link #visitSource(String, SCMSourceObserver)}.
+     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
+     * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
+     * #visitSource(String, SCMSourceObserver)}.
      *
      * @param traits the new behavioural traits.
      */
@@ -171,52 +197,28 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     }
 
-    @DataBoundSetter
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
-    }
-
-    @DataBoundSetter
-    public void setCredentialsId(String credentialsId) {
-        this.credentialsId = credentialsId;
-    }
-
-    /**
-     * Gets the behavioural traits that are applied to this navigator and any {@link GitLabSCMSource} instances it
-     * discovers.
-     *
-     * @return the behavioural traits.
-     */
-    @NonNull
-    public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
-        return Collections.unmodifiableList(traits);
-    }
-
     @NonNull
     @Override
     protected String id() {
         return GitLabHelper.getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
-    public static String getProjectOwnerFromNamespace(String projectPathWithNamespace) {
-        int namespaceLength = projectPathWithNamespace.lastIndexOf("/");
-        return projectPathWithNamespace.substring(0, namespaceLength);
-    }
-
     @Override
-    public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
+    public void visitSources(@NonNull final SCMSourceObserver observer)
+        throws IOException, InterruptedException {
         LOGGER.info("visiting sources..");
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
-                .withTraits(traits)
-                .newRequest(this, observer)) {
+            .withTraits(traits)
+            .newRequest(this, observer)) {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
             if (gitlabOwner == null) {
                 gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             }
             List<Project> projects;
-            if(gitlabOwner instanceof GitLabUser) {
+            if (gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
-                projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
+                projects = gitLabApi.getProjectApi()
+                    .getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
             } else {
                 isGroup = true;
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
@@ -229,46 +231,53 @@ public class GitLabSCMNavigator extends SCMNavigator {
             observer.getListener().getLogger().format("%nChecking projects...%n");
             PersonalAccessToken webHookCredentials = getWebHookCredentials(observer.getContext());
             GitLabApi webhookGitLabApi = null;
-            if(webHookCredentials != null) {
-                webhookGitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName), webHookCredentials.getToken().getPlainText());
+            if (webHookCredentials != null) {
+                webhookGitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName),
+                    webHookCredentials.getToken().getPlainText());
             }
             String webHookUrl = GitLabHookCreator.getHookUrl(true);
-            for(Project p : projects) {
+            for (Project p : projects) {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 getNavigatorProjects().add(projectPathWithNamespace);
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
-                    observer.getListener().getLogger().format("%nIgnoring project with empty repository %s%n",
+                    observer.getListener().getLogger()
+                        .format("%nIgnoring project with empty repository %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
-                        HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
+                    HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                 try {
-                    if(webhookGitLabApi != null) {
-                        observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator.createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace, webHookUrl));
+                    if (webhookGitLabApi != null) {
+                        observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
+                            .createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace,
+                                webHookUrl));
                     }
                 } catch (GitLabApiException e) {
-                    observer.getListener().getLogger().format("Cannot set web hook: %s%n", e.getReason());
+                    observer.getListener().getLogger()
+                        .format("Cannot set web hook: %s%n", e.getReason());
                 }
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 if (request.process(projectPathWithNamespace,
-                        projectPath -> new GitLabSCMSourceBuilder(
-                                getId() + "::" + projectPath,
-                                serverName,
-                                credentialsId,
-                                projectOwner,
-                                projectPath
-                        ).withTraits(traits).build(),
-                        null,
-                        (Witness) (projectPath, isMatch) -> {
-                    if (isMatch) {
-                        observer.getListener().getLogger().format("Proposing %s%n", projectPath);
-                    } else {
-                        observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
-                    }
-                })) {
-                    observer.getListener().getLogger().format("%n%d projects were processed (query complete)%n",
+                    projectPath -> new GitLabSCMSourceBuilder(
+                        getId() + "::" + projectPath,
+                        serverName,
+                        credentialsId,
+                        projectOwner,
+                        projectPath
+                    ).withTraits(traits).build(),
+                    null,
+                    (Witness) (projectPath, isMatch) -> {
+                        if (isMatch) {
+                            observer.getListener().getLogger()
+                                .format("Proposing %s%n", projectPath);
+                        } else {
+                            observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
+                        }
+                    })) {
+                    observer.getListener().getLogger()
+                        .format("%n%d projects were processed (query complete)%n",
                             count);
                     return;
                 }
@@ -282,12 +291,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private PersonalAccessToken getWebHookCredentials(SCMSourceOwner owner) {
         PersonalAccessToken credentials = null;
         GitLabServer server = GitLabServers.get().findServer(getServerName());
-        if(server == null) {
+        if (server == null) {
             return null;
         }
-        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(traits);
+        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext()
+            .withTraits(traits);
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(navigatorContext.traits());
+            .withTraits(navigatorContext.traits());
         GitLabHookRegistration webhookMode = ctx.webhookRegistration();
         switch (webhookMode) {
             case DISABLE:
@@ -297,13 +307,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     break;
                 }
                 credentials = server.getCredentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No System credentials added, cannot create web hook");
                 }
                 break;
             case ITEM:
                 credentials = credentials(owner);
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No Item credentials added, cannot create web hook");
                 }
                 break;
@@ -315,8 +325,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @NonNull
     @Override
-    protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner, SCMNavigatorEvent event,
-                                           @NonNull TaskListener listener) throws IOException, InterruptedException {
+    protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner,
+        SCMNavigatorEvent event,
+        @NonNull TaskListener listener) throws IOException, InterruptedException {
         LOGGER.info("retrieving actions..");
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
@@ -328,9 +339,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
             String avatarUrl = gitlabOwner.getAvatarUrl();
             List<Action> result = new ArrayList<>();
             result.add(new ObjectMetadataAction(
-                    Util.fixEmpty(fullName),
-                    null,
-                    webUrl)
+                Util.fixEmpty(fullName),
+                null,
+                webUrl)
             );
             if (StringUtils.isNotBlank(avatarUrl)) {
                 result.add(new GitLabAvatar(avatarUrl));
@@ -352,27 +363,49 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @Override
     public void afterSave(@NonNull SCMNavigatorOwner owner) {
-        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext().withTraits(traits);
+        GitLabSCMNavigatorContext navigatorContext = new GitLabSCMNavigatorContext()
+            .withTraits(traits);
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(navigatorContext.traits());
+            .withTraits(navigatorContext.traits());
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
         LOGGER.info("Mode of system hook: " + systemhookMode.toString());
-        GitLabHookCreator.register(owner,this, systemhookMode);
+        GitLabHookCreator.register(owner, this, systemhookMode);
     }
 
     public PersonalAccessToken credentials(SCMSourceOwner owner) {
         return CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                        PersonalAccessToken.class,
-                        owner,
-                        Jenkins.getAuthentication(),
-                        fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()
-                ), credentials -> credentials instanceof PersonalAccessToken
+            lookupCredentials(
+                PersonalAccessToken.class,
+                owner,
+                Jenkins.getAuthentication(),
+                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()
+            ), credentials -> credentials instanceof PersonalAccessToken
         );
     }
 
     @Extension
     public static class DescriptorImpl extends SCMNavigatorDescriptor implements IconSpec {
+
+        @Inject
+        private GitLabSCMSource.DescriptorImpl delegate;
+
+        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner,
+            @QueryParameter String serverName) {
+            if (projectOwner.equals("")) {
+                return FormValidation.ok();
+            }
+            GitLabApi gitLabApi = null;
+            try {
+                gitLabApi = GitLabHelper.apiBuilder(serverName);
+                GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+                return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e, e.getMessage());
+            }
+            return FormValidation.ok("");
+        }
 
         @NonNull
         @Override
@@ -401,35 +434,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
             return iconFilePathPattern(getIconClassName());
         }
 
-
         @Override
         public SCMNavigator newInstance(String name) {
             LOGGER.info("Instantiating GitLabSCMNavigator..");
             GitLabSCMNavigator navigator =
-                    new GitLabSCMNavigator("");
+                new GitLabSCMNavigator("");
             navigator.setTraits(getTraitsDefaults());
             return navigator;
         }
 
-        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner, @QueryParameter String serverName) {
-            if(projectOwner.equals("")) {
-                return FormValidation.ok();
-            }
-            GitLabApi gitLabApi = null;
-            try {
-                gitLabApi = GitLabHelper.apiBuilder(serverName);
-                GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
-                return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            } catch (IllegalStateException e) {
-                return FormValidation.error(e, e.getMessage());
-            }
-            return FormValidation.ok("");
-        }
-
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
-                                                 @QueryParameter String serverName) {
+            @QueryParameter String serverName) {
             if (context == null) {
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
@@ -449,8 +464,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
-                                                     @QueryParameter String serverName,
-                                                     @QueryParameter String credentialsId) {
+            @QueryParameter String serverName,
+            @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
                 if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
@@ -460,7 +475,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             } else {
                 if (!context.hasPermission(Item.EXTENDED_READ)
-                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     // must be able to read the configuration or use the item credentials if you want the list
                     result.includeCurrentValue(credentialsId);
                     return result;
@@ -468,13 +483,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             result.includeEmptyValue();
             result.includeMatchingAs(
-                    context instanceof Queue.Task ?
-                            Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                            : ACL.SYSTEM,
-                    context,
-                    StandardUsernameCredentials.class,
-                    fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
-                    GitClient.CREDENTIALS_MATCHER
+                context instanceof Queue.Task ?
+                    Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                    : ACL.SYSTEM,
+                context,
+                StandardUsernameCredentials.class,
+                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
+                GitClient.CREDENTIALS_MATCHER
             );
             return result;
         }
@@ -482,16 +497,18 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @SuppressWarnings("unused") // jelly
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {
             GitLabSCMSource.DescriptorImpl sourceDescriptor =
-                    Jenkins.getActiveInstance().getDescriptorByType(GitLabSCMSource.DescriptorImpl.class);
+                Jenkins.getActiveInstance()
+                    .getDescriptorByType(GitLabSCMSource.DescriptorImpl.class);
             List<SCMTraitDescriptor<?>> all = new ArrayList<>();
-            all.addAll(SCMNavigatorTrait._for(this, GitLabSCMNavigatorContext.class, GitLabSCMSourceBuilder.class));
+            all.addAll(SCMNavigatorTrait
+                ._for(this, GitLabSCMNavigatorContext.class, GitLabSCMSourceBuilder.class));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, GitLabSCMSourceContext.class, null));
             all.addAll(SCMSourceTrait._for(sourceDescriptor, null, GitLabSCMBuilder.class));
             Set<SCMTraitDescriptor<?>> dedup = new HashSet<>();
             for (Iterator<SCMTraitDescriptor<?>> iterator = all.iterator(); iterator.hasNext(); ) {
                 SCMTraitDescriptor<?> d = iterator.next();
                 if (dedup.contains(d)
-                        || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
+                    || d instanceof GitBrowserSCMSourceTrait.DescriptorImpl) {
                     // remove any we have seen already and ban the browser configuration as it will always be github
                     iterator.remove();
                 } else {
@@ -499,7 +516,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             List<NamedArrayList<? extends SCMTraitDescriptor<?>>> result = new ArrayList<>();
-            NamedArrayList.select(all, "Projects", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
+            NamedArrayList
+                .select(all, "Projects", new NamedArrayList.Predicate<SCMTraitDescriptor<?>>() {
                         @Override
                         public boolean test(SCMTraitDescriptor<?> scmTraitDescriptor) {
                             return scmTraitDescriptor instanceof SCMNavigatorTraitDescriptor;
@@ -507,15 +525,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     },
                     true, result);
             NamedArrayList.select(all, "Within project", NamedArrayList
-                            .anyOf(NamedArrayList.withAnnotation(Discovery.class),
-                                    NamedArrayList.withAnnotation(Selection.class)),
-                    true, result);
+                    .anyOf(NamedArrayList.withAnnotation(Discovery.class),
+                        NamedArrayList.withAnnotation(Selection.class)),
+                true, result);
             NamedArrayList.select(all, "Additional", null, true, result);
             return result;
         }
-
-        @Inject
-        private GitLabSCMSource.DescriptorImpl delegate;
 
         @Override
         @NonNull

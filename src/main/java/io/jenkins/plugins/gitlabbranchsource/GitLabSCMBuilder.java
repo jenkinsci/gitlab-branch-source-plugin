@@ -34,6 +34,7 @@ import org.eclipse.jgit.transport.RefSpec;
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
  */
 public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
+
     /**
      * The context within which credentials should be resolved.
      */
@@ -59,35 +60,40 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     /**
      * Constructor
      *
-     * @param source    the {@link GitLabSCMSource}
-     * @param head      the {@link SCMHead}
-     * @param revision  the (optional) {@link SCMRevision}
+     * @param source the {@link GitLabSCMSource}
+     * @param head the {@link SCMHead}
+     * @param revision the (optional) {@link SCMRevision}
      */
-    public GitLabSCMBuilder(@NonNull GitLabSCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision revision) {
+    public GitLabSCMBuilder(@NonNull GitLabSCMSource source, @NonNull SCMHead head,
+        @CheckForNull SCMRevision revision) {
         super(
-                head,
-                revision,
-                source.getHttpRemote(),
-                source.getCredentialsId()
+            head,
+            revision,
+            source.getHttpRemote(),
+            source.getCredentialsId()
         );
         this.context = source.getOwner();
-        serverUrl = StringUtils.defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()), GitLabServer.GITLAB_SERVER_URL);
+        serverUrl = StringUtils
+            .defaultIfBlank(GitLabHelper.getServerUrlFromName(source.getServerName()),
+                GitLabServer.GITLAB_SERVER_URL);
         projectPath = source.getProjectPath();
         sshRemote = source.getSshRemote();
         httpRemote = source.getHttpRemote();
         // configure the ref specs
         withoutRefSpecs();
         String projectUrl;
-        if(head instanceof MergeRequestSCMHead) {
+        if (head instanceof MergeRequestSCMHead) {
             MergeRequestSCMHead h = (MergeRequestSCMHead) head;
-            withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
+            withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head
+                .getName());
             projectUrl = projectUrl(h.getOriginProjectPath());
         } else if (head instanceof GitLabTagSCMHead) {
             withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());
             projectUrl = projectUrl(projectPath);
-        }  else {
+        } else {
 
-            withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
+            withRefSpec(
+                "+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(projectPath);
         }
         withBrowser(new GitLabBrowser(projectUrl));
@@ -96,20 +102,20 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
     /**
      * Returns a {@link UriTemplate} for checkout according to credentials configuration.
      *
-     * @param context       the context within which to resolve the credentials.
-     * @param serverUrl     the server url
-     * @param sshRemote     the SSH remote URL for the project.
-     * @param httpRemote    the HTTPS remote URL for the project.
+     * @param context the context within which to resolve the credentials.
+     * @param serverUrl the server url
+     * @param sshRemote the SSH remote URL for the project.
+     * @param httpRemote the HTTPS remote URL for the project.
      * @param credentialsId the credentials.
-     * @param projectPath   the full path to the project (with namespace).
+     * @param projectPath the full path to the project (with namespace).
      * @return a {@link UriTemplate}
      */
     public static UriTemplate checkoutUriTemplate(@CheckForNull Item context,
-                                                  @NonNull String serverUrl,
-                                                  @CheckForNull String httpRemote,
-                                                  @CheckForNull String sshRemote,
-                                                  @CheckForNull String credentialsId,
-                                                  @NonNull String projectPath) {
+        @NonNull String serverUrl,
+        @CheckForNull String httpRemote,
+        @CheckForNull String sshRemote,
+        @CheckForNull String credentialsId,
+        @NonNull String projectPath) {
 
         if (credentialsId != null && sshRemote != null) {
             URIRequirementBuilder builder = URIRequirementBuilder.create();
@@ -118,57 +124,57 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 builder.withHostname(serverUri.getHost());
             }
             StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(
-                    CredentialsProvider.lookupCredentials(
-                            StandardUsernameCredentials.class,
-                            context,
-                            context instanceof Queue.Task
-                                    ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
-                                    : ACL.SYSTEM,
-                            builder.build()
-                    ),
-                    CredentialsMatchers.allOf(
-                            CredentialsMatchers.withId(credentialsId),
-                            CredentialsMatchers.instanceOf(StandardUsernameCredentials.class)
-                    )
+                CredentialsProvider.lookupCredentials(
+                    StandardUsernameCredentials.class,
+                    context,
+                    context instanceof Queue.Task
+                        ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                        : ACL.SYSTEM,
+                    builder.build()
+                ),
+                CredentialsMatchers.allOf(
+                    CredentialsMatchers.withId(credentialsId),
+                    CredentialsMatchers.instanceOf(StandardUsernameCredentials.class)
+                )
             );
             if (credentials instanceof SSHUserPrivateKey) {
                 return UriTemplate.buildFromTemplate(sshRemote)
-                        .build();
+                    .build();
             }
         }
-        if(httpRemote != null) {
+        if (httpRemote != null) {
             return UriTemplate.buildFromTemplate(httpRemote)
-                    .build();
+                .build();
         }
         return UriTemplate.buildFromTemplate(serverUrl + '/' + projectPath)
-                .literal(".git")
-                .build();
+            .literal(".git")
+            .build();
     }
 
     private String projectUrl(String projectPath) {
         return UriTemplate.buildFromTemplate(serverUrl)
-                .template("{/project*}")
-                .build()
-                .set("project", projectPath.split(Operator.PATH.getSeparator()))
-                .expand();
+            .template("{/project*}")
+            .build()
+            .set("project", projectPath.split(Operator.PATH.getSeparator()))
+            .expand();
     }
 
     /**
-     * Returns a {@link UriTemplate} for checkout according to credentials configuration.
-     * Expects the parameters {@code owner} and {@code repository} to be populated before expansion.
+     * Returns a {@link UriTemplate} for checkout according to credentials configuration. Expects
+     * the parameters {@code owner} and {@code repository} to be populated before expansion.
      *
      * @return a {@link UriTemplate}
      */
     @NonNull
     public final UriTemplate checkoutUriTemplate() {
-        return checkoutUriTemplate(context, serverUrl, httpRemote, sshRemote, credentialsId(), projectPath);
+        return checkoutUriTemplate(context, serverUrl, httpRemote, sshRemote, credentialsId(),
+            projectPath);
     }
 
     /**
      * Updates the {@link GitSCMBuilder#withRemote(String)} based on the current {@link #head()} and
-     * {@link #revision()}.
-     * Will be called automatically by {@link #build()} but exposed in case the correct remote is required after
-     * changing the {@link #withCredentials(String)}.
+     * {@link #revision()}. Will be called automatically by {@link #build()} but exposed in case the
+     * correct remote is required after changing the {@link #withCredentials(String)}.
      *
      * @return {@code this} for method chaining.
      */
@@ -212,7 +218,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     for (RefSpec b : asRefSpecs()) {
                         String dst = b.getDestination();
                         assert dst.startsWith(Constants.R_REFS)
-                                : "All git references must start with refs/";
+                            : "All git references must start with refs/";
                         if (targetSrc.equals(b.getSource())) {
                             if (targetDst.equals(dst)) {
                                 match = true;
@@ -232,24 +238,30 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         }
                         if (localNames.contains(localName)) {
                             // conflict with intended alternative name
-                            localName = "remotes/" + remoteName() + "/merge-requests-" + head.getId() + "-upstream-" + name;
+                            localName =
+                                "remotes/" + remoteName() + "/merge-requests-" + head.getId()
+                                    + "-upstream-" + name;
                         }
                         if (localNames.contains(localName)) {
                             // ok we're just going to mangle our way to something that works
                             Random entropy = new Random();
                             while (localNames.contains(localName)) {
-                                localName = "remotes/" + remoteName() + "/merge-requests-" + head.getId() + "-upstream-" + name
-                                        + "-" + Integer.toHexString(entropy.nextInt(Integer.MAX_VALUE));
+                                localName =
+                                    "remotes/" + remoteName() + "/merge-requests-" + head.getId()
+                                        + "-upstream-" + name
+                                        + "-" + Integer
+                                        .toHexString(entropy.nextInt(Integer.MAX_VALUE));
                             }
                         }
                         withRefSpec("+refs/heads/" + name + ":refs/" + localName);
                     }
                     withExtension(new MergeWithGitSCMExtension(
-                                    localName,
-                                    r instanceof MergeRequestSCMRevision
-                                            ? ((BranchSCMRevision) ((MergeRequestSCMRevision) r).getTarget()).getHash()
-                                            : null
-                            )
+                            localName,
+                            r instanceof MergeRequestSCMRevision
+                                ? ((BranchSCMRevision) ((MergeRequestSCMRevision) r).getTarget())
+                                .getHash()
+                                : null
+                        )
                     );
                 }
                 if (r instanceof MergeRequestSCMRevision) {

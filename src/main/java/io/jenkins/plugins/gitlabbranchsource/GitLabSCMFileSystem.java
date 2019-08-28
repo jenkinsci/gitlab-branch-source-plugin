@@ -25,7 +25,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
     private final String ref;
 
     protected GitLabSCMFileSystem(GitLabApi gitLabApi, Project project, String ref,
-                                 @CheckForNull SCMRevision rev) throws IOException {
+        @CheckForNull SCMRevision rev) throws IOException {
         super(rev);
         this.gitLabApi = gitLabApi;
         this.project = project;
@@ -34,7 +34,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
                 this.ref = ((MergeRequestSCMRevision) rev).getOrigin().getHash();
             } else if (rev instanceof BranchSCMRevision) {
                 this.ref = ((BranchSCMRevision) rev).getHash();
-            } else if (rev instanceof GitTagSCMRevision){
+            } else if (rev instanceof GitTagSCMRevision) {
                 this.ref = ((GitTagSCMRevision) rev).getHash();
             } else {
                 this.ref = ref;
@@ -47,7 +47,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
     @Override
     public long lastModified() throws IOException {
         Date lastActivity = project.getLastActivityAt();
-        if(lastActivity == null) {
+        if (lastActivity == null) {
             return 0;
         }
         return lastActivity.getTime();
@@ -84,18 +84,20 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         }
 
         @Override
-        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev) {
+        public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm,
+            @CheckForNull SCMRevision rev) {
             return null;
         }
 
-        public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev, @NonNull GitLabApi gitLabApi, @NonNull Project gitlabProject)
-                throws IOException, InterruptedException {
+        public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
+            @NonNull GitLabApi gitLabApi, @NonNull Project gitlabProject)
+            throws IOException, InterruptedException {
             String ref;
             if (head instanceof MergeRequestSCMHead) {
                 ref = ((MergeRequestSCMHead) head).getOriginName();
             } else if (head instanceof BranchSCMHead) {
                 ref = head.getName();
-            } else if (head instanceof GitLabTagSCMHead){
+            } else if (head instanceof GitLabTagSCMHead) {
                 ref = head.getName();
             } else {
                 return null;

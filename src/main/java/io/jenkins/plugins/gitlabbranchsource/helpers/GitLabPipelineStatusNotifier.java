@@ -45,13 +45,16 @@ import org.gitlab4j.api.models.CommitStatus;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
- * Publishes Build-Status to GitLab using separate threads so it does not block while sending messages
- * TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better way to do this built into Jenkins
+ * Publishes Build-Status to GitLab using separate threads so it does not block while sending
+ * messages TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better
+ * way to do this built into Jenkins
  */
 public class GitLabPipelineStatusNotifier {
-    private static final Logger LOGGER = Logger.getLogger(GitLabPipelineStatusNotifier.class.getName());
 
-    private static String getRootUrl(Run<?,?> build) {
+    private static final Logger LOGGER = Logger
+        .getLogger(GitLabPipelineStatusNotifier.class.getName());
+
+    private static String getRootUrl(Run<?, ?> build) {
         try {
             return DisplayURLProvider.get().getRunURL(build);
         } catch (IllegalStateException e) {
@@ -59,9 +62,10 @@ public class GitLabPipelineStatusNotifier {
         }
     }
 
-    private static GitLabSCMSourceContext getSourceContext(Run<?,?> build, GitLabSCMSource source) {
+    private static GitLabSCMSourceContext getSourceContext(Run<?, ?> build,
+        GitLabSCMSource source) {
         return new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits((source.getTraits()));
+            .withTraits((source.getTraits()));
     }
 
     private static GitLabSCMSource getSource(Run<?, ?> build) {
@@ -74,7 +78,7 @@ public class GitLabPipelineStatusNotifier {
 
     private static String getMrBuildName(String buildName) {
         String suffix = "jenkinsci/";
-        if(buildName.contains("merge")) {
+        if (buildName.contains("merge")) {
             return suffix + "mr-merge";
         }
         return suffix + "mr-head";
@@ -83,9 +87,9 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Log comment on Commits and Merge Requests upon build complete.
      */
-    private static void logComment(Run<?,?> build, TaskListener listener) {
+    private static void logComment(Run<?, ?> build, TaskListener listener) {
         GitLabSCMSource source = getSource(build);
-        if(source == null) {
+        if (source == null) {
             return;
         }
         final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
@@ -93,10 +97,10 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         String url = getRootUrl(build);
-        if(url.isEmpty()) {
+        if (url.isEmpty()) {
             listener.getLogger().println(
-                    "Can not determine Jenkins root URL. Comments are disabled until a root URL is"
-                            + " configured in Jenkins global configuration.");
+                "Can not determine Jenkins root URL. Comments are disabled until a root URL is"
+                    + " configured in Jenkins global configuration.");
             return;
         }
         Result result = build.getResult();
@@ -104,7 +108,7 @@ public class GitLabPipelineStatusNotifier {
         String note = "";
         String symbol = "";
         if (Result.SUCCESS.equals(result)) {
-            if(!sourceContext.doLogSuccess()) {
+            if (!sourceContext.doLogSuccess()) {
                 return;
             }
             symbol = ":heavy_check_mark: ";
@@ -124,7 +128,7 @@ public class GitLabPipelineStatusNotifier {
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             String sudoUsername = sourceContext.getSudoUser();
-            if(!sudoUsername.isEmpty()) {
+            if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
             }
             String hash;
@@ -132,25 +136,25 @@ public class GitLabPipelineStatusNotifier {
                 hash = ((BranchSCMRevision) revision).getHash();
                 String buildName = "**jenkinsci/branch:** ";
                 gitLabApi.getCommitsApi().addComment(
-                        source.getProjectPath(),
-                        hash,
-                        symbol + buildName + note + suffix
+                    source.getProjectPath(),
+                    hash,
+                    symbol + buildName + note + suffix
                 );
             } else if (revision instanceof MergeRequestSCMRevision) {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
                 String buildName = "**" + getMrBuildName(build.getFullDisplayName()) + "**: ";
                 gitLabApi.getNotesApi().createMergeRequestNote(
-                        source.getProjectPath(),
-                        Integer.valueOf(head.getId()),
-                        symbol + buildName + note + suffix
+                    source.getProjectPath(),
+                    Integer.valueOf(head.getId()),
+                    symbol + buildName + note + suffix
                 );
-            } else if (revision instanceof GitTagSCMRevision){
+            } else if (revision instanceof GitTagSCMRevision) {
                 hash = ((GitTagSCMRevision) revision).getHash();
                 String buildName = "**jenkinsci/tag:** ";
                 gitLabApi.getCommitsApi().addComment(
-                        source.getProjectPath(),
-                        hash,
-                        symbol + buildName + note + suffix
+                    source.getProjectPath(),
+                    hash,
+                    symbol + buildName + note + suffix
                 );
             }
         } catch (NoSuchFieldException | GitLabApiException e) {
@@ -163,7 +167,7 @@ public class GitLabPipelineStatusNotifier {
      */
     private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
         GitLabSCMSource source = getSource(build);
-        if(source == null) {
+        if (source == null) {
             return;
         }
         final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);
@@ -171,10 +175,10 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         String url = getRootUrl(build);
-        if(url.isEmpty()) {
+        if (url.isEmpty()) {
             listener.getLogger().println(
-                    "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
-                            + " configured in Jenkins global configuration.");
+                "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
+                    + " configured in Jenkins global configuration.");
             return;
         }
         Result result = build.getResult();
@@ -189,15 +193,18 @@ public class GitLabPipelineStatusNotifier {
             status.setStatus("SUCCESS");
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
-            status.setDescription(build.getParent().getFullName() + ": This commit has test failures");
+            status.setDescription(
+                build.getParent().getFullName() + ": This commit has test failures");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (Result.FAILURE.equals(result)) {
-            status.setDescription(build.getParent().getFullName() + ": There was a failure building this commit");
+            status.setDescription(
+                build.getParent().getFullName() + ": There was a failure building this commit");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (result != null) { // ABORTED, NOT_BUILT.
-            status.setDescription(build.getParent().getFullName() + ": Something is wrong with the build of this commit");
+            status.setDescription(build.getParent().getFullName()
+                + ": Something is wrong with the build of this commit");
             status.setStatus("CANCELED");
             state = Constants.CommitBuildState.CANCELED;
         } else {
@@ -209,24 +216,28 @@ public class GitLabPipelineStatusNotifier {
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         String hash;
         if (revision instanceof BranchSCMRevision) {
-            listener.getLogger().format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
+            listener.getLogger()
+                .format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((BranchSCMRevision) revision).getHash();
             status.setName("jenkinsci/branch");
         } else if (revision instanceof MergeRequestSCMRevision) {
-            listener.getLogger().format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
+            listener.getLogger()
+                .format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
             status.setName(getMrBuildName(build.getFullDisplayName()));
-        } else if (revision instanceof GitTagSCMRevision){
-            listener.getLogger().format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
+        } else if (revision instanceof GitTagSCMRevision) {
+            listener.getLogger()
+                .format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((GitTagSCMRevision) revision).getHash();
             status.setName("jenkinsci/tag");
         } else {
             return;
         }
-        JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class).get(JobScheduledListener.class);
+        JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
+            .get(JobScheduledListener.class);
         if (jsl != null) {
             // we are setting the status, so don't let the queue listener background thread change it to pending
             synchronized (jsl.resolving) {
@@ -237,10 +248,10 @@ public class GitLabPipelineStatusNotifier {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             LOGGER.info("COMMIT: " + hash);
             gitLabApi.getCommitsApi().addCommitStatus(
-                    source.getProjectPath(),
-                    hash,
-                    state,
-                    status);
+                source.getProjectPath(),
+                hash,
+                state,
+                status);
             listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
         } catch (NoSuchFieldException | GitLabApiException e) {
             e.printStackTrace();
@@ -249,6 +260,7 @@ public class GitLabPipelineStatusNotifier {
 
     @Extension
     public static class JobScheduledListener extends QueueListener {
+
         private final AtomicLong nonce = new AtomicLong();
         private final Map<Job, Long> resolving = new HashMap<>();
 
@@ -267,8 +279,9 @@ public class GitLabPipelineStatusNotifier {
                 return;
             }
             final GitLabSCMSource source = (GitLabSCMSource) src;
-            final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits((source.getTraits()));
+            final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null,
+                SCMHeadObserver.none())
+                .withTraits((source.getTraits()));
             if (sourceContext.notificationsDisabled()) {
                 return;
             }
@@ -286,19 +299,23 @@ public class GitLabPipelineStatusNotifier {
                 public void run() {
                     SecurityContext context = ACL.impersonate(Tasks.getAuthenticationOf(wi.task));
                     try {
-                        SCMRevision revision = source.fetch(head, new LogTaskListener(LOGGER, Level.INFO));
+                        SCMRevision revision = source
+                            .fetch(head, new LogTaskListener(LOGGER, Level.INFO));
                         String hash;
                         CommitStatus status = new CommitStatus();
                         if (revision instanceof BranchSCMRevision) {
-                            LOGGER.log(Level.INFO, "Notifying branch pending build {0}", job.getFullName());
+                            LOGGER.log(Level.INFO, "Notifying branch pending build {0}",
+                                job.getFullName());
                             hash = ((BranchSCMRevision) revision).getHash();
                             status.setName("jenkinsci/branch");
                         } else if (revision instanceof MergeRequestSCMRevision) {
-                            LOGGER.log(Level.INFO, "Notifying merge request pending build {0}", job.getFullName());
+                            LOGGER.log(Level.INFO, "Notifying merge request pending build {0}",
+                                job.getFullName());
                             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
                             status.setName(getMrBuildName(job.getFullDisplayName()));
-                        } else if (revision instanceof GitTagSCMRevision){
-                            LOGGER.log(Level.INFO, "Notifying tag pending build {0}", job.getFullName());
+                        } else if (revision instanceof GitTagSCMRevision) {
+                            LOGGER.log(Level.INFO, "Notifying tag pending build {0}",
+                                job.getFullName());
                             hash = ((GitTagSCMRevision) revision).getHash();
                             status.setName("jenkinsci/tag");
                         } else {
@@ -322,26 +339,27 @@ public class GitLabPipelineStatusNotifier {
                                 if (!nonce.equals(resolving.get(job))) {
                                     // it's not our nonce, so drop
                                     LOGGER.log(Level.INFO,
-                                            "{0} has already started, skipping notification of queued",
-                                            job.getFullName());
+                                        "{0} has already started, skipping notification of queued",
+                                        job.getFullName());
                                     return;
                                 }
                                 // it is our nonce, so remove it
                                 resolving.remove(job);
                             }
                             gitLabApi.getCommitsApi().addCommitStatus(
-                                    source.getProjectPath(),
-                                    hash,
-                                    state,
-                                    status);
+                                source.getProjectPath(),
+                                hash,
+                                state,
+                                status);
                             LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
                         } catch (NoSuchFieldException | GitLabApiException e) {
                             e.printStackTrace();
                         }
                     } catch (IOException | InterruptedException e) {
                         LOGGER.log(Level.INFO,
-                                "Could not send commit status notification for " + job.getFullName() + " to " + source
-                                        .getServerName(), e);
+                            "Could not send commit status notification for " + job.getFullName()
+                                + " to " + source
+                                .getServerName(), e);
                     } finally {
                         SecurityContextHolder.setContext(context);
                     }
@@ -353,11 +371,13 @@ public class GitLabPipelineStatusNotifier {
 
     @Extension
     public static class JobCheckOutListener extends SCMListener {
+
         @Override
-        public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener, File changelogFile,
-                               SCMRevisionState pollingBaseline) {
+        public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener,
+            File changelogFile,
+            SCMRevisionState pollingBaseline) {
             LOGGER.info("SCMListener: Checkout" + build.getFullDisplayName());
-                sendNotifications(build, listener);
+            sendNotifications(build, listener);
         }
     }
 
@@ -377,7 +397,7 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
-            LOGGER.info("RunListener: Started"+run.getFullDisplayName());
+            LOGGER.info("RunListener: Started" + run.getFullDisplayName());
             sendNotifications(run, listener);
         }
     }

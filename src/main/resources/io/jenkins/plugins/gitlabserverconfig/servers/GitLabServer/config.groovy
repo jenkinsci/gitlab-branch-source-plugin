@@ -29,10 +29,10 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
 }
 
 f.validateButton(
-        title: _("Test connection"),
-        progress: _("Testing.."),
-        method: "testConnection",
-        with: "serverUrl,credentialsId"
+    title: _("Test connection"),
+    progress: _("Testing.."),
+    method: "testConnection",
+    with: "serverUrl,credentialsId"
 )
 
 

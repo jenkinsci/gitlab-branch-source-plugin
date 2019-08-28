@@ -20,16 +20,42 @@ public abstract class GitLabOwner {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    @NonNull
+    public static GitLabOwner fetchOwner(GitLabApi gitLabApi, String projectOwner) {
+        try {
+            Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
+            return new GitLabGroup(group.getName(), group.getWebUrl(), group.getAvatarUrl(),
+                group.getId(), group.getFullName(), group.getDescription());
+        } catch (GitLabApiException e) {
+            if (e.getHttpStatus() != 404) {
+                throw new IllegalStateException("Unable to fetch Group", e);
+            }
+
+            try {
+                User user = gitLabApi.getUserApi().getUser(projectOwner);
+                // If user is not found, null is returned
+                if (user == null) {
+                    throw new IllegalStateException(
+                        String.format("Owner '%s' is neither a user/group/subgroup", projectOwner));
+                }
+                return new GitLabUser(user.getName(), user.getWebUrl(), user.getAvatarUrl(),
+                    user.getId());
+            } catch (GitLabApiException e1) {
+                throw new IllegalStateException("Unable to fetch User", e1);
+            }
+        }
     }
 
-    public String getFullName() {
+    public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFullName() {
+        return name;
     }
 
     public String getWebUrl() {
@@ -57,30 +83,4 @@ public abstract class GitLabOwner {
     }
 
     public abstract String getWord();
-
-    @NonNull
-    public static GitLabOwner fetchOwner(GitLabApi gitLabApi, String projectOwner) {
-        try {
-            Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
-            return new GitLabGroup(group.getName(), group.getWebUrl(), group.getAvatarUrl(),
-                group.getId(), group.getFullName(), group.getDescription());
-        } catch (GitLabApiException e) {
-            if (e.getHttpStatus() != 404) {
-                throw new IllegalStateException("Unable to fetch Group", e);
-            }
-
-            try {
-                User user = gitLabApi.getUserApi().getUser(projectOwner);
-                // If user is not found, null is returned
-                if (user == null) {
-                    throw new IllegalStateException(
-                        String.format("Owner '%s' is neither a user/group/subgroup", projectOwner));
-                }
-                return new GitLabUser(user.getName(), user.getWebUrl(), user.getAvatarUrl(),
-                    user.getId());
-            } catch (GitLabApiException e1) {
-                throw new IllegalStateException("Unable to fetch User", e1);
-            }
-        }
-    }
 }

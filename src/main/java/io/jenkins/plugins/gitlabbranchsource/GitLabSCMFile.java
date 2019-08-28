@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GitLabSCMFile extends SCMFile {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMFile.class);
     private final GitLabApi gitLabApi;
     private final Project project;
@@ -77,7 +78,7 @@ public class GitLabSCMFile extends SCMFile {
             file = gitLabApi.getRepositoryFileApi().getFileInfo(project, getPath(), ref);
         } catch (GitLabApiException e) {
             throw new NotFoundException(
-                    "No Jenkinsfile found in the root of the repository, skipping " + ref);
+                "No Jenkinsfile found in the root of the repository, skipping " + ref);
         }
         return file != null;
     }
@@ -90,18 +91,18 @@ public class GitLabSCMFile extends SCMFile {
             throw new FileNotFoundException(getPath());
         }
         InputStream content = fetchFile();
-        if(content == null) {
+        if (content == null) {
             throw new FileNotFoundException(getPath());
         }
         isFile = true;
         return content;
     }
 
-    private InputStream fetchFile()  {
+    private InputStream fetchFile() {
         try {
             return gitLabApi.getRepositoryFileApi().getRawFile(project, ref, getPath());
         } catch (GitLabApiException e) {
-            LOGGER.info("Jenkinsfile Not found: "+ref);
+            LOGGER.info("Jenkinsfile Not found: " + ref);
         }
         return null;
     }

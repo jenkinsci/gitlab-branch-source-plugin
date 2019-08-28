@@ -23,7 +23,7 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
     }
 
     private static Type typeOf(TagPushEvent tagPushEvent) {
-        if (tagPushEvent.getAfter().matches(NONE_HASH_PATTERN) ) {
+        if (tagPushEvent.getAfter().matches(NONE_HASH_PATTERN)) {
             return REMOVED;
         }
         return Type.CREATED;
@@ -53,12 +53,14 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
     public String descriptionFor(SCMSource source) {
         String ref = getPayload().getRef();
         ref = ref.startsWith(Constants.R_TAGS) ? ref.substring(Constants.R_TAGS.length()) : ref;
-        return "Tag push event of tag " + ref + " in project " + getPayload().getProject().getPathWithNamespace();
+        return "Tag push event of tag " + ref + " in project " + getPayload().getProject()
+            .getPathWithNamespace();
     }
 
     @Override
     public boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
-        return navigator.getNavigatorProjects().contains(getPayload().getProject().getPathWithNamespace());
+        return navigator.getNavigatorProjects()
+            .contains(getPayload().getProject().getPathWithNamespace());
     }
 
     @Override
@@ -72,14 +74,14 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
         String ref = getPayload().getRef();
         ref = ref.startsWith(Constants.R_TAGS) ? ref.substring(Constants.R_TAGS.length()) : ref;
         long time = 0L;
-        if(getType() == CREATED) {
+        if (getType() == CREATED) {
             time = getPayload().getCommits().get(0).getTimestamp().getTime();
         }
         GitLabTagSCMHead h = new GitLabTagSCMHead(ref, time);
         String hash = getPayload().getCheckoutSha();
         return Collections.<SCMHead, SCMRevision>singletonMap(h,
-                (getType() == CREATED)
-                        ? new GitTagSCMRevision(h, hash) : null);
+            (getType() == CREATED)
+                ? new GitTagSCMRevision(h, hash) : null);
     }
 
 }

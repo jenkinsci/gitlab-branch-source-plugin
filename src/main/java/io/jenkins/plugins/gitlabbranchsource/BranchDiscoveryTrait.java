@@ -26,6 +26,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * A {@link Discovery} trait for GitLab that will discover branches on the repository.
  */
 public class BranchDiscoveryTrait extends SCMSourceTrait {
+
     /**
      * The strategy encoded as a bit-field.
      */
@@ -44,7 +45,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Constructor for legacy code.
      *
-     * @param buildBranch       build branches that are not filed as a MR.
+     * @param buildBranch build branches that are not filed as a MR.
      * @param buildBranchWithMr build branches that are also MRs.
      */
     public BranchDiscoveryTrait(boolean buildBranch, boolean buildBranchWithMr) {
@@ -166,12 +167,15 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Trusts branches from the origin repository.
      */
-    public static class BranchSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, BranchSCMHead, SCMRevision> {
+    public static class BranchSCMHeadAuthority extends
+        SCMHeadAuthority<SCMSourceRequest, BranchSCMHead, SCMRevision> {
+
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
+            @NonNull BranchSCMHead head) {
             return true;
         }
 
@@ -181,13 +185,17 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         @Extension
         @Symbol("gitLabBranchHeadAuthority")
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
+
             /**
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
-            }            /**
+            }
+
+            /**
              * {@inheritDoc}
              */
             @Override
@@ -203,6 +211,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * Filter that excludes branches that are also filed as a merge request.
      */
     public static class ExcludeOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
+
         /**
          * {@inheritDoc}
          */
@@ -212,7 +221,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     // only match if the merge request is an origin merge request
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
-                            && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
+                        && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
                         return true;
                     }
                 }
@@ -225,6 +234,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * Filter that excludes branches that are not also filed as a merge request.
      */
     public static class OnlyOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
+
         /**
          * {@inheritDoc}
          */
@@ -233,7 +243,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
-                            && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
+                        && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
                         return true;
                     }
                 }

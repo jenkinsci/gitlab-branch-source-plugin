@@ -38,7 +38,8 @@ public class HookRegistrationTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public HookRegistrationTrait(@NonNull String webHookMode, @NonNull String systemHookMode) {
-        this(GitLabHookRegistration.valueOf(webHookMode), GitLabHookRegistration.valueOf(systemHookMode));
+        this(GitLabHookRegistration.valueOf(webHookMode),
+            GitLabHookRegistration.valueOf(systemHookMode));
     }
 
     /**
@@ -47,7 +48,8 @@ public class HookRegistrationTrait extends SCMSourceTrait {
      * @param webHookMode the web hook mode of registration to apply.
      * @param systemHookMode the system hook mode of registration to apply.
      */
-    public HookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode, @NonNull GitLabHookRegistration systemHookMode) {
+    public HookRegistrationTrait(@NonNull GitLabHookRegistration webHookMode,
+        @NonNull GitLabHookRegistration systemHookMode) {
         this.webHookMode = webHookMode;
         this.systemHookMode = systemHookMode;
     }
@@ -125,10 +127,10 @@ public class HookRegistrationTrait extends SCMSourceTrait {
         }
 
         /**
-        * Form completion.
-        *
-        * @return the system hook mode options.
-        */
+         * Form completion.
+         *
+         * @return the system hook mode options.
+         */
         @Restricted(NoExternalUse.class)
         @SuppressWarnings("unused") // stapler form binding
         public ListBoxModel doFillSystemHookModeItems() {
@@ -138,9 +140,12 @@ public class HookRegistrationTrait extends SCMSourceTrait {
         private ListBoxModel getOptions(boolean isWebHook) {
             ListBoxModel result = new ListBoxModel();
             String pronoun = isWebHook ? "Web Hook" : "System Hook";
-            result.add(Messages.HookRegistrationTrait_disable(pronoun), GitLabHookRegistration.DISABLE.toString());
-            result.add(Messages.HookRegistrationTrait_useSystem(pronoun), GitLabHookRegistration.SYSTEM.toString());
-            result.add(Messages.HookRegistrationTrait_useItem(pronoun), GitLabHookRegistration.ITEM.toString());
+            result.add(Messages.HookRegistrationTrait_disable(pronoun),
+                GitLabHookRegistration.DISABLE.toString());
+            result.add(Messages.HookRegistrationTrait_useSystem(pronoun),
+                GitLabHookRegistration.SYSTEM.toString());
+            result.add(Messages.HookRegistrationTrait_useItem(pronoun),
+                GitLabHookRegistration.ITEM.toString());
             return result;
         }
 

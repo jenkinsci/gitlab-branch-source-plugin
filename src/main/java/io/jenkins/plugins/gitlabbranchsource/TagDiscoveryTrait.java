@@ -21,6 +21,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * A {@link Discovery} trait for GitLab that will discover tags on the project.
  */
 public class TagDiscoveryTrait extends SCMSourceTrait {
+
     /**
      * Constructor for stapler.
      */
@@ -84,12 +85,15 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
     /**
      * Trusts tags from the origin project.
      */
-    public static class TagSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, GitLabTagSCMHead, GitTagSCMRevision> {
+    public static class TagSCMHeadAuthority extends
+        SCMHeadAuthority<SCMSourceRequest, GitLabTagSCMHead, GitTagSCMRevision> {
+
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull GitLabTagSCMHead head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
+            @NonNull GitLabTagSCMHead head) {
             return true;
         }
 
@@ -98,6 +102,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
          */
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
+
             /**
              * {@inheritDoc}
              */
@@ -110,7 +115,8 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
             }
         }

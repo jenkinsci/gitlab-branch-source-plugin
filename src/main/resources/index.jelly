@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-    Provides branch source and folder organisation functionality for GitLab Repositories in Jenkins
+  Provides branch source and folder organisation functionality for GitLab Repositories in Jenkins
 </div>

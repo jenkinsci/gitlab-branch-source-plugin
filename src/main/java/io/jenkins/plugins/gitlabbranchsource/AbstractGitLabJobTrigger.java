@@ -8,13 +8,13 @@ public abstract class AbstractGitLabJobTrigger<E> {
         this.payload = payload;
     }
 
+    public static void fireNow(AbstractGitLabJobTrigger trigger) {
+        trigger.isMatch();
+    }
+
     public E getPayload() {
         return this.payload;
     }
 
     public abstract void isMatch();
-
-    public static void fireNow(AbstractGitLabJobTrigger trigger) {
-        trigger.isMatch();
-    }
 }
