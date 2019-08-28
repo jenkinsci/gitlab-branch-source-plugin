@@ -36,6 +36,36 @@ public class GitLabLink implements Action, IconSpec {
         this.displayName = "";
     }
 
+    public GitLabLink(@NonNull String iconClassName, @NonNull String url, String displayName) {
+        this.iconClassName = iconClassName;
+        this.url = url;
+        this.displayName = displayName;
+    }
+
+    public static GitLabLink toGroup(String url) {
+        return new GitLabLink("gitlab-logo", url, "Group");
+    }
+
+    public static GitLabLink toProject(String url) {
+        return new GitLabLink("gitlab-project", url, "Project");
+    }
+
+    public static GitLabLink toBranch(String url) {
+        return new GitLabLink("gitlab-branch", url, "Branch");
+    }
+
+    public static GitLabLink toMergeRequest(String url) {
+        return new GitLabLink("gitlab-mr", url, "Merge Request");
+    }
+
+    public static GitLabLink toTag(String url) {
+        return new GitLabLink("gitlab-tag", url, "Tag");
+    }
+
+    public static GitLabLink toCommit(String url) {
+        return new GitLabLink("gitlab-commit", url, "Commit");
+    }
+
     @NonNull
     public String getUrl() {
         return url;

@@ -22,6 +22,7 @@ public final class GitLabIcons {
     public static final String ICON_MR = "gitlab-mr";
     public static final String ICON_TAG = "gitlab-tag";
     private static final String ICON_PATH = "plugin/gitlab-branch-source/images/";
+
     private GitLabIcons() { /* no instances allowed */}
 
     @Initializer
@@ -71,6 +72,7 @@ public final class GitLabIcons {
         private final String className;
         private final String dimensions;
         private final String style;
+
         Size(String className, String dimensions, String style) {
             this.className = className;
             this.dimensions = dimensions;

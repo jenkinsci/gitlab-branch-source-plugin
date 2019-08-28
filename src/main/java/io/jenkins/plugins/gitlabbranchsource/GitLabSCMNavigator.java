@@ -18,7 +18,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
@@ -69,6 +68,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
@@ -200,7 +201,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @NonNull
     @Override
     protected String id() {
-        return GitLabHelper.getServerUrlFromName(serverName) + "::" + projectOwner;
+        return getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
     @Override
@@ -210,7 +211,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
             .withTraits(traits)
             .newRequest(this, observer)) {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(serverName);
             if (gitlabOwner == null) {
                 gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             }
@@ -232,7 +233,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             PersonalAccessToken webHookCredentials = getWebHookCredentials(observer.getContext());
             GitLabApi webhookGitLabApi = null;
             if (webHookCredentials != null) {
-                webhookGitLabApi = new GitLabApi(GitLabHelper.getServerUrlFromName(serverName),
+                webhookGitLabApi = new GitLabApi(getServerUrlFromName(serverName),
                     webHookCredentials.getToken().getPlainText());
             }
             String webHookUrl = GitLabHookCreator.getHookUrl(true);
@@ -330,7 +331,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         LOGGER.info("retrieving actions..");
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(serverName);
             if (gitlabOwner == null) {
                 gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
             }
@@ -346,7 +347,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             if (StringUtils.isNotBlank(avatarUrl)) {
                 result.add(new GitLabAvatar(avatarUrl));
             }
-            result.add(new GitLabLink("gitlab-logo", webUrl));
+            result.add(GitLabLink.toGroup(webUrl));
             if (StringUtils.isBlank(webUrl)) {
                 listener.getLogger().println("Web URL unspecified");
             } else {
@@ -378,7 +379,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 PersonalAccessToken.class,
                 owner,
                 Jenkins.getAuthentication(),
-                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()
+                fromUri(getServerUrlFromName(serverName)).build()
             ), credentials -> credentials instanceof PersonalAccessToken
         );
     }
@@ -396,7 +397,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             GitLabApi gitLabApi = null;
             try {
-                gitLabApi = GitLabHelper.apiBuilder(serverName);
+                gitLabApi = apiBuilder(serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (NoSuchFieldException e) {
@@ -488,7 +489,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,
-                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
+                fromUri(getServerUrlFromName(serverName)).build(),
                 GitClient.CREDENTIALS_MATCHER
             );
             return result;

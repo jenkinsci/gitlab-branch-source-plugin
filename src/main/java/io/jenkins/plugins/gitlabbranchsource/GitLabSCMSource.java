@@ -4,9 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
-import com.damnhandy.uri.template.UriTemplate;
-import com.damnhandy.uri.template.UriTemplateBuilder;
-import com.damnhandy.uri.template.impl.Operator;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
@@ -21,7 +18,6 @@ import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -93,6 +89,13 @@ import org.slf4j.LoggerFactory;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.branchUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.mergeRequestUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.tagUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
@@ -156,8 +159,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     public String getRemote() {
         return GitLabSCMBuilder
-            .checkoutUriTemplate(getOwner(), GitLabHelper.getServerUrlFromName(serverName),
-                getHttpRemote(), getSshRemote(), getCredentialsId(), projectPath)
+            .checkoutUriTemplate(getOwner(), getServerUrlFromName(serverName),
+                getHttpRemote(),
+                getSshRemote(), getCredentialsId(), projectPath)
             .expand();
     }
 
@@ -165,7 +169,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public HashMap<String, AccessLevel> getMembers() {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(serverName);
             for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
@@ -308,11 +312,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String sha = branch.getCommit().getId();
                         listener.getLogger().format("%nChecking branch %s%n",
                             HyperlinkNote.encodeTo(
-                                UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
-                                    .literal("/tree")
-                                    .path("branch")
-                                    .build()
-                                    .set("branch", branchName)
+                                branchUriTemplate(gitlabProject.getWebUrl())
+                                    .set("branch", splitPath(branchName))
                                     .expand(),
                                 branchName
                             )
@@ -356,10 +357,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         count++;
                         listener.getLogger().format("%nChecking merge request %s%n",
                             HyperlinkNote.encodeTo(
-                                UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
-                                    .literal("/merge_requests")
-                                    .path("iid")
-                                    .build()
+                                mergeRequestUriTemplate(gitlabProject.getWebUrl())
                                     .set("iid", m.getIid())
                                     .expand(),
                                 "!" + m.getIid()
@@ -451,15 +449,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String sha = tag.getCommit().getId();
                         listener.getLogger().format("%nChecking tag %s%n",
                             HyperlinkNote.encodeTo(
-                                UriTemplate.buildFromTemplate(gitlabProject.getWebUrl())
-                                    .literal("/tree")
-                                    .path("tag")
-                                    .build()
-                                    .set("tag", tag.getName())
+                                tagUriTemplate(gitlabProject.getWebUrl())
+                                    .set("tag", splitPath(tag.getName()))
                                     .expand(),
                                 tag.getName()
                             )
-
                         );
                         GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
                         if (request.process(head, new GitTagSCMRevision(head, sha),
@@ -529,13 +523,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 e.printStackTrace();
             }
         }
-        result.add(new GitLabLink("gitlab-project",
-            UriTemplate.buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
-                .template("{/project*}")
-                .build()
-                .set("project", projectPath.split(Operator.PATH.getSeparator()))
-                .expand()
-        ));
+        String projectUrl = projectUriTemplate(serverName)
+            .set("project", splitPath(projectPath))
+            .expand();
+        result.add(GitLabLink.toProject(projectUrl));
         return result;
     }
 
@@ -555,13 +546,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
-            String branchUrl = UriTemplate
-                .buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
-                .template("{/project*}")
-                .literal("/tree")
-                .path(UriTemplateBuilder.var("branch"))
-                .build()
-                .set("project", projectPath.split(Operator.PATH.getSeparator()))
+            String branchUrl = branchUriTemplate(serverName)
+                .set("project", splitPath(projectPath))
                 .set("branch", head.getName())
                 .expand();
             result.add(new ObjectMetadataAction(
@@ -569,20 +555,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 null,
                 branchUrl
             ));
-            GitLabLink gitLabLink = new GitLabLink("gitlab-branch", branchUrl);
-            gitLabLink.setDisplayName("Branch");
-            result.add(gitLabLink);
+            result.add(GitLabLink.toBranch(branchUrl));
             if (head.getName().equals(gitlabProject.getDefaultBranch())) {
                 result.add(new PrimaryInstanceMetadataAction());
             }
         } else if (head instanceof MergeRequestSCMHead) {
-            String mergeUrl = UriTemplate
-                .buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
-                .template("{/project*}")
-                .literal("/merge_requests")
-                .path(UriTemplateBuilder.var("iid"))
-                .build()
-                .set("project", projectPath.split(Operator.PATH.getSeparator()))
+            String mergeUrl = mergeRequestUriTemplate(serverName)
+                .set("project", splitPath(projectPath))
                 .set("iid", ((MergeRequestSCMHead) head).getId())
                 .expand();
             result.add(new ObjectMetadataAction(
@@ -590,17 +569,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 null,
                 mergeUrl
             ));
-            GitLabLink gitLabLink = new GitLabLink("gitlab-mr", mergeUrl);
-            gitLabLink.setDisplayName("Merge Request");
-            result.add(gitLabLink);
+            result.add(GitLabLink.toMergeRequest(mergeUrl));
         } else if (head instanceof GitLabTagSCMHead) {
-            String tagUrl = UriTemplate
-                .buildFromTemplate(GitLabHelper.getServerUrlFromName(serverName))
-                .template("{/project*}")
-                .literal("/tree")
-                .path(UriTemplateBuilder.var("tag"))
-                .build()
-                .set("project", projectPath.split(Operator.PATH.getSeparator()))
+            String tagUrl = tagUriTemplate(serverName)
+                .set("project", splitPath(projectPath))
                 .set("tag", head.getName())
                 .expand();
             result.add(new ObjectMetadataAction(
@@ -608,9 +580,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 null,
                 tagUrl
             ));
-            GitLabLink gitLabLink = new GitLabLink("gitlab-tag", tagUrl);
-            gitLabLink.setDisplayName("Tag");
-            result.add(gitLabLink);
+            result.add(GitLabLink.toTag(tagUrl));
         }
         return result;
     }
@@ -653,7 +623,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(@NonNull SCMRevision revision, SCMHeadEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
-        return super.retrieveActions(revision, event, listener);
+        List<Action> actions = new ArrayList<>();
+        if (revision instanceof SCMRevisionImpl) {
+            String hash = ((SCMRevisionImpl) revision).getHash();
+            String commitUrl = commitUriTemplate(serverName)
+                .set("project", splitPath(projectPath))
+                .set("hash", hash)
+                .expand();
+            actions.add(GitLabLink.toCommit(commitUrl));
+        }
+
+        return actions;
     }
 
     @NonNull
@@ -667,7 +647,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (builder == null) {
                 throw new AssertionError();
             }
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(serverName);
             if (gitlabProject == null) {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
             }
@@ -731,7 +711,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 PersonalAccessToken.class,
                 getOwner(),
                 Jenkins.getAuthentication(),
-                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build()),
+                fromUri(getServerUrlFromName(serverName)).build()),
             GitLabServer.CREDENTIALS_MATCHER
         );
     }
@@ -803,7 +783,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,
-                fromUri(GitLabHelper.getServerUrlFromName(serverName)).build(),
+                fromUri(getServerUrlFromName(serverName)).build(),
                 GitClient.CREDENTIALS_MATCHER
             );
             return result;
@@ -816,10 +796,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try {
                 GitLabApi gitLabApi;
                 if (serverName.equals("")) {
-                    gitLabApi = GitLabHelper
-                        .apiBuilder(GitLabServers.get().getServers().get(0).getName());
+                    gitLabApi = apiBuilder(GitLabServers.get().getServers().get(0).getName());
                 } else {
-                    gitLabApi = GitLabHelper.apiBuilder(serverName);
+                    gitLabApi = apiBuilder(serverName);
                 }
 
                 if (projectOwner.equals("")) {
