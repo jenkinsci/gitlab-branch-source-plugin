@@ -1,6 +1,6 @@
 servers:
-  - credentialsId: "i<3GitLab"
-    manageSystemHooks: true
-    manageWebHooks: true
-    name: "gitlab-[0-9]{4}"
-    serverUrl: "https://gitlab.com"
+- credentialsId: "i<3GitLab"
+  manageSystemHooks: true
+  manageWebHooks: true
+  name: "gitlab-[0-9]{4}"
+  serverUrl: "https://gitlab.com"
