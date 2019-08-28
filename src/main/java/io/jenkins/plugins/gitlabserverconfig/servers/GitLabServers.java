@@ -33,8 +33,8 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServers.class);
 
     /**
-     * The list of {@link GitLabServer}, this is subject to the constraint that there can only ever be
-     * one entry for each {@link GitLabServer#getServerUrl()}.
+     * The list of {@link GitLabServer}, this is subject to the constraint that there can only ever
+     * be one entry for each {@link GitLabServer#getServerUrl()}.
      */
     private List<GitLabServer> servers;
 
@@ -48,6 +48,19 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     }
 
     /**
+     * Helper function to get predicate to filter servers based on their names
+     *
+     * @param keyExtractor the Function to filter
+     * @param <T> In this case it is server
+     * @return a predicate to filter servers list
+     */
+    private static <T> Predicate<T> distinctByKey(
+        Function<? super T, ?> keyExtractor) {
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+    }
+
+    /**
      * Populates a {@link ListBoxModel} with the servers.
      *
      * @return A {@link ListBoxModel} with all the servers
@@ -57,7 +70,9 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         for (GitLabServer server : getServers()) {
             String serverUrl = server.getServerUrl();
             String serverName = server.getName(); // serverName or name or displayName
-            result.add(StringUtils.isBlank(serverName) ? serverUrl : serverName + " (" + serverUrl + ")", serverName);
+            result.add(
+                StringUtils.isBlank(serverName) ? serverUrl : serverName + " (" + serverUrl + ")",
+                serverName);
         }
         return result;
     }
@@ -70,37 +85,8 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     @Nonnull
     public List<GitLabServer> getServers() {
         return servers == null || servers.isEmpty()
-                ? Collections.emptyList()
-                : Collections.unmodifiableList(servers);
-    }
-
-    @Nonnull
-    @Override
-    public String getDisplayName() {
-        return Messages.GitLabServers_displayName();
-    }
-
-    /**
-     * Gets descriptor of {@link GitLabPersonalAccessTokenCreator}
-     *
-     * @return the list of descriptors
-     */
-    public List<Descriptor> actions() {
-        return Collections.singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
-    }
-
-    /**
-     * Helper function to get predicate to filter servers
-     * based on their names
-     *
-     * @param keyExtractor the Function to filter
-     * @param <T> In this case it is server
-     * @return a predicate to filter servers list
-     */
-    private static <T> Predicate<T> distinctByKey(
-            Function<? super T, ?> keyExtractor) {
-        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
-        return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
+            ? Collections.emptyList()
+            : Collections.unmodifiableList(servers);
     }
 
     /**
@@ -115,9 +101,24 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         save();
     }
 
+    @Nonnull
+    @Override
+    public String getDisplayName() {
+        return Messages.GitLabServers_displayName();
+    }
+
     /**
-     * Adds an server
-     * Checks if the GitLab Server name is unique
+     * Gets descriptor of {@link GitLabPersonalAccessTokenCreator}
+     *
+     * @return the list of descriptors
+     */
+    public List<Descriptor> actions() {
+        return Collections
+            .singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
+    }
+
+    /**
+     * Adds an server Checks if the GitLab Server name is unique
      *
      * @param server the server to add.
      * @return {@code true} if the list of endpoints was modified
@@ -125,10 +126,10 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     public boolean addServer(@Nonnull GitLabServer server) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         GitLabServer gitLabServer = servers.stream()
-                .filter(s -> s.getName().equals(server.getName()))
-                .findAny()
-                .orElse(null);
-        if(gitLabServer != null) {
+            .filter(s -> s.getName().equals(server.getName()))
+            .findAny()
+            .orElse(null);
+        if (gitLabServer != null) {
             return false;
         }
         servers.add(server);
@@ -137,27 +138,26 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     }
 
     /**
-     * Updates an existing endpoint (or adds if missing)
-     * Checks if the GitLab Server name is matched
+     * Updates an existing endpoint (or adds if missing) Checks if the GitLab Server name is
+     * matched
      *
      * @param server the server to update.
      * @return {@code true} if the list of endpoints was modified
      */
     public boolean updateServer(@Nonnull GitLabServer server) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
-        if(!servers.contains(server)) {
+        if (!servers.contains(server)) {
             return false;
         }
         servers = servers.stream()
-                .map(oldServer -> oldServer.getName().equals(server.getName()) ? server : oldServer)
-                .collect(Collectors.toList());
+            .map(oldServer -> oldServer.getName().equals(server.getName()) ? server : oldServer)
+            .collect(Collectors.toList());
         setServers(servers);
         return true;
     }
 
     /**
-     * Removes a server entry
-     * Checks if the GitLab Server name is matched
+     * Removes a server entry Checks if the GitLab Server name is matched
      *
      * @param name the server name to remove.
      * @return {@code true} if the list of endpoints was modified
@@ -165,7 +165,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     public boolean removeServer(@CheckForNull String name) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         boolean removed = servers.removeIf(s -> s.getName().equals(name));
-        if(removed) {
+        if (removed) {
             setServers(servers);
         }
         return removed;
@@ -178,12 +178,12 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @return the global configuration for the specified server url or {@code null} if not defined.
      */
     @CheckForNull
-    public  GitLabServer findServer(@CheckForNull String serverName) {
+    public GitLabServer findServer(@CheckForNull String serverName) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         return servers.stream()
-                .filter(server -> server.getName().equals(serverName))
-                .findAny()
-                .orElse(null);
+            .filter(server -> server.getName().equals(serverName))
+            .findAny()
+            .orElse(null);
     }
 
 }

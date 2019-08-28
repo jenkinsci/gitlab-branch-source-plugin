@@ -1,7 +1,8 @@
 target
 /work*
 *.iml
-/.idea
+.idea/*
+!.idea/codeStyles/
 .classpath
 .project
 .settings

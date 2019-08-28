@@ -7,29 +7,30 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
 
 public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead2 {
+
     private final long id;
     private final BranchSCMHead target;
     private final ChangeRequestCheckoutStrategy strategy;
     private final String originName;
     private final String originOwner;
-    private String originProjectPath;
     private final SCMHeadOrigin origin;
+    private String originProjectPath;
 
     /**
      * Constructor.
      *
-     * @param id                the merge request id.
-     * @param name              the name of the head.
-     * @param target            the target of this merge request.
-     * @param strategy          the checkout strategy
-     * @param origin            the origin of the merge request
-     * @param originOwner       the name of the owner of the origin project
+     * @param id the merge request id.
+     * @param name the name of the head.
+     * @param target the target of this merge request.
+     * @param strategy the checkout strategy
+     * @param origin the origin of the merge request
+     * @param originOwner the name of the owner of the origin project
      * @param originProjectPath the name of the origin project path
-     * @param originName        the name of the branch in the origin project
+     * @param originName the name of the branch in the origin project
      */
     public MergeRequestSCMHead(@NonNull String name, long id, BranchSCMHead target,
-                              ChangeRequestCheckoutStrategy strategy, SCMHeadOrigin origin, String originOwner,
-                              String originProjectPath, String originName) {
+        ChangeRequestCheckoutStrategy strategy, SCMHeadOrigin origin, String originOwner,
+        String originProjectPath, String originName) {
         super(name);
         this.id = id;
         this.target = target;

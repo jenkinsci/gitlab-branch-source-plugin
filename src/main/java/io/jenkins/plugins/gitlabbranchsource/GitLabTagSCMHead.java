@@ -5,10 +5,11 @@ import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.scm.api.mixin.TagSCMHead;
 
 public class GitLabTagSCMHead extends GitTagSCMHead implements TagSCMHead {
+
     /**
      * Constructor.
      *
-     * @param name      the name.
+     * @param name the name.
      * @param timestamp the tag timestamp;
      */
     public GitLabTagSCMHead(@NonNull String name, long timestamp) {

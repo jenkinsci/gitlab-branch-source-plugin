@@ -9,7 +9,7 @@ def f = namespace(FormTagLib);
 def c = namespace(CredentialsTagLib)
 
 f.entry(title: _("GitLab Server URL"), field: "serverUrl",
-        help: app.getDescriptor(GitLabServer.class)?.getHelpFile("serverUrl")) {
+    help: app.getDescriptor(GitLabServer.class)?.getHelpFile("serverUrl")) {
     f.textbox(default: GitLabServer.GITLAB_SERVER_URL)
 }
 
@@ -20,10 +20,10 @@ f.radioBlock(checked: true, name: "credentials", value: "plugin", title: "From c
 
     f.block() {
         f.validateButton(
-                title: _("Create token credentials"),
-                progress: _("Creating..."),
-                method: "createTokenByCredentials",
-                with: "serverUrl,credentialsId"
+            title: _("Create token credentials"),
+            progress: _("Creating..."),
+            method: "createTokenByCredentials",
+            with: "serverUrl,credentialsId"
         )
     }
 }
@@ -40,10 +40,10 @@ f.radioBlock(checked: false, name: "credentials", value: "manually", title: "Fro
 
     f.block() {
         f.validateButton(
-                title: _("Create token credentials"),
-                progress: _("Creating..."),
-                method: "createTokenByPassword",
-                with: "serverUrl,login,password"
+            title: _("Create token credentials"),
+            progress: _("Creating..."),
+            method: "createTokenByPassword",
+            with: "serverUrl,login,password"
         )
     }
 }

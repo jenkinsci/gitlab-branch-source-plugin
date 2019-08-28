@@ -19,10 +19,11 @@ import org.kohsuke.stapler.QueryParameter;
 
 
 /**
- * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link CredentialsProvider}
- * instances that store {@link Secret} locally.
+ * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link
+ * CredentialsProvider} instances that store {@link Secret} locally.
  */
-public class PersonalAccessTokenImpl extends BaseStandardCredentials implements PersonalAccessToken {
+public class PersonalAccessTokenImpl extends BaseStandardCredentials implements
+    PersonalAccessToken {
 
     /**
      * Our token.
@@ -33,17 +34,17 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     /**
      * Constructor.
      *
-     * @param scope       the credentials scope.
-     * @param id          the credentials id.
+     * @param scope the credentials scope.
+     * @param id the credentials id.
      * @param description the description of the token.
-     * @param token       the token itself (will be passed through {@link Secret#fromString(String)})
+     * @param token the token itself (will be passed through {@link Secret#fromString(String)})
      */
     @DataBoundConstructor
     public PersonalAccessTokenImpl(
-                @CheckForNull CredentialsScope scope,
-                @CheckForNull String id,
-                @CheckForNull String description,
-                @NonNull String token) {
+        @CheckForNull CredentialsScope scope,
+        @CheckForNull String id,
+        @CheckForNull String description,
+        @NonNull String token) {
         super(scope, id, description);
         this.token = Secret.fromString(token);
     }
@@ -85,9 +86,10 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         @SuppressWarnings("unused")
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);
-            if(StringUtils.equals(value, secret.getPlainText())) {
+            if (StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() != GITLAB_ACCESS_TOKEN_LENGTH) {
-                    return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
+                    return FormValidation
+                        .error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
                 }
             } else if (secret.getPlainText().length() != GITLAB_ACCESS_TOKEN_LENGTH) {
                 return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());

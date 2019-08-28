@@ -21,10 +21,10 @@ public class GitLabHookCreator {
     public static final Logger LOGGER = Logger.getLogger(GitLabHookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
-                                GitLabHookRegistration systemhookMode) {
+        GitLabHookRegistration systemhookMode) {
         PersonalAccessToken credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
-        if(server == null) {
+        if (server == null) {
             return;
         }
         switch (systemhookMode) {
@@ -35,13 +35,13 @@ public class GitLabHookCreator {
                     return;
                 }
                 credentials = server.getCredentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No System credentials added, cannot create system hook");
                 }
                 break;
             case ITEM:
                 credentials = navigator.credentials(owner);
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No Item credentials added, cannot create system hook");
                 }
                 break;
@@ -49,16 +49,16 @@ public class GitLabHookCreator {
                 return;
         }
         // add system hooks
-        if(credentials != null) {
+        if (credentials != null) {
             createSystemHookWhenMissing(server, credentials);
         }
     }
 
     public static void register(GitLabSCMSource source,
-                                GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
+        GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
         PersonalAccessToken credentials = null;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
-        if(server == null) {
+        if (server == null) {
             return;
         }
         switch (webhookMode) {
@@ -69,13 +69,13 @@ public class GitLabHookCreator {
                     break;
                 }
                 credentials = server.getCredentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No System credentials added, cannot create web hook");
                 }
                 break;
             case ITEM:
                 credentials = source.credentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No Item credentials added, cannot create web hook");
                 }
                 break;
@@ -83,16 +83,18 @@ public class GitLabHookCreator {
                 return;
         }
         String hookUrl = getHookUrl(true);
-        if(hookUrl.equals("")) {
+        if (hookUrl.equals("")) {
             return;
         }
-        if(credentials != null) {
+        if (credentials != null) {
             try {
-                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
+                    credentials.getToken().getPlainText());
                 createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
-                        "Could not manage project hooks for " + source.getProjectPath() + " on " + server.getServerUrl(), e);
+                    "Could not manage project hooks for " + source.getProjectPath() + " on "
+                        + server.getServerUrl(), e);
             }
         }
         switch (systemhookMode) {
@@ -103,13 +105,13 @@ public class GitLabHookCreator {
                     return;
                 }
                 credentials = server.getCredentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No System credentials added, cannot create system hook");
                 }
                 break;
             case ITEM:
                 credentials = source.credentials();
-                if(credentials == null) {
+                if (credentials == null) {
                     LOGGER.info("No Item credentials added, cannot create system hook");
                 }
                 break;
@@ -117,23 +119,25 @@ public class GitLabHookCreator {
                 return;
         }
         // add system hooks
-        if(credentials != null) {
+        if (credentials != null) {
             createSystemHookWhenMissing(server, credentials);
         }
     }
 
-    public static void createSystemHookWhenMissing(GitLabServer server, PersonalAccessToken credentials) {
+    public static void createSystemHookWhenMissing(GitLabServer server,
+        PersonalAccessToken credentials) {
         String systemHookUrl = getHookUrl(false);
         try {
-            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
+                credentials.getToken().getPlainText());
             SystemHook systemHook = gitLabApi.getSystemHooksApi()
-                    .getSystemHookStream()
-                    .filter(hook -> systemHookUrl.equals(hook.getUrl()))
-                    .findFirst()
-                    .orElse(null);
-            if(systemHook == null) {
+                .getSystemHookStream()
+                .filter(hook -> systemHookUrl.equals(hook.getUrl()))
+                .findFirst()
+                .orElse(null);
+            if (systemHook == null) {
                 gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, "",
-                        false, false, false);
+                    false, false, false);
             }
         } catch (GitLabApiException e) {
             LOGGER.info("User is not admin so cannot set system hooks");
@@ -149,10 +153,11 @@ public class GitLabHookCreator {
         }
         checkURL(rootUrl);
         String pronoun = "gitlab-systemhook";
-        if(isWebHook) {
+        if (isWebHook) {
             pronoun = "gitlab-webhook";
         }
-        return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build().expand();
+        return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
+            .expand();
     }
 
     static void checkURL(String url) {
@@ -184,13 +189,14 @@ public class GitLabHookCreator {
         return enabledHooks;
     }
 
-    public static String createWebHookWhenMissing(GitLabApi gitLabApi, String project, String hookUrl)
-            throws GitLabApiException {
+    public static String createWebHookWhenMissing(GitLabApi gitLabApi, String project,
+        String hookUrl)
+        throws GitLabApiException {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
-                .filter(hook -> hookUrl.equals(hook.getUrl()))
-                .findFirst()
-                .orElseGet(GitLabHookCreator::createWebHook);
-        if(projectHook.getId() == null) {
+            .filter(hook -> hookUrl.equals(hook.getUrl()))
+            .findFirst()
+            .orElseGet(GitLabHookCreator::createWebHook);
+        if (projectHook.getId() == null) {
             gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
             return "created";
         }

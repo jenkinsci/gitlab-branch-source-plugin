@@ -15,6 +15,7 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
  * Link to GitLab
  */
 public class GitLabLink implements Action, IconSpec {
+
     /**
      * The icon class name to use.
      */
@@ -35,10 +36,6 @@ public class GitLabLink implements Action, IconSpec {
         this.displayName = "";
     }
 
-    public void setDisplayName(@NonNull String displayName) {
-        this.displayName = displayName;
-    }
-
     @NonNull
     public String getUrl() {
         return url;
@@ -56,7 +53,8 @@ public class GitLabLink implements Action, IconSpec {
             Icon icon = IconSet.icons.getIconByClassSpec(iconClassName + " icon-md");
             if (icon != null) {
                 JellyContext ctx = new JellyContext();
-                ctx.setVariable("resURL", Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
+                ctx.setVariable("resURL",
+                    Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
                 return icon.getQualifiedUrl(ctx);
             }
         }
@@ -66,6 +64,10 @@ public class GitLabLink implements Action, IconSpec {
     @Override
     public String getDisplayName() {
         return defaultIfBlank(displayName, "GitLab");
+    }
+
+    public void setDisplayName(@NonNull String displayName) {
+        this.displayName = displayName;
     }
 
     @Override
@@ -100,9 +102,9 @@ public class GitLabLink implements Action, IconSpec {
     @Override
     public String toString() {
         return "GitLabLink{" +
-                "iconClassName='" + iconClassName + '\'' +
-                ", url='" + url + '\'' +
-                '}';
+            "iconClassName='" + iconClassName + '\'' +
+            ", url='" + url + '\'' +
+            '}';
     }
 
 }

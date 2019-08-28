@@ -26,14 +26,6 @@ public class LogCommentTrait extends SCMSourceTrait {
     }
 
     /**
-     * Setter for stapler to set the username of the sudo user.
-     */
-    @DataBoundSetter
-    public void setSudoUser(@NonNull String sudoUser) {
-        this.sudoUser = sudoUser;
-    }
-
-    /**
      * Setter for stapler to enable logging of successful builds.
      */
     @DataBoundSetter
@@ -59,6 +51,14 @@ public class LogCommentTrait extends SCMSourceTrait {
     @NonNull
     public String getSudoUser() {
         return sudoUser;
+    }
+
+    /**
+     * Setter for stapler to set the username of the sudo user.
+     */
+    @DataBoundSetter
+    public void setSudoUser(@NonNull String sudoUser) {
+        this.sudoUser = sudoUser;
     }
 
     /**

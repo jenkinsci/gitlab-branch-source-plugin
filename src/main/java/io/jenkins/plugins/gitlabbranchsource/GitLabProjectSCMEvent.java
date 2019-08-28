@@ -8,6 +8,7 @@ import jenkins.scm.api.SCMSourceEvent;
 import org.gitlab4j.api.systemhooks.ProjectSystemHookEvent;
 
 public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent> {
+
     public GitLabProjectSCMEvent(ProjectSystemHookEvent projectSystemHookEvent, String origin) {
         super(typeOf(projectSystemHookEvent), projectSystemHookEvent, origin);
     }
@@ -20,7 +21,9 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                 return Type.REMOVED;
             case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
                 return Type.UPDATED;
-            default: throw new IllegalArgumentException("cannot handle system-hook " + projectSystemHookEvent);
+            default:
+                throw new IllegalArgumentException(
+                    "cannot handle system-hook " + projectSystemHookEvent);
         }
     }
 
@@ -38,7 +41,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
     @Override
     public String description() {
         return "Project event to branch " + getPayload().getPath() + " in namespace " +
-                getPayload().getPathWithNamespace();
+            getPayload().getPathWithNamespace();
     }
 
     /**
@@ -64,10 +67,11 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
         switch (getType()) {
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();
-                String projectOwner = GitLabSCMNavigator.getProjectOwnerFromNamespace(projectPathWithNamespace);
-                if(navigator.isGroup()) {
+                String projectOwner = GitLabSCMNavigator
+                    .getProjectOwnerFromNamespace(projectPathWithNamespace);
+                if (navigator.isGroup()) {
                     // checks when project owner is a Group
-                    if(navigator.isWantSubGroupProjects()) {
+                    if (navigator.isWantSubGroupProjects()) {
                         // can be a subgroup so needs to at least start with the project owner when subgroup projects are required
                         return projectOwner.startsWith(navigator.getProjectOwner());
                     } else {
@@ -80,9 +84,11 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                     return projectOwner.equals(navigator.getProjectOwner());
                 }
             case UPDATED:
-                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
+                return navigator.getNavigatorProjects()
+                    .contains(getPayload().getPathWithNamespace());
             case REMOVED:
-                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
+                return navigator.getNavigatorProjects()
+                    .contains(getPayload().getPathWithNamespace());
             default:
                 return false;
         }
@@ -90,7 +96,8 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
 
     @Override
     public boolean isMatch(@NonNull SCMSource source) {
-        return source instanceof GitLabSCMSource && getPayload().getProjectId().equals(((GitLabSCMSource) source).getProjectId());
+        return source instanceof GitLabSCMSource && getPayload().getProjectId()
+            .equals(((GitLabSCMSource) source).getProjectId());
     }
 
 }

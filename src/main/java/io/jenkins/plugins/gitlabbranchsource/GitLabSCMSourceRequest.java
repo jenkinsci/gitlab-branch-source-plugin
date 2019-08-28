@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSourceRequest.class);
     /**
      * {@code true} if branch details need to be fetched.
@@ -56,17 +57,20 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     @NonNull
     private final Set<ChangeRequestCheckoutStrategy> forkMRStrategies;
     /**
-     * The set of merge request numbers that the request is scoped to or {@code null} if the request is not limited.
+     * The set of merge request numbers that the request is scoped to or {@code null} if the request
+     * is not limited.
      */
     @CheckForNull
     private final Set<Long> requestedMergeRequestNumbers;
     /**
-     * The set of origin branch names that the request is scoped to or {@code null} if the request is not limited.
+     * The set of origin branch names that the request is scoped to or {@code null} if the request
+     * is not limited.
      */
     @CheckForNull
     private final Set<String> requestedOriginBranchNames;
     /**
-     * The set of tag names that the request is scoped to or {@code null} if the request is not limited.
+     * The set of tag names that the request is scoped to or {@code null} if the request is not
+     * limited.
      */
     @CheckForNull
     private final Set<String> requestedTagNames;
@@ -103,22 +107,23 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Constructor.
      *
-     * @param source   the source.
-     * @param context  the context.
+     * @param source the source.
+     * @param context the context.
      * @param listener the listener.
      */
-    GitLabSCMSourceRequest(SCMSource source, GitLabSCMSourceContext context, TaskListener listener) {
+    GitLabSCMSourceRequest(SCMSource source, GitLabSCMSourceContext context,
+        TaskListener listener) {
         super(source, context, listener);
         fetchBranches = context.wantBranches();
         fetchTags = context.wantTags();
         fetchOriginMRs = context.wantOriginMRs();
         fetchForkMRs = context.wantForkMRs();
         originMRStrategies = fetchOriginMRs && !context.originMRStrategies().isEmpty()
-                ? Collections.unmodifiableSet(EnumSet.copyOf(context.originMRStrategies()))
-                : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+            ? Collections.unmodifiableSet(EnumSet.copyOf(context.originMRStrategies()))
+            : Collections.<ChangeRequestCheckoutStrategy>emptySet();
         forkMRStrategies = fetchForkMRs && !context.forkMRStrategies().isEmpty()
-                ? Collections.unmodifiableSet(EnumSet.copyOf(context.forkMRStrategies()))
-                : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+            ? Collections.unmodifiableSet(EnumSet.copyOf(context.forkMRStrategies()))
+            : Collections.<ChangeRequestCheckoutStrategy>emptySet();
         Set<SCMHead> includes = context.observer().getIncludes();
         if (includes != null) {
             Set<Long> mergeRequestNumbers = new HashSet<>(includes.size());
@@ -212,24 +217,29 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the {@link ChangeRequestCheckoutStrategy} to create for merge requests of the specified type.
+     * Returns the {@link ChangeRequestCheckoutStrategy} to create for merge requests of the
+     * specified type.
      *
-     * @param fork {@code true} to return strategies for the fork merge requests, {@code false} for origin merge requests.
+     * @param fork {@code true} to return strategies for the fork merge requests, {@code false} for
+     * origin merge requests.
      * @return the {@link ChangeRequestCheckoutStrategy} to create for each merge request.
      */
     @NonNull
     public final Set<ChangeRequestCheckoutStrategy> getMRStrategies(boolean fork) {
         if (fork) {
-            return fetchForkMRs ? getForkMRStrategies() : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+            return fetchForkMRs ? getForkMRStrategies()
+                : Collections.<ChangeRequestCheckoutStrategy>emptySet();
         }
-        return fetchOriginMRs ? getOriginMRStrategies() : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+        return fetchOriginMRs ? getOriginMRStrategies()
+            : Collections.<ChangeRequestCheckoutStrategy>emptySet();
     }
 
     /**
      * Returns the {@link ChangeRequestCheckoutStrategy} to create for each merge request.
      *
-     * @return a map of the {@link ChangeRequestCheckoutStrategy} to create for each merge request keyed by whether the
-     * strategy applies to forks or not ({@link Boolean#FALSE} is the key for origin merge requests)
+     * @return a map of the {@link ChangeRequestCheckoutStrategy} to create for each merge request
+     * keyed by whether the strategy applies to forks or not ({@link Boolean#FALSE} is the key for
+     * origin merge requests)
      */
     public final Map<Boolean, Set<ChangeRequestCheckoutStrategy>> getMRStrategies() {
         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> result = new HashMap<>();
@@ -242,8 +252,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Returns requested merge request numbers.
      *
-     * @return the requested merge request numbers or {@code null} if the request was not scoped to a subset of merge
-     * requests.
+     * @return the requested merge request numbers or {@code null} if the request was not scoped to
+     * a subset of merge requests.
      */
     @CheckForNull
     public final Set<Long> getRequestedMergeRequestNumbers() {
@@ -253,7 +263,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Gets requested origin branch names.
      *
-     * @return the requested origin branch names or {@code null} if the request was not scoped to a subset of branches.
+     * @return the requested origin branch names or {@code null} if the request was not scoped to a
+     * subset of branches.
      */
     @CheckForNull
     public final Set<String> getRequestedOriginBranchNames() {
@@ -263,7 +274,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Gets requested tag names.
      *
-     * @return the requested tag names or {@code null} if the request was not scoped to a subset of tags.
+     * @return the requested tag names or {@code null} if the request was not scoped to a subset of
+     * tags.
      */
     @CheckForNull
     public final Set<String> getRequestedTagNames() {
@@ -271,11 +283,12 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the merge request details or an empty list if either the request did not specify to {@link #isFetchMRs()}
-     * or if the merge request details have not been provided by {@link #setMergeRequests(Iterable)} yet.
+     * Returns the merge request details or an empty list if either the request did not specify to
+     * {@link #isFetchMRs()} or if the merge request details have not been provided by {@link
+     * #setMergeRequests(Iterable)} yet.
      *
-     * @return the details of merge requests, may be limited by {@link #getRequestedMergeRequestNumbers()} or
-     * may be empty if not {@link #isFetchMRs()}
+     * @return the details of merge requests, may be limited by {@link #getRequestedMergeRequestNumbers()}
+     * or may be empty if not {@link #isFetchMRs()}
      */
     @NonNull
     public Iterable<MergeRequest> getMergeRequests() {
@@ -292,8 +305,9 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the branch details or an empty list if either the request did not specify to {@link #isFetchBranches()}
-     * or if the branch details have not been provided by {@link #setBranches(Iterable)} yet.
+     * Returns the branch details or an empty list if either the request did not specify to {@link
+     * #isFetchBranches()} or if the branch details have not been provided by {@link
+     * #setBranches(Iterable)} yet.
      *
      * @return the branch details (may be empty)
      */
@@ -312,17 +326,9 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Provides the requests with the tag details.
-     *
-     * @param tags the tag details.
-     */
-    public final void setTags(@CheckForNull Iterable<Tag> tags) {
-        this.tags = tags;
-    }
-
-    /**
-     * Returns the tag details or an empty list if either the request did not specify to {@link #isFetchTags()} ()}
-     * or if the tag details have not been provided by {@link #setTags(Iterable)} yet.
+     * Returns the tag details or an empty list if either the request did not specify to {@link
+     * #isFetchTags()} ()} or if the tag details have not been provided by {@link
+     * #setTags(Iterable)} yet.
      *
      * @return the tag details (may be empty)
      */
@@ -332,9 +338,20 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     }
 
     /**
-     * Returns the Map of project {@link Member} or {@code null} if those details have not been provided yet.
+     * Provides the requests with the tag details.
      *
-     * @return the Map of project {@link Member} or {@code null} if those details have not been provided yet.
+     * @param tags the tag details.
+     */
+    public final void setTags(@CheckForNull Iterable<Tag> tags) {
+        this.tags = tags;
+    }
+
+    /**
+     * Returns the Map of project {@link Member} or {@code null} if those details have not been
+     * provided yet.
+     *
+     * @return the Map of project {@link Member} or {@code null} if those details have not been
+     * provided yet.
      */
     public final HashMap<String, AccessLevel> getMembers() {
         return members;
@@ -343,7 +360,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Provides the Map of project {@link Member} username and {@link AccessLevel} of the member.
      *
-     * @param members the Map of project {@link Member} username and {@link AccessLevel} of the member.
+     * @param members the Map of project {@link Member} username and {@link AccessLevel} of the
+     * member.
      */
     public final void setMembers(@CheckForNull HashMap<String, AccessLevel> members) {
         this.members = members;
@@ -353,8 +371,8 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     /**
      * Returns the {@link GitLabApi} to use for the request.
      *
-     * @return the {@link GitLabApi} to use for the request or {@code null} if caller should establish
-     * their own.
+     * @return the {@link GitLabApi} to use for the request or {@code null} if caller should
+     * establish their own.
      */
     @CheckForNull
     public GitLabApi getGitLabApi() {
@@ -377,18 +395,18 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @param username the username of MR author
      * @return {@link AccessLevel} the permissions of the supplied user.
      */
-    public AccessLevel getPermission(String username){
-        if(getMembers() == null) {
+    public AccessLevel getPermission(String username) {
+        if (getMembers() == null) {
             return null;
         }
-        if(getMembers().containsKey(username)) {
+        if (getMembers().containsKey(username)) {
             return getMembers().get(username);
         }
         return null;
     }
 
     public boolean isMember(String username) {
-        if(getMembers() == null) {
+        if (getMembers() == null) {
             throw new NullPointerException("No members! :O");
         }
         return getMembers().containsKey(username);

@@ -10,8 +10,8 @@ public class GitLabSCMNavigatorRequest extends SCMNavigatorRequest {
     private boolean wantSubgroupProjects;
 
     protected GitLabSCMNavigatorRequest(@NonNull SCMNavigator source,
-                                       @NonNull GitLabSCMNavigatorContext context,
-                                       @NonNull SCMSourceObserver observer) {
+        @NonNull GitLabSCMNavigatorContext context,
+        @NonNull SCMSourceObserver observer) {
         super(source, context, observer);
         wantSubgroupProjects = context.wantSubgroupProjects();
     }

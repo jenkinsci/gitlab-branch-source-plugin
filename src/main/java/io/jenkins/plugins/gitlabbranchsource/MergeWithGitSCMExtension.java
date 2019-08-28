@@ -21,9 +21,9 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
- * Similar to {@link PreBuildMerge}, but we cannot use that unmodified: we need to specify the exact base branch
- * hash. The hash is specified so that we are not subject to a race condition between the {@code baseHash} we think
- * we are merging with and a possibly newer one that was just pushed.
+ * Similar to {@link PreBuildMerge}, but we cannot use that unmodified: we need to specify the exact
+ * base branch hash. The hash is specified so that we are not subject to a race condition between
+ * the {@code baseHash} we think we are merging with and a possibly newer one that was just pushed.
  */
 @Restricted(NoExternalUse.class)
 public class MergeWithGitSCMExtension extends GitSCMExtension {
@@ -48,15 +48,17 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
     }
 
     @Override
-    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
-                                            Revision marked, Revision rev)
-            throws IOException, InterruptedException, GitException {
+    public Revision decorateRevisionToBuild(GitSCM scm, Run<?, ?> build, GitClient git,
+        TaskListener listener,
+        Revision marked, Revision rev)
+        throws IOException, InterruptedException, GitException {
         ObjectId baseObjectId;
         if (StringUtils.isBlank(baseHash)) {
             try {
                 baseObjectId = git.revParse(Constants.R_REFS + baseName);
             } catch (GitException e) {
-                listener.getLogger().printf("Unable to determine head revision of %s prior to merge with PR%n",
+                listener.getLogger()
+                    .printf("Unable to determine head revision of %s prior to merge with PR%n",
                         baseName);
                 throw e;
             }
@@ -64,7 +66,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
             baseObjectId = ObjectId.fromString(baseHash);
         }
         listener.getLogger().printf("Merging %s commit %s into PR head commit %s%n",
-                baseName, baseObjectId.name(), rev.getSha1String()
+            baseName, baseObjectId.name(), rev.getSha1String()
         );
         checkout(scm, build, git, listener, rev);
         try {
@@ -86,14 +88,17 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
             throw x;
         }
         build.addAction(
-                new MergeRecord(baseName, baseObjectId.getName())); // does not seem to be used, but just in case
+            new MergeRecord(baseName,
+                baseObjectId.getName())); // does not seem to be used, but just in case
         ObjectId mergeRev = git.revParse(Constants.HEAD);
         listener.getLogger().println("Merge succeeded, producing " + mergeRev.name());
-        return new Revision(mergeRev, rev.getBranches()); // note that this ensures Build.revision != Build.marked
+        return new Revision(mergeRev,
+            rev.getBranches()); // note that this ensures Build.revision != Build.marked
     }
 
-    private void checkout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, Revision rev)
-            throws InterruptedException, IOException, GitException {
+    private void checkout(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener,
+        Revision rev)
+        throws InterruptedException, IOException, GitException {
         CheckoutCommand checkoutCommand = git.checkout().ref(rev.getSha1String());
         for (GitSCMExtension ext : scm.getExtensions()) {
             ext.decorateCheckoutCommand(scm, build, git, listener, checkoutCommand);

@@ -62,12 +62,13 @@ public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
         String ref = getPayload().getRef();
         ref = ref.startsWith(Constants.R_HEADS) ? ref.substring(Constants.R_HEADS.length()) : ref;
         return "Push event to branch " + ref + " in project " +
-                getPayload().getProject().getPathWithNamespace();
+            getPayload().getProject().getPathWithNamespace();
     }
 
     @Override
     public boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
-        return navigator.getNavigatorProjects().contains(getPayload().getProject().getPathWithNamespace());
+        return navigator.getNavigatorProjects()
+            .contains(getPayload().getProject().getPathWithNamespace());
     }
 
     @Override
@@ -82,7 +83,7 @@ public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
         ref = ref.startsWith(Constants.R_HEADS) ? ref.substring(Constants.R_HEADS.length()) : ref;
         BranchSCMHead h = new BranchSCMHead(ref);
         return Collections.<SCMHead, SCMRevision>singletonMap(h,
-                StringUtils.isNotBlank(getPayload().getAfter())
-                        ? new BranchSCMRevision(h, getPayload().getAfter()) : null);
+            StringUtils.isNotBlank(getPayload().getAfter())
+                ? new BranchSCMRevision(h, getPayload().getAfter()) : null);
     }
 }

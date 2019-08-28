@@ -27,9 +27,11 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * A {@link Discovery} trait for GitLab that will discover merge requests from forks of the project.
+ * A {@link Discovery} trait for GitLab that will discover merge requests from forks of the
+ * project.
  */
 public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
+
     /**
      * The strategy encoded as a bit-field.
      */
@@ -39,19 +41,19 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
      */
     @NonNull
     private final SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends ChangeRequestSCMHead2, ? extends
-            SCMRevision>
-            trust;
+        SCMRevision>
+        trust;
 
     /**
      * Constructor for stapler.
      *
      * @param strategyId the strategy id.
-     * @param trust      the authority to use.
+     * @param trust the authority to use.
      */
     @DataBoundConstructor
     public ForkMergeRequestDiscoveryTrait(int strategyId,
-                                         @NonNull SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends
-                                                 ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
+        @NonNull SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends
+            ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
         this.strategyId = strategyId;
         this.trust = trust;
     }
@@ -60,13 +62,13 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
      * Constructor for programmatic instantiation.
      *
      * @param strategies the {@link ChangeRequestCheckoutStrategy} instances.
-     * @param trust      the authority.
+     * @param trust the authority.
      */
     public ForkMergeRequestDiscoveryTrait(@NonNull Set<ChangeRequestCheckoutStrategy> strategies,
-                                         @NonNull SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends
-                                                 ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
+        @NonNull SCMHeadAuthority<? super GitLabSCMSourceRequest, ? extends
+            ChangeRequestSCMHead2, ? extends SCMRevision> trust) {
         this((strategies.contains(ChangeRequestCheckoutStrategy.MERGE) ? 1 : 0)
-                + (strategies.contains(ChangeRequestCheckoutStrategy.HEAD) ? 2 : 0), trust);
+            + (strategies.contains(ChangeRequestCheckoutStrategy.HEAD) ? 2 : 0), trust);
     }
 
     /**
@@ -91,7 +93,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             case 2:
                 return EnumSet.of(ChangeRequestCheckoutStrategy.HEAD);
             case 3:
-                return EnumSet.of(ChangeRequestCheckoutStrategy.HEAD, ChangeRequestCheckoutStrategy.MERGE);
+                return EnumSet
+                    .of(ChangeRequestCheckoutStrategy.HEAD, ChangeRequestCheckoutStrategy.MERGE);
             default:
                 return EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
         }
@@ -184,10 +187,10 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         @SuppressWarnings("unused") // stapler
         public List<SCMHeadAuthorityDescriptor> getTrustDescriptors() {
             return SCMHeadAuthority._for(
-                    GitLabSCMSourceRequest.class,
-                    MergeRequestSCMHead.class,
-                    MergeRequestSCMRevision.class,
-                    SCMHeadOrigin.Fork.class
+                GitLabSCMSourceRequest.class,
+                MergeRequestSCMHead.class,
+                MergeRequestSCMRevision.class,
+                SCMHeadOrigin.Fork.class
             );
         }
 
@@ -207,7 +210,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * An {@link SCMHeadAuthority} that trusts nothing.
      */
-    public static class TrustNobody extends SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
+    public static class TrustNobody extends
+        SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
 
         /**
          * Constructor.
@@ -220,7 +224,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull ChangeRequestSCMHead2 head) {
+        public boolean checkTrusted(@NonNull SCMSourceRequest request,
+            @NonNull ChangeRequestSCMHead2 head) {
             return false;
         }
 
@@ -235,9 +240,12 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
-            }            /**
+            }
+
+            /**
              * {@inheritDoc}
              */
             @Override
@@ -253,12 +261,27 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
      * An {@link SCMHeadAuthority} that trusts Members to the project.
      */
     public static class TrustMembers
-            extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
+        extends
+        SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
+
         /**
          * Constructor.
          */
         @DataBoundConstructor
         public TrustMembers() {
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request,
+            @NonNull MergeRequestSCMHead head) {
+            if (head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
+                return false;
+            }
+            assert request.getMembers() != null;
+            return request.isMember(head.getOriginOwner());
         }
 
         /**
@@ -281,21 +304,11 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
             }
 
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head) {
-            if(head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
-               return false;
-            }
-            assert request.getMembers() != null;
-            return request.isMember(head.getOriginOwner());
         }
     }
 
@@ -303,7 +316,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
      * An {@link SCMHeadAuthority} that trusts those with required permission to the project.
      */
     public static class TrustPermission
-            extends SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
+        extends
+        SCMHeadAuthority<GitLabSCMSourceRequest, MergeRequestSCMHead, MergeRequestSCMRevision> {
 
         /**
          * Constructor.
@@ -316,16 +330,18 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request, @NonNull MergeRequestSCMHead head) {
+        protected boolean checkTrusted(@NonNull GitLabSCMSourceRequest request,
+            @NonNull MergeRequestSCMHead head) {
             if (!head.getOrigin().equals(SCMHeadOrigin.DEFAULT)) {
                 AccessLevel permission = request.getPermission(head.getOriginOwner());
-                if(permission != null) {
+                if (permission != null) {
                     switch (permission) {
                         case MAINTAINER:
                         case DEVELOPER:
                         case OWNER:
                             return true;
-                        default: return false;
+                        default:
+                            return false;
                     }
                 }
             }
@@ -338,6 +354,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         @Symbol("gitLabTrustPermissions")
         @Extension
         public static class DescriptorImpl extends SCMHeadAuthorityDescriptor {
+
             /**
              * {@inheritDoc}
              */
@@ -350,7 +367,8 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
             }
         }
@@ -359,12 +377,23 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * An {@link SCMHeadAuthority} that trusts everyone.
      */
-    public static class TrustEveryone extends SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
+    public static class TrustEveryone extends
+        SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
+
         /**
          * Constructor.
          */
         @DataBoundConstructor
         public TrustEveryone() {
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
+            @NonNull ChangeRequestSCMHead2 head) {
+            return true;
         }
 
         /**
@@ -386,15 +415,10 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(
+                @NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Fork.class.isAssignableFrom(originClass);
             }
-        }        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull ChangeRequestSCMHead2 head) {
-            return true;
         }
     }
 

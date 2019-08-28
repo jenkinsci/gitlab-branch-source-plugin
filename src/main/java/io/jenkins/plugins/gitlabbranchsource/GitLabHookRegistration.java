@@ -9,14 +9,14 @@ public enum GitLabHookRegistration {
     /**
      * Disable hook registration.
      */
-     DISABLE,
+    DISABLE,
     /**
-     * Use the global system configuration for hook registration. (If the {@link GitLabServers}
-     * does not have hook registration configured then this will be the same as {@link #DISABLE})
+     * Use the global system configuration for hook registration. (If the {@link GitLabServers} does
+     * not have hook registration configured then this will be the same as {@link #DISABLE})
      */
-     SYSTEM,
-      /**
+    SYSTEM,
+    /**
      * Use the item scoped credentials to register the hook.
      */
-      ITEM
+    ITEM
 }

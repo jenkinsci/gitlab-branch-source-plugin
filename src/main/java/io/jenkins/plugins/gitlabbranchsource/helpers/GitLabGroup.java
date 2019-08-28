@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 public class GitLabGroup extends GitLabOwner {
+
     private String fullName;
     private String description;
 
@@ -16,16 +17,16 @@ public class GitLabGroup extends GitLabOwner {
         return fullName;
     }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     @Override
     public String getWord() {
-        if(fullName.indexOf('/') == -1) {
+        if (fullName.indexOf('/') == -1) {
             return "Group";
         }
         return "Subgroup";
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public String getDescription() {

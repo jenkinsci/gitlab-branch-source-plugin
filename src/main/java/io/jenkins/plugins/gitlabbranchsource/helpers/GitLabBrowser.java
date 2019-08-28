@@ -30,7 +30,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
         return new URL(
-                UriTemplate.buildFromTemplate(getProjectUrl())
+            UriTemplate.buildFromTemplate(getProjectUrl())
                 .literal("/commit")
                 .path(UriTemplateBuilder.var("changeSet"))
                 .build()
@@ -42,7 +42,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
         if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
-                || path.getChangeSet().getParentCommit() == null) {
+            || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         return diffLink(path);
@@ -51,44 +51,46 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
-        if(path.getEditType().equals(EditType.DELETE)) {
+        if (path.getEditType().equals(EditType.DELETE)) {
             return diffLink(path);
         } else {
             return new URL(
-                    UriTemplate.buildFromTemplate(getProjectUrl())
-                            .literal("/blob")
-                            .path(UriTemplateBuilder.var("changeSet"))
-                            .path(UriTemplateBuilder.var("path", true))
-                            .build()
-                            .set("changeSet", path.getChangeSet().getId())
-                            .set("path", StringUtils.split(path.getPath(), '/'))
-                            .expand()
+                UriTemplate.buildFromTemplate(getProjectUrl())
+                    .literal("/blob")
+                    .path(UriTemplateBuilder.var("changeSet"))
+                    .path(UriTemplateBuilder.var("path", true))
+                    .build()
+                    .set("changeSet", path.getChangeSet().getId())
+                    .set("path", StringUtils.split(path.getPath(), '/'))
+                    .expand()
             );
         }
     }
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
         return new URL(
-                UriTemplate.buildFromTemplate(getProjectUrl())
-                        .literal("/commit")
-                        .path(UriTemplateBuilder.var("changeSet"))
-                        .fragment(UriTemplateBuilder.var("diff"))
-                        .build()
-                        .set("changeSet", path.getChangeSet().getId())
-                        .set("diff", "#diff-" + getIndexOfPath(path))
-                        .expand()
+            UriTemplate.buildFromTemplate(getProjectUrl())
+                .literal("/commit")
+                .path(UriTemplateBuilder.var("changeSet"))
+                .fragment(UriTemplateBuilder.var("diff"))
+                .build()
+                .set("changeSet", path.getChangeSet().getId())
+                .set("diff", "#diff-" + getIndexOfPath(path))
+                .expand()
         );
     }
 
     @Extension
     public static class DescriptorImp extends Descriptor<RepositoryBrowser<?>> {
+
         @NonNull
         public String getDisplayName() {
             return "GitLab";
         }
 
         @Override
-        public GitLabBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+        public GitLabBrowser newInstance(StaplerRequest req, JSONObject jsonObject)
+            throws FormException {
             return req.bindJSON(GitLabBrowser.class, jsonObject);
         }
     }

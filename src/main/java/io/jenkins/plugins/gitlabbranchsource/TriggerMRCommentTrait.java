@@ -12,6 +12,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * Allows a GitLab merge request comment to trigger an immediate build based on a comment string.
  */
 public class TriggerMRCommentTrait extends SCMSourceTrait {
+
     /**
      * The comment body to trigger a new build on.
      */
