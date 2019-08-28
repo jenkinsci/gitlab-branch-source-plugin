@@ -65,7 +65,7 @@ public class GitLabHelper {
 
     public static UriTemplate commitUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}/commits/{hash}")
+            .template("{/project*}/commit/{hash}")
             .build();
     }
 
