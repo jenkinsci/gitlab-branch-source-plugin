@@ -35,6 +35,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -116,20 +117,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
      */
     @NonNull
-    private transient /*effectively final*/ Map<Integer,ObjectMetadataAction> mergeRequestMetadataCache;
+    private transient /*effectively final*/ Map<Integer,ObjectMetadataAction> mergeRequestMetadataCache = new ConcurrentHashMap<>();
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
      */
     @NonNull
-    private transient /*effectively final*/ Map<Integer,ContributorMetadataAction> mergeRequestContributorCache;
+    private transient /*effectively final*/ Map<Integer,ContributorMetadataAction> mergeRequestContributorCache = new ConcurrentHashMap<>();
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
         this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
-        mergeRequestMetadataCache = new HashMap<>();
-        mergeRequestContributorCache = new HashMap<>();
     }
 
     public String getServerName() {
