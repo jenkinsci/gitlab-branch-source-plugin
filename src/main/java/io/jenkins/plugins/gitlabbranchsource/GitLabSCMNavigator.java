@@ -18,6 +18,7 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabGroup;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
@@ -338,10 +339,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
             String fullName = gitlabOwner.getFullName();
             String webUrl = gitlabOwner.getWebUrl();
             String avatarUrl = gitlabOwner.getAvatarUrl();
+            String description = null;
+            if (gitlabOwner instanceof GitLabGroup) {
+                description = ((GitLabGroup) gitlabOwner).getDescription();
+            }
             List<Action> result = new ArrayList<>();
             result.add(new ObjectMetadataAction(
                 Util.fixEmpty(fullName),
-                null,
+                description,
                 webUrl)
             );
             if (StringUtils.isNotBlank(avatarUrl)) {
