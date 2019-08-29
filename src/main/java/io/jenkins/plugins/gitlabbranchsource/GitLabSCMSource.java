@@ -542,7 +542,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-                result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(),
+                result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(), gitlabProject.getDescription(),
                     gitlabProject.getWebUrl()));
             } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
