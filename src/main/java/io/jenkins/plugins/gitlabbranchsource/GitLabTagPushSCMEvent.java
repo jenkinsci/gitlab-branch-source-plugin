@@ -84,4 +84,9 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
                 ? new GitTagSCMRevision(h, hash) : null);
     }
 
+    @Override
+    public GitLabWebHookCause getCause() {
+        return new GitLabWebHookCause().fromTag(getPayload());
+    }
+
 }
