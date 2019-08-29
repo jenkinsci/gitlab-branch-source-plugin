@@ -54,6 +54,7 @@ import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceDescriptor;
 import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.metadata.ContributorMetadataAction;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
 import jenkins.scm.api.metadata.PrimaryInstanceMetadataAction;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
@@ -111,11 +112,24 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private transient Project gitlabProject;
     private int projectId = -1;
 
+    /**
+     * The cache of {@link ObjectMetadataAction} instances for each open MR.
+     */
+    @NonNull
+    private transient /*effectively final*/ Map<Integer,ObjectMetadataAction> mergeRequestMetadataCache;
+    /**
+     * The cache of {@link ObjectMetadataAction} instances for each open MR.
+     */
+    @NonNull
+    private transient /*effectively final*/ Map<Integer,ContributorMetadataAction> mergeRequestContributorCache;
+
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
         this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
+        mergeRequestMetadataCache = new HashMap<>();
+        mergeRequestContributorCache = new HashMap<>();
     }
 
     public String getServerName() {
@@ -354,6 +368,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         final MergeRequest m =
                             gitLabApi.getMergeRequestApi()
                                 .getMergeRequest(gitlabProject, mr.getIid());
+                        mergeRequestContributorCache.put(mr.getIid(),
+                            new ContributorMetadataAction(
+                                mr.getAuthor().getUsername(),
+                                mr.getAuthor().getName(),
+                                mr.getAuthor().getEmail()
+                            ));
+                        mergeRequestMetadataCache.put(mr.getIid(),
+                            new ObjectMetadataAction(
+                                mr.getTitle(),
+                                mr.getDescription(),
+                                mr.getWebUrl()
+                            ));
                         count++;
                         listener.getLogger().format("%nChecking merge request %s%n",
                             HyperlinkNote.encodeTo(
@@ -560,15 +586,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 result.add(new PrimaryInstanceMetadataAction());
             }
         } else if (head instanceof MergeRequestSCMHead) {
+            int iid = Integer.parseInt(((MergeRequestSCMHead) head).getId());
             String mergeUrl = mergeRequestUriTemplate(serverName)
                 .set("project", splitPath(projectPath))
-                .set("iid", ((MergeRequestSCMHead) head).getId())
+                .set("iid", iid)
                 .expand();
-            result.add(new ObjectMetadataAction(
-                null,
-                null,
-                mergeUrl
-            ));
+            ObjectMetadataAction metadataAction = mergeRequestMetadataCache.get(iid);
+            if (metadataAction == null) {
+                // best effort
+                metadataAction = new ObjectMetadataAction(null, null, mergeUrl);
+            }
+            result.add(metadataAction);
+            ContributorMetadataAction contributor = mergeRequestContributorCache.get(iid);
+            if (contributor != null) {
+                result.add(contributor);
+            }
             result.add(GitLabLink.toMergeRequest(mergeUrl));
         } else if (head instanceof GitLabTagSCMHead) {
             String tagUrl = tagUriTemplate(serverName)
