@@ -164,4 +164,9 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
         return result;
     }
 
+    @Override
+    public GitLabWebHookCause getCause() {
+        return new GitLabWebHookCause().fromMergeRequest(getPayload());
+    }
+
 }

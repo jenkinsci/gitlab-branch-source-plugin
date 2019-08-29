@@ -86,4 +86,10 @@ public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
             StringUtils.isNotBlank(getPayload().getAfter())
                 ? new BranchSCMRevision(h, getPayload().getAfter()) : null);
     }
+
+    @Override
+    public GitLabWebHookCause getCause() {
+        return new GitLabWebHookCause().fromPush(getPayload());
+    }
+
 }

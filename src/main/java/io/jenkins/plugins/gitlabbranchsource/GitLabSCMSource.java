@@ -633,6 +633,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             actions.add(GitLabLink.toCommit(commitUrl));
         }
 
+        if (event instanceof AbstractGitLabSCMHeadEvent) {
+            actions.add(new GitLabSCMCauseAction(((AbstractGitLabSCMHeadEvent) event).getCause()));
+        }
+
         return actions;
     }
 
