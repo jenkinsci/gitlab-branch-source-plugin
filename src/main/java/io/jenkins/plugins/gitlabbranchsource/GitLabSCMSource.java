@@ -834,9 +834,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
 
                 if (projectOwner.equals("")) {
-//                    for(Project p : gitLabApi.getProjectApi().getOwnedProjects()) {
-//                        result.add(p.getPathWithNamespace());
-//                    }
                     return new StandardListBoxModel().includeEmptyValue();
                 }
                 try {
