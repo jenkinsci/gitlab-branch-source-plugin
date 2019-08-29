@@ -18,6 +18,7 @@ import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -69,6 +70,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
+import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -544,6 +546,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
                 result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(),
                     gitlabProject.getWebUrl()));
+                String avatarUrl = gitlabProject.getAvatarUrl();
+                if (StringUtils.isNotBlank(avatarUrl)) {
+                    result.add(new GitLabAvatar(avatarUrl));
+                }
             } catch (GitLabApiException | NoSuchFieldException e) {
                 e.printStackTrace();
             }
