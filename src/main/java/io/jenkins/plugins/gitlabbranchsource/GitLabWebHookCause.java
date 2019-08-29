@@ -1,8 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import hudson.markup.EscapedMarkupFormatter;
 import hudson.triggers.SCMTrigger.SCMTriggerCause;
-import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
