@@ -543,7 +543,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
             } catch (GitLabApiException e) {
-                e.printStackTrace();
+                throw new IllegalStateException("Failed to retrieve project", e);
             }
         }
         String projectUrl = gitlabProject.getWebUrl();
