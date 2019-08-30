@@ -186,7 +186,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
             return new HashMap<>();
         }
@@ -267,7 +267,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     head.getClass().getName());
                 return null;
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
         return super.retrieve(head, listener);
@@ -507,7 +507,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         .format("%n%d tags were processed (query completed)%n", count);
                 }
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
     }
@@ -541,7 +541,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            } catch (GitLabApiException | NoSuchFieldException e) {
+            } catch (GitLabApiException e) {
                 e.printStackTrace();
             }
         }
@@ -564,7 +564,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            } catch (GitLabApiException | NoSuchFieldException e) {
+            } catch (GitLabApiException e) {
                 e.printStackTrace();
             }
         }
@@ -723,7 +723,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return fs != null ? fs.getRoot() : null;
                 }
             };
-        } catch (InterruptedException | NoSuchFieldException | GitLabApiException e) {
+        } catch (InterruptedException | GitLabApiException e) {
             throw new IOException(e);
         }
     }
@@ -849,7 +849,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                 }
                 return result;
-            } catch (GitLabApiException | NoSuchFieldException e) {
+            } catch (GitLabApiException e) {
                 e.printStackTrace();
                 return new StandardListBoxModel()
                     .includeEmptyValue();

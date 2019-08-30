@@ -285,7 +285,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
     }
@@ -331,40 +331,35 @@ public class GitLabSCMNavigator extends SCMNavigator {
         SCMNavigatorEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         LOGGER.info("retrieving actions..");
-        try {
+        if (gitlabOwner == null) {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            if (gitlabOwner == null) {
-                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
-            }
-            String fullName = gitlabOwner.getFullName();
-            String webUrl = gitlabOwner.getWebUrl();
-            String avatarUrl = gitlabOwner.getAvatarUrl();
-            String description = null;
-            if (gitlabOwner instanceof GitLabGroup) {
-                description = ((GitLabGroup) gitlabOwner).getDescription();
-            }
-            List<Action> result = new ArrayList<>();
-            result.add(new ObjectMetadataAction(
-                Util.fixEmpty(fullName),
-                description,
-                webUrl)
-            );
-            if (StringUtils.isNotBlank(avatarUrl)) {
-                result.add(new GitLabAvatar(avatarUrl));
-            }
-            result.add(GitLabLink.toGroup(webUrl));
-            if (StringUtils.isBlank(webUrl)) {
-                listener.getLogger().println("Web URL unspecified");
-            } else {
-                listener.getLogger().printf("%s URL: %s%n", gitlabOwner.getWord(),
-                    HyperlinkNote
-                        .encodeTo(webUrl, StringUtils.defaultIfBlank(fullName, webUrl)));
-            }
-            return result;
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            throw new IOException("Server Not found");
+            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
         }
+        String fullName = gitlabOwner.getFullName();
+        String webUrl = gitlabOwner.getWebUrl();
+        String avatarUrl = gitlabOwner.getAvatarUrl();
+        String description = null;
+        if (gitlabOwner instanceof GitLabGroup) {
+            description = ((GitLabGroup) gitlabOwner).getDescription();
+        }
+        List<Action> result = new ArrayList<>();
+        result.add(new ObjectMetadataAction(
+            Util.fixEmpty(fullName),
+            description,
+            webUrl)
+        );
+        if (StringUtils.isNotBlank(avatarUrl)) {
+            result.add(new GitLabAvatar(avatarUrl));
+        }
+        result.add(GitLabLink.toGroup(webUrl));
+        if (StringUtils.isBlank(webUrl)) {
+            listener.getLogger().println("Web URL unspecified");
+        } else {
+            listener.getLogger().printf("%s URL: %s%n", gitlabOwner.getWord(),
+                HyperlinkNote
+                    .encodeTo(webUrl, StringUtils.defaultIfBlank(fullName, webUrl)));
+        }
+        return result;
     }
 
     @Override
@@ -405,12 +400,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 gitLabApi = apiBuilder(serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
             } catch (IllegalStateException e) {
                 return FormValidation.error(e, e.getMessage());
             }
-            return FormValidation.ok("");
         }
 
         @NonNull
