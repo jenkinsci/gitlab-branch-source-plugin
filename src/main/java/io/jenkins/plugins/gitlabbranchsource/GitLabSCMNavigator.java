@@ -233,11 +233,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
             observer.getListener().getLogger().format("%nChecking projects...%n");
             PersonalAccessToken webHookCredentials = getWebHookCredentials(observer.getContext());
             GitLabApi webhookGitLabApi = null;
+            String webHookUrl = null;
             if (webHookCredentials != null) {
                 webhookGitLabApi = new GitLabApi(getServerUrlFromName(serverName),
                     webHookCredentials.getToken().getPlainText());
+                webHookUrl = GitLabHookCreator.getHookUrl(true);
             }
-            String webHookUrl = GitLabHookCreator.getHookUrl(true);
             for (Project p : projects) {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
@@ -251,7 +252,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                     HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                 try {
-                    if (webhookGitLabApi != null) {
+                    if (webhookGitLabApi != null && webHookUrl != null) {
                         observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
                             .createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace,
                                 webHookUrl));
