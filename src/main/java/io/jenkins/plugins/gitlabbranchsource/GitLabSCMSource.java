@@ -97,7 +97,6 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.branchU
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.mergeRequestUriTemplate;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.tagUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
@@ -547,15 +546,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 e.printStackTrace();
             }
         }
-        result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(), gitlabProject.getDescription(),
-            gitlabProject.getWebUrl()));
+        String projectUrl = gitlabProject.getWebUrl();
+        result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(),
+            gitlabProject.getDescription(),
+            projectUrl));
         String avatarUrl = gitlabProject.getAvatarUrl();
         if (StringUtils.isNotBlank(avatarUrl)) {
             result.add(new GitLabAvatar(avatarUrl));
         }
-        String projectUrl = projectUriTemplate(serverName)
-            .set("project", splitPath(projectPath))
-            .expand();
         result.add(GitLabLink.toProject(projectUrl));
         return result;
     }
