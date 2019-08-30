@@ -11,6 +11,7 @@ import hudson.ExtensionList;
 import hudson.Util;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
+import hudson.model.Actionable;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
@@ -553,6 +554,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         String avatarUrl = gitlabProject.getAvatarUrl();
         if (StringUtils.isNotBlank(avatarUrl)) {
             result.add(new GitLabAvatar(avatarUrl));
+        } else {
+            SCMSourceOwner owner = getOwner();
+            if (owner instanceof Actionable) {
+                GitLabAvatar avatar = ((Actionable) owner).getAction(GitLabAvatar.class);
+                if (avatar != null) {
+                    result.add(avatar);
+                }
+            }
         }
         result.add(GitLabLink.toProject(projectUrl));
         return result;
