@@ -157,7 +157,7 @@ public class GitLabPipelineStatusNotifier {
                     symbol + buildName + note + suffix
                 );
             }
-        } catch (NoSuchFieldException | GitLabApiException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
     }
@@ -253,7 +253,7 @@ public class GitLabPipelineStatusNotifier {
                 state,
                 status);
             listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
-        } catch (NoSuchFieldException | GitLabApiException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
     }
@@ -352,7 +352,7 @@ public class GitLabPipelineStatusNotifier {
                                 state,
                                 status);
                             LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
-                        } catch (NoSuchFieldException | GitLabApiException e) {
+                        } catch (GitLabApiException e) {
                             e.printStackTrace();
                         }
                     } catch (IOException | InterruptedException e) {

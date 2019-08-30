@@ -18,6 +18,7 @@ import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
@@ -69,6 +70,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
+import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -95,7 +97,6 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.branchU
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.mergeRequestUriTemplate;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.tagUriTemplate;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
@@ -186,7 +187,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
             return new HashMap<>();
         }
@@ -267,7 +268,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     head.getClass().getName());
                 return null;
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
         return super.retrieve(head, listener);
@@ -507,7 +508,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         .format("%n%d tags were processed (query completed)%n", count);
                 }
             }
-        } catch (GitLabApiException | NoSuchFieldException e) {
+        } catch (GitLabApiException e) {
             e.printStackTrace();
         }
     }
@@ -535,22 +536,24 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) {
-        LOGGER.info(String.format("e, l..%s", Thread.currentThread().getName()));
         List<Action> result = new ArrayList<>();
         if (gitlabProject == null) {
             try {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-                result.add(new ObjectMetadataAction(null, gitlabProject.getDescription(),
-                    gitlabProject.getWebUrl()));
-            } catch (GitLabApiException | NoSuchFieldException e) {
-                e.printStackTrace();
+            } catch (GitLabApiException e) {
+                throw new IllegalStateException("Failed to retrieve project", e);
             }
         }
-        String projectUrl = projectUriTemplate(serverName)
-            .set("project", splitPath(projectPath))
-            .expand();
+        String projectUrl = gitlabProject.getWebUrl();
+        result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(),
+            gitlabProject.getDescription(),
+            projectUrl));
+        String avatarUrl = gitlabProject.getAvatarUrl();
+        if (StringUtils.isNotBlank(avatarUrl)) {
+            result.add(new GitLabAvatar(avatarUrl));
+        }
         result.add(GitLabLink.toProject(projectUrl));
         return result;
     }
@@ -565,7 +568,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabApi gitLabApi = apiBuilder(serverName);
                 listener.getLogger().format("Looking up project %s%n", projectPath);
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            } catch (GitLabApiException | NoSuchFieldException e) {
+            } catch (GitLabApiException e) {
                 e.printStackTrace();
             }
         }
@@ -724,7 +727,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return fs != null ? fs.getRoot() : null;
                 }
             };
-        } catch (InterruptedException | NoSuchFieldException | GitLabApiException e) {
+        } catch (InterruptedException | GitLabApiException e) {
             throw new IOException(e);
         }
     }
@@ -850,7 +853,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                 }
                 return result;
-            } catch (GitLabApiException | NoSuchFieldException e) {
+            } catch (GitLabApiException e) {
                 e.printStackTrace();
                 return new StandardListBoxModel()
                     .includeEmptyValue();

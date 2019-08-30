@@ -11,7 +11,7 @@ import org.gitlab4j.api.GitLabApi;
 
 public class GitLabHelper {
 
-    public static GitLabApi apiBuilder(String serverName) throws NoSuchFieldException {
+    public static GitLabApi apiBuilder(String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
             PersonalAccessToken credentials = server.getCredentials();
@@ -20,7 +20,7 @@ public class GitLabHelper {
             }
             return new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
         }
-        throw new NoSuchFieldException(
+        throw new IllegalStateException(
             String.format("No server found with the name: %s", serverName));
     }
 
