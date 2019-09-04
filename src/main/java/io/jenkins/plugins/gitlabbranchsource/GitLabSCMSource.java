@@ -830,11 +830,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         public ListBoxModel doFillProjectPathItems(@AncestorInPath SCMSourceOwner context,
             @QueryParameter String serverName,
             @QueryParameter String projectOwner) {
+            List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
+            if (gitLabServers.size() == 0) {
+                return new StandardListBoxModel()
+                    .includeEmptyValue();
+            }
             ListBoxModel result = new ListBoxModel();
             try {
                 GitLabApi gitLabApi;
                 if (serverName.equals("")) {
-                    gitLabApi = apiBuilder(GitLabServers.get().getServers().get(0).getName());
+                    gitLabApi = apiBuilder(gitLabServers.get(0).getName());
                 } else {
                     gitLabApi = apiBuilder(serverName);
                 }
