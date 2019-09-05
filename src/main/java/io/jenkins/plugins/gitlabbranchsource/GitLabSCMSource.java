@@ -107,6 +107,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private final String serverName;
     private final String projectOwner;
     private final String projectPath;
+    private String projectName;
     private String credentialsId;
     private List<SCMSourceTrait> traits = new ArrayList<>();
     private transient String sshRemote;
@@ -160,6 +161,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         this.sshRemote = sshRemote;
     }
 
+    public String getProjectName() {
+        return projectName;
+    }
+
+    /**
+     * Only used for saving project name for {@link GitLabSCMNavigator}
+     * @param projectName the name of the project
+     */
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
     @Override
     public String getCredentialsId() {
         return credentialsId;
@@ -177,6 +190,24 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 getHttpRemote(),
                 getSshRemote(), getCredentialsId(), projectPath)
             .expand();
+    }
+
+    protected Project getGitlabProject() {
+        if (gitlabProject == null) {
+            getGitlabProject(apiBuilder(serverName));
+        }
+        return gitlabProject;
+    }
+
+    protected Project getGitlabProject(GitLabApi gitLabApi) {
+        if (gitlabProject == null) {
+            try {
+                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+            } catch (GitLabApiException e) {
+                throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
+            }
+        }
+        return gitlabProject;
     }
 
     // This method always returns the latest list of members of the project
@@ -218,9 +249,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            if (gitlabProject == null) {
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            }
+            getGitlabProject(gitLabApi);
             LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if (head instanceof BranchSCMHead) {
                 listener.getLogger()
@@ -280,9 +309,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            if (gitlabProject == null) {
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            }
+            getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
@@ -537,18 +564,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) {
         List<Action> result = new ArrayList<>();
-        if (gitlabProject == null) {
-            try {
-                GitLabApi gitLabApi = apiBuilder(serverName);
-                listener.getLogger().format("Looking up project %s%n", projectPath);
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            } catch (GitLabApiException e) {
-                throw new IllegalStateException("Failed to retrieve project", e);
-            }
-        }
+        getGitlabProject();
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(traits);
         String projectUrl = gitlabProject.getWebUrl();
-        result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(),
+        String name = StringUtils.isBlank(projectName) ? gitlabProject.getNameWithNamespace() : projectName;
+        result.add(new ObjectMetadataAction(name,
             gitlabProject.getDescription(),
             projectUrl));
         String avatarUrl = gitlabProject.getAvatarUrl();
@@ -564,15 +584,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event,
         @NonNull TaskListener listener) {
         LOGGER.info(String.format("h, e, l..%s", Thread.currentThread().getName()));
-        if (gitlabProject == null) {
-            try {
-                GitLabApi gitLabApi = apiBuilder(serverName);
-                listener.getLogger().format("Looking up project %s%n", projectPath);
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            } catch (GitLabApiException e) {
-                e.printStackTrace();
-            }
-        }
+        getGitlabProject();
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
             String branchUrl = branchUriTemplate(serverName)
@@ -687,9 +699,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 throw new AssertionError();
             }
             GitLabApi gitLabApi = apiBuilder(serverName);
-            if (gitlabProject == null) {
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-            }
+            getGitlabProject(gitLabApi);
             LOGGER.info("Creating a probe: " + head.getName());
             final SCMFileSystem fs = builder.build(head, revision, gitLabApi, gitlabProject);
             return new SCMProbe() {
@@ -728,7 +738,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return fs != null ? fs.getRoot() : null;
                 }
             };
-        } catch (InterruptedException | GitLabApiException e) {
+        } catch (InterruptedException e) {
             throw new IOException(e);
         }
     }

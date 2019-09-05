@@ -184,6 +184,20 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
     }
 
+    private GitLabOwner getGitlabOwner() {
+        if (gitlabOwner == null) {
+            getGitlabOwner(apiBuilder(serverName));
+        }
+        return gitlabOwner;
+    }
+
+    private GitLabOwner getGitlabOwner(GitLabApi gitLabApi) {
+        if (gitlabOwner == null) {
+            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+        }
+        return gitlabOwner;
+    }
+
     /**
      * Sets the behavioural traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
@@ -212,9 +226,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             .withTraits(traits)
             .newRequest(this, observer)) {
             GitLabApi gitLabApi = apiBuilder(serverName);
-            if (gitlabOwner == null) {
-                gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
-            }
+            getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
                 // Even returns the group projects owned by the user
@@ -241,6 +253,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
             for (Project p : projects) {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
+                String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
+                String projectName = getProjectName(request.withProjectNamingStrategy(), p);
                 getNavigatorProjects().add(projectPathWithNamespace);
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger()
@@ -249,7 +263,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     continue;
                 }
                 observer.getListener().getLogger().format("%nChecking project %s%n",
-                    HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
+                    HyperlinkNote.encodeTo(p.getWebUrl(), projectName));
                 try {
                     if (webhookGitLabApi != null && webHookUrl != null) {
                         observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
@@ -260,22 +274,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     observer.getListener().getLogger()
                         .format("Cannot set web hook: %s%n", e.getReason());
                 }
-                String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
-                if (request.process(projectPathWithNamespace,
-                    projectPath -> new GitLabSCMSourceBuilder(
-                        getId() + "::" + projectPath,
+                if (request.process(projectName,
+                    name -> new GitLabSCMSourceBuilder(
+                        getId() + "::" + projectPathWithNamespace,
                         serverName,
                         credentialsId,
                         projectOwner,
-                        projectPath
+                        projectPathWithNamespace,
+                        name
                     ).withTraits(traits).build(),
                     null,
-                    (Witness) (projectPath, isMatch) -> {
+                    (Witness) (name, isMatch) -> {
                         if (isMatch) {
                             observer.getListener().getLogger()
-                                .format("Proposing %s%n", projectPath);
+                                .format("Proposing %s%n", name);
                         } else {
-                            observer.getListener().getLogger().format("Ignoring %s%n", projectPath);
+                            observer.getListener().getLogger().format("Ignoring %s%n", name);
                         }
                     })) {
                     observer.getListener().getLogger()
@@ -288,6 +302,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
         } catch (GitLabApiException e) {
             e.printStackTrace();
         }
+    }
+
+    @NonNull
+    private String getProjectName(int projectNamingStrategy, Project project) {
+        String projectName;
+        switch (projectNamingStrategy) {
+            default:
+            case 1:
+                projectName = project.getPathWithNamespace();
+                break;
+            case 2:
+                projectName = project.getNameWithNamespace()
+                    .replace(String.format("%s / ", getGitlabOwner().getFullName()), "");
+                break;
+        }
+        return projectName;
     }
 
     private PersonalAccessToken getWebHookCredentials(SCMSourceOwner owner) {
@@ -331,10 +361,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         SCMNavigatorEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         LOGGER.info("retrieving actions..");
-        if (gitlabOwner == null) {
-            GitLabApi gitLabApi = apiBuilder(serverName);
-            gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
-        }
+        getGitlabOwner();
         String fullName = gitlabOwner.getFullName();
         String webUrl = gitlabOwner.getWebUrl();
         String avatarUrl = gitlabOwner.getAvatarUrl();
