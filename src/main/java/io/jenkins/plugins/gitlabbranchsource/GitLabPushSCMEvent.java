@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
-
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
