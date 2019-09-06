@@ -1,23 +1,56 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import com.thoughtworks.xstream.XStream;
 import java.lang.reflect.Field;
+import jenkins.branch.BranchSource;
+import jenkins.scm.api.SCMSource;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runners.model.Statement;
+import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import static org.junit.Assert.assertNotNull;
 
 public class GitLabSCMSourceDeserializationTest {
 
+    private static final String PROJECT_NAME = "project";
+    private static final String SOURCE_ID = "id";
+
+    @Rule
+    public final RestartableJenkinsRule plan = new RestartableJenkinsRule();
+
     @Test
-    public void afterDeserializationWithXStreamTransientFieldsAreNotNull() throws Exception {
-        XStream xs = new XStream();
-        GitLabSCMSource source = (GitLabSCMSource) xs.fromXML(xs.toXML(new GitLabSCMSource("Test Server", "Test Owner", "test-path")));
-        Field mergeRequestContributorCache = source.getClass().getDeclaredField("mergeRequestContributorCache");
-        mergeRequestContributorCache.setAccessible(true);
-        Field mergeRequestMetadataCache = source.getClass().getDeclaredField("mergeRequestMetadataCache");
-        mergeRequestMetadataCache.setAccessible(true);
-        assertNotNull(mergeRequestMetadataCache.get(source));
-        assertNotNull(mergeRequestContributorCache.get(source));
+    public void afterRestartingJenkinsTransientFieldsAreNotNull() throws Exception {
+        plan.addStep(new Statement() {
+
+            @Override
+            public void evaluate() throws Throwable {
+                GitLabSCMSourceBuilder sb = new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project");
+                WorkflowMultiBranchProject project = plan.j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
+                project.getSourcesList().add(new BranchSource(sb.build()));
+            }
+        });
+
+        plan.addStep(new Statement() {
+
+            @Override
+            public void evaluate() throws Throwable {
+                SCMSource source = plan.j.getInstance()
+                        .getAllItems(WorkflowMultiBranchProject.class)
+                        .stream().filter(p -> PROJECT_NAME.equals(p.getName()))
+                        .map(p -> p.getSCMSource(SOURCE_ID))
+                        .findFirst()
+                        .get();
+
+                Class<? extends SCMSource> clazz = source.getClass();
+                Field mergeRequestContributorCache = clazz.getDeclaredField("mergeRequestContributorCache");
+                mergeRequestContributorCache.setAccessible(true);
+                Field mergeRequestMetadataCache = clazz.getDeclaredField("mergeRequestMetadataCache");
+                mergeRequestMetadataCache.setAccessible(true);
+                assertNotNull(mergeRequestMetadataCache.get(source));
+                assertNotNull(mergeRequestContributorCache.get(source));
+            }
+        });
     }
 
 }
