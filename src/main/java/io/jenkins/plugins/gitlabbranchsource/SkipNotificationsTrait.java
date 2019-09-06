@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -33,6 +34,7 @@ public class SkipNotificationsTrait extends SCMSourceTrait {
     @Symbol("skipNotifications")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.SkipNotificationsTrait_displayName();

@@ -40,7 +40,7 @@ public class GitLabSCMFile extends SCMFile {
 
     @NonNull
     @Override
-    protected SCMFile newChild(String name, boolean assumeIsDirectory) {
+    protected SCMFile newChild(@NonNull String name, boolean assumeIsDirectory) {
         return new GitLabSCMFile(this, name, assumeIsDirectory ? Boolean.FALSE : null);
     }
 

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -54,6 +55,7 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
     @Symbol("mrTriggerComment")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.TriggerMRCommentTrait_displayName();

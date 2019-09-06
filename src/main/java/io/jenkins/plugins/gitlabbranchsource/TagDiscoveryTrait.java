@@ -59,6 +59,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.TagDiscoveryTrait_displayName();
@@ -106,6 +107,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.TagDiscoveryTrait_authorityDisplayName();

@@ -94,6 +94,7 @@ public class HookRegistrationTrait extends SCMSourceTrait {
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.HookRegistrationTrait_displayName();

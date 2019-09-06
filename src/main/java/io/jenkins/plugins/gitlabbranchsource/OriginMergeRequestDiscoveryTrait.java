@@ -109,6 +109,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Discover merge requests from origin";
@@ -180,6 +181,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.OriginMergeRequestDiscoveryTrait_authorityDisplayName();

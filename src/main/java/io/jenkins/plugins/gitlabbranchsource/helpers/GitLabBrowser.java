@@ -88,7 +88,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         }
 
         @Override
-        public GitLabBrowser newInstance(StaplerRequest req, JSONObject jsonObject)
+        public GitLabBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject)
             throws FormException {
             return req.bindJSON(GitLabBrowser.class, jsonObject);
         }

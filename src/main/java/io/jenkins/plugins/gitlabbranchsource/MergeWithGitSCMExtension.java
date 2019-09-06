@@ -43,6 +43,7 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
         return baseName;
     }
 
+    @CheckForNull
     public String getBaseHash() {
         return baseHash;
     }
