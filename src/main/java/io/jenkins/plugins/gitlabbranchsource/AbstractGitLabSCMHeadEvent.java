@@ -5,6 +5,7 @@ import hudson.scm.SCM;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.gitlab4j.api.webhook.AbstractPushEvent;
 
@@ -19,7 +20,7 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractGitLabSCMHeadEvent.class.getName());
 
-    private static final String NONE_HASH_PATTERN = "^0+$";
+    private static final Pattern NONE_HASH_PATTERN = Pattern.compile("^0+$");
 
     static <E extends AbstractPushEvent> Type typeOf(E pushEvent) {
         Type result;
@@ -39,7 +40,7 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
     }
 
     private static boolean isPresent(String ref) {
-        return !(ref.matches(NONE_HASH_PATTERN));
+        return !(NONE_HASH_PATTERN.matcher(ref).matches());
     }
 
     public AbstractGitLabSCMHeadEvent(Type type, E createEvent, String origin) {
