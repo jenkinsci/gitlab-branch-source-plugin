@@ -14,7 +14,6 @@ import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
-import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
@@ -817,7 +816,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             result.includeEmptyValue();
             result.includeMatchingAs(
                 context instanceof Queue.Task
-                    ? Tasks.getAuthenticationOf((Queue.Task) context)
+                    ? ((Queue.Task) context).getDefaultAuthentication()
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,
