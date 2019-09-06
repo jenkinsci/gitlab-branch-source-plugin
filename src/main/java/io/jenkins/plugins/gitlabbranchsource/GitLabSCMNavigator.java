@@ -13,6 +13,7 @@ import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
+import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -482,7 +483,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             result.includeEmptyValue();
             result.includeMatchingAs(
                 context instanceof Queue.Task
-                    ? ((Queue.Task) context).getDefaultAuthentication()
+                    ? Tasks.getAuthenticationOf((Queue.Task) context)
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,

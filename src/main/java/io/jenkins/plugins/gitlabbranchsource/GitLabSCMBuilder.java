@@ -10,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
@@ -128,7 +129,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     StandardUsernameCredentials.class,
                     context,
                     context instanceof Queue.Task
-                        ? ((Queue.Task) context).getDefaultAuthentication()
+                        ? Tasks.getAuthenticationOf((Queue.Task) context)
                         : ACL.SYSTEM,
                     builder.build()
                 ),
