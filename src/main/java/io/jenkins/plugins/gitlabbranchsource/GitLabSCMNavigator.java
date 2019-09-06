@@ -13,7 +13,6 @@ import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
-import hudson.model.queue.Tasks;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -445,7 +444,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
             @QueryParameter String serverName) {
             if (context == null) {
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
                     result.add(serverName);
@@ -467,7 +466,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     result.includeCurrentValue(credentialsId);
                     return result;
@@ -482,8 +481,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             result.includeEmptyValue();
             result.includeMatchingAs(
-                context instanceof Queue.Task ?
-                    Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                context instanceof Queue.Task
+                    ? ((Queue.Task) context).getDefaultAuthentication()
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,
@@ -496,7 +495,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @SuppressWarnings("unused") // jelly
         public List<NamedArrayList<? extends SCMTraitDescriptor<?>>> getTraitsDescriptorLists() {
             GitLabSCMSource.DescriptorImpl sourceDescriptor =
-                Jenkins.getActiveInstance()
+                Jenkins.get()
                     .getDescriptorByType(GitLabSCMSource.DescriptorImpl.class);
             List<SCMTraitDescriptor<?>> all = new ArrayList<>();
             all.addAll(SCMNavigatorTrait

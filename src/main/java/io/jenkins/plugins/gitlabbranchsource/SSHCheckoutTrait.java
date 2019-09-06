@@ -12,7 +12,6 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.Item;
 import hudson.model.Queue;
-import hudson.model.queue.Tasks;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.security.ACL;
@@ -86,7 +85,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     result.includeCurrentValue(credentialsId);
                     return result;
@@ -101,8 +100,8 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             }
             result.includeEmptyValue();
             result.includeMatchingAs(
-                context instanceof Queue.Task ?
-                    Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                context instanceof Queue.Task
+                    ? ((Queue.Task) context).getDefaultAuthentication()
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,
