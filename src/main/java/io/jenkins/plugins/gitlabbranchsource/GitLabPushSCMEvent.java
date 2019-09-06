@@ -3,6 +3,8 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Logger;
+
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
@@ -13,18 +15,33 @@ import org.gitlab4j.api.webhook.PushEvent;
 
 public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
 
+    private static final Logger LOGGER = Logger.getLogger(GitLabPushSCMEvent.class.getName());
+
+    private static final String NULL_REV = "0000000000000000000000000000000000000000";
+
     public GitLabPushSCMEvent(PushEvent pushEvent, String origin) {
         super(typeOf(pushEvent), pushEvent, origin);
     }
 
     private static Type typeOf(PushEvent pushEvent) {
-        if (!pushEvent.getCommits().get(0).getAdded().isEmpty()) {
-            return Type.CREATED;
+        Type result;
+        boolean hasBefore = isPresent(pushEvent.getBefore());
+        boolean hasAfter = isPresent(pushEvent.getAfter());
+        if (hasBefore && hasAfter) {
+            result = Type.UPDATED;
+        } else if (hasAfter) {
+            result = Type.CREATED;
+        } else if (hasBefore) {
+            result = Type.REMOVED;
+        } else {
+            LOGGER.warning("Received push event with both \"before\" and \"after\" set to non-existing revision. Assuming removal.");
+            result = Type.REMOVED;
         }
-        if (!pushEvent.getCommits().get(0).getRemoved().isEmpty()) {
-            return Type.REMOVED;
-        }
-        return Type.UPDATED;
+        return result;
+    }
+
+    private static boolean isPresent(String ref) {
+        return !(ref.equals(NULL_REV));
     }
 
     /**
