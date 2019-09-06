@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMNavigator;
@@ -59,9 +58,9 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
 
     public abstract boolean isMatch(@NonNull GitLabSCMSource source);
 
-    @Nonnull
+    @NonNull
     @Override
-    public final Map<SCMHead, SCMRevision> heads(@Nonnull SCMSource source) {
+    public final Map<SCMHead, SCMRevision> heads(@NonNull SCMSource source) {
         Map<SCMHead, SCMRevision> heads = new HashMap<>();
         if (source instanceof GitLabSCMSource) {
             return headsFor((GitLabSCMSource) source);

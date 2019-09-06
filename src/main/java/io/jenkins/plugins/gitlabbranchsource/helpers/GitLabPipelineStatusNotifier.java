@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -381,7 +381,7 @@ public class GitLabPipelineStatusNotifier {
     public static class JobCompletedListener extends RunListener<Run<?, ?>> {
 
         @Override
-        public void onCompleted(Run<?, ?> build, @Nonnull TaskListener listener) {
+        public void onCompleted(Run<?, ?> build, @NonNull TaskListener listener) {
             LOGGER.info("RunListener: Complete" + build.getFullDisplayName());
             sendNotifications(build, listener);
             logComment(build, listener);
