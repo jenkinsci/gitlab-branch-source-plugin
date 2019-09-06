@@ -12,21 +12,11 @@ import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.webhook.TagPushEvent;
 
 import static jenkins.scm.api.SCMEvent.Type.CREATED;
-import static jenkins.scm.api.SCMEvent.Type.REMOVED;
 
 public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEvent> {
 
-    private static final String NONE_HASH_PATTERN = "^0+$";
-
     public GitLabTagPushSCMEvent(TagPushEvent tagPushEvent, String origin) {
         super(typeOf(tagPushEvent), tagPushEvent, origin);
-    }
-
-    private static Type typeOf(TagPushEvent tagPushEvent) {
-        if (tagPushEvent.getAfter().matches(NONE_HASH_PATTERN)) {
-            return REMOVED;
-        }
-        return Type.CREATED;
     }
 
     /**

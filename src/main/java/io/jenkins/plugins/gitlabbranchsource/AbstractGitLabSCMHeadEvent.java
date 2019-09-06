@@ -4,6 +4,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.scm.SCM;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import org.gitlab4j.api.webhook.AbstractPushEvent;
+
 import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadEvent;
@@ -12,6 +16,31 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 
 public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractGitLabSCMHeadEvent.class.getName());
+
+    private static final String NONE_HASH_PATTERN = "^0+$";
+
+    static <E extends AbstractPushEvent> Type typeOf(E pushEvent) {
+        Type result;
+        boolean hasBefore = isPresent(pushEvent.getBefore());
+        boolean hasAfter = isPresent(pushEvent.getAfter());
+        if (hasBefore && hasAfter) {
+            result = Type.UPDATED;
+        } else if (hasAfter) {
+            result = Type.CREATED;
+        } else if (hasBefore) {
+            result = Type.REMOVED;
+        } else {
+            LOGGER.warning("Received push event with both \"before\" and \"after\" set to non-existing revision. Assuming removal.");
+            result = Type.REMOVED;
+        }
+        return result;
+    }
+
+    private static boolean isPresent(String ref) {
+        return !(ref.matches(NONE_HASH_PATTERN));
+    }
 
     public AbstractGitLabSCMHeadEvent(Type type, E createEvent, String origin) {
         super(type, createEvent, origin);
