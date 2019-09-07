@@ -17,16 +17,6 @@ public class GitLabPushSCMEvent extends AbstractGitLabSCMHeadEvent<PushEvent> {
         super(typeOf(pushEvent), pushEvent, origin);
     }
 
-    private static Type typeOf(PushEvent pushEvent) {
-        if (!pushEvent.getCommits().get(0).getAdded().isEmpty()) {
-            return Type.CREATED;
-        }
-        if (!pushEvent.getCommits().get(0).getRemoved().isEmpty()) {
-            return Type.REMOVED;
-        }
-        return Type.UPDATED;
-    }
-
     /**
      * {@inheritDoc}
      */
