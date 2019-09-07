@@ -457,6 +457,8 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel.
 
+* `Disable GitLab project avatar` - It is not possible to fetch avatars when api has no token authentication or project is private. So as a workaround you may want to disable fetching avatars of GitLab project(s). We will fix this issue in a later release.
+
 * `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
 * `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
