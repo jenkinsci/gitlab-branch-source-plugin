@@ -1,4 +1,4 @@
-[![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/develop/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/develop/)
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/)
 [![Travis](https://img.shields.io/travis/jenkinsci/gitlab-branch-source-plugin.svg?logo=travis&label=build&logoColor=white)](https://travis-ci.org/jenkinsci/gitlab-branch-source-plugin)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
 [![Gitter](https://badges.gitter.im/jenkinsci/gitlab-branch-source-plugin.svg)](https://gitter.im/jenkinsci/gitlab-branch-source-plugin)
@@ -114,8 +114,6 @@ Here are a few ways to setup your own Jenkins server:
 
 ## Installing plugin
 
-This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release has been made to Jenkins Experimental Update Center. You can try it out by following ways:
-
 1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
     ```bash
@@ -125,13 +123,13 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release 
         -w <path-to-jenkins-war>
     ```
     
-2. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Avalailable and search for `gitlab branch source plugin` then select Install.
+2. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Available and search for `gitlab branch source plugin` then select Install.
 
 3. From Source:
 
     i. Checkout out source code to your local machine:
     
-         git clone https://github.com/baymac/gitlab-branch-source-plugin.git -b develop
+         git clone https://github.com/baymac/gitlab-branch-source-plugin.git -b master
     
          cd gitlab-branch-source-plugin
     
@@ -163,7 +161,7 @@ This plugin is in Beta testing stage. `gitlab-branch-source-0.0.7-beta` release 
     
         6. Select `Install without restart`
 	
-4. Download `gitlab-branch-source-1.0.0.hpi` from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.0.0/gitlab-branch-source-1.0.0.hpi) and manually install.
+4. Download latest release (`gitlab-branch-source-1.2.1.hpi`) from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.2.1/gitlab-branch-source-1.2.1.hpi) and manually install.
 
 ## Initial Setup
 
@@ -189,7 +187,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     i. `Name` - Plugin automatically generates an unique server name for you. User may want to configure this field to suit their needs but should make sure it is sufficiently unique. We recommend to keep it as it is.
 
-    ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User canmodify it to enter their GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.
+    ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User can modify it to enter their GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.
 
     iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
 
