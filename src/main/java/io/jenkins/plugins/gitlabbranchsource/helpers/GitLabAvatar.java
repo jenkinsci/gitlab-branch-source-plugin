@@ -12,7 +12,7 @@ public class GitLabAvatar extends AvatarMetadataAction {
     public GitLabAvatar(String avatar) {
         this.avatar = avatar;
     }
-    
+
     @Override
     public String getAvatarImageOf(@NonNull String size) {
         return StringUtils.isBlank(avatar) ? null : GitLabAvatarCache.buildUrl(avatar, size);
