@@ -16,6 +16,7 @@ import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.util.LogTaskListener;
 import io.jenkins.plugins.gitlabbranchsource.BranchSCMRevision;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
@@ -36,8 +37,6 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -294,75 +293,69 @@ public class GitLabPipelineStatusNotifier {
                 resolving.put(job, nonce);
             }
             // prevent delays in the queue when updating GitLab
-            Computer.threadPoolForRemoting.submit(new Runnable() {
-                @Override
-                public void run() {
-                    SecurityContext context = ACL.impersonate(Tasks.getAuthenticationOf(wi.task));
-                    try {
-                        SCMRevision revision = source
-                            .fetch(head, new LogTaskListener(LOGGER, Level.INFO));
-                        String hash;
-                        CommitStatus status = new CommitStatus();
-                        if (revision instanceof BranchSCMRevision) {
-                            LOGGER.log(Level.INFO, "Notifying branch pending build {0}",
-                                job.getFullName());
-                            hash = ((BranchSCMRevision) revision).getHash();
-                            status.setName("jenkinsci/branch");
-                        } else if (revision instanceof MergeRequestSCMRevision) {
-                            LOGGER.log(Level.INFO, "Notifying merge request pending build {0}",
-                                job.getFullName());
-                            hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
-                            status.setName(getMrBuildName(job.getFullDisplayName()));
-                        } else if (revision instanceof GitTagSCMRevision) {
-                            LOGGER.log(Level.INFO, "Notifying tag pending build {0}",
-                                job.getFullName());
-                            hash = ((GitTagSCMRevision) revision).getHash();
-                            status.setName("jenkinsci/tag");
-                        } else {
-                            return;
-                        }
-                        String url;
-                        try {
-                            url = DisplayURLProvider.get().getJobURL(job);
-                        } catch (IllegalStateException e) {
-                            // no root url defined, cannot notify, let's get out of here
-                            return;
-                        }
-                        status.setTargetUrl(url);
-                        status.setDescription(job.getFullName() + ": Build queued...");
-                        status.setStatus("PENDING");
-                        Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
-                        try {
-                            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-                            // check are we still the task to set pending
-                            synchronized (resolving) {
-                                if (!nonce.equals(resolving.get(job))) {
-                                    // it's not our nonce, so drop
-                                    LOGGER.log(Level.INFO,
-                                        "{0} has already started, skipping notification of queued",
-                                        job.getFullName());
-                                    return;
-                                }
-                                // it is our nonce, so remove it
-                                resolving.remove(job);
-                            }
-                            gitLabApi.getCommitsApi().addCommitStatus(
-                                source.getProjectPath(),
-                                hash,
-                                state,
-                                status);
-                            LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
-                        } catch (GitLabApiException e) {
-                            e.printStackTrace();
-                        }
-                    } catch (IOException | InterruptedException e) {
-                        LOGGER.log(Level.INFO,
-                            "Could not send commit status notification for " + job.getFullName()
-                                + " to " + source
-                                .getServerName(), e);
-                    } finally {
-                        SecurityContextHolder.setContext(context);
+            Computer.threadPoolForRemoting.submit(() -> {
+                try (ACLContext ctx = ACL.as(Tasks.getAuthenticationOf(wi.task))) {
+                    SCMRevision revision = source
+                        .fetch(head, new LogTaskListener(LOGGER, Level.INFO));
+                    String hash;
+                    CommitStatus status = new CommitStatus();
+                    if (revision instanceof BranchSCMRevision) {
+                        LOGGER.log(Level.INFO, "Notifying branch pending build {0}",
+                            job.getFullName());
+                        hash = ((BranchSCMRevision) revision).getHash();
+                        status.setName("jenkinsci/branch");
+                    } else if (revision instanceof MergeRequestSCMRevision) {
+                        LOGGER.log(Level.INFO, "Notifying merge request pending build {0}",
+                            job.getFullName());
+                        hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
+                        status.setName(getMrBuildName(job.getFullDisplayName()));
+                    } else if (revision instanceof GitTagSCMRevision) {
+                        LOGGER.log(Level.INFO, "Notifying tag pending build {0}",
+                            job.getFullName());
+                        hash = ((GitTagSCMRevision) revision).getHash();
+                        status.setName("jenkinsci/tag");
+                    } else {
+                        return;
                     }
+                    String url;
+                    try {
+                        url = DisplayURLProvider.get().getJobURL(job);
+                    } catch (IllegalStateException e) {
+                        // no root url defined, cannot notify, let's get out of here
+                        return;
+                    }
+                    status.setTargetUrl(url);
+                    status.setDescription(job.getFullName() + ": Build queued...");
+                    status.setStatus("PENDING");
+                    Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
+                    try {
+                        GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+                        // check are we still the task to set pending
+                        synchronized (resolving) {
+                            if (!nonce.equals(resolving.get(job))) {
+                                // it's not our nonce, so drop
+                                LOGGER.log(Level.INFO,
+                                    "{0} has already started, skipping notification of queued",
+                                    job.getFullName());
+                                return;
+                            }
+                            // it is our nonce, so remove it
+                            resolving.remove(job);
+                        }
+                        gitLabApi.getCommitsApi().addCommitStatus(
+                            source.getProjectPath(),
+                            hash,
+                            state,
+                            status);
+                        LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
+                    } catch (GitLabApiException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException | InterruptedException e) {
+                    LOGGER.log(Level.INFO,
+                        "Could not send commit status notification for " + job.getFullName()
+                            + " to " + source
+                            .getServerName(), e);
                 }
             });
         }

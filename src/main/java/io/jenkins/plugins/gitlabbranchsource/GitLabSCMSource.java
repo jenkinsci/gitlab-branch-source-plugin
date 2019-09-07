@@ -14,7 +14,6 @@ import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.TaskListener;
-import hudson.model.queue.Tasks;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.ListBoxModel;
@@ -779,7 +778,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         public ListBoxModel doFillServerNameItems(@AncestorInPath SCMSourceOwner context,
             @QueryParameter String serverName) {
             if (context == null) {
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
                     result.add(serverName);
@@ -802,7 +801,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
                 // must have admin if you want the list without a context
-                if (!Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     result.includeCurrentValue(credentialsId);
                     return result;
                 }
@@ -817,7 +816,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             result.includeEmptyValue();
             result.includeMatchingAs(
                 context instanceof Queue.Task
-                    ? Tasks.getDefaultAuthenticationOf((Queue.Task) context)
+                    ? ((Queue.Task) context).getDefaultAuthentication()
                     : ACL.SYSTEM,
                 context,
                 StandardUsernameCredentials.class,

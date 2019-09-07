@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import hudson.model.CauseAction;
 import hudson.model.Job;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -33,7 +34,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                     Pattern.CASE_INSENSITIVE);
             final String commentBody = getPayload().getObjectAttributes().getNote();
             final String commentUrl = getPayload().getObjectAttributes().getUrl();
-            ACL.impersonate(ACL.SYSTEM, () -> {
+            try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
                 boolean jobFound = false;
                 for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
                     LOGGER.info("Source Owner: " + owner.getFullDisplayName());
@@ -91,7 +92,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         }
                     );
                 }
-            });
+            }
         }
     }
 
