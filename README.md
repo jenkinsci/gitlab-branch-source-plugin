@@ -129,7 +129,7 @@ Here are a few ways to setup your own Jenkins server:
 
     i. Checkout out source code to your local machine:
     
-         git clone https://github.com/baymac/gitlab-branch-source-plugin.git -b master
+         git clone https://github.com/baymac/gitlab-branch-source-plugin.git
     
          cd gitlab-branch-source-plugin
     
