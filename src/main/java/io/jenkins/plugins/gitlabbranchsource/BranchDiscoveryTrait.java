@@ -126,6 +126,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.BranchDiscoveryTrait_displayName();
@@ -198,6 +199,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.BranchDiscoveryTrait_authorityDisplayName();

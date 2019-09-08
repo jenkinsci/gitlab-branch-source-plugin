@@ -77,6 +77,7 @@ public class LogCommentTrait extends SCMSourceTrait {
     @Symbol("logComment")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.LogCommentTrait_displayName();

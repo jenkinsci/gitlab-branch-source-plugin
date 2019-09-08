@@ -896,6 +896,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
+        @NonNull
         public List<SCMSourceTrait> getTraitsDefaults() {
             return Arrays.<SCMSourceTrait>asList( // TODO finalize
                 new BranchDiscoveryTrait(true, false),

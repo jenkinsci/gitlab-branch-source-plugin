@@ -141,6 +141,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
         /**
          * {@inheritDoc}
          */
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.ForkMergeRequestDiscoveryTrait_displayName();
@@ -248,6 +249,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.ForkMergeRequestDiscoveryTrait_nobodyDisplayName();
@@ -358,6 +360,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.ForkMergeRequestDiscoveryTrait_permissionsDisplayName();
@@ -406,6 +409,7 @@ public class ForkMergeRequestDiscoveryTrait extends SCMSourceTrait {
             /**
              * {@inheritDoc}
              */
+            @NonNull
             @Override
             public String getDisplayName() {
                 return Messages.ForkMergeRequestDiscoveryTrait_everyoneDisplayName();

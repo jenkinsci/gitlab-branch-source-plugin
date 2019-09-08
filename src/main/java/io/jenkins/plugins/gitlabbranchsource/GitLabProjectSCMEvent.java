@@ -1,7 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.annotation.Nonnull;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceEvent;
@@ -63,7 +62,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
         return navigator instanceof GitLabSCMNavigator && isMatch((GitLabSCMNavigator) navigator);
     }
 
-    private boolean isMatch(@Nonnull GitLabSCMNavigator navigator) {
+    private boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
         switch (getType()) {
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();

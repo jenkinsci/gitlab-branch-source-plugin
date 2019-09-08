@@ -1,5 +1,7 @@
 package io.jenkins.plugins.gitlabserverconfig.servers;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
@@ -14,8 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -82,7 +82,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      *
      * @return the list of endpoints
      */
-    @Nonnull
+    @NonNull
     public List<GitLabServer> getServers() {
         return servers == null || servers.isEmpty()
             ? Collections.emptyList()
@@ -101,7 +101,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         save();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public String getDisplayName() {
         return Messages.GitLabServers_displayName();
@@ -123,7 +123,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @param server the server to add.
      * @return {@code true} if the list of endpoints was modified
      */
-    public boolean addServer(@Nonnull GitLabServer server) {
+    public boolean addServer(@NonNull GitLabServer server) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         GitLabServer gitLabServer = servers.stream()
             .filter(s -> s.getName().equals(server.getName()))
@@ -144,7 +144,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @param server the server to update.
      * @return {@code true} if the list of endpoints was modified
      */
-    public boolean updateServer(@Nonnull GitLabServer server) {
+    public boolean updateServer(@NonNull GitLabServer server) {
         List<GitLabServer> servers = new ArrayList<>(getServers());
         if (!servers.contains(server)) {
             return false;
