@@ -24,12 +24,12 @@ public class GitLabSCMSourceBuilder extends
         @CheckForNull String credentialsId, @NonNull String projectOwner,
         @NonNull String projectPath, @NonNull String projectName) {
         super(GitLabSCMSource.class, projectName);
-        this.projectName = projectName;
-        this.projectPath = projectPath;
         this.id = id;
         this.serverName = serverName;
-        this.projectOwner = projectOwner;
         this.credentialsId = credentialsId;
+        this.projectOwner = projectOwner;
+        this.projectPath = projectPath;
+        this.projectName = projectName;
     }
 
     @CheckForNull
