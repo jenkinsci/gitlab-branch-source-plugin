@@ -457,6 +457,8 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Disable GitLab project avatar` - It is not possible to fetch avatars when api has no token authentication or project is private. So as a workaround you may want to disable fetching avatars of GitLab project(s). We will fix this issue in a later release.
 
+* `Project Naming Strategy` - Choose whether you want `project name` or the `project path (with namespace)` as job names of each project. Users generally prefer the first option but due to legacy reasons we have `project path (with namespace)` as default naming scheme. Note if a job is already created and the naming strategy is changed it will cause projects and build logs to be destroyed.
+
 * `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
 * `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
