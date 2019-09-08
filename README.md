@@ -161,7 +161,7 @@ Here are a few ways to setup your own Jenkins server:
     
         6. Select `Install without restart`
 	
-4. Download latest release (`gitlab-branch-source-1.2.1.hpi`) from [here](https://repo.jenkins-ci.org/releases/io/jenkins/plugins/gitlab-branch-source/1.2.1/gitlab-branch-source-1.2.1.hpi) and manually install.
+4. Download latest release from [here](https://updates.jenkins.io/latest/gitlab-branch-source.hpi) and manually install.
 
 ## Initial Setup
 
