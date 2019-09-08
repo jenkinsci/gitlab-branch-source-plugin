@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
@@ -919,4 +920,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
     }
 
+    @SuppressFBWarnings(value="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification="Known to be null during deserialization")
+    private Object readResolve() {
+        if (mergeRequestMetadataCache == null) {
+            mergeRequestMetadataCache = new ConcurrentHashMap<>();
+        }
+        if (mergeRequestContributorCache == null) {
+            mergeRequestContributorCache = new ConcurrentHashMap<>();
+        }
+        return this;
+    }
 }
