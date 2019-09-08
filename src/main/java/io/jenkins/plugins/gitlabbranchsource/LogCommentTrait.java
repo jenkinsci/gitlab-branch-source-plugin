@@ -33,6 +33,14 @@ public class LogCommentTrait extends SCMSourceTrait {
         this.logSuccess = logSuccess;
     }
 
+    /**
+     * Setter for stapler to set the username of the sudo user.
+     */
+    @DataBoundSetter
+    public void setSudoUser(@NonNull String sudoUser) {
+        this.sudoUser = sudoUser;
+    }
+
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (context instanceof GitLabSCMSourceContext) {
@@ -51,14 +59,6 @@ public class LogCommentTrait extends SCMSourceTrait {
     @NonNull
     public String getSudoUser() {
         return sudoUser;
-    }
-
-    /**
-     * Setter for stapler to set the username of the sudo user.
-     */
-    @DataBoundSetter
-    public void setSudoUser(@NonNull String sudoUser) {
-        this.sudoUser = sudoUser;
     }
 
     /**

@@ -545,12 +545,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 throw new IllegalStateException("Failed to retrieve project", e);
             }
         }
+        GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(traits);
         String projectUrl = gitlabProject.getWebUrl();
         result.add(new ObjectMetadataAction(gitlabProject.getNameWithNamespace(),
             gitlabProject.getDescription(),
             projectUrl));
         String avatarUrl = gitlabProject.getAvatarUrl();
-        if (StringUtils.isNotBlank(avatarUrl)) {
+        if (!ctx.projectAvatarDisabled() && StringUtils.isNotBlank(avatarUrl)) {
             result.add(new GitLabAvatar(avatarUrl));
         }
         result.add(GitLabLink.toProject(projectUrl));

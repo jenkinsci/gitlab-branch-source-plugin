@@ -43,6 +43,8 @@ public class GitLabSCMSourceContext
 
     private String commentBody = "";
 
+    private boolean projectAvatarDisabled;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
         @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -90,6 +92,10 @@ public class GitLabSCMSourceContext
 
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
+    }
+
+    public final boolean projectAvatarDisabled() {
+        return projectAvatarDisabled;
     }
 
     public final boolean logCommentEnabled() {
@@ -165,6 +171,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext withNotificationsDisabled(boolean disabled) {
         this.notificationsDisabled = disabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withProjectAvatarDisabled(boolean disabled) {
+        this.projectAvatarDisabled = disabled;
         return this;
     }
 
