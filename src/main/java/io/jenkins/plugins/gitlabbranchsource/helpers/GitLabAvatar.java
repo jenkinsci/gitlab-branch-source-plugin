@@ -1,10 +1,9 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.model.Hudson;
 import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
-import org.kohsuke.stapler.Stapler;
+import org.apache.commons.lang.StringUtils;
 
 public class GitLabAvatar extends AvatarMetadataAction {
 
@@ -16,24 +15,7 @@ public class GitLabAvatar extends AvatarMetadataAction {
 
     @Override
     public String getAvatarImageOf(@NonNull String size) {
-        if (avatar == null) {
-            // fall back to the generic github org icon
-            String image = avatarIconClassNameImageOf(getAvatarIconClassName(), size);
-            return image != null
-                ? image
-                : (Stapler.getCurrentRequest().getContextPath() + Hudson.RESOURCE_PATH
-                    + "/plugin/gitlab-branch-source/images/" + size + "/gitlab-logo.png");
-        } else {
-            String[] xy = size.split("x");
-            if (xy.length == 0) {
-                return avatar;
-            }
-            if (avatar.contains("?")) {
-                return avatar + "&s=" + xy[0];
-            } else {
-                return avatar + "?s=" + xy[0];
-            }
-        }
+        return StringUtils.isBlank(avatar) ? null : GitLabAvatarCache.buildUrl(avatar, size);
     }
 
     @Override
