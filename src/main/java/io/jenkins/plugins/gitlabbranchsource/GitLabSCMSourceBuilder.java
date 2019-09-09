@@ -17,16 +17,19 @@ public class GitLabSCMSourceBuilder extends
     private final String projectOwner;
     @NonNull
     private final String projectPath;
+    @NonNull
+    private final String projectName;
 
     public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverName,
         @CheckForNull String credentialsId, @NonNull String projectOwner,
-        @NonNull String projectPath) {
-        super(GitLabSCMSource.class, projectPath);
-        this.projectPath = projectPath;
+        @NonNull String projectPath, @NonNull String projectName) {
+        super(GitLabSCMSource.class, projectName);
         this.id = id;
         this.serverName = serverName;
-        this.projectOwner = projectOwner;
         this.credentialsId = credentialsId;
+        this.projectOwner = projectOwner;
+        this.projectPath = projectPath;
+        this.projectName = projectName;
     }
 
     @CheckForNull
@@ -47,6 +50,7 @@ public class GitLabSCMSourceBuilder extends
         result.setId(id);
         result.setCredentialsId(credentialsId);
         result.setTraits(traits());
+        result.setProjectName(projectName);
         return result;
     }
 }

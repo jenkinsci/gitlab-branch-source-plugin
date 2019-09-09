@@ -10,6 +10,8 @@ public class GitLabSCMNavigatorContext extends
 
     private boolean wantSubgroupProjects;
 
+    private int projectNamingStrategy = 1;
+
     @NonNull
     @Override
     public GitLabSCMNavigatorRequest newRequest(@NonNull SCMNavigator navigator,
@@ -26,6 +28,20 @@ public class GitLabSCMNavigatorContext extends
 
     public GitLabSCMNavigatorContext wantSubgroupProjects(boolean include) {
         this.wantSubgroupProjects = include;
+        return this;
+    }
+
+    /**
+     * Returns the project naming strategy id.
+     *
+     * @return the project naming strategy id.
+     */
+    public int withProjectNamingStrategy() {
+        return projectNamingStrategy;
+    }
+
+    public GitLabSCMNavigatorContext withProjectNamingStrategy(int strategyId) {
+        this.projectNamingStrategy = strategyId;
         return this;
     }
 }

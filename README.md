@@ -449,19 +449,21 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Tag discovery` - Discover tags in the project. To automatically build tags install `basic-branch-build-plugin`.
 
-* `Discover group/subgroup projects` - Discovers subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
+* `Discover group/subgroup projects` - Discover subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
 
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
 
 * `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel.
 
-* `Disable GitLab project avatar` - It is not possible to fetch avatars when api has no token authentication or project is private. So as a workaround you may want to disable fetching avatars of GitLab project(s). We will fix this issue in a later release.
+* `Disable GitLab project avatar` - Disable avatars of GitLab project(s). It is not possible to fetch avatars when API has no token authentication or project is private. So you may use this option as a workaround. We will fix this issue in a later release.
 
-* `Filter by name (with regex)` - To filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
+* `Project Naming Strategy` - Choose whether you want `project name` or the `project path (with namespace)` as job names of each project. Users generally prefer the first option but due to legacy reasons we have `project path (with namespace)` as default naming scheme. Note if a job is already created and the naming strategy is changed it will cause projects and build logs to be destroyed.
 
-* `Filter by name (with wildcards)` - To filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
+* `Filter by name (with regex)` - Filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
-* `Skip pipeline status notifications` - To disable notifying GitLab server about the pipeline status.
+* `Filter by name (with wildcards)` - Filter the type of items you want to discover in your project based on the wildcards specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `development master MR-*`.
+
+* `Skip pipeline status notifications` - Disable notifying GitLab server about the pipeline status.
 
 * `Override hook management modes` - Override default hook management mode of web hook and system hook. `ITEM` credentials for webhook is currently not supported.
 
