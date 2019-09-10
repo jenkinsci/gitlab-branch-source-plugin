@@ -16,19 +16,24 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.models.Project;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
 
     private final GitLabApi gitLabApi;
-    private final Project project;
+    private final String projectPath;
+    private final Date lastActivity;
     private final String ref;
 
-    protected GitLabSCMFileSystem(GitLabApi gitLabApi, Project project, String ref,
+    protected GitLabSCMFileSystem(
+        GitLabApi gitLabApi,
+        String projectPath,
+        Date lastActivity,
+        String ref,
         @CheckForNull SCMRevision rev) throws IOException {
         super(rev);
         this.gitLabApi = gitLabApi;
-        this.project = project;
+        this.projectPath = projectPath;
+        this.lastActivity = lastActivity;
         if (rev != null) {
             if (rev.getHead() instanceof MergeRequestSCMHead) {
                 this.ref = ((MergeRequestSCMRevision) rev).getOrigin().getHash();
@@ -46,7 +51,6 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
 
     @Override
     public long lastModified() throws IOException {
-        Date lastActivity = project.getLastActivityAt();
         if (lastActivity == null) {
             return 0;
         }
@@ -56,7 +60,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
     @NonNull
     @Override
     public SCMFile getRoot() {
-        return new GitLabSCMFile(gitLabApi, project, ref);
+        return new GitLabSCMFile(gitLabApi, projectPath, ref);
     }
 
     @Extension
@@ -90,7 +94,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         }
 
         public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
-            @NonNull GitLabApi gitLabApi, @NonNull Project gitlabProject)
+            @NonNull GitLabApi gitLabApi, @NonNull String projectPath, Date lastActivity)
             throws IOException, InterruptedException {
             String ref;
             if (head instanceof MergeRequestSCMHead) {
@@ -102,7 +106,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
             } else {
                 return null;
             }
-            return new GitLabSCMFileSystem(gitLabApi, gitlabProject, ref, rev);
+            return new GitLabSCMFileSystem(gitLabApi, projectPath, lastActivity, ref, rev);
         }
     }
 }

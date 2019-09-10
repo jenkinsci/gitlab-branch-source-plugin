@@ -701,7 +701,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             LOGGER.info("Creating a probe: " + head.getName());
-            final SCMFileSystem fs = builder.build(head, revision, gitLabApi, gitlabProject);
+            final SCMFileSystem fs = builder.build(head, revision, gitLabApi, projectPath,
+                gitlabProject.getLastActivityAt());
             return new SCMProbe() {
                 @NonNull
                 @Override

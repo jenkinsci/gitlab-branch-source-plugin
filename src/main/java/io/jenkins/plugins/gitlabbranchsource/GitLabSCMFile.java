@@ -9,7 +9,6 @@ import javassist.NotFoundException;
 import jenkins.scm.api.SCMFile;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.RepositoryFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,22 +17,22 @@ public class GitLabSCMFile extends SCMFile {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMFile.class);
     private final GitLabApi gitLabApi;
-    private final Project project;
+    private final String projectPath;
     private final String ref;
     private Boolean isFile;
 
-    public GitLabSCMFile(GitLabApi gitLabApi, Project project, String ref) {
+    public GitLabSCMFile(GitLabApi gitLabApi, String projectPath, String ref) {
         super();
         this.gitLabApi = gitLabApi;
         type(Type.DIRECTORY);
-        this.project = project;
+        this.projectPath = projectPath;
         this.ref = ref;
     }
 
     private GitLabSCMFile(@NonNull GitLabSCMFile parent, String name, Boolean isFile) {
         super(parent, name);
         this.gitLabApi = parent.gitLabApi;
-        this.project = parent.project;
+        this.projectPath = parent.projectPath;
         this.ref = parent.ref;
         this.isFile = isFile;
     }
@@ -75,7 +74,7 @@ public class GitLabSCMFile extends SCMFile {
     private Boolean checkFile() throws NotFoundException {
         RepositoryFile file = null;
         try {
-            file = gitLabApi.getRepositoryFileApi().getFileInfo(project, getPath(), ref);
+            file = gitLabApi.getRepositoryFileApi().getFileInfo(projectPath, getPath(), ref);
         } catch (GitLabApiException e) {
             throw new NotFoundException(
                 "No Jenkinsfile found in the root of the repository, skipping " + ref);
@@ -100,7 +99,7 @@ public class GitLabSCMFile extends SCMFile {
 
     private InputStream fetchFile() {
         try {
-            return gitLabApi.getRepositoryFileApi().getRawFile(project, ref, getPath());
+            return gitLabApi.getRepositoryFileApi().getRawFile(projectPath, ref, getPath());
         } catch (GitLabApiException e) {
             LOGGER.info("Jenkinsfile Not found: " + ref);
         }
