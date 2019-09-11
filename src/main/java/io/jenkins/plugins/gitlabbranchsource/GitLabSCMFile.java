@@ -20,6 +20,7 @@ public class GitLabSCMFile extends SCMFile {
     public GitLabSCMFile(GitLabApi gitLabApi, String projectPath, String ref) {
         super();
         this.gitLabApi = gitLabApi;
+        this.isDir = true;
         type(Type.DIRECTORY);
         this.projectPath = projectPath;
         this.ref = ref;
