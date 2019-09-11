@@ -15,7 +15,7 @@ public class GitLabSCMFile extends SCMFile {
     private final GitLabApi gitLabApi;
     private final String projectPath;
     private final String ref;
-    private Boolean isDir;
+    private boolean isDir;
 
     public GitLabSCMFile(GitLabApi gitLabApi, String projectPath, String ref) {
         super();
@@ -26,7 +26,7 @@ public class GitLabSCMFile extends SCMFile {
         this.ref = ref;
     }
 
-    private GitLabSCMFile(@NonNull GitLabSCMFile parent, String name, Boolean isDir) {
+    private GitLabSCMFile(@NonNull GitLabSCMFile parent, String name, boolean isDir) {
         super(parent, name);
         this.gitLabApi = parent.gitLabApi;
         this.projectPath = parent.projectPath;
@@ -46,7 +46,7 @@ public class GitLabSCMFile extends SCMFile {
     @NonNull
     @Override
     protected SCMFile newChild(@NonNull String name, boolean assumeIsDirectory) {
-        return new GitLabSCMFile(this, name, assumeIsDirectory ? Boolean.TRUE : null);
+        return new GitLabSCMFile(this, name, assumeIsDirectory);
     }
 
     @NonNull
