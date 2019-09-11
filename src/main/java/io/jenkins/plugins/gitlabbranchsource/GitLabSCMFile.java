@@ -1,25 +1,22 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import javassist.NotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.scm.api.SCMFile;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.RepositoryFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.gitlab4j.api.models.TreeItem;
 
 public class GitLabSCMFile extends SCMFile {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMFile.class);
     private final GitLabApi gitLabApi;
     private final String projectPath;
     private final String ref;
-    private Boolean isFile;
+    private Boolean isDir;
 
     public GitLabSCMFile(GitLabApi gitLabApi, String projectPath, String ref) {
         super();
@@ -29,25 +26,54 @@ public class GitLabSCMFile extends SCMFile {
         this.ref = ref;
     }
 
-    private GitLabSCMFile(@NonNull GitLabSCMFile parent, String name, Boolean isFile) {
+    private GitLabSCMFile(@NonNull GitLabSCMFile parent, String name, Boolean isDir) {
         super(parent, name);
         this.gitLabApi = parent.gitLabApi;
         this.projectPath = parent.projectPath;
         this.ref = parent.ref;
-        this.isFile = isFile;
+        this.isDir = isDir;
+    }
+
+    private GitLabSCMFile(GitLabSCMFile parent, String name, Type type) {
+        super(parent, name);
+        this.gitLabApi = parent.gitLabApi;
+        this.projectPath = parent.projectPath;
+        this.ref = parent.ref;
+        isDir = type == Type.DIRECTORY;
+        type(type);
     }
 
     @NonNull
     @Override
     protected SCMFile newChild(@NonNull String name, boolean assumeIsDirectory) {
-        return new GitLabSCMFile(this, name, assumeIsDirectory ? Boolean.FALSE : null);
+        return new GitLabSCMFile(this, name, assumeIsDirectory ? Boolean.TRUE : null);
     }
 
     @NonNull
     @Override
-    public Iterable<SCMFile> children() throws IOException {
-        // TODO Fix this
-        return Collections.emptyList();
+    public Iterable<SCMFile> children() throws IOException, InterruptedException {
+        if (!this.isDirectory()) {
+            throw new IOException("Cannot get children from a regular file");
+        }
+        List<TreeItem> treeItems = fetchTree();
+        List<SCMFile> result = new ArrayList<>(treeItems.size());
+        for (TreeItem c : treeItems) {
+            Type t;
+            if (c.getType() == TreeItem.Type.TREE) {
+                t = Type.DIRECTORY;
+            } else if (c.getType() == TreeItem.Type.BLOB) {
+                if ("120000".equals(c.getMode())) {
+                    // File Mode 120000 is a symlink
+                    t = Type.LINK;
+                } else {
+                    t = Type.REGULAR_FILE;
+                }
+            } else {
+                t = Type.OTHER;
+            }
+            result.add(new GitLabSCMFile(this, c.getName(), t));
+        }
+        return result;
     }
 
     @Override
@@ -58,52 +84,54 @@ public class GitLabSCMFile extends SCMFile {
 
     @NonNull
     @Override
-    protected Type type() {
-        // TODO needs review
-        if (isFile == null) {
+    protected Type type() throws IOException, InterruptedException {
+        if (isDir) {
+            return Type.DIRECTORY;
+        }
+        try {
+            gitLabApi.getRepositoryFileApi()
+                .getFile(projectPath, getPath(), ref);
+            return Type.REGULAR_FILE;
+        } catch (GitLabApiException e) {
+            if (e.getHttpStatus() != 404) {
+                throw new IOException(e);
+            }
             try {
-                isFile = checkFile();
-            } catch (NotFoundException e) {
-                isFile = false;
-                return Type.NONEXISTENT;
+                gitLabApi.getRepositoryApi().getTree(projectPath, getPath(), ref);
+                return Type.DIRECTORY;
+            } catch (GitLabApiException ex) {
+                if (e.getHttpStatus() != 404) {
+                    throw new IOException(e);
+                }
             }
         }
-        return isFile ? Type.REGULAR_FILE : Type.NONEXISTENT;
-    }
-
-    private Boolean checkFile() throws NotFoundException {
-        RepositoryFile file = null;
-        try {
-            file = gitLabApi.getRepositoryFileApi().getFileInfo(projectPath, getPath(), ref);
-        } catch (GitLabApiException e) {
-            throw new NotFoundException(
-                "No Jenkinsfile found in the root of the repository, skipping " + ref);
-        }
-        return file != null;
+        return Type.NONEXISTENT;
     }
 
     @NonNull
     @Override
     public InputStream content() throws IOException, InterruptedException {
-        // TODO needs review
-        if (isFile != null && !isFile) {
-            throw new FileNotFoundException(getPath());
+        if (this.isDirectory()) {
+            throw new IOException("Cannot get raw content from a directory");
+        } else {
+            return fetchFile();
         }
-        InputStream content = fetchFile();
-        if (content == null) {
-            throw new FileNotFoundException(getPath());
-        }
-        isFile = true;
-        return content;
     }
 
-    private InputStream fetchFile() {
+    private InputStream fetchFile() throws IOException {
         try {
             return gitLabApi.getRepositoryFileApi().getRawFile(projectPath, ref, getPath());
         } catch (GitLabApiException e) {
-            LOGGER.info("Jenkinsfile Not found: " + ref);
+            throw new IOException(String.format("%s not found at %s", getPath(), ref));
         }
-        return null;
+    }
+
+    private List<TreeItem> fetchTree() throws IOException {
+        try {
+            return gitLabApi.getRepositoryApi().getTree(projectPath, getPath(), ref);
+        } catch (GitLabApiException e) {
+            throw new IOException(String.format("%s not found at %s", getPath(), ref));
+        }
     }
 
 }

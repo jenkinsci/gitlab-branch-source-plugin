@@ -7,7 +7,6 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import java.io.IOException;
-import java.util.Date;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -16,24 +15,22 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
 
     private final GitLabApi gitLabApi;
     private final String projectPath;
-    private final Date lastActivity;
     private final String ref;
 
     protected GitLabSCMFileSystem(
         GitLabApi gitLabApi,
         String projectPath,
-        Date lastActivity,
         String ref,
         @CheckForNull SCMRevision rev) throws IOException {
         super(rev);
         this.gitLabApi = gitLabApi;
         this.projectPath = projectPath;
-        this.lastActivity = lastActivity;
         if (rev != null) {
             if (rev.getHead() instanceof MergeRequestSCMHead) {
                 this.ref = ((MergeRequestSCMRevision) rev).getOrigin().getHash();
@@ -51,10 +48,11 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
 
     @Override
     public long lastModified() throws IOException {
-        if (lastActivity == null) {
+        try {
+            return gitLabApi.getCommitsApi().getCommit(projectPath, ref).getCommittedDate().getTime();
+        } catch (GitLabApiException e) {
             return 0;
         }
-        return lastActivity.getTime();
     }
 
     @NonNull
@@ -68,7 +66,6 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
 
         @Override
         public boolean supports(SCM source) {
-            // TODO implement a GitLabSCM so we can work for those
             return false;
         }
 
@@ -94,7 +91,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         }
 
         public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
-            @NonNull GitLabApi gitLabApi, @NonNull String projectPath, Date lastActivity)
+            @NonNull GitLabApi gitLabApi, @NonNull String projectPath)
             throws IOException, InterruptedException {
             String ref;
             if (head instanceof MergeRequestSCMHead) {
@@ -106,7 +103,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
             } else {
                 return null;
             }
-            return new GitLabSCMFileSystem(gitLabApi, projectPath, lastActivity, ref, rev);
+            return new GitLabSCMFileSystem(gitLabApi, projectPath, ref, rev);
         }
     }
 }
