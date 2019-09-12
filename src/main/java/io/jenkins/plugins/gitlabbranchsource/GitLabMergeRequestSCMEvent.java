@@ -142,7 +142,8 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         : SCMHeadOrigin.DEFAULT,
                     originOwner,
                     originProjectPath,
-                    m.getSourceBranch()
+                    m.getSourceBranch(),
+                    m.getTitle()
                 );
                 result.put(h, m.getState().equals("closed")
                     ? null

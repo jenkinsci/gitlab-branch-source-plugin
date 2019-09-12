@@ -443,7 +443,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         : SCMHeadOrigin.DEFAULT,
                                     originOwner,
                                     originProjectPath,
-                                    m.getSourceBranch()
+                                    m.getSourceBranch(),
+                                    m.getTitle()
                                 ),
                                 (SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>) head ->
                                     new MergeRequestSCMRevision(
