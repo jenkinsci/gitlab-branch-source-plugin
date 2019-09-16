@@ -15,6 +15,7 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
     private final String originOwner;
     private final SCMHeadOrigin origin;
     private String originProjectPath;
+    private String title;
 
     /**
      * Constructor.
@@ -27,10 +28,11 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
      * @param originOwner the name of the owner of the origin project
      * @param originProjectPath the name of the origin project path
      * @param originName the name of the branch in the origin project
+     * @param title the title of the merge request
      */
     public MergeRequestSCMHead(@NonNull String name, long id, BranchSCMHead target,
         ChangeRequestCheckoutStrategy strategy, SCMHeadOrigin origin, String originOwner,
-        String originProjectPath, String originName) {
+        String originProjectPath, String originName, String title) {
         super(name);
         this.id = id;
         this.target = target;
@@ -39,6 +41,7 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
         this.originOwner = originOwner;
         this.originProjectPath = originProjectPath;
         this.originName = originName;
+        this.title = title;
     }
 
     @Override
@@ -84,4 +87,11 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
         return originProjectPath;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }
