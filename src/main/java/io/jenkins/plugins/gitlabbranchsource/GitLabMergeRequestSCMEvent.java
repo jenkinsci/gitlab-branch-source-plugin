@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -13,6 +14,9 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 
 public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<MergeRequestEvent> {
@@ -130,6 +134,8 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                 .equals(getPayload().getObjectAttributes().getTargetProjectId());
             String originOwner = getPayload().getUser().getUsername();
             String originProjectPath = m.getSource().getPathWithNamespace();
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            MergeRequest mr = gitLabApi.getMergeRequestApi().getMergeRequest(getPayload().getObjectAttributes().getSourceProjectId(), m.getIid());
             for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                 MergeRequestSCMHead h = new MergeRequestSCMHead(
                     "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -151,7 +157,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         h,
                         new BranchSCMRevision(
                             h.getTarget(),
-                            "HEAD"
+                            mr.getDiffRefs().getStartSha()
                         ),
                         new BranchSCMRevision(
                             new BranchSCMHead(h.getOriginName()),
@@ -159,7 +165,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         )
                     ));
             }
-        } catch (IOException e) {
+        } catch (IOException | GitLabApiException e) {
             e.printStackTrace();
         }
         return result;

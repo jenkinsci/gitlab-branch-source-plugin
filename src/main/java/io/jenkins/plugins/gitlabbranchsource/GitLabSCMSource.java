@@ -451,7 +451,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         head,
                                         new BranchSCMRevision(
                                             head.getTarget(),
-                                            m.getDiffRefs().getBaseSha()
+                                            m.getDiffRefs().getStartSha() // Latest revision of target branch
                                         ),
                                         new BranchSCMRevision(
                                             new BranchSCMHead(head.getOriginName()),
