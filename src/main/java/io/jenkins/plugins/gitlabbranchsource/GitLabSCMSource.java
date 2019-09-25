@@ -429,6 +429,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         } else if (fork) {
                             originProjectPath = forkMrSources.get(m.getSourceProjectId());
                         }
+                        String targetSha = gitLabApi.getRepositoryApi().getBranch(m.getTargetProjectId(), m.getTargetBranch()).getCommit().getId();
                         LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE"
                             : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
@@ -451,7 +452,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         head,
                                         new BranchSCMRevision(
                                             head.getTarget(),
-                                            m.getDiffRefs().getStartSha() // Latest revision of target branch
+                                            targetSha // Latest revision of target branch
                                         ),
                                         new BranchSCMRevision(
                                             new BranchSCMHead(head.getOriginName()),

@@ -134,8 +134,6 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                 .equals(getPayload().getObjectAttributes().getTargetProjectId());
             String originOwner = getPayload().getUser().getUsername();
             String originProjectPath = m.getSource().getPathWithNamespace();
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-            MergeRequest mr = gitLabApi.getMergeRequestApi().getMergeRequest(getPayload().getObjectAttributes().getSourceProjectId(), m.getIid());
             for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                 MergeRequestSCMHead h = new MergeRequestSCMHead(
                     "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
@@ -157,7 +155,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         h,
                         new BranchSCMRevision(
                             h.getTarget(),
-                            mr.getDiffRefs().getStartSha()
+                            "HEAD"
                         ),
                         new BranchSCMRevision(
                             new BranchSCMHead(h.getOriginName()),
@@ -165,7 +163,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         )
                     ));
             }
-        } catch (IOException | GitLabApiException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return result;
