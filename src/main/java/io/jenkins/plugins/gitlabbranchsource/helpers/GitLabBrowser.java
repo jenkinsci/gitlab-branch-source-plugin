@@ -80,7 +80,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
     }
 
     @Extension
-    public static class DescriptorImp extends Descriptor<RepositoryBrowser<?>> {
+    public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
         @NonNull
         public String getDisplayName() {
