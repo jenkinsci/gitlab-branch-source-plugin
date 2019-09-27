@@ -21,7 +21,7 @@ public class MergeRequestSCMRevision extends ChangeRequestSCMRevision<MergeReque
      * @param origin the {@link BranchSCMRevision} of the {@link MergeRequestSCMHead#getOrigin()}
      * head.
      */
-    protected MergeRequestSCMRevision(
+    public MergeRequestSCMRevision(
         @NonNull MergeRequestSCMHead head,
         @NonNull BranchSCMRevision target,
         @NonNull BranchSCMRevision origin) {

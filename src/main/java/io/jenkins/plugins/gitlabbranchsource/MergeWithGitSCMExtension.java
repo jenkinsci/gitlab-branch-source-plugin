@@ -59,14 +59,14 @@ public class MergeWithGitSCMExtension extends GitSCMExtension {
                 baseObjectId = git.revParse(Constants.R_REFS + baseName);
             } catch (GitException e) {
                 listener.getLogger()
-                    .printf("Unable to determine head revision of %s prior to merge with PR%n",
+                    .printf("Unable to determine head revision of %s prior to merge with MR%n",
                         baseName);
                 throw e;
             }
         } else {
             baseObjectId = ObjectId.fromString(baseHash);
         }
-        listener.getLogger().printf("Merging %s commit %s into PR head commit %s%n",
+        listener.getLogger().printf("Merging %s commit %s into MR head commit %s%n",
             baseName, baseObjectId.name(), rev.getSha1String()
         );
         checkout(scm, build, git, listener, rev);

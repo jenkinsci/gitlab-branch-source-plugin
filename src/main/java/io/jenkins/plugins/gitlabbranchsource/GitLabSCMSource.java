@@ -266,6 +266,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 MergeRequest mr =
                     gitLabApi.getMergeRequestApi()
                         .getMergeRequest(gitlabProject, Integer.parseInt(h.getId()));
+                String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
                 if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
                     listener.getLogger().format("Current revision of merge request #%s is %s%n",
                         h.getId(), mr.getDiffRefs().getHeadSha());
@@ -273,11 +274,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         h,
                         new BranchSCMRevision(
                             h.getTarget(),
-                            mr.getDiffRefs().getBaseSha()
+                            targetSha
                         ),
                         new BranchSCMRevision(
                             new BranchSCMHead(h.getOriginName()),
-                            mr.getDiffRefs().getHeadSha()
+                            mr.getSha()
                         )
                     );
                 } else {
@@ -390,11 +391,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Integer, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
-                        // Since by default GitLab4j do not populate DiffRefs for a list of Merge Requests
-                        // It is required to get the individual diffRef using the Iid.
-                        final MergeRequest m =
-                            gitLabApi.getMergeRequestApi()
-                                .getMergeRequest(gitlabProject, mr.getIid());
                         mergeRequestContributorCache.put(mr.getIid(),
                             new ContributorMetadataAction(
                                 mr.getAuthor().getUsername(),
@@ -411,51 +407,52 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         listener.getLogger().format("%nChecking merge request %s%n",
                             HyperlinkNote.encodeTo(
                                 mergeRequestUriTemplate(gitlabProject.getWebUrl())
-                                    .set("iid", m.getIid())
+                                    .set("iid", mr.getIid())
                                     .expand(),
-                                "!" + m.getIid()
+                                "!" + mr.getIid()
                             )
                         );
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request
                             .getMRStrategies();
-                        boolean fork = !m.getSourceProjectId().equals(m.getTargetProjectId());
-                        String originOwner = m.getAuthor().getUsername();
+                        boolean fork = !mr.getSourceProjectId().equals(mr.getTargetProjectId());
+                        String originOwner = mr.getAuthor().getUsername();
                         String originProjectPath = projectPath;
-                        if (fork && !forkMrSources.containsKey(m.getSourceProjectId())) {
+                        if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
                             // This is a hack to get the path with namespace of source project for forked mrs
                             originProjectPath = gitLabApi.getProjectApi()
-                                .getProject(m.getSourceProjectId()).getPathWithNamespace();
-                            forkMrSources.put(m.getSourceProjectId(), originProjectPath);
+                                .getProject(mr.getSourceProjectId()).getPathWithNamespace();
+                            forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
                         } else if (fork) {
-                            originProjectPath = forkMrSources.get(m.getSourceProjectId());
+                            originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
+                        String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
                         LOGGER.info(originOwner + " -> " + (request.isMember(originOwner) ? "TRUE"
                             : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
-                                    "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
+                                    "MR-" + mr.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
                                         .toLowerCase(Locale.ENGLISH) : ""),
-                                    m.getIid(),
-                                    new BranchSCMHead(m.getTargetBranch()),
+                                    mr.getIid(),
+                                    new BranchSCMHead(mr.getTargetBranch()),
                                     ChangeRequestCheckoutStrategy.MERGE,
                                     fork
                                         ? new SCMHeadOrigin.Fork(originProjectPath)
                                         : SCMHeadOrigin.DEFAULT,
                                     originOwner,
                                     originProjectPath,
-                                    m.getSourceBranch(),
-                                    m.getTitle()
+                                    mr.getSourceBranch(),
+                                    mr.getTitle()
                                 ),
                                 (SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>) head ->
                                     new MergeRequestSCMRevision(
                                         head,
                                         new BranchSCMRevision(
                                             head.getTarget(),
-                                            m.getDiffRefs().getBaseSha()
+                                            targetSha // Latest revision of target branch
                                         ),
                                         new BranchSCMRevision(
                                             new BranchSCMHead(head.getOriginName()),
-                                            m.getDiffRefs().getHeadSha()
+                                            mr.getSha()
                                         )
                                     ),
                                 new SCMSourceRequest.ProbeLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
