@@ -1,5 +1,6 @@
 servers:
 - credentialsId: "i<3GitLab"
+  hostedOnOwnServer: true
   manageSystemHooks: true
   manageWebHooks: true
   name: "gitlab-[0-9]{4}"

@@ -28,6 +28,10 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
     f.checkbox(title: _("Manage System Hooks"))
 }
 
+f.entry(title: _("Hosted On Own Server"), field: "hostedOnOwnServer", "description": "Do you host GitLab on your own server ?") {
+    f.checkbox(title: _("Hosted On Own Server"))
+}
+
 f.validateButton(
     title: _("Test connection"),
     progress: _("Testing.."),

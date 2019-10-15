@@ -70,6 +70,7 @@ import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCreden
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlOrDefault;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
@@ -246,9 +247,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
             GitLabApi webhookGitLabApi = null;
             String webHookUrl = null;
             if (webHookCredentials != null) {
-                webhookGitLabApi = new GitLabApi(getServerUrlFromName(serverName),
+                GitLabServer server = GitLabServers.get().findServer(serverName);
+                webhookGitLabApi = new GitLabApi(getServerUrlOrDefault(server),
                     webHookCredentials.getToken().getPlainText());
-                webHookUrl = GitLabHookCreator.getHookUrl(true);
+                webHookUrl = GitLabHookCreator.getHookUrl(true, server != null && server.isHostedOnOwnServer());
             }
             for (Project p : projects) {
                 count++;

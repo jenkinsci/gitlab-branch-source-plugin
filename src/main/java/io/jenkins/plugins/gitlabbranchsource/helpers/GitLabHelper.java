@@ -27,7 +27,7 @@ public class GitLabHelper {
     @NonNull
     public static String getServerUrlFromName(String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
-        return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
+        return getServerUrlOrDefault(server);
     }
 
     @NonNull
@@ -37,6 +37,11 @@ public class GitLabHelper {
         } else {
             return getServerUrlFromName(server);
         }
+    }
+
+    @NonNull
+    public static String getServerUrlOrDefault(GitLabServer server) {
+        return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
     }
 
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {

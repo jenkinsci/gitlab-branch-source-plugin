@@ -102,6 +102,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @NonNull
     private String credentialsId;
 
+
+    /**
+     * {@code true} if GitLab is hosted on own server
+     */
+    private boolean hostedOnOwnServer;
+
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
@@ -166,6 +172,29 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public void setManageWebHooks(boolean manageWebHooks) {
         this.manageWebHooks = manageWebHooks;
     }
+
+
+    /**
+     * Returns {@code true} if Gitlab is hosted on own server
+     *
+     * @return {@code true} if Gitlab is hosted on own server
+     */
+
+    public boolean  isHostedOnOwnServer() {
+        return this.hostedOnOwnServer;
+    }
+
+    /**
+     * Data Bound Setter for Gitlab hosted on own server
+     *
+     * @param hostedOnOwnServer {@code true} if Gitlab is hosted on own server
+     *
+     */
+    @DataBoundSetter
+    public void setHostedOnOwnServer(boolean hostedOnOwnServer) {
+        this.hostedOnOwnServer = hostedOnOwnServer;
+    }
+
 
     /**
      * Returns {@code true} if Jenkins is supposed to auto-manage system hooks for this end-point.

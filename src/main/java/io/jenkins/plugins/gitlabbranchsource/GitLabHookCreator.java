@@ -82,7 +82,7 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        String hookUrl = getHookUrl(true);
+        String hookUrl = getHookUrl(true, server.isHostedOnOwnServer());
         if (hookUrl.equals("")) {
             return;
         }
@@ -126,7 +126,7 @@ public class GitLabHookCreator {
 
     public static void createSystemHookWhenMissing(GitLabServer server,
         PersonalAccessToken credentials) {
-        String systemHookUrl = getHookUrl(false);
+        String systemHookUrl = getHookUrl(false, server.isHostedOnOwnServer());
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
                 credentials.getToken().getPlainText());
@@ -145,13 +145,15 @@ public class GitLabHookCreator {
         }
     }
 
-    public static String getHookUrl(boolean isWebHook) {
+    public static String getHookUrl(boolean isWebHook, boolean hostedOnOwnServer) {
         JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
         String rootUrl = locationConfiguration.getUrl();
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
-        checkURL(rootUrl);
+        if (!hostedOnOwnServer) {
+            checkURL(rootUrl);
+        }
         String pronoun = "gitlab-systemhook";
         if (isWebHook) {
             pronoun = "gitlab-webhook";
