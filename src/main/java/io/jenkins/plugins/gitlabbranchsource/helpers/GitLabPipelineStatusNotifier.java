@@ -122,7 +122,7 @@ public class GitLabPipelineStatusNotifier {
             symbol = ":no_entry_sign: ";
             note = "The Jenkins CI build aborted ";
         }
-        String suffix = " - [Details](" + url + "console)";
+        String suffix = " - [Details](" + url + ")";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
