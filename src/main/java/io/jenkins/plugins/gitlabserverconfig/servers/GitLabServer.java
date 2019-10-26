@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabserverconfig.servers;
 
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -206,7 +207,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     public PersonalAccessToken getCredentials() {
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.ADMINISTER);
+        jenkins.checkPermission(CredentialsProvider.USE_OWN);
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
             lookupCredentials(
                 PersonalAccessToken.class,
