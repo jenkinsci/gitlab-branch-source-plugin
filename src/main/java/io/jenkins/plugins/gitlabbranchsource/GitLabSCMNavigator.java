@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
@@ -300,7 +301,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
     }
 

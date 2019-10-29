@@ -140,8 +140,7 @@ public class GitLabHookCreator {
                     false, false, false);
             }
         } catch (GitLabApiException e) {
-            LOGGER.info("User is not admin so cannot set system hooks");
-            e.printStackTrace();
+            LOGGER.log(Level.INFO, "User is not admin so cannot set system hooks", e);
         }
     }
 

@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -219,7 +220,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             return new HashMap<>();
         }
         return members;
@@ -299,7 +300,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 return null;
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
         return super.retrieve(head, listener);
     }
@@ -534,7 +535,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
     }
 
@@ -868,7 +869,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
                 return result;
             } catch (GitLabApiException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
                 return new StandardListBoxModel()
                     .includeEmptyValue();
             }
