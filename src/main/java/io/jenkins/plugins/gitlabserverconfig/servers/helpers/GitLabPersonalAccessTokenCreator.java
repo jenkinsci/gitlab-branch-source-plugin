@@ -29,13 +29,13 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.utils.AccessTokenUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.firstOrNull;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
@@ -50,8 +50,7 @@ public class GitLabPersonalAccessTokenCreator extends
     Descriptor<GitLabPersonalAccessTokenCreator> implements
     Describable<GitLabPersonalAccessTokenCreator> {
 
-    private static final Logger LOGGER = LoggerFactory
-        .getLogger(GitLabPersonalAccessTokenCreator.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabPersonalAccessTokenCreator.class.getName());
 
     private static final List<AccessTokenUtils.Scope> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
         AccessTokenUtils.Scope.API,
@@ -223,7 +222,7 @@ public class GitLabPersonalAccessTokenCreator extends
         try (ACLContext acl = ACL.as(ACL.SYSTEM)) {
             new SystemCredentialsProvider.StoreImpl().addDomain(domain, credentials);
         } catch (IOException e) {
-            LOGGER.error("Can't add credentials for domain", e);
+            LOGGER.log(Level.SEVERE, "Can't add credentials for domain", e);
         }
     }
 }

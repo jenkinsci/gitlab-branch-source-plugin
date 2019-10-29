@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
@@ -88,8 +89,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
@@ -104,7 +103,7 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GIT
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabSCMSource.class.getName());
     private final String serverName;
     private final String projectOwner;
     private final String projectPath;
