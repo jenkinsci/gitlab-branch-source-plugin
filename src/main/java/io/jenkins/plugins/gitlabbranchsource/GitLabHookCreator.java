@@ -152,9 +152,9 @@ public class GitLabHookCreator {
             return "";
         }
         checkURL(rootUrl);
-        String pronoun = "gitlab-systemhook";
+        String pronoun = "/gitlab-systemhook";
         if (isWebHook) {
-            pronoun = "gitlab-webhook";
+            pronoun = "/gitlab-webhook";
         }
         return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
             .expand();
