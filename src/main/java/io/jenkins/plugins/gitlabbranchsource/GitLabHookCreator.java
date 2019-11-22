@@ -151,7 +151,6 @@ public class GitLabHookCreator {
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
-        checkURL(rootUrl);
         String pronoun = "/gitlab-systemhook";
         if (isWebHook) {
             pronoun = "/gitlab-webhook";
@@ -159,24 +158,6 @@ public class GitLabHookCreator {
         return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
             .expand();
     }
-
-    static void checkURL(String url) {
-        try {
-            URL anURL = new URL(url);
-            if ("localhost".equals(anURL.getHost())) {
-                throw new IllegalStateException(
-                    "Jenkins URL cannot start with http://localhost \nURL is: " + url);
-            }
-            if (!anURL.getHost().contains(".")) {
-                throw new IllegalStateException(
-                    "You must use a fully qualified domain name for Jenkins URL, this is required by GitLab"
-                        + "\nURL is: " + url);
-            }
-        } catch (MalformedURLException e) {
-            throw new IllegalStateException("Bad Jenkins URL\nURL is: " + url);
-        }
-    }
-
 
     public static ProjectHook createWebHook() {
         ProjectHook enabledHooks = new ProjectHook();
