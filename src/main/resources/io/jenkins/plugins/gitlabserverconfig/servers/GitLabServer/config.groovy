@@ -16,6 +16,10 @@ f.entry(title: _("Server URL"), field: "serverUrl", "description": "The url to t
     f.textbox(default: GitLabServer.GITLAB_SERVER_URL)
 }
 
+f.entry(title: _("Retry Count"), field: "retryCount", "description": "How many times the API calls to GitLab server should be retried") {
+    f.textbox(default: GitLabServer.RETRY_COUNT)
+}
+
 f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Personal Access Token for GitLab APIs access") {
     c.select(context: app)
 }

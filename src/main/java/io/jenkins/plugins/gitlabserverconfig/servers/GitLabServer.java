@@ -56,6 +56,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Used as default token value if no any credentials found by given credentialsId.
      */
     public final static String EMPTY_TOKEN = "";
+    public final static Integer RETRY_COUNT = 3;
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
     /**
      * Length of unique random numeric name for server
@@ -78,6 +79,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     @NonNull
     private final String name;
+
+    /**
+     * How many times each API call to GitLab is retried.
+     */
+    private Integer retryCount;
 
     /**
      * The URL of this GitLab Server.
@@ -146,6 +152,17 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @NonNull
     public String getServerUrl() {
         return serverUrl;
+    }
+
+    @DataBoundSetter
+    public void setRetryCount(int retryCount) {
+        if(retryCount >= 0) {
+            this.retryCount = retryCount;
+        }
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
     }
 
     /**
@@ -256,6 +273,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 LOGGER.info(String.format("Invalid GitLab Server Url: %s", serverUrl));
                 return FormValidation.error(Messages.GitLabServer_invalidUrl(serverUrl));
             }
+        }
+
+        public static FormValidation doCheckRetryCount(@QueryParameter Integer retryCount){
+            if(retryCount < 0) {
+                return FormValidation.error(Messages.GitLabServer_invalidRetryCount());
+            }
+
+            return FormValidation.ok();
         }
 
         @NonNull

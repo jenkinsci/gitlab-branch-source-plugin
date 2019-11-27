@@ -1,7 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.gitlab4j.api.GitLabApi;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.User;
@@ -21,7 +21,7 @@ public abstract class GitLabOwner {
     }
 
     @NonNull
-    public static GitLabOwner fetchOwner(GitLabApi gitLabApi, String projectOwner) {
+    public static GitLabOwner fetchOwner(GitLabApiWithRetry gitLabApi, String projectOwner) {
         try {
             Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
             return new GitLabGroup(group.getName(), group.getWebUrl(), group.getAvatarUrl(),
