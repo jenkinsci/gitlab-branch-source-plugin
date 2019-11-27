@@ -8,11 +8,11 @@ import org.gitlab4j.api.models.MergeRequest;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class MergeRequestApiWithRetry {
+public class MergeRequestApiRetryWrapper {
     private final MergeRequestApi _mergeRequestApi;
     private final Integer _retryCount;
 
-    public MergeRequestApiWithRetry(MergeRequestApi mergeRequestApi, Integer retryCount) {
+    public MergeRequestApiRetryWrapper(MergeRequestApi mergeRequestApi, Integer retryCount) {
         _mergeRequestApi = mergeRequestApi;
         _retryCount = retryCount;
     }

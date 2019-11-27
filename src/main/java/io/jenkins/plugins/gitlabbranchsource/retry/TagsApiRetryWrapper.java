@@ -7,11 +7,11 @@ import org.gitlab4j.api.models.Tag;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class TagsApiWithRetry {
+public class TagsApiRetryWrapper {
     private final TagsApi _tagsApi;
     private final Integer _retryCount;
 
-    public TagsApiWithRetry(TagsApi tagsApi, Integer retryCount){
+    public TagsApiRetryWrapper(TagsApi tagsApi, Integer retryCount){
         _tagsApi = tagsApi;
         _retryCount = retryCount;
     }

@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 import org.gitlab4j.api.GitLabApiException;
 
 public class RetryHelper {
-    public static final Logger LOGGER = Logger.getLogger(GitLabApiWithRetry.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabApiRetryWrapper.class.getName());
 
     public static <T> T withRetry(Retryable<T> func, Integer retryCount) throws GitLabApiException {
         int retries = 0;

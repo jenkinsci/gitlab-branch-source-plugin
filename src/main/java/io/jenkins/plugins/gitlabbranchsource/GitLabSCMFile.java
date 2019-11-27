@@ -1,7 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,12 +12,12 @@ import org.gitlab4j.api.models.TreeItem;
 
 public class GitLabSCMFile extends SCMFile {
 
-    private final GitLabApiWithRetry gitLabApi;
+    private final GitLabApiRetryWrapper gitLabApi;
     private final String projectPath;
     private final String ref;
     private boolean isDir;
 
-    public GitLabSCMFile(GitLabApiWithRetry gitLabApi, String projectPath, String ref) {
+    public GitLabSCMFile(GitLabApiRetryWrapper gitLabApi, String projectPath, String ref) {
         super();
         this.gitLabApi = gitLabApi;
         this.isDir = true;

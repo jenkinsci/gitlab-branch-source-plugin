@@ -9,13 +9,13 @@ import org.gitlab4j.api.models.TreeItem;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class RepositoryApiWithRetry {
-    public static final Logger LOGGER = Logger.getLogger(RepositoryApiWithRetry.class.getName());
+public class RepositoryApiRetryWrapper {
+    public static final Logger LOGGER = Logger.getLogger(RepositoryApiRetryWrapper.class.getName());
 
     private final RepositoryApi _repositoryApi;
     private final Integer _retryCount;
 
-    public RepositoryApiWithRetry(RepositoryApi repositoryApi, Integer retryCount) {
+    public RepositoryApiRetryWrapper(RepositoryApi repositoryApi, Integer retryCount) {
         this._repositoryApi = repositoryApi;
         _retryCount = retryCount;
     }

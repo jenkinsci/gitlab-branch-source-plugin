@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -12,16 +12,16 @@ import org.gitlab4j.api.GitLabApi;
 
 public class GitLabHelper {
 
-    public static GitLabApiWithRetry apiBuilder(String serverName) {
+    public static GitLabApiRetryWrapper apiBuilder(String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
             PersonalAccessToken credentials = server.getCredentials();
             if (credentials != null) {
                 GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
-                return new GitLabApiWithRetry(gitLabApi, server.getRetryCount());
+                return new GitLabApiRetryWrapper(gitLabApi, server.getRetryCount());
             }
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
-            return new GitLabApiWithRetry(gitLabApi, server.getRetryCount());
+            return new GitLabApiRetryWrapper(gitLabApi, server.getRetryCount());
         }
         throw new IllegalStateException(
             String.format("No server found with the name: %s", serverName));

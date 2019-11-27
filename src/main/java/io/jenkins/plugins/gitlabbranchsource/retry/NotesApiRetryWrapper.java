@@ -6,11 +6,11 @@ import org.gitlab4j.api.models.Note;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class NotesApiWithRetry {
+public class NotesApiRetryWrapper {
     private final NotesApi _notesApi;
     private final Integer _retryCount;
 
-    public NotesApiWithRetry(NotesApi notesApi, Integer retryCount) {
+    public NotesApiRetryWrapper(NotesApi notesApi, Integer retryCount) {
         _notesApi = notesApi;
         _retryCount = retryCount;
     }

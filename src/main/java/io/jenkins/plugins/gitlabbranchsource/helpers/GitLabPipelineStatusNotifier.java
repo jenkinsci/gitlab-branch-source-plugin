@@ -24,7 +24,7 @@ import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -125,7 +125,7 @@ public class GitLabPipelineStatusNotifier {
         String suffix = " - [Details](" + url + ")";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
-            GitLabApiWithRetry gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            GitLabApiRetryWrapper gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             String sudoUsername = sourceContext.getSudoUser();
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
@@ -244,7 +244,7 @@ public class GitLabPipelineStatusNotifier {
             }
         }
         try {
-            GitLabApiWithRetry gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            GitLabApiRetryWrapper gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             LOGGER.info("COMMIT: " + hash);
             gitLabApi.getCommitsApi().addCommitStatus(
                 source.getProjectPath(),
@@ -329,7 +329,7 @@ public class GitLabPipelineStatusNotifier {
                     status.setStatus("PENDING");
                     Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                     try {
-                        GitLabApiWithRetry gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+                        GitLabApiRetryWrapper gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
                         // check are we still the task to set pending
                         synchronized (resolving) {
                             if (!nonce.equals(resolving.get(job))) {

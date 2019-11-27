@@ -4,7 +4,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.TaskListener;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
@@ -103,7 +103,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * A connection to the GitLab API or {@code null} if none established yet.
      */
     @CheckForNull
-    private GitLabApiWithRetry gitLabApi;
+    private GitLabApiRetryWrapper gitLabApi;
 
     /**
      * Constructor.
@@ -376,7 +376,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * establish their own.
      */
     @CheckForNull
-    public GitLabApiWithRetry getGitLabApi() {
+    public GitLabApiRetryWrapper getGitLabApi() {
         return gitLabApi;
     }
 
@@ -385,7 +385,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      *
      * @param gitLabApi {@link GitLabApi} to use for the request.
      */
-    public void setGitLabApi(@CheckForNull GitLabApiWithRetry gitLabApi) {
+    public void setGitLabApi(@CheckForNull GitLabApiRetryWrapper gitLabApi) {
         this.gitLabApi = gitLabApi;
     }
 

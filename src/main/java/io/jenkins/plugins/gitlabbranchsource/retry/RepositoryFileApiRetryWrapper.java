@@ -7,11 +7,11 @@ import org.gitlab4j.api.models.RepositoryFile;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class RepositoryFileApiWithRetry {
+public class RepositoryFileApiRetryWrapper {
     private final RepositoryFileApi _repositoryFileApi;
     private final Integer _retryCount;
 
-    public RepositoryFileApiWithRetry(RepositoryFileApi repositoryFileApi, Integer retryCount) {
+    public RepositoryFileApiRetryWrapper(RepositoryFileApi repositoryFileApi, Integer retryCount) {
         _repositoryFileApi = repositoryFileApi;
         _retryCount = retryCount;
     }

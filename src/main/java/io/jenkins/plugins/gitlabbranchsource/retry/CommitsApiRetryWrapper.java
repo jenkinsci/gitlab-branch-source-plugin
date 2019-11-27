@@ -9,11 +9,11 @@ import org.gitlab4j.api.models.CommitStatus;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class CommitsApiWithRetry {
+public class CommitsApiRetryWrapper {
     private final CommitsApi _commitsApi;
     private final Integer _retryCount;
 
-    public CommitsApiWithRetry(CommitsApi commitsApi, Integer retryCount) {
+    public CommitsApiRetryWrapper(CommitsApi commitsApi, Integer retryCount) {
         this._commitsApi = commitsApi;
         this._retryCount = retryCount;
     }

@@ -9,11 +9,11 @@ import org.gitlab4j.api.models.Project;
 
 import static io.jenkins.plugins.gitlabbranchsource.retry.RetryHelper.withRetry;
 
-public class GroupApiWithRetry {
+public class GroupApiRetryWrapper {
     private final GroupApi _groupApi;
     private final Integer _retryCount;
 
-    public GroupApiWithRetry(GroupApi groupApi, Integer retryCount) {
+    public GroupApiRetryWrapper(GroupApi groupApi, Integer retryCount) {
         _groupApi = groupApi;
         _retryCount = retryCount;
     }

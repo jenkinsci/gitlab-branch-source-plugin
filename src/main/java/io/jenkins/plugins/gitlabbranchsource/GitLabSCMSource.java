@@ -20,7 +20,7 @@ import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -199,7 +199,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return gitlabProject;
     }
 
-    protected Project getGitlabProject(GitLabApiWithRetry gitLabApi) {
+    protected Project getGitlabProject(GitLabApiRetryWrapper gitLabApi) {
         if (gitlabProject == null) {
             try {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
@@ -214,7 +214,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public HashMap<String, AccessLevel> getMembers() {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            GitLabApiWithRetry gitLabApi = apiBuilder(serverName);
+            GitLabApiRetryWrapper gitLabApi = apiBuilder(serverName);
             for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
@@ -248,7 +248,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
         throws IOException, InterruptedException {
         try {
-            GitLabApiWithRetry gitLabApi = apiBuilder(serverName);
+            GitLabApiRetryWrapper gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             LOGGER.info(String.format("h, l..%s", Thread.currentThread().getName()));
             if (head instanceof BranchSCMHead) {
@@ -308,7 +308,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         SCMHeadEvent<?> event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
-            GitLabApiWithRetry gitLabApi = apiBuilder(serverName);
+            GitLabApiRetryWrapper gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
@@ -695,7 +695,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (builder == null) {
                 throw new AssertionError();
             }
-            GitLabApiWithRetry gitLabApi = apiBuilder(serverName);
+            GitLabApiRetryWrapper gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             LOGGER.info("Creating a probe: " + head.getName());
             final SCMFileSystem fs = builder.build(head, revision, gitLabApi, projectPath);
@@ -845,7 +845,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             ListBoxModel result = new ListBoxModel();
             try {
-                GitLabApiWithRetry gitLabApi;
+                GitLabApiRetryWrapper gitLabApi;
                 if (serverName.equals("")) {
                     gitLabApi = apiBuilder(gitLabServers.get(0).getName());
                 } else {

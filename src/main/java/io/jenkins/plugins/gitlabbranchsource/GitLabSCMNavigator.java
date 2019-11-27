@@ -21,7 +21,7 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabGroup;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -192,7 +192,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return gitlabOwner;
     }
 
-    private GitLabOwner getGitlabOwner(GitLabApiWithRetry gitLabApi) {
+    private GitLabOwner getGitlabOwner(GitLabApiRetryWrapper gitLabApi) {
         if (gitlabOwner == null) {
             gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
         }
@@ -226,7 +226,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
             .withTraits(traits)
             .newRequest(this, observer)) {
-            GitLabApiWithRetry gitLabApi = apiBuilder(serverName);
+            GitLabApiRetryWrapper gitLabApi = apiBuilder(serverName);
             getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
@@ -425,7 +425,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             if (projectOwner.equals("")) {
                 return FormValidation.ok();
             }
-            GitLabApiWithRetry gitLabApi = null;
+            GitLabApiRetryWrapper gitLabApi = null;
             try {
                 gitLabApi = apiBuilder(serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);

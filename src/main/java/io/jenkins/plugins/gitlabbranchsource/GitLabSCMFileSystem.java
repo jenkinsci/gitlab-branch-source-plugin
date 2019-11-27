@@ -6,7 +6,7 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
-import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiWithRetry;
+import io.jenkins.plugins.gitlabbranchsource.retry.GitLabApiRetryWrapper;
 import java.io.IOException;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMFile;
@@ -19,12 +19,12 @@ import org.gitlab4j.api.GitLabApiException;
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
 
-    private final GitLabApiWithRetry gitLabApi;
+    private final GitLabApiRetryWrapper gitLabApi;
     private final String projectPath;
     private final String ref;
 
     protected GitLabSCMFileSystem(
-        GitLabApiWithRetry gitLabApi,
+        GitLabApiRetryWrapper gitLabApi,
         String projectPath,
         String ref,
         @CheckForNull SCMRevision rev) throws IOException {
@@ -91,7 +91,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         }
 
         public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
-                                   @NonNull GitLabApiWithRetry gitLabApi, @NonNull String projectPath)
+                                   @NonNull GitLabApiRetryWrapper gitLabApi, @NonNull String projectPath)
             throws IOException, InterruptedException {
             String ref;
             if (head instanceof MergeRequestSCMHead) {
