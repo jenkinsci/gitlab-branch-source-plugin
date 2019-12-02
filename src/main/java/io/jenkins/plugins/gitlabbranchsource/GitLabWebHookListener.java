@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMHeadEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
@@ -19,33 +20,29 @@ public class GitLabWebHookListener implements WebHookListener {
     }
 
     @Override
-    public void onNoteEvent(NoteEvent event) {
-        LOGGER.info("NOTE EVENT");
-        LOGGER.info(event.toString());
-        GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(event);
+    public void onNoteEvent(NoteEvent noteEvent) {
+        LOGGER.log(Level.INFO, noteEvent.toString());
+        GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(noteEvent);
         AbstractGitLabJobTrigger.fireNow(trigger);
     }
 
     @Override
-    public void onMergeRequestEvent(MergeRequestEvent event) {
-        LOGGER.info("MR EVENT");
-        LOGGER.info(event.toString());
-        GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(event, origin);
+    public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
+        LOGGER.log(Level.INFO, mrEvent.toString());
+        GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
-        LOGGER.info("PUSH EVENT");
-        LOGGER.info(pushEvent.toString());
+        LOGGER.log(Level.INFO, pushEvent.toString());
         GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
-        LOGGER.info("TAG EVENT");
-        LOGGER.info(tagPushEvent.toString());
+        LOGGER.log(Level.INFO, tagPushEvent.toString());
         GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }

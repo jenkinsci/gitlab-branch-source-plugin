@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.scm.api.SCMSourceEvent;
 import org.gitlab4j.api.systemhooks.GroupSystemHookEvent;
@@ -19,10 +20,8 @@ public class GitLabSystemHookListener implements SystemHookListener {
 
     @Override
     public void onProjectEvent(ProjectSystemHookEvent projectSystemHookEvent) {
-        LOGGER.info("PROJECT EVENT");
-        LOGGER.info(projectSystemHookEvent.toString());
+        LOGGER.log(Level.INFO, projectSystemHookEvent.toString());
         // TODO: implement handling `project_transfer` and `project_renamed`
-
         switch (projectSystemHookEvent.getEventName()) {
             case ProjectSystemHookEvent.PROJECT_CREATE_EVENT:
             case ProjectSystemHookEvent.PROJECT_DESTROY_EVENT:
@@ -32,13 +31,12 @@ public class GitLabSystemHookListener implements SystemHookListener {
                 SCMSourceEvent.fireLater(trigger, 5, TimeUnit.SECONDS);
                 break;
             default:
-                LOGGER.info("unsupported System hook event");
+                LOGGER.log(Level.INFO, String.format("unsupported System hook event: %s", projectSystemHookEvent.getEventName().toString()));
         }
     }
 
     @Override
     public void onGroupEvent(GroupSystemHookEvent groupSystemHookEvent) {
-        LOGGER.info("GROUP EVENT");
-        LOGGER.info(groupSystemHookEvent.toString());
+        LOGGER.log(Level.INFO, groupSystemHookEvent.toString());
     }
 }
