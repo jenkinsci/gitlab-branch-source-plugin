@@ -653,7 +653,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return revision;
                 }
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger()
