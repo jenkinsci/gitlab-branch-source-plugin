@@ -3,6 +3,8 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +18,8 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 
 public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<MergeRequestEvent> {
+    
+    private static final Logger LOGGER = Logger.getLogger(GitLabMergeRequestSCMEvent.class.getName());
 
     public GitLabMergeRequestSCMEvent(MergeRequestEvent mrEvent, String origin) {
         super(typeOf(mrEvent), mrEvent, origin);
