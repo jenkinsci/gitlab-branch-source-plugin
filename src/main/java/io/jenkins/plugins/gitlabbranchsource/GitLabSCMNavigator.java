@@ -31,6 +31,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
@@ -63,8 +65,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
@@ -75,7 +75,7 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFile
 
 public class GitLabSCMNavigator extends SCMNavigator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMNavigator.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabSCMNavigator.class.getName());
     /**
      * The owner of the projects to navigate.
      */
@@ -300,7 +300,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
     }
 

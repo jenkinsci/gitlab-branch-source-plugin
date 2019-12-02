@@ -160,7 +160,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                     ));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
         }
         return result;
     }

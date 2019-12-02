@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMSource;
@@ -24,12 +25,10 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GitLabSCMSourceRequest extends SCMSourceRequest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSourceRequest.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabSCMSourceRequest.class.getName());
     /**
      * {@code true} if branch details need to be fetched.
      */
