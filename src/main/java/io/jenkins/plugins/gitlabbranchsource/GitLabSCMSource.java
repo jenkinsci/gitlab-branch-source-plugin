@@ -434,7 +434,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         .toLowerCase(Locale.ENGLISH) : ""),
                                     mr.getIid(),
                                     new BranchSCMHead(mr.getTargetBranch()),
-                                    ChangeRequestCheckoutStrategy.MERGE,
+                                    strategy,
                                     fork
                                         ? new SCMHeadOrigin.Fork(originProjectPath)
                                         : SCMHeadOrigin.DEFAULT,
