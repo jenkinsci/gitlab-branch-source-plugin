@@ -16,6 +16,8 @@ import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.RandomStringUtils;
@@ -30,8 +32,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
@@ -56,7 +56,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Used as default token value if no any credentials found by given credentialsId.
      */
     public final static String EMPTY_TOKEN = "";
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServer.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
     /**
      * Length of unique random numeric name for server
      */
@@ -242,7 +242,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             try {
                 new URL(serverUrl);
             } catch (MalformedURLException e) {
-                LOGGER.error(String.format("Incorrect url: %s", serverUrl));
+                LOGGER.log(Level.SEVERE, "Incorrect url: %s", serverUrl);
                 return FormValidation.error("Malformed url (%s)", e.getMessage());
             }
             if (GITLAB_SERVER_URL.equals(serverUrl)) {
@@ -287,7 +287,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     gitLabApi.getProjectApi().getProjects(1, 1);
                     return FormValidation.ok("Valid GitLab Server but no credentials specified");
                 } catch (GitLabApiException e) {
-                    LOGGER.error("Invalid GitLab Server Url");
+                    LOGGER.log(Level.SEVERE, "Invalid GitLab Server Url");
                     return FormValidation
                         .errorWithMarkup(Messages
                             .GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
@@ -303,8 +303,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     return FormValidation
                         .ok(String.format("Credentials verified for user %s", user.getUsername()));
                 } catch (GitLabApiException e) {
-                    LOGGER.error(
-                        String.format("Failed to connect with GitLab Server - %s", e.getMessage()));
+                    LOGGER.log(Level.SEVERE,
+                        "Failed to connect with GitLab Server - %s", e.getMessage());
                     return FormValidation.error(e,
                         Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
                 }

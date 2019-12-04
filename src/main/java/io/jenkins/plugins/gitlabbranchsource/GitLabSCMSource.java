@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.branch.MultiBranchProject;
 import jenkins.model.Jenkins;
@@ -88,8 +90,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
@@ -104,7 +104,7 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GIT
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabSCMSource.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabSCMSource.class.getName());
     private final String serverName;
     private final String projectOwner;
     private final String projectPath;
@@ -220,7 +220,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             return new HashMap<>();
         }
         return members;
@@ -301,7 +301,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 return null;
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
         return super.retrieve(head, listener);
     }
@@ -536,7 +536,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         } finally {
             if (this.getOwner() != null) {
                 this.getOwner().save();
@@ -659,7 +659,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return revision;
                 }
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger()
@@ -874,7 +874,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
                 return result;
             } catch (GitLabApiException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
                 return new StandardListBoxModel()
                     .includeEmptyValue();
             }

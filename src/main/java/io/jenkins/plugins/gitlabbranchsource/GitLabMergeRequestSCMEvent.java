@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMHeadOrigin;
@@ -16,6 +18,7 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 
 public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<MergeRequestEvent> {
+    private static final Logger LOGGER = Logger.getLogger(GitLabMergeRequestSCMEvent.class.getName());
 
     public GitLabMergeRequestSCMEvent(MergeRequestEvent mrEvent, String origin) {
         super(typeOf(mrEvent), mrEvent, origin);
@@ -160,7 +163,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                     ));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
         }
         return result;
     }

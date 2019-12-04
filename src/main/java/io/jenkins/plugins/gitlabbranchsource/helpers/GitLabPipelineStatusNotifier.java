@@ -157,7 +157,7 @@ public class GitLabPipelineStatusNotifier {
                 );
             }
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         }
     }
 
@@ -253,7 +253,7 @@ public class GitLabPipelineStatusNotifier {
                 status);
             listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
         } catch (GitLabApiException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception caught adding commit status:" + e, e);
         }
     }
 
@@ -349,7 +349,7 @@ public class GitLabPipelineStatusNotifier {
                             status);
                         LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
                     } catch (GitLabApiException e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.WARNING, "Exception caught: " + e, e);
                     }
                 } catch (IOException | InterruptedException e) {
                     LOGGER.log(Level.INFO,

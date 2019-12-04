@@ -15,12 +15,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static hudson.Util.fixNull;
 
@@ -30,7 +29,7 @@ import static hudson.Util.fixNull;
 @Extension
 public class GitLabServers extends GlobalConfiguration implements PersistentDescriptor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabServers.class);
+    private static final Logger LOGGER = Logger.getLogger(GitLabServers.class.getName());
 
     /**
      * The list of {@link GitLabServer}, this is subject to the constraint that there can only ever
