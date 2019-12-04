@@ -430,7 +430,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             : "FALSE"));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
-                                    "MR-" + mr.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
+                                    "MR-" + mr.getIid() + (strategies.get(fork).size() > 1 ? "-" + strategy.name()
                                         .toLowerCase(Locale.ENGLISH) : ""),
                                     mr.getIid(),
                                     new BranchSCMHead(mr.getTargetBranch()),

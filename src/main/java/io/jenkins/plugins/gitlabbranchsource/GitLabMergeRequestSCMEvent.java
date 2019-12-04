@@ -135,7 +135,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             String originProjectPath = m.getSource().getPathWithNamespace();
             for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                 MergeRequestSCMHead h = new MergeRequestSCMHead(
-                    "MR-" + m.getIid() + (strategies.size() > 1 ? "-" + strategy.name()
+                    "MR-" + m.getIid() + (strategies.get(fork).size() > 1 ? "-" + strategy.name()
                         .toLowerCase(Locale.ENGLISH) : ""),
                     m.getIid(),
                     new BranchSCMHead(m.getTargetBranch()),
