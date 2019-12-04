@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import jenkins.branch.MultiBranchProject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitTagSCMRevision;
@@ -114,7 +115,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private transient String httpRemote;
     private transient Project gitlabProject;
     private int projectId = -1;
-    private String projectIdStr;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -233,17 +233,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @DataBoundSetter
     public void setProjectId(int projectId) {
         this.projectId = projectId;
-        System.out.println("setProjectId=========================" + projectId);
-        setProjectIdStr(projectId + "");
-    }
-
-    public String getProjectIdStr() {
-        return projectIdStr;
-    }
-
-    @DataBoundSetter
-    public void setProjectIdStr(String projectIdStr) {
-        this.projectIdStr = projectIdStr;
     }
 
     @NonNull
@@ -325,7 +314,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
-            getDescriptor().save();
             LOGGER.info(String.format("c, o, e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();
@@ -549,6 +537,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             e.printStackTrace();
+        } finally {
+            if (this.getOwner() != null) {
+                this.getOwner().save();
+            }
         }
     }
 
@@ -757,7 +749,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public void afterSave() {
-        this.getDescriptor().save();
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
             .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
         GitLabHookRegistration webhookMode = ctx.webhookRegistration();
