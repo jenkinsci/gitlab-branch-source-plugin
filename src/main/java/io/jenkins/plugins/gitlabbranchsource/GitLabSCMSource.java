@@ -537,8 +537,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
         } finally {
-            if (this.getOwner() != null) {
-                this.getOwner().save();
+            SCMSourceOwner owner = this.getOwner();
+            if (owner != null) {
+                owner.save();
             }
         }
     }
