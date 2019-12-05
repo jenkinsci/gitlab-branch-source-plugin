@@ -139,7 +139,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                         .toLowerCase(Locale.ENGLISH) : ""),
                     m.getIid(),
                     new BranchSCMHead(m.getTargetBranch()),
-                    ChangeRequestCheckoutStrategy.MERGE,
+                    strategy,
                     fork
                         ? new SCMHeadOrigin.Fork(originProjectPath)
                         : SCMHeadOrigin.DEFAULT,
