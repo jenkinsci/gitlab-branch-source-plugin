@@ -229,6 +229,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return projectId;
     }
 
+    @DataBoundSetter
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
@@ -535,6 +536,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+        } finally {
+            SCMSourceOwner owner = this.getOwner();
+            if (owner != null) {
+                owner.save();
+            }
         }
     }
 
