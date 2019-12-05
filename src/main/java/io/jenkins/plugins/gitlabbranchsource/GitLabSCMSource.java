@@ -270,7 +270,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
                 if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
                     listener.getLogger().format("Current revision of merge request #%s is %s%n",
-                        h.getId(), mr.getDiffRefs().getHeadSha());
+                        h.getId(), mr.getSha());
                     return new MergeRequestSCMRevision(
                         h,
                         new BranchSCMRevision(
