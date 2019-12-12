@@ -227,6 +227,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return projectId;
     }
 
+    @DataBoundSetter
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
@@ -263,10 +264,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
                         .getCommit().getId();
                 if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
-                    listener.getLogger().format("Current revision of merge request #%s is %s%n", h.getId(),
-                            mr.getDiffRefs().getHeadSha());
-                    return new MergeRequestSCMRevision(h, new BranchSCMRevision(h.getTarget(), targetSha),
-                            new BranchSCMRevision(new BranchSCMHead(h.getOriginName()), mr.getSha()));
+                    listener.getLogger().format("Current revision of merge request #%s is %s%n",
+                        h.getId(), mr.getSha());
+                    return new MergeRequestSCMRevision(
+                        h,
+                        new BranchSCMRevision(
+                            h.getTarget(),
+                            targetSha
+                        ),
+                        new BranchSCMRevision(
+                            new BranchSCMHead(h.getOriginName()),
+                            mr.getSha()
+                        )
+                    );
                 } else {
                     listener.getLogger().format("Merge request #%s is CLOSED%n", h.getId());
                     return null;
@@ -412,10 +422,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             : "Untrusted")));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
-                                    String.format("MR-%s %s", mr.getIid() , (strategies.size() > 1 ? "-" + strategy.name().toLowerCase(Locale.ENGLISH) : "")),
+                                    "MR-" + mr.getIid() + (strategies.get(fork).size() > 1 ? "-" + strategy.name()
+                                        .toLowerCase(Locale.ENGLISH) : ""),
                                     mr.getIid(),
                                     new BranchSCMHead(mr.getTargetBranch()),
-                                    ChangeRequestCheckoutStrategy.MERGE,
+                                    strategy,
                                     fork
                                         ? new SCMHeadOrigin.Fork(originProjectPath)
                                         : SCMHeadOrigin.DEFAULT,
@@ -516,6 +527,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+        } finally {
+            SCMSourceOwner owner = this.getOwner();
+            if (owner != null) {
+                owner.save();
+            }
         }
     }
 

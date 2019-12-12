@@ -272,7 +272,7 @@ public class GitLabPipelineStatusNotifier {
                 return;
             }
             final Job<?, ?> job = (Job) wi.task;
-            LOGGER.log(Level.FINE, String.format("QueueListener: Waiting %s", job.getFullDisplayName()));
+            LOGGER.log(Level.FINE, String.format("QueueListener: Waiting > %s", job.getFullDisplayName()));
             final SCMSource src = SCMSource.SourceByItem.findSource(job);
             if (!(src instanceof GitLabSCMSource)) {
                 return;
@@ -369,7 +369,7 @@ public class GitLabPipelineStatusNotifier {
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener,
             File changelogFile,
             SCMRevisionState pollingBaseline) {
-            LOGGER.log(Level.FINE, String.format("SCMListener: Checkout %s", build.getFullDisplayName()));
+            LOGGER.log(Level.FINE, String.format("SCMListener: Checkout > %s", build.getFullDisplayName()));
             sendNotifications(build, listener);
         }
     }
@@ -382,7 +382,7 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onCompleted(Run<?, ?> build, @NonNull TaskListener listener) {
-            LOGGER.log(Level.FINE, String.format("RunListener: Complete %s", build.getFullDisplayName()));
+            LOGGER.log(Level.FINE, String.format("RunListener: Complete > %s", build.getFullDisplayName()));
             sendNotifications(build, listener);
             logComment(build, listener);
 
@@ -390,7 +390,7 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
-            LOGGER.log(Level.FINE, String.format("RunListener: Started %s", run.getFullDisplayName()));
+            LOGGER.log(Level.FINE, String.format("RunListener: Started > %s", run.getFullDisplayName()));
             sendNotifications(run, listener);
         }
     }
