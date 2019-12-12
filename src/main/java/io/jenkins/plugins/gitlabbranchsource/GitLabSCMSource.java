@@ -249,7 +249,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
-            LOGGER.log(Level.FINEST, String.format("h, l..%s", Thread.currentThread().getName()));
             if (head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
                 String revision = gitLabApi.getRepositoryApi().getBranch(gitlabProject, head.getName()).getCommit()
@@ -304,7 +303,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
-            LOGGER.log(Level.FINEST, String.format("c, o e, l..%s", Thread.currentThread().getName()));
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
@@ -574,7 +572,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
-        LOGGER.log(Level.FINE, String.format("h, e, l..%s", Thread.currentThread().getName()));
         getGitlabProject();
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
@@ -669,13 +666,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
-            LOGGER.log(Level.FINEST, String.format("Creating a probe: %s", head.getName()));
             final SCMFileSystem fs = builder.build(head, revision, gitLabApi, projectPath);
             return new SCMProbe() {
                 @NonNull
                 @Override
                 public SCMProbeStat stat(@NonNull String path) throws IOException {
-                    LOGGER.log(Level.FINEST, String.format("Path of file: %s", path));
                     try {
                         return SCMProbeStat.fromType(fs.child(path).getType());
                     } catch (InterruptedException e) {
@@ -718,8 +713,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
         GitLabHookRegistration webhookMode = ctx.webhookRegistration();
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
-        LOGGER.log(Level.FINEST, String.format("Mode of web hook: %s", webhookMode.toString()));
-        LOGGER.log(Level.FINEST, String.format("Mode of system hook: %s", systemhookMode.toString()));
         GitLabHookCreator.register(this, webhookMode, systemhookMode);
     }
 

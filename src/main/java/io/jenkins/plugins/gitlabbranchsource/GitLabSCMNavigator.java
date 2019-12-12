@@ -395,7 +395,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
             .withTraits(navigatorContext.traits());
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
-        LOGGER.log(Level.FINEST, String.format("Mode of system hook: %s", systemhookMode.toString()));
         GitLabHookCreator.register(owner, this, systemhookMode);
     }
 
