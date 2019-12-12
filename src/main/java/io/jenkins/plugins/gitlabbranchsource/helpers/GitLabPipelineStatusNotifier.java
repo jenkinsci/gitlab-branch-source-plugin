@@ -181,7 +181,7 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         Result result = build.getResult();
-        LOGGER.log(Level.FINE, "Result: " + result);
+        LOGGER.log(Level.FINE, String.format("Result: %s", result));
 
         CommitStatus status = new CommitStatus();
         Constants.CommitBuildState state;
