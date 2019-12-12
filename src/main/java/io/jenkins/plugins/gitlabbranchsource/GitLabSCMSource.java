@@ -167,7 +167,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     /**
      * Only used for saving project name for {@link GitLabSCMNavigator}
-     * 
+     *
      * @param projectName the name of the project
      */
     public void setProjectName(String projectName) {
