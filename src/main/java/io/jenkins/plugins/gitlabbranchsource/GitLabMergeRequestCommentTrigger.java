@@ -37,7 +37,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
             try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
                 boolean jobFound = false;
                 for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
-                    LOGGER.info("Source Owner: " + owner.getFullDisplayName());
+                    LOGGER.log(Level.FINEST, String.format("Source Owner: %s", owner.getFullDisplayName()));
                     // This is a hack to skip owners which are children of a SCMNavigator
                     if (owner.getFullDisplayName().contains(" » ")) {
                         continue;

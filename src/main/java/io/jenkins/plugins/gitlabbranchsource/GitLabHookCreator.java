@@ -36,13 +36,13 @@ public class GitLabHookCreator {
                 }
                 credentials = server.getCredentials();
                 if (credentials == null) {
-                    LOGGER.info("No System credentials added, cannot create system hook");
+                    LOGGER.log(Level.WARNING, "No System credentials added, cannot create system hook");
                 }
                 break;
             case ITEM:
                 credentials = navigator.credentials(owner);
                 if (credentials == null) {
-                    LOGGER.info("No Item credentials added, cannot create system hook");
+                    LOGGER.log(Level.WARNING, "No Item credentials added, cannot create system hook");
                 }
                 break;
             default:
@@ -70,13 +70,13 @@ public class GitLabHookCreator {
                 }
                 credentials = server.getCredentials();
                 if (credentials == null) {
-                    LOGGER.info("No System credentials added, cannot create web hook");
+                    LOGGER.log(Level.WARNING, "No System credentials added, cannot create web hook");
                 }
                 break;
             case ITEM:
                 credentials = source.credentials();
                 if (credentials == null) {
-                    LOGGER.info("No Item credentials added, cannot create web hook");
+                    LOGGER.log(Level.WARNING, "No Item credentials added, cannot create web hook");
                 }
                 break;
             default:
@@ -106,13 +106,13 @@ public class GitLabHookCreator {
                 }
                 credentials = server.getCredentials();
                 if (credentials == null) {
-                    LOGGER.info("No System credentials added, cannot create system hook");
+                    LOGGER.log(Level.WARNING, "No System credentials added, cannot create system hook");
                 }
                 break;
             case ITEM:
                 credentials = source.credentials();
                 if (credentials == null) {
-                    LOGGER.info("No Item credentials added, cannot create system hook");
+                    LOGGER.log(Level.WARNING, "No Item credentials added, cannot create system hook");
                 }
                 break;
             default:

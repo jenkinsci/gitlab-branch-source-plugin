@@ -246,14 +246,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 return FormValidation.error("Malformed url (%s)", e.getMessage());
             }
             if (GITLAB_SERVER_URL.equals(serverUrl)) {
-                LOGGER.info(String.format("Community version of GitLab: %s", serverUrl));
+                LOGGER.log(Level.FINEST, String.format("Community version of GitLab: %s", serverUrl));
             }
             GitLabApi gitLabApi = new GitLabApi(serverUrl, "");
             try {
                 gitLabApi.getProjectApi().getProjects(1, 1);
                 return FormValidation.ok();
             } catch (GitLabApiException e) {
-                LOGGER.info(String.format("Invalid GitLab Server Url: %s", serverUrl));
+                LOGGER.log(Level.FINEST, String.format("Invalid GitLab Server Url: %s", serverUrl));
                 return FormValidation.error(Messages.GitLabServer_invalidUrl(serverUrl));
             }
         }
@@ -269,7 +269,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
             @QueryParameter String credentialsId) {
-            LOGGER.info("Testing Connection for GitLab, url:" + serverUrl);
             PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
             String privateToken = "";
             if (credentials != null) {
@@ -297,7 +296,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
-                    LOGGER.info(String
+                    LOGGER.log(Level.FINEST, String
                         .format("Connection established with the GitLab Server for %s",
                             user.getUsername()));
                     return FormValidation

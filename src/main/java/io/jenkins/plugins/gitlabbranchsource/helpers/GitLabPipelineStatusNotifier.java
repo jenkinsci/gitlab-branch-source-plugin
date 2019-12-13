@@ -103,7 +103,7 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         Result result = build.getResult();
-        LOGGER.info("Log Comment Result: " + result);
+        LOGGER.log(Level.FINE, String.format("Log Comment Result: %s", result));
         String note = "";
         String symbol = "";
         if (Result.SUCCESS.equals(result)) {
@@ -181,7 +181,7 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         Result result = build.getResult();
-        LOGGER.info("Result: " + result);
+        LOGGER.log(Level.FINE, String.format("Result: %s", result));
 
         CommitStatus status = new CommitStatus();
         Constants.CommitBuildState state;
@@ -245,7 +245,7 @@ public class GitLabPipelineStatusNotifier {
         }
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
-            LOGGER.info("COMMIT: " + hash);
+            LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
             gitLabApi.getCommitsApi().addCommitStatus(
                 source.getProjectPath(),
                 hash,
@@ -272,7 +272,7 @@ public class GitLabPipelineStatusNotifier {
                 return;
             }
             final Job<?, ?> job = (Job) wi.task;
-            LOGGER.info("QueueListener: Waiting > " + job.getFullDisplayName());
+            LOGGER.log(Level.FINE, String.format("QueueListener: Waiting > %s", job.getFullDisplayName()));
             final SCMSource src = SCMSource.SourceByItem.findSource(job);
             if (!(src instanceof GitLabSCMSource)) {
                 return;
@@ -369,7 +369,7 @@ public class GitLabPipelineStatusNotifier {
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener,
             File changelogFile,
             SCMRevisionState pollingBaseline) {
-            LOGGER.info("SCMListener: Checkout > " + build.getFullDisplayName());
+            LOGGER.log(Level.FINE, String.format("SCMListener: Checkout > %s", build.getFullDisplayName()));
             sendNotifications(build, listener);
         }
     }
@@ -382,7 +382,7 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onCompleted(Run<?, ?> build, @NonNull TaskListener listener) {
-            LOGGER.info("RunListener: Complete > " + build.getFullDisplayName());
+            LOGGER.log(Level.FINE, String.format("RunListener: Complete > %s", build.getFullDisplayName()));
             sendNotifications(build, listener);
             logComment(build, listener);
 
@@ -390,7 +390,7 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
-            LOGGER.info("RunListener: Started > " + run.getFullDisplayName());
+            LOGGER.log(Level.FINE, String.format("RunListener: Started > %s", run.getFullDisplayName()));
             sendNotifications(run, listener);
         }
     }

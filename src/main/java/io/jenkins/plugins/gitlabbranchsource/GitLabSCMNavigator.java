@@ -221,7 +221,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer)
         throws IOException, InterruptedException {
-        LOGGER.info("visiting sources..");
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
             .withTraits(traits)
             .newRequest(this, observer)) {
@@ -341,13 +340,13 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
                 credentials = server.getCredentials();
                 if (credentials == null) {
-                    LOGGER.info("No System credentials added, cannot create web hook");
+                    LOGGER.log(Level.WARNING, "No System credentials added, cannot create web hook");
                 }
                 break;
             case ITEM:
                 credentials = credentials(owner);
                 if (credentials == null) {
-                    LOGGER.info("No Item credentials added, cannot create web hook");
+                    LOGGER.log(Level.WARNING, "No Item credentials added, cannot create web hook");
                 }
                 break;
             default:
@@ -361,7 +360,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
     protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner,
         SCMNavigatorEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
-        LOGGER.info("retrieving actions..");
         getGitlabOwner();
         String fullName = gitlabOwner.getFullName();
         String webUrl = gitlabOwner.getWebUrl();
@@ -397,7 +395,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
             .withTraits(navigatorContext.traits());
         GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
-        LOGGER.info("Mode of system hook: " + systemhookMode.toString());
         GitLabHookCreator.register(owner, this, systemhookMode);
     }
 
@@ -462,7 +459,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
         @Override
         public SCMNavigator newInstance(String name) {
-            LOGGER.info("Instantiating GitLabSCMNavigator..");
             GitLabSCMNavigator navigator =
                 new GitLabSCMNavigator("");
             navigator.setTraits(getTraitsDefaults());
