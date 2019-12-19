@@ -5,8 +5,6 @@ import com.damnhandy.uri.template.UriTemplateBuilder;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.JenkinsLocationConfiguration;
@@ -151,7 +149,7 @@ public class GitLabHookCreator {
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
-        checkURL(rootUrl);
+        UrlChecker.get().checkURL(rootUrl);
         if (rootUrl.endsWith("/")) {
             rootUrl = rootUrl.substring(0, rootUrl.length() - 1);
         }
@@ -163,24 +161,6 @@ public class GitLabHookCreator {
         }
         return uriBuilder.literal("/post").build().expand();
     }
-
-    static void checkURL(String url) {
-        try {
-            URL anURL = new URL(url);
-            if ("localhost".equals(anURL.getHost())) {
-                throw new IllegalStateException(
-                    "Jenkins URL cannot start with http://localhost \nURL is: " + url);
-            }
-            if (!anURL.getHost().contains(".")) {
-                throw new IllegalStateException(
-                    "You must use a fully qualified domain name for Jenkins URL, this is required by GitLab"
-                        + "\nURL is: " + url);
-            }
-        } catch (MalformedURLException e) {
-            throw new IllegalStateException("Bad Jenkins URL\nURL is: " + url);
-        }
-    }
-
 
     public static ProjectHook createWebHook() {
         ProjectHook enabledHooks = new ProjectHook();
