@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.damnhandy.uri.template.UriTemplateBuilder;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -151,12 +152,16 @@ public class GitLabHookCreator {
             return "";
         }
         checkURL(rootUrl);
-        String pronoun = "/gitlab-systemhook";
-        if (isWebHook) {
-            pronoun = "/gitlab-webhook";
+        if (rootUrl.endsWith("/")) {
+            rootUrl = rootUrl.substring(0, rootUrl.length() - 1);
         }
-        return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
-            .expand();
+        UriTemplateBuilder uriBuilder = UriTemplate.buildFromTemplate(rootUrl);
+        if (isWebHook) {
+            uriBuilder = uriBuilder.literal("/gitlab-webhook");
+        } else {
+            uriBuilder = uriBuilder.literal("/gitlab-systemhook");
+        }
+        return uriBuilder.literal("/post").build().expand();
     }
 
     static void checkURL(String url) {
