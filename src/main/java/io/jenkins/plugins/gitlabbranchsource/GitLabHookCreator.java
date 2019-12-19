@@ -8,7 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
@@ -145,15 +145,14 @@ public class GitLabHookCreator {
     }
 
     public static String getHookUrl(boolean isWebHook) {
-        JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
-        String rootUrl = locationConfiguration.getUrl();
+        String rootUrl = Jenkins.get().getRootUrl();
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
         checkURL(rootUrl);
-        String pronoun = "/gitlab-systemhook";
+        String pronoun = "gitlab-systemhook";
         if (isWebHook) {
-            pronoun = "/gitlab-webhook";
+            pronoun = "gitlab-webhook";
         }
         return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
             .expand();
