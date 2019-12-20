@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.damnhandy.uri.template.UriTemplateBuilder;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -8,7 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.model.JenkinsLocationConfiguration;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMNavigatorOwner;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
@@ -145,18 +146,18 @@ public class GitLabHookCreator {
     }
 
     public static String getHookUrl(boolean isWebHook) {
-        JenkinsLocationConfiguration locationConfiguration = JenkinsLocationConfiguration.get();
-        String rootUrl = locationConfiguration.getUrl();
+        String rootUrl = Jenkins.get().getRootUrl();
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
         checkURL(rootUrl);
-        String pronoun = "/gitlab-systemhook";
+        UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(rootUrl);
         if (isWebHook) {
-            pronoun = "/gitlab-webhook";
+            templateBuilder.literal("gitlab-webhook");
+        } else {
+            templateBuilder.literal("gitlab-systemhook");
         }
-        return UriTemplate.buildFromTemplate(rootUrl).literal(pronoun).literal("/post").build()
-            .expand();
+        return templateBuilder.literal("/post").build().expand();
     }
 
     static void checkURL(String url) {
