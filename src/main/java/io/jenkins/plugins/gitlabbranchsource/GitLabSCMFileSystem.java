@@ -94,10 +94,12 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         
         @Override
         public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head,
-           @CheckForNull SCMRevision rev){
-            GitLabApi gitLabApi = apiBuilder(source.getServerName());
-            String projectPath = source.getProjectPath();
-            return build(head, rev, gitlabApi, projectPath); 
+           @CheckForNull SCMRevision rev)
+           throws IOException, InterruptedException {
+            GitLabSCMSource gitlabScmSource = (GitLabSCMSource) source;
+            GitLabApi gitLabApi = apiBuilder(gitlabScmSource.getServerName());
+            String projectPath = gitlabScmSource.getProjectPath();
+            return build(head, rev, gitLabApi, projectPath); 
         }
 
         public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
