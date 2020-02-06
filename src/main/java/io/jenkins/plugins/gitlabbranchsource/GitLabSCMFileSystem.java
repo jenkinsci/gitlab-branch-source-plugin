@@ -16,6 +16,8 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+
 
 public class GitLabSCMFileSystem extends SCMFileSystem {
 
@@ -88,6 +90,14 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm,
             @CheckForNull SCMRevision rev) {
             return null;
+        }
+        
+        @Override
+        public SCMFileSystem build(@NonNull SCMSource source, @NonNull SCMHead head,
+           @CheckForNull SCMRevision rev){
+            GitLabApi gitLabApi = apiBuilder(source.getServerName());
+            String projectPath = source.getProjectPath();
+            return build(head, rev, gitlabApi, projectPath); 
         }
 
         public SCMFileSystem build(@NonNull SCMHead head, @CheckForNull SCMRevision rev,
