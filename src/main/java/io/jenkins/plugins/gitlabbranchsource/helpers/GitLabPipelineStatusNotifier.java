@@ -79,15 +79,15 @@ public class GitLabPipelineStatusNotifier {
         return null;
     }
 
-    private static String getStatusName(final Run<?, ?> build, final SCMRevision revision) {
-        return getStatusName(build.getFullDisplayName(), revision);
+    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Run<?, ?> build, final SCMRevision revision) {
+        return getStatusName(sourceContext, build.getFullDisplayName(), revision);
     }
 
-    private static String getStatusName(final Job<?, ?> job, final SCMRevision revision) {
-        return getStatusName(job.getFullDisplayName(), revision);
+    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Job<?, ?> job, final SCMRevision revision) {
+        return getStatusName(sourceContext, job.getFullDisplayName(), revision);
     }
 
-    private static String getStatusName(final String fullDisplayName, final SCMRevision revision) {
+    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName, final SCMRevision revision) {
         final String type;
         if (revision instanceof BranchSCMRevision) {
             type = "branch";
@@ -101,7 +101,13 @@ public class GitLabPipelineStatusNotifier {
                 + revision.getClass().getName() + ", append" + type + " to status name");
         }
 
-        final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + type;
+        String customPrefix = sourceContext.getBuildStatusNameCustomPart();
+        if (!customPrefix.isEmpty())
+        {
+            customPrefix = customPrefix + GITLAB_PIPELINE_STATUS_DELIMITER;
+        }
+
+        final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + customPrefix + type;
         LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
         return statusName;
     }
@@ -157,7 +163,7 @@ public class GitLabPipelineStatusNotifier {
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
             }
-            final String buildName = "**" + getStatusName(build, revision) + ":** ";
+            final String buildName = "**" + getStatusName(sourceContext, build, revision) + ":** ";
             final String hash;
             if (revision instanceof BranchSCMRevision) {
                 hash = ((BranchSCMRevision) revision).getHash();
@@ -257,7 +263,7 @@ public class GitLabPipelineStatusNotifier {
         } else {
             return;
         }
-        status.setName(getStatusName(build, revision));
+        status.setName(getStatusName(sourceContext, build, revision));
 
         final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
             .get(JobScheduledListener.class);
@@ -338,7 +344,7 @@ public class GitLabPipelineStatusNotifier {
                     } else {
                         return;
                     }
-                    status.setName(getStatusName(job, revision));
+                    status.setName(getStatusName(sourceContext, job, revision));
 
                     String url;
                     try {
