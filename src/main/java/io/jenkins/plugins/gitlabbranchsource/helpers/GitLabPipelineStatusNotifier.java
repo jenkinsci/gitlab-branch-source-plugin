@@ -53,6 +53,10 @@ public class GitLabPipelineStatusNotifier {
     private static final Logger LOGGER = Logger
         .getLogger(GitLabPipelineStatusNotifier.class.getName());
 
+    private static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
+
+    private static final String GITLAB_PIPELINE_STATUS_DELIMITER = "/";
+
     private static String getRootUrl(Run<?, ?> build) {
         try {
             return DisplayURLProvider.get().getRunURL(build);
@@ -75,12 +79,35 @@ public class GitLabPipelineStatusNotifier {
         return null;
     }
 
-    private static String getMrBuildName(String buildName) {
-        String suffix = "jenkinsci/";
-        if (buildName.contains("merge")) {
-            return suffix + "mr-merge";
+    private static String getStatusName(final Run<?, ?> build, final SCMRevision revision) {
+        return getStatusName(build.getFullDisplayName(), revision);
+    }
+
+    private static String getStatusName(final Job<?, ?> job, final SCMRevision revision) {
+        return getStatusName(job.getFullDisplayName(), revision);
+    }
+
+    private static String getStatusName(final String fullDisplayName, final SCMRevision revision) {
+        final String type;
+        if (revision instanceof BranchSCMRevision) {
+            type = "branch";
+        } else if (revision instanceof MergeRequestSCMRevision) {
+            type = getMrBuildName(fullDisplayName);
+        } else if (revision instanceof GitTagSCMRevision) {
+            type = "tag";
+        } else {
+            type = "UNKNOWN";
+            LOGGER.log(Level.WARNING, () -> "Unknown SCMRevision implementation "
+                + revision.getClass().getName() + ", append" + type + " to status name");
         }
-        return suffix + "mr-head";
+
+        final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + type;
+        LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
+        return statusName;
+    }
+
+    private static String getMrBuildName(final String buildName) {
+        return (buildName.contains("merge") ? "mr-merge" : "mr-head");
     }
 
     /**
@@ -130,10 +157,10 @@ public class GitLabPipelineStatusNotifier {
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
             }
-            String hash;
+            final String buildName = "**" + getStatusName(build, revision) + ":** ";
+            final String hash;
             if (revision instanceof BranchSCMRevision) {
                 hash = ((BranchSCMRevision) revision).getHash();
-                String buildName = "**jenkinsci/branch:** ";
                 gitLabApi.getCommitsApi().addComment(
                     source.getProjectPath(),
                     hash,
@@ -141,7 +168,6 @@ public class GitLabPipelineStatusNotifier {
                 );
             } else if (revision instanceof MergeRequestSCMRevision) {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-                String buildName = "**" + getMrBuildName(build.getFullDisplayName()) + "**: ";
                 gitLabApi.getNotesApi().createMergeRequestNote(
                     source.getProjectPath(),
                     Integer.valueOf(head.getId()),
@@ -149,7 +175,6 @@ public class GitLabPipelineStatusNotifier {
                 );
             } else if (revision instanceof GitTagSCMRevision) {
                 hash = ((GitTagSCMRevision) revision).getHash();
-                String buildName = "**jenkinsci/tag:** ";
                 gitLabApi.getCommitsApi().addComment(
                     source.getProjectPath(),
                     hash,
@@ -212,30 +237,29 @@ public class GitLabPipelineStatusNotifier {
             state = Constants.CommitBuildState.RUNNING;
         }
 
-        SCMRevision revision = SCMRevisionAction.getRevision(source, build);
+        final SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         String hash;
         if (revision instanceof BranchSCMRevision) {
             listener.getLogger()
                 .format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((BranchSCMRevision) revision).getHash();
-            status.setName("jenkinsci/branch");
         } else if (revision instanceof MergeRequestSCMRevision) {
             listener.getLogger()
                 .format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
-            status.setName(getMrBuildName(build.getFullDisplayName()));
         } else if (revision instanceof GitTagSCMRevision) {
             listener.getLogger()
                 .format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
                     status.getStatus(), status.getDescription());
             hash = ((GitTagSCMRevision) revision).getHash();
-            status.setName("jenkinsci/tag");
         } else {
             return;
         }
-        JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
+        status.setName(getStatusName(build, revision));
+
+        final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
             .get(JobScheduledListener.class);
         if (jsl != null) {
             // we are setting the status, so don't let the queue listener background thread change it to pending
@@ -295,28 +319,27 @@ public class GitLabPipelineStatusNotifier {
             // prevent delays in the queue when updating GitLab
             Computer.threadPoolForRemoting.submit(() -> {
                 try (ACLContext ctx = ACL.as(Tasks.getAuthenticationOf(wi.task))) {
-                    SCMRevision revision = source
+                    final SCMRevision revision = source
                         .fetch(head, new LogTaskListener(LOGGER, Level.INFO));
                     String hash;
-                    CommitStatus status = new CommitStatus();
+                    final CommitStatus status = new CommitStatus();
                     if (revision instanceof BranchSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying branch pending build {0}",
                             job.getFullName());
                         hash = ((BranchSCMRevision) revision).getHash();
-                        status.setName("jenkinsci/branch");
                     } else if (revision instanceof MergeRequestSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying merge request pending build {0}",
                             job.getFullName());
                         hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
-                        status.setName(getMrBuildName(job.getFullDisplayName()));
                     } else if (revision instanceof GitTagSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying tag pending build {0}",
                             job.getFullName());
                         hash = ((GitTagSCMRevision) revision).getHash();
-                        status.setName("jenkinsci/tag");
                     } else {
                         return;
                     }
+                    status.setName(getStatusName(job, revision));
+
                     String url;
                     try {
                         url = DisplayURLProvider.get().getJobURL(job);
