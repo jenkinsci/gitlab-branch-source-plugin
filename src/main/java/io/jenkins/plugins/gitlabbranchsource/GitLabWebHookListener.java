@@ -21,28 +21,28 @@ public class GitLabWebHookListener implements WebHookListener {
 
     @Override
     public void onNoteEvent(NoteEvent noteEvent) {
-        LOGGER.log(Level.INFO, noteEvent.toString());
+        LOGGER.log(Level.FINE, noteEvent.toString());
         GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(noteEvent);
         AbstractGitLabJobTrigger.fireNow(trigger);
     }
 
     @Override
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
-        LOGGER.log(Level.INFO, mrEvent.toString());
+        LOGGER.log(Level.FINE, mrEvent.toString());
         GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
-        LOGGER.log(Level.INFO, pushEvent.toString());
+        LOGGER.log(Level.FINE, pushEvent.toString());
         GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }
 
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
-        LOGGER.log(Level.INFO, tagPushEvent.toString());
+        LOGGER.log(Level.FINE, tagPushEvent.toString());
         GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
         SCMHeadEvent.fireNow(trigger);
     }

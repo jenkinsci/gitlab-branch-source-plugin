@@ -20,7 +20,7 @@ public class GitLabSystemHookListener implements SystemHookListener {
 
     @Override
     public void onProjectEvent(ProjectSystemHookEvent projectSystemHookEvent) {
-        LOGGER.log(Level.INFO, projectSystemHookEvent.toString());
+        LOGGER.log(Level.FINE, projectSystemHookEvent.toString());
         // TODO: implement handling `project_transfer` and `project_renamed`
         switch (projectSystemHookEvent.getEventName()) {
             case ProjectSystemHookEvent.PROJECT_CREATE_EVENT:
@@ -37,6 +37,6 @@ public class GitLabSystemHookListener implements SystemHookListener {
 
     @Override
     public void onGroupEvent(GroupSystemHookEvent groupSystemHookEvent) {
-        LOGGER.log(Level.INFO, groupSystemHookEvent.toString());
+        LOGGER.log(Level.FINE, groupSystemHookEvent.toString());
     }
 }
