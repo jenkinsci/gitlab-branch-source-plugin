@@ -9,13 +9,13 @@ import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class SkipNotificationsTrait extends SCMSourceTrait {
+public class GitLabSkipNotificationsTrait extends SCMSourceTrait {
 
     /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public SkipNotificationsTrait() {
+    public GitLabSkipNotificationsTrait() {
         //empty
     }
 
@@ -31,13 +31,13 @@ public class SkipNotificationsTrait extends SCMSourceTrait {
      * Our descriptor.
      */
     @Extension
-    @Symbol("skipNotifications")
+    @Symbol("gitlabSkipNotifications")
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
 
         @NonNull
         @Override
         public String getDisplayName() {
-            return Messages.SkipNotificationsTrait_displayName();
+            return Messages.GitLabSkipNotificationsTrait_displayName();
         }
 
         @Override
