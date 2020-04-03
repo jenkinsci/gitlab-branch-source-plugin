@@ -201,6 +201,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         if (gitlabProject == null) {
             try {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+                sshRemote = gitlabProject.getSshUrlToRepo();
+                httpRemote = gitlabProject.getHttpUrlToRepo();
             } catch (GitLabApiException e) {
                 throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
             }
