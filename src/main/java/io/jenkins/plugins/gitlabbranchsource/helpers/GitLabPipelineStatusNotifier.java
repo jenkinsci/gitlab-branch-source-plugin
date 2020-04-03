@@ -113,8 +113,8 @@ public class GitLabPipelineStatusNotifier {
             symbol = ":heavy_check_mark: ";
             note = "The Jenkins CI build passed ";
         } else if (Result.UNSTABLE.equals(result)) {
-            symbol = ":heavy_multiplication_x: ";
-            note = "The Jenkins CI build failed ";
+            symbol = ":exclamation:  ";
+            note = "The Jenkins CI build is unstable ";
         } else if (Result.FAILURE.equals(result)) {
             symbol = ":heavy_multiplication_x: ";
             note = "The Jenkins CI build failed ";
@@ -194,7 +194,7 @@ public class GitLabPipelineStatusNotifier {
         } else if (Result.UNSTABLE.equals(result)) {
             status.setDescription(
                 build.getParent().getFullName() + ": This commit has test failures");
-            status.setStatus("FAILED");
+            status.setStatus("SUCCESS");
             state = Constants.CommitBuildState.FAILED;
         } else if (Result.FAILURE.equals(result)) {
             status.setDescription(
