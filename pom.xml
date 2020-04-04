@@ -171,10 +171,10 @@
         <type>pom</type>
       </dependency>
       <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.9.5</version>
-    </dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>2.9.5</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
