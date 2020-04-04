@@ -16,6 +16,7 @@
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.176.2</jenkins.version>
     <java.level>8</java.level>
+    <jcasc.version>1.36</jcasc.version>
   </properties>
   <name>GitLab Branch Source Plugin</name>
   <description>GitLab Provides branch source and folder organisation functionality for GitLab
@@ -147,13 +148,24 @@
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
+      <version>${jcasc.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.jenkins</groupId>
-      <artifactId>configuration-as-code</artifactId>
-      <classifier>tests</classifier>
+      <groupId>io.jenkins.configuration-as-code</groupId>
+      <artifactId>test-harness</artifactId>
+      <version>${jcasc.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
