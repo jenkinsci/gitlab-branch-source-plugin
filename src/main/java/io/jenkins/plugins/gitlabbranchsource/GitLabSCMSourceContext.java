@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabPipelineStatusStrategy;
 import java.util.EnumSet;
 import java.util.Set;
 import jenkins.scm.api.SCMHeadObserver;
@@ -44,6 +45,12 @@ public class GitLabSCMSourceContext
     private String commentBody = "";
 
     private boolean projectAvatarDisabled;
+
+    private boolean markUnstableAsSuccess;
+
+    @NonNull
+    private Set<GitLabPipelineStatusStrategy> pipelineStatusStrategy = EnumSet
+        .noneOf(GitLabPipelineStatusStrategy.class);
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
         @NonNull SCMHeadObserver observer) {
@@ -116,6 +123,15 @@ public class GitLabSCMSourceContext
 
     public final String getCommentBody() {
         return commentBody;
+    }
+
+    public boolean isMarkUnstableAsSuccess() {
+        return markUnstableAsSuccess;
+    }
+
+    @NonNull
+    public Set<GitLabPipelineStatusStrategy> getPipelineStatusStrategy() {
+        return pipelineStatusStrategy;
     }
 
     @NonNull
@@ -213,5 +229,18 @@ public class GitLabSCMSourceContext
     public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
         @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
+    }
+
+    @NonNull
+    public GitLabSCMSourceContext withPipelineStatusStrategies(
+        Set<GitLabPipelineStatusStrategy> strategy) {
+        pipelineStatusStrategy.addAll(strategy);
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean markUnstableAsSuccess) {
+        this.markUnstableAsSuccess = markUnstableAsSuccess;
+        return this;
     }
 }
