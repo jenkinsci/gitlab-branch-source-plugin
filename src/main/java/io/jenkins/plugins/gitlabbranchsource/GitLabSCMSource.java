@@ -113,7 +113,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private int projectId = -1;
+    private int projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -131,6 +131,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
+        try {
+            this.projectId = apiBuilder(serverName).getProjectApi().getProject(projectPath).getId();
+        } catch (GitLabApiException e) {
+            LOGGER.log(Level.WARNING, "Failed to set project id");
+        }
     }
 
     public String getServerName() {
@@ -229,7 +234,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return projectId;
     }
 
-    @DataBoundSetter
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
