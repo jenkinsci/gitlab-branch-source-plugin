@@ -113,7 +113,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private int projectId;
+    private String projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -219,18 +219,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            LOGGER.log(Level.WARNING, "Exception while fetching members" + e, e);
             return new HashMap<>();
         }
         return members;
     }
 
     public int getProjectId() {
-        return projectId;
+        return Integer.parseInt(projectId);
     }
 
     @DataBoundSetter
-    public void setProjectId(int projectId) {
+    public void setProjectId(String projectId) {
         this.projectId = projectId;
     }
 
@@ -304,7 +304,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabProject(gitLabApi);
-            setProjectId(gitlabProject.getId());
+            setProjectId(gitlabProject.getId().toString());
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();
             try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
@@ -792,10 +792,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
-        public int getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
+        public String getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
             List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
             if (gitLabServers.size() == 0) {
-                return -1;
+                return "-1";
             }
             try {
                 GitLabApi gitLabApi;
@@ -804,13 +804,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 } else {
                     gitLabApi = apiBuilder(serverName);
                 }
-                if (projectPath.equals("")) {
-                    return -1;
+                if (!projectPath.equals("")) {
+                    return gitLabApi.getProjectApi().getProject(projectPath).getId().toString();
                 }
-                return gitLabApi.getProjectApi().getProject(projectPath).getId();
             } catch (GitLabApiException e) {
-                return -1;
+                return "-1";
             }
+            return "-1";
         }
 
         public ListBoxModel doFillProjectPathItems(@AncestorInPath SCMSourceOwner context,
