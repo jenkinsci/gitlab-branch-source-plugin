@@ -113,7 +113,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private int projectId = -1;
+    private int projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -203,6 +203,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
                 sshRemote = gitlabProject.getSshUrlToRepo();
                 httpRemote = gitlabProject.getHttpUrlToRepo();
+                projectId = gitlabProject.getId();
             } catch (GitLabApiException e) {
                 throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
             }
@@ -219,7 +220,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            LOGGER.log(Level.WARNING, "Exception while fetching members" + e, e);
             return new HashMap<>();
         }
         return members;
@@ -790,6 +791,27 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     context, StandardUsernameCredentials.class, fromUri(getServerUrlFromName(serverName)).build(),
                     GitClient.CREDENTIALS_MATCHER);
             return result;
+        }
+
+        public int getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
+            List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
+            if (gitLabServers.size() == 0) {
+                return -1;
+            }
+            try {
+                GitLabApi gitLabApi;
+                if (StringUtils.isBlank(serverName)) {
+                    gitLabApi = apiBuilder(gitLabServers.get(0).getName());
+                } else {
+                    gitLabApi = apiBuilder(serverName);
+                }
+                if (StringUtils.isNotBlank(projectPath)) {
+                    return gitLabApi.getProjectApi().getProject(projectPath).getId();
+                }
+            } catch (GitLabApiException e) {
+                return -1;
+            }
+            return -1;
         }
 
         public ListBoxModel doFillProjectPathItems(@AncestorInPath SCMSourceOwner context,

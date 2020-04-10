@@ -16,6 +16,9 @@
   <f:entry title="${%Behaviours}">
     <scm:traits field="traits"/>
   </f:entry>
+  <f:invisibleEntry>
+    <f:number clazz="project-id" field="projectId"/>
+  </f:invisibleEntry>
   <script>
     // var projectOwner = document.getElementsByClassName('project-owner');
     //
