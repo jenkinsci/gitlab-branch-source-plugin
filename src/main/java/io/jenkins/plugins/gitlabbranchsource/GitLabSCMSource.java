@@ -131,11 +131,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
-        try {
-            this.projectId = apiBuilder(serverName).getProjectApi().getProject(projectPath).getId();
-        } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Failed to set project id");
-        }
     }
 
     public String getServerName() {
@@ -234,6 +229,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return projectId;
     }
 
+    @DataBoundSetter
     public void setProjectId(int projectId) {
         this.projectId = projectId;
     }
@@ -794,6 +790,27 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     context, StandardUsernameCredentials.class, fromUri(getServerUrlFromName(serverName)).build(),
                     GitClient.CREDENTIALS_MATCHER);
             return result;
+        }
+
+        public int getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
+            List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
+            if (gitLabServers.size() == 0) {
+                return -1;
+            }
+            try {
+                GitLabApi gitLabApi;
+                if (serverName.equals("")) {
+                    gitLabApi = apiBuilder(gitLabServers.get(0).getName());
+                } else {
+                    gitLabApi = apiBuilder(serverName);
+                }
+                if (projectPath.equals("")) {
+                    return -1;
+                }
+                return gitLabApi.getProjectApi().getProject(projectPath).getId();
+            } catch (GitLabApiException e) {
+                return -1;
+            }
         }
 
         public ListBoxModel doFillProjectPathItems(@AncestorInPath SCMSourceOwner context,
