@@ -800,12 +800,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             try {
                 GitLabApi gitLabApi;
-                if (serverName.equals("")) {
+                if (StringUtils.isBlank(serverName)) {
                     gitLabApi = apiBuilder(gitLabServers.get(0).getName());
                 } else {
                     gitLabApi = apiBuilder(serverName);
                 }
-                if (!projectPath.equals("")) {
+                if (StringUtils.isNotBlank(projectPath)) {
                     return gitLabApi.getProjectApi().getProject(projectPath).getId();
                 }
             } catch (GitLabApiException e) {
