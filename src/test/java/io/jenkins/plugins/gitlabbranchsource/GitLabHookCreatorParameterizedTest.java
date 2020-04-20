@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import hudson.Util;
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.junit.ClassRule;
@@ -8,8 +9,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import hudson.Util;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
