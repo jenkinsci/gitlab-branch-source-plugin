@@ -146,7 +146,7 @@ public class GitLabHookCreator {
     }
 
     /**
-     * @deprecated use {@link getHookUrl(String,boolean)} instead
+     * @deprecated use {@link #getHookUrl(String,boolean)} instead
      */
     @Deprecated
     public static String getHookUrl(boolean isWebHook) {

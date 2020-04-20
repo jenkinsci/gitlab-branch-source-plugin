@@ -226,7 +226,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * @param hooksBaseUrl a custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
+     * @param hooksRootUrl a custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
      * Set to {@code null} for default behavior.
      */
     @DataBoundSetter
