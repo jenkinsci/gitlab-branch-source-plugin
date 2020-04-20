@@ -69,7 +69,6 @@ import org.kohsuke.stapler.QueryParameter;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getHooksRootUrl;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrl;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
@@ -250,7 +249,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 GitLabServer server = GitLabServers.get().findServer(serverName);
                 webhookGitLabApi = new GitLabApi(getServerUrl(server),
                     webHookCredentials.getToken().getPlainText());
-                webHookUrl = GitLabHookCreator.getHookUrl(getHooksRootUrl(server), true);
+                webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
             for (Project p : projects) {
                 count++;

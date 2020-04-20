@@ -1,6 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import hudson.Util;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.junit.ClassRule;
@@ -61,8 +61,9 @@ public class GitLabHookCreatorParameterizedTest {
             proto -> {
                 String expected = proto + jenkinsUrl + expectedPath;
                 JenkinsLocationConfiguration.get().setUrl("http://whatever");
-                // GitlabServer#getHooksRootUrl() ensures a trailing slash, we do the same here
-                String hookUrl = GitLabHookCreator.getHookUrl(Util.ensureEndsWith(proto + jenkinsUrl, "/"), hookType);
+                GitLabServer server = new GitLabServer("https://gitlab.com", "GitLab", null);
+                server.setHooksRootUrl(proto + jenkinsUrl);
+                String hookUrl = GitLabHookCreator.getHookUrl(server, hookType);
                 GitLabHookCreator.checkURL(hookUrl);
                 assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
                 assertThat(hookUrl, is(expected));

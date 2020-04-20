@@ -44,10 +44,6 @@ public class GitLabHelper {
         }
     }
 
-    public static String getHooksRootUrl(GitLabServer server) {
-        return server != null ? server.getHooksRootUrl() : null;
-    }
-
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {
         return UriTemplate.buildFromTemplate(getServerUrl(server));
     }
