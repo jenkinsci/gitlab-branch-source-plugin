@@ -160,16 +160,16 @@ public class GitLabHookCreator {
      * @return a webhook or systemhook URL
      */
     public static String getHookUrl(String hooksRootUrl, boolean isWebHook) {
-        String rootUrl = StringUtils.isBlank(hooksRootUrl) ? Jenkins.get().getRootUrl() : hooksRootUrl;
+        String rootUrl = (hooksRootUrl == null) ? Jenkins.get().getRootUrl() : hooksRootUrl;
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
         checkURL(rootUrl);
-        UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(StringUtils.stripEnd(rootUrl, "/"));
+        UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(rootUrl);
         if (isWebHook) {
-            templateBuilder.literal("/gitlab-webhook");
+            templateBuilder.literal("gitlab-webhook");
         } else {
-            templateBuilder.literal("/gitlab-systemhook");
+            templateBuilder.literal("gitlab-systemhook");
         }
         return templateBuilder.literal("/post").build().expand();
     }

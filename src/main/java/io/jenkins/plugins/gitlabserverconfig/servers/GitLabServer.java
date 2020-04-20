@@ -236,11 +236,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
      * @return the custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
-     * Can be {@code null}.
+     * Can be either a root URL with its trailing slash, or {@code null}.
      */
     @CheckForNull
     public String getHooksRootUrl() {
-        return hooksRootUrl;
+        return Util.ensureEndsWith(Util.fixEmptyAndTrim(hooksRootUrl), "/");
     }
 
     /**

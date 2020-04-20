@@ -2,13 +2,14 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.apache.commons.lang.StringUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import hudson.Util;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -32,9 +33,7 @@ public class GitLabHookCreatorParameterizedTest {
             {"intranet.local", true, "/gitlab-webhook/post"},
             {"www.mydomain.com:8000", true, "/gitlab-webhook/post"},
             {"www.mydomain.com", false, "/gitlab-systemhook/post"},
-            {"www.mydomain.com/", true, "/gitlab-webhook/post"},
-            {"www.mydomain.com/jenkins", false, "/gitlab-systemhook/post"},
-            {"www.mydomain.com/jenkins/", true, "/gitlab-webhook/post"}
+            {"www.mydomain.com/jenkins", true, "/gitlab-webhook/post"}
         });
     }
 
@@ -48,7 +47,7 @@ public class GitLabHookCreatorParameterizedTest {
     public void hookUrl() {
         Arrays.asList("http://", "https://").forEach(
             proto -> {
-                String expected = proto + StringUtils.stripEnd(jenkinsUrl, "/") + expectedPath;
+                String expected = proto + jenkinsUrl + expectedPath;
                 JenkinsLocationConfiguration.get().setUrl(proto + jenkinsUrl);
                 String hookUrl = GitLabHookCreator.getHookUrl(null, hookType);
                 GitLabHookCreator.checkURL(hookUrl);
@@ -61,9 +60,10 @@ public class GitLabHookCreatorParameterizedTest {
     public void hookUrlFromCustomRootUrl() {
         Arrays.asList("http://", "https://").forEach(
             proto -> {
-                String expected = proto + StringUtils.stripEnd(jenkinsUrl, "/") + expectedPath;
+                String expected = proto + jenkinsUrl + expectedPath;
                 JenkinsLocationConfiguration.get().setUrl("http://whatever");
-                String hookUrl = GitLabHookCreator.getHookUrl(proto + jenkinsUrl, hookType);
+                // GitlabServer#getHooksRootUrl() ensures a trailing slash, we do the same here
+                String hookUrl = GitLabHookCreator.getHookUrl(Util.ensureEndsWith(proto + jenkinsUrl, "/"), hookType);
                 GitLabHookCreator.checkURL(hookUrl);
                 assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
                 assertThat(hookUrl, is(expected));
