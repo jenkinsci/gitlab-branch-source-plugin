@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,10 @@ public class GitLabHookCreatorParameterizedTest {
             {"intranet.local:8080", false, "/gitlab-systemhook/post"},
             {"intranet.local", true, "/gitlab-webhook/post"},
             {"www.mydomain.com:8000", true, "/gitlab-webhook/post"},
-            {"www.mydomain.com", false, "/gitlab-systemhook/post"}
+            {"www.mydomain.com", false, "/gitlab-systemhook/post"},
+            {"www.mydomain.com/", true, "/gitlab-webhook/post"},
+            {"www.mydomain.com/jenkins", false, "/gitlab-systemhook/post"},
+            {"www.mydomain.com/jenkins/", true, "/gitlab-webhook/post"}
         });
     }
 
@@ -44,9 +48,22 @@ public class GitLabHookCreatorParameterizedTest {
     public void hookUrl() {
         Arrays.asList("http://", "https://").forEach(
             proto -> {
-                String expected = proto + jenkinsUrl + expectedPath;
+                String expected = proto + StringUtils.stripEnd(jenkinsUrl, "/") + expectedPath;
                 JenkinsLocationConfiguration.get().setUrl(proto + jenkinsUrl);
-                String hookUrl = GitLabHookCreator.getHookUrl(hookType);
+                String hookUrl = GitLabHookCreator.getHookUrl(null, hookType);
+                GitLabHookCreator.checkURL(hookUrl);
+                assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
+                assertThat(hookUrl, is(expected));
+            });
+    }
+
+    @Test
+    public void hookUrlFromCustomRootUrl() {
+        Arrays.asList("http://", "https://").forEach(
+            proto -> {
+                String expected = proto + StringUtils.stripEnd(jenkinsUrl, "/") + expectedPath;
+                JenkinsLocationConfiguration.get().setUrl("http://whatever");
+                String hookUrl = GitLabHookCreator.getHookUrl(proto + jenkinsUrl, hookType);
                 GitLabHookCreator.checkURL(hookUrl);
                 assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
                 assertThat(hookUrl, is(expected));

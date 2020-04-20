@@ -28,6 +28,10 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
     f.checkbox(title: _("Manage System Hooks"))
 }
 
+f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "Jenkins root URL to use in hooks URL (if different from the public Jenkins root URL)") {
+    f.textbox()
+}
+
 f.validateButton(
     title: _("Test connection"),
     progress: _("Testing.."),

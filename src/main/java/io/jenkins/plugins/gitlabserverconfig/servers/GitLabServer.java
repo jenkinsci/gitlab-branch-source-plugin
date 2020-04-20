@@ -5,6 +5,8 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -102,6 +104,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     @NonNull
     private String credentialsId;
+
+    /**
+     * The Jenkins root URL to use in Gitlab hooks, instead of {@link Jenkins#getRootUrl()}.
+     * Useful when the main public Jenkins URL can't be accessed from Gitlab.
+     */
+    private String hooksRootUrl;
 
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
@@ -218,6 +226,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
+     * @param hooksBaseUrl a custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
+     * Set to {@code null} for default behavior.
+     */
+    @DataBoundSetter
+    public void setHooksRootUrl(String hooksRootUrl) {
+        this.hooksRootUrl = hooksRootUrl;
+    }
+
+    /**
+     * @return the custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
+     * Can be {@code null}.
+     */
+    @CheckForNull
+    public String getHooksRootUrl() {
+        return hooksRootUrl;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -256,6 +282,31 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 LOGGER.log(Level.FINEST, String.format("Invalid GitLab Server Url: %s", serverUrl));
                 return FormValidation.error(Messages.GitLabServer_invalidUrl(serverUrl));
             }
+        }
+
+        /**
+         * Checks that the supplied URL looks like a valid Jenkins root URL.
+         *
+         * @param hooksRootUrl the URL to check.
+         * @return the validation results.
+         */
+        public static FormValidation doCheckHooksRootUrl(@QueryParameter String hooksRootUrl) {
+            if (StringUtils.isBlank(hooksRootUrl)) {
+                return FormValidation.ok();
+            }
+            try {
+                new URL(hooksRootUrl);
+            } catch (MalformedURLException e) {
+                LOGGER.log(Level.FINEST, "Malformed hooks root URL: {0}", hooksRootUrl);
+                return FormValidation.error("Malformed url (%s)", e.getMessage());
+            }
+            if (hooksRootUrl.endsWith("/post")
+                    || hooksRootUrl.contains("/gitlab-webhook")
+                    || hooksRootUrl.contains("/gitlab-systemhook")) {
+                LOGGER.log(Level.FINEST, "Dubious hooks root URL: {0}", hooksRootUrl);
+                return FormValidation.warning("This looks like a full webhook URL, it should only be a root URL.");
+            }
+            return FormValidation.ok();
         }
 
         @NonNull

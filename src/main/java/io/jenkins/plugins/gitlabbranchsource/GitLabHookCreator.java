@@ -83,7 +83,7 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        String hookUrl = getHookUrl(true);
+        String hookUrl = getHookUrl(server.getHooksRootUrl(), true);
         if (hookUrl.equals("")) {
             return;
         }
@@ -127,7 +127,7 @@ public class GitLabHookCreator {
 
     public static void createSystemHookWhenMissing(GitLabServer server,
         PersonalAccessToken credentials) {
-        String systemHookUrl = getHookUrl(false);
+        String systemHookUrl = getHookUrl(server.getHooksRootUrl(), false);
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
                 credentials.getToken().getPlainText());
@@ -145,17 +145,31 @@ public class GitLabHookCreator {
         }
     }
 
+    /**
+     * @deprecated use {@link getHookUrl(String,boolean)} instead
+     */
+    @Deprecated
     public static String getHookUrl(boolean isWebHook) {
-        String rootUrl = Jenkins.get().getRootUrl();
+        return getHookUrl(null, isWebHook);
+    }
+
+    /**
+     * @param hooksRootUrl the root URL to use in the hook URL.
+     *        If {@code null} or empty, {@link Jenkins#getRootUrl()} will be used instead.
+     * @param isWebHook {@code true} to get the webhook URL, {@code false} for the systemhook URL
+     * @return a webhook or systemhook URL
+     */
+    public static String getHookUrl(String hooksRootUrl, boolean isWebHook) {
+        String rootUrl = StringUtils.isBlank(hooksRootUrl) ? Jenkins.get().getRootUrl() : hooksRootUrl;
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
         checkURL(rootUrl);
-        UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(rootUrl);
+        UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(StringUtils.stripEnd(rootUrl, "/"));
         if (isWebHook) {
-            templateBuilder.literal("gitlab-webhook");
+            templateBuilder.literal("/gitlab-webhook");
         } else {
-            templateBuilder.literal("gitlab-systemhook");
+            templateBuilder.literal("/gitlab-systemhook");
         }
         return templateBuilder.literal("/post").build().expand();
     }

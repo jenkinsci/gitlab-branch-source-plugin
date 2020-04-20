@@ -3,6 +3,8 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -27,6 +29,11 @@ public class GitLabHelper {
     @NonNull
     public static String getServerUrlFromName(String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
+        return getServerUrl(server);
+    }
+
+    @NonNull
+    public static String getServerUrl(GitLabServer server) {
         return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
     }
 
@@ -37,6 +44,10 @@ public class GitLabHelper {
         } else {
             return getServerUrlFromName(server);
         }
+    }
+
+    public static String getHooksRootUrl(GitLabServer server) {
+        return server != null ? server.getHooksRootUrl() : null;
     }
 
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {
