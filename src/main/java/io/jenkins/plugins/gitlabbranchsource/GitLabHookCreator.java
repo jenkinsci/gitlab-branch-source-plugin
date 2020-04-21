@@ -83,7 +83,7 @@ public class GitLabHookCreator {
             default:
                 return;
         }
-        String hookUrl = getHookUrl(true);
+        String hookUrl = getHookUrl(server, true);
         if (hookUrl.equals("")) {
             return;
         }
@@ -127,7 +127,7 @@ public class GitLabHookCreator {
 
     public static void createSystemHookWhenMissing(GitLabServer server,
         PersonalAccessToken credentials) {
-        String systemHookUrl = getHookUrl(false);
+        String systemHookUrl = getHookUrl(server, false);
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
                 credentials.getToken().getPlainText());
@@ -145,8 +145,25 @@ public class GitLabHookCreator {
         }
     }
 
+    /**
+     * @deprecated use {@link #getHookUrl(GitLabServer,boolean)} instead
+     */
+    @Deprecated
     public static String getHookUrl(boolean isWebHook) {
-        String rootUrl = Jenkins.get().getRootUrl();
+        return getHookUrl(null, isWebHook);
+    }
+
+    /**
+     * @param server the {@code GitLabServer} for which the hooks URL would be created. If not {@code null} and it
+     *        has a {@link GitLabServer#getHooksRootUrl()}, then the hook URL will be based on this root URL.
+     *        Otherwise, the hook URL will be based on {@link Jenkins#getRootUrl()}.
+     * @param isWebHook {@code true} to get the webhook URL, {@code false} for the systemhook URL
+     * @return a webhook or systemhook URL
+     */
+    public static String getHookUrl(GitLabServer server, boolean isWebHook) {
+        String rootUrl = (server == null || server.getHooksRootUrl() == null)
+                ? Jenkins.get().getRootUrl()
+                : server.getHooksRootUrl();
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }

@@ -11,6 +11,7 @@ unclassified:
   gitLabServers:
     servers:
       - credentialsId: "i<3GitLab"
+        hooksRootUrl: "https://jenkins.intranet/"
         manageSystemHooks: true
         manageWebHooks: true
         name: gitlab-3213

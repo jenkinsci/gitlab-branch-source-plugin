@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.junit.ClassRule;
@@ -30,7 +31,8 @@ public class GitLabHookCreatorParameterizedTest {
             {"intranet.local:8080", false, "/gitlab-systemhook/post"},
             {"intranet.local", true, "/gitlab-webhook/post"},
             {"www.mydomain.com:8000", true, "/gitlab-webhook/post"},
-            {"www.mydomain.com", false, "/gitlab-systemhook/post"}
+            {"www.mydomain.com", false, "/gitlab-systemhook/post"},
+            {"www.mydomain.com/jenkins", true, "/gitlab-webhook/post"}
         });
     }
 
@@ -46,7 +48,22 @@ public class GitLabHookCreatorParameterizedTest {
             proto -> {
                 String expected = proto + jenkinsUrl + expectedPath;
                 JenkinsLocationConfiguration.get().setUrl(proto + jenkinsUrl);
-                String hookUrl = GitLabHookCreator.getHookUrl(hookType);
+                String hookUrl = GitLabHookCreator.getHookUrl(null, hookType);
+                GitLabHookCreator.checkURL(hookUrl);
+                assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
+                assertThat(hookUrl, is(expected));
+            });
+    }
+
+    @Test
+    public void hookUrlFromCustomRootUrl() {
+        Arrays.asList("http://", "https://").forEach(
+            proto -> {
+                String expected = proto + jenkinsUrl + expectedPath;
+                JenkinsLocationConfiguration.get().setUrl("http://whatever");
+                GitLabServer server = new GitLabServer("https://gitlab.com", "GitLab", null);
+                server.setHooksRootUrl(proto + jenkinsUrl);
+                String hookUrl = GitLabHookCreator.getHookUrl(server, hookType);
                 GitLabHookCreator.checkURL(hookUrl);
                 assertThat(hookUrl.replaceAll(proto, ""), not(containsString("//")));
                 assertThat(hookUrl, is(expected));

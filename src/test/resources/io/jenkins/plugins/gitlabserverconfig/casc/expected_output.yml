@@ -1,5 +1,6 @@
 servers:
 - credentialsId: "i<3GitLab"
+  hooksRootUrl: "https://jenkins.intranet/"
   manageSystemHooks: true
   manageWebHooks: true
   name: "gitlab-[0-9]{4}"
