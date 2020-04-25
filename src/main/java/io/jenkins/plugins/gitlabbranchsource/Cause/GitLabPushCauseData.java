@@ -9,16 +9,14 @@ import org.kohsuke.stapler.export.ExportedBean;
 @ExportedBean
 public class GitLabPushCauseData {
 
-    PushEvent pushEvent;
+    private Map<String, String> variables = new HashMap<>();
 
     public GitLabPushCauseData(PushEvent pushEvent) {
-        this.pushEvent = pushEvent;
+        this.variables.put("triggeredBy", pushEvent.getUserName());
     }
 
     @Exported
     public Map<String, String> getBuildVariables() {
-        Map<String, String> variables = new HashMap<>();
-        variables.put("triggeredBy", pushEvent.getUserName());
         return variables;
     }
 }

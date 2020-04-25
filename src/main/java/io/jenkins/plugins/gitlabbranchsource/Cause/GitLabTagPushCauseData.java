@@ -3,18 +3,20 @@ package io.jenkins.plugins.gitlabbranchsource.Cause;
 import java.util.HashMap;
 import java.util.Map;
 import org.gitlab4j.api.webhook.TagPushEvent;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
+@ExportedBean
 public class GitLabTagPushCauseData {
 
-    TagPushEvent tagPushEvent;
+    private Map<String, String> variables = new HashMap<>();
 
     public GitLabTagPushCauseData(TagPushEvent tagPushEvent) {
-        this.tagPushEvent = tagPushEvent;
+        this.variables.put("triggeredBy", tagPushEvent.getUserName());
     }
 
+    @Exported
     public Map<String, String> getBuildVariables() {
-        Map<String, String> variables = new HashMap<>();
-        variables.put("triggeredBy", tagPushEvent.getUserName());
         return variables;
     }
 }

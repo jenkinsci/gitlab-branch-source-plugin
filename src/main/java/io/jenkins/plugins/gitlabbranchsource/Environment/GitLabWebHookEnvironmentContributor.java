@@ -28,13 +28,13 @@ public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor 
         if (cause != null) {
             if(cause.getGitLabPushCauseData() != null) {
                 envs.override("gitlabVar", "push");
-//                envs.overrideAll(cause.getGitLabPushCauseData().getBuildVariables());
+                envs.overrideAll(cause.getGitLabPushCauseData().getBuildVariables());
             } else if(cause.getGitLabMergeRequestCauseData() != null) {
                 envs.override("gitlabVar", "mrpush");
-//                envs.overrideAll(cause.getGitLabMergeRequestCauseData().getBuildVariables());
+                envs.overrideAll(cause.getGitLabMergeRequestCauseData().getBuildVariables());
             } else if(cause.getGitLabTagPushCauseData() != null) {
                 envs.override("gitlabVar", "tagpush");
-//                envs.overrideAll(cause.getGitLabTagPushCauseData().getBuildVariables());
+                envs.overrideAll(cause.getGitLabTagPushCauseData().getBuildVariables());
             }
         }
     }

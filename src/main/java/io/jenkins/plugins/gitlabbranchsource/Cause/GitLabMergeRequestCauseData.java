@@ -9,16 +9,14 @@ import org.kohsuke.stapler.export.ExportedBean;
 @ExportedBean
 public class GitLabMergeRequestCauseData {
 
-    MergeRequestEvent mergeRequestEvent;
+    private Map<String, String> variables = new HashMap<>();
 
     public GitLabMergeRequestCauseData(MergeRequestEvent mergeRequestEvent) {
-        this.mergeRequestEvent = mergeRequestEvent;
+        this.variables.put("triggeredBy", mergeRequestEvent.getUser().getName());
     }
 
     @Exported
     public Map<String, String> getBuildVariables() {
-        Map<String, String> variables = new HashMap<>();
-        variables.put("triggeredBy", mergeRequestEvent.getUser().getName());
         return variables;
     }
 }
