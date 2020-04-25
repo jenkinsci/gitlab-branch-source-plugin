@@ -1,6 +1,9 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import hudson.triggers.SCMTrigger.SCMTriggerCause;
+import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabMergeRequestCauseData;
+import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabPushCauseData;
+import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabTagPushCauseData;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
@@ -10,6 +13,10 @@ import org.gitlab4j.api.webhook.TagPushEvent;
 public class GitLabWebHookCause extends SCMTriggerCause {
 
     private String description;
+    // possible NPEs
+    private GitLabPushCauseData gitLabPushCauseData;
+    private GitLabMergeRequestCauseData gitLabMergeRequestCauseData;
+    private GitLabTagPushCauseData gitLabTagPushCauseData;
 
     public GitLabWebHookCause() {
         super("");
@@ -22,6 +29,7 @@ public class GitLabWebHookCause extends SCMTriggerCause {
         } else {
             description = Messages.GitLabWebHookCause_ShortDescription_Push(userName);
         }
+        this.gitLabPushCauseData = new GitLabPushCauseData(pushEvent);
         return this;
     }
 
@@ -35,6 +43,7 @@ public class GitLabWebHookCause extends SCMTriggerCause {
         String source = String.format("%s%s", nameSpace, objectAttributes.getSourceBranch());
         description = Messages.GitLabWebHookCause_ShortDescription_MergeRequestHook(
             id, source, objectAttributes.getTargetBranch());
+        this.gitLabMergeRequestCauseData = new GitLabMergeRequestCauseData(mergeRequestEvent);
         return this;
     }
 
@@ -45,6 +54,7 @@ public class GitLabWebHookCause extends SCMTriggerCause {
         } else {
             description = Messages.GitLabWebHookCause_ShortDescription_Push(userName);
         }
+        this.gitLabTagPushCauseData = new GitLabTagPushCauseData(tagPushEvent);
         return this;
     }
 
@@ -66,4 +76,15 @@ public class GitLabWebHookCause extends SCMTriggerCause {
         return super.hashCode();
     }
 
+    public GitLabPushCauseData getGitLabPushCauseData() {
+        return gitLabPushCauseData;
+    }
+
+    public GitLabMergeRequestCauseData getGitLabMergeRequestCauseData() {
+        return gitLabMergeRequestCauseData;
+    }
+
+    public GitLabTagPushCauseData getGitLabTagPushCauseData() {
+        return gitLabTagPushCauseData;
+    }
 }
