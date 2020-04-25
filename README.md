@@ -477,9 +477,12 @@ Branch - BRANCH_NAME
 Merge Request - BRANCH_NAME, CHANGE_ID, CHANGE_TARGET, CHANGE_BRANCH, CHANGE_FORK, CHANGE_URL
 Tag - BRANCH_NAME, TAG_NAME, TAG_TIMESTAMP, TAG_DATE, TAG_UNIXTIME
 
-If the Job is triggered by Web Hook, the Web Hook Payload is available as Environment Variables which can be used in your Pipeline Code. Here are the following environment variables available:
+If the Job is triggered by Web Hook, the Web Hook Payload is available as Environment Variables which can be used in your Pipeline Code. See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events.
 
-If no response is recorded for any field in the Web Hook Payload, it returns an empty String. To add more variables see `package io.jenkins.plugins.gitlabbranchsource.Cause`.
+Here are the following environment variables available:
+
+> NOTE: 
+> If no response is recorded for any field in the Web Hook Payload, it returns an empty String. To add more variables see `package io.jenkins.plugins.gitlabbranchsource.Cause`.
 
 All Events: OBJECT_KIND - This environment variable should be used to check the event type before accessing the environment variables.
 
@@ -545,9 +548,10 @@ HOOK_REFS_HEAD
 
 Tag Event:
 
-NOTE: Jenkins by default refrains from automatically building Tag on push. You need to install Branch Build Strategy Plugin to solve this. 
-See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
-See Reason: https://issues.jenkins-ci.org/browse/JENKINS-47496?focusedCommentId=332369&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-332369
+> NOTE: 
+> Jenkins by default refrains from automatically building Tag on push. You need to install Branch Build Strategy Plugin to solve this. 
+> See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
+> See Reason: https://issues.jenkins-ci.org/browse/JENKINS-47496?focusedCommentId=332369&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-332369
 
 <details>
 <summary>Expand</summary><br>
