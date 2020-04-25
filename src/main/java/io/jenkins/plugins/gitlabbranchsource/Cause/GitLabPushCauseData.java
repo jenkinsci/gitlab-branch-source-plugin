@@ -7,6 +7,10 @@ import org.gitlab4j.api.webhook.PushEvent;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultDateString;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultListSize;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
 @ExportedBean
@@ -15,7 +19,7 @@ public class GitLabPushCauseData {
     private Map<String, String> variables = new HashMap<>();
 
     public GitLabPushCauseData(PushEvent pushEvent) {
-        this.variables.put("OBJECT_KIND", pushEvent.OBJECT_KIND);
+        this.variables.put("OBJECT_KIND", defaultString(pushEvent.OBJECT_KIND));
         this.variables.put("HOOK_AFTER", defaultString(pushEvent.getAfter()));
         this.variables.put("HOOK_BEFORE", defaultString(pushEvent.getBefore()));
         this.variables.put("HOOK_REF", defaultString(pushEvent.getRef()));
@@ -24,7 +28,7 @@ public class GitLabPushCauseData {
         this.variables.put("HOOK_USER_NAME", defaultString(pushEvent.getUserName()));
         this.variables.put("HOOK_USER_EMAIL", defaultString(pushEvent.getUserEmail()));
         this.variables.put("HOOK_PROJECT_ID", defaultIntString(pushEvent.getProjectId()));
-        this.variables.put("HOOK_PROJECT_ID_2", defaultIntString(pushEvent.getProjectId()));
+        this.variables.put("HOOK_PROJECT_ID_2", defaultIntString(pushEvent.getProject().getId()));
         this.variables.put("HOOK_PROJECT_NAME", defaultString(pushEvent.getProject().getName()));
         this.variables.put("HOOK_PROJECT_DESCRIPTION", defaultString(pushEvent.getProject().getDescription()));
         this.variables.put("HOOK_PROJECT_WEB_URL", defaultString(pushEvent.getProject().getWebUrl()));
@@ -32,7 +36,7 @@ public class GitLabPushCauseData {
         this.variables.put("HOOK_PROJECT_GIT_SSH_URL", defaultString(pushEvent.getProject().getGitSshUrl()));
         this.variables.put("HOOK_PROJECT_GIT_HTTP_URL", defaultString(pushEvent.getProject().getGitHttpUrl()));
         this.variables.put("HOOK_PROJECT_NAMESPACE", defaultString(pushEvent.getProject().getNamespace()));
-        this.variables.put("HOOK_PROJECT_VISIBILITY_LEVEL", defaultString(pushEvent.getProject().getVisibilityLevel().toString()));
+        this.variables.put("HOOK_PROJECT_VISIBILITY_LEVEL", defaultVisibilityString(pushEvent.getProject().getVisibilityLevel()));
         this.variables.put("HOOK_PROJECT_PATH_NAMESPACE", defaultString(pushEvent.getProject().getPathWithNamespace()));
         this.variables.put("HOOK_PROJECT_CI_CONFIG_PATH", defaultString(pushEvent.getProject().getCiConfigPath()));
         this.variables.put("HOOK_PROJECT_DEFAULT_BRANCH", defaultString(pushEvent.getProject().getDefaultBranch()));
@@ -46,9 +50,9 @@ public class GitLabPushCauseData {
         this.variables.put("HOOK_REPO_HOMEPAGE", defaultString(pushEvent.getRepository().getHomepage()));
         this.variables.put("HOOK_REPO_GIT_SSH_URL", defaultString(pushEvent.getRepository().getGit_ssh_url()));
         this.variables.put("HOOK_REPO_GIT_HTTP_URL", defaultString(pushEvent.getRepository().getGit_http_url()));
-        this.variables.put("HOOK_REPO_VISIBILITY_LEVEL", defaultString(pushEvent.getRepository().getVisibility_level().toString()));
+        this.variables.put("HOOK_REPO_VISIBILITY_LEVEL", defaultVisibilityString(pushEvent.getRepository().getVisibility_level()));
         this.variables.put("HOOK_COMMIT_COUNT", defaultIntString(pushEvent.getTotalCommitsCount()));
-        int totalCommitsCount = pushEvent.getCommits().size();
+        int totalCommitsCount = defaultListSize(pushEvent.getCommits());
         for(int index = 0; index < totalCommitsCount; index++) {
             this.variables.put("HOOK_COMMIT_ID_" + index+1,  defaultString(pushEvent.getCommits().get(index).getId()));
             this.variables.put("HOOK_COMMIT_MESSAGE_" + index+1, defaultString(pushEvent.getCommits().get(index).getMessage()));
@@ -70,14 +74,6 @@ public class GitLabPushCauseData {
         this.variables.put("HOOK_REQUEST_STRING", defaultString(pushEvent.getRequestQueryString()));
         this.variables.put("HOOK_REQUEST_TOKEN", defaultString(pushEvent.getRequestSecretToken()));
         this.variables.put("HOOK_REFS_HEAD", defaultString(pushEvent.getRef()));
-    }
-
-    private String defaultDateString(Date date) {
-        return date == null ? "" : date.toString();
-    }
-
-    private String defaultIntString(Integer val) {
-        return val == null ? "" : val.toString();
     }
 
     @Exported
