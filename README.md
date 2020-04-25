@@ -288,7 +288,7 @@ with `push`, `tag`, `merge request` and `note` events.
 ```
 with `repository update` event.
 
-### Configuration as Code
+###\ Configuration as Code
 
 There is an easier way to setup GitLab Server configuration on your Jenkins server. No need for messing around in the UI.
 `Jenkins Configuration as Code (JCasC)` or simply `Configuration as Code` Plugin allows you to configure Jenkins
@@ -408,11 +408,11 @@ To create a `GitLab Group Job`:
 
 The indexing in this group job type only needs to discover one branch with`Jenkinsfile` and thus it only shows the partial indexing log. You need to visit individual projects to see their full indexing.
 
-### SCM Trait APIs
+## SCM Trait APIs
 
 The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder Organization` (unless otherwise stated).
 
-#### Default Traits:
+### Default Traits:
 
 * `Discover branches` - To discover branches.
 
@@ -443,7 +443,7 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 		
 	If `Members` or `Trusted Members` is selected, then plugin will build the target branch of MRs from non/untrusted members.
 
-#### Additional Traits:
+### Additional Traits:
 
 These traits can be selected by selecting `Add` in the `Behaviours` section.
 
@@ -469,7 +469,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
-### Environment Variables
+## Environment Variables
 
 By default job has the following environment variables (provided by Branch API Plugin):
 
@@ -477,7 +477,7 @@ Branch - `BRANCH_NAME`
 
 Merge Request - `BRANCH_NAME`, `CHANGE_ID`, `CHANGE_TARGET`, `CHANGE_BRANCH`, `CHANGE_FORK`, `CHANGE_URL`
 
-Tag - BRANCH_NAME, `TAG_NAME`, `TAG_TIMESTAMP`, `TAG_DATE`, `TAG_UNIXTIME`
+Tag - `BRANCH_NAME`, `TAG_NAME`, `TAG_TIMESTAMP`, `TAG_DATE`, `TAG_UNIXTIME`
 
 If the Job is triggered by Web Hook, the Web Hook Payload is available as Environment Variables which can be used in your Pipeline Code. See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events.
 
@@ -491,7 +491,7 @@ A few points to note:
 >
 > Any variables ending with `#` indicates the index of the list of the same payload starting from 1.
 
-Push Event:
+### Push Event:
 
 <details>
 <summary>Expand :snowflake:	</summary><br>
@@ -603,9 +603,9 @@ Push Event:
 
 </details>
 
-Tag Event:
+### Tag Event:
 
-NOTE: 
+Note: 
 > Jenkins by default refrains from automatically building Tag on push. You need to install Branch Build Strategy Plugin to solve this. 
 > 
 > See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
@@ -692,7 +692,7 @@ NOTE:
 
 </details>
 
-Merge Request Event:
+### Merge Request Event:
 
 <details>
 <summary>Expand :zap: </summary><br>
@@ -1122,7 +1122,7 @@ Maintainers:
 
 External Support:
 
-* [Oleg](https://github.com/oleg-nenashev) 
+* [Oleg](https://github.com/oleg-nenashev) (The Jenkins Board )
 * [Greg](https://github.com/gmessner) (The maintainer of GitLab4J APIs)
 * [Stephen](https://github.com/stephenc) (The maintainer of SCM related Jenkins Plugins)
 
