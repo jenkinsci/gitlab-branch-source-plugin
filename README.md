@@ -570,7 +570,7 @@ Note:
 > 
 > See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
 >
-> Do remember if you are using Basic Branch Build for tag builds you also need to add strategies for branch and pull request (change request) else they would not be automatically built (See GIF below). I cannot say if that is a bug or a feature.
+> Do remember if you are using Basic Branch Build for tag builds you also need to add strategies for branch and pull request (change request) else they would not be automatically built (See GIF below). 
 
 ![branch-build-strategy](/docs/img/branch-build-strategy.gif)
 
