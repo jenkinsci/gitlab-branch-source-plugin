@@ -2,36 +2,31 @@ package io.jenkins.plugins.gitlabbranchsource.Environment;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixRun;
 import hudson.model.EnvironmentContributor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.jenkins.plugins.gitlabbranchsource.GitLabWebHookCause;
 import javax.annotation.Nonnull;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 @Extension
 public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor {
 
     @Override
     public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) {
-        GitLabWebHookCause cause = null;
-        if (r instanceof MatrixRun) {
-            MatrixBuild parent = ((MatrixRun)r).getParentBuild();
-            if (parent != null) {
-                cause = (GitLabWebHookCause) parent.getCause(GitLabWebHookCause.class);
-            }
-        } else {
-            cause = (GitLabWebHookCause) r.getCause(GitLabWebHookCause.class);
+        GitLabWebHookCause gitLabWebHookCause = null;
+        System.out.println(r.getClass().getName());
+        if (r instanceof WorkflowRun) {
+            gitLabWebHookCause = (GitLabWebHookCause) r.getCause(GitLabWebHookCause.class);
         }
-        envs.override("OBJECT_KIND", "none");
-        if (cause != null) {
-            if(cause.getGitLabPushCauseData() != null) {
-                envs.overrideAll(cause.getGitLabPushCauseData().getBuildVariables());
-            } else if(cause.getGitLabMergeRequestCauseData() != null) {
-                envs.overrideAll(cause.getGitLabMergeRequestCauseData().getBuildVariables());
-            } else if(cause.getGitLabTagPushCauseData() != null) {
-                envs.overrideAll(cause.getGitLabTagPushCauseData().getBuildVariables());
+        envs.override("GITLAB_OBJECT_KIND", "none");
+        if (gitLabWebHookCause != null) {
+            if(gitLabWebHookCause.getGitLabPushCauseData() != null) {
+                envs.overrideAll(gitLabWebHookCause.getGitLabPushCauseData().getBuildVariables());
+            } else if(gitLabWebHookCause.getGitLabMergeRequestCauseData() != null) {
+                envs.overrideAll(gitLabWebHookCause.getGitLabMergeRequestCauseData().getBuildVariables());
+            } else if(gitLabWebHookCause.getGitLabTagPushCauseData() != null) {
+                envs.overrideAll(gitLabWebHookCause.getGitLabTagPushCauseData().getBuildVariables());
             }
         }
     }

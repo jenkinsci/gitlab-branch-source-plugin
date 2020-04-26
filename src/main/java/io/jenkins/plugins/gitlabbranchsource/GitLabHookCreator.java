@@ -167,7 +167,7 @@ public class GitLabHookCreator {
         if (StringUtils.isBlank(rootUrl)) {
             return "";
         }
-//        checkURL(rootUrl);
+        checkURL(rootUrl);
         UriTemplateBuilder templateBuilder = UriTemplate.buildFromTemplate(rootUrl);
         if (isWebHook) {
             templateBuilder.literal("gitlab-webhook");
