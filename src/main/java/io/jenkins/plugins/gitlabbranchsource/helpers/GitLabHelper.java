@@ -1,8 +1,16 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
+import hudson.model.Item;
+import hudson.model.Queue;
+import hudson.security.ACL;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -12,16 +20,43 @@ import org.gitlab4j.api.GitLabApi;
 public class GitLabHelper {
 
     public static GitLabApi apiBuilder(String serverName) {
+        return apiBuilder(serverName, null);
+    }
+
+    public static GitLabApi apiBuilder(String serverName, StandardCredentials credentials) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
-            PersonalAccessToken credentials = server.getCredentials();
-            if (credentials != null) {
-                return new GitLabApi(server.getServerUrl(), credentials.getToken().getPlainText());
+            credentials = credentials == null ?server.getCredentials(): credentials;
+
+            if (credentials == null) {
+                return new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
+            } else if (credentials instanceof PersonalAccessToken) {
+                return new GitLabApi(server.getServerUrl(),((PersonalAccessToken) credentials).getToken().getPlainText());
+            } else if (credentials instanceof UsernamePasswordCredentials) {
+                return new GitLabApi(server.getServerUrl(),((UsernamePasswordCredentials) credentials).getPassword().getPlainText());
             }
             return new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
         }
         throw new IllegalStateException(
             String.format("No server found with the name: %s", serverName));
+    }
+
+    public static StandardCredentials getSourceCredentials(@NonNull String server, @NonNull Item context, @NonNull String credentialsId) {
+        return CredentialsMatchers.firstOrNull(
+            CredentialsProvider.lookupCredentials(
+                StandardCredentials.class,
+                context,
+                context instanceof Queue.Task
+                        ? ((Queue.Task) context).getDefaultAuthentication()
+                        : ACL.SYSTEM,
+                URIRequirementBuilder.create()
+                        .withHostname(getServerUrl(server))
+                        .build()
+        ),
+        CredentialsMatchers.allOf(
+                CredentialsMatchers.withId(credentialsId),
+                CredentialsMatchers.instanceOf(StandardCredentials.class)
+        ));
     }
 
     @NonNull
