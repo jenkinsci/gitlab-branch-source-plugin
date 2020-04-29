@@ -302,6 +302,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            throw new IOException("Failed to visit SCM source", e);
         }
     }
 

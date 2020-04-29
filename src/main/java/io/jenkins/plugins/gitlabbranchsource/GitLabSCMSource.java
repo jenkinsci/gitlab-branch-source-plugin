@@ -294,8 +294,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
         }
-        return super.retrieve(head, listener);
     }
 
     @Override
@@ -528,6 +528,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            throw new IOException("Failed to fetch latest heads", e);
         } finally {
             SCMSourceOwner owner = this.getOwner();
             if (owner != null) {

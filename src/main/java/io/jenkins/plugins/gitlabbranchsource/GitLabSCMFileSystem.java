@@ -53,7 +53,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         try {
             return gitLabApi.getCommitsApi().getCommit(projectPath, ref).getCommittedDate().getTime();
         } catch (GitLabApiException e) {
-            return 0;
+            throw new IOException("Failed to retrieve last modified time", e);
         }
     }
 
