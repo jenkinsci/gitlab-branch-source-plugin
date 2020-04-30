@@ -114,6 +114,8 @@ Here are a few ways to setup your own Jenkins server:
 
 ## Installing plugin
 
+You can use any one of these ways:
+
 1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
     ```bash
@@ -129,38 +131,42 @@ Here are a few ways to setup your own Jenkins server:
 
     i. Checkout out source code to your local machine:
     
-         git clone https://github.com/baymac/gitlab-branch-source-plugin.git
-    
-         cd gitlab-branch-source-plugin
+    ```
+    git clone https://github.com/baymac/gitlab-branch-source-plugin.git
+    cd gitlab-branch-source-plugin
+    ```
     
     ii. Install the plugin:
-    
-        mvn clean install
-        
-        mvn clean install -DskipTests # to skip tests
-    
+    ```
+    mvn clean install
+        or
+    mvn clean install -DskipTests # to skip tests
+    ```
+
     iii. Run the Plugin:
     
-        mvn hpi:run # runs a Jenkins instance at localhost:8080
-    
-        mvn hpi:run -Djetty.port={port} # to run on your desired port number
-    
-    iv. Now the `*.hpi` generated can be manually installed on your Jenkins instance:
+    ```
+    mvn hpi:run # runs a Jenkins instance at localhost:8080
+        or
+    mvn hpi:run -Djetty.port={port} # to run on your desired port number
+    ```
 
-        1. Select `Manage Jenkins`
-    
-        2. Select `Manage Plugins`
-    
-        3. Select `Advanced` tab
-    
-        3. In `Upload Plugin` section, select `Choose file`
-    
-        4. Select `${root_dir}/target/gitlab-branch-source.hpi`
-    
-        5. Select `Upload`
-    
-        6. Select `Install without restart`
-	
+    iv. Now the `*.hpi` generated can be manually installed on your Jenkins instance:
+    ```
+    1. Select `Manage Jenkins`
+
+    2. Select `Manage Plugins`
+
+    3. Select `Advanced` tab
+
+    3. In `Upload Plugin` section, select `Choose file`
+
+    4. Select `${root_dir}/target/gitlab-branch-source.hpi`
+
+    5. Select `Upload`
+
+    6. Select `Install without restart`
+	```
 4. Download latest release from [here](https://updates.jenkins.io/latest/gitlab-branch-source.hpi) and manually install.
 
 ## Initial Setup
@@ -204,17 +210,19 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     ii. Generate a `Personal Access Token` on your GitLab Server
 
-        a. Select profile dropdown menu from top-right corner
+    ```
+    a. Select profile dropdown menu from top-right corner
 
-        b. Select `Settings`
+    b. Select `Settings`
 
-        c. Select `Access Token` from left column
+    c. Select `Access Token` from left column
 
-        d. Enter a name | Set Scope to `api` (If admin also give `sudo` which required for systemhooks and mr comment trigger)
+    d. Enter a name | Set Scope to `api` (If admin also give `sudo` which required for systemhooks and mr comment trigger)
 
-        e. Select `Create Personal Access Token`
+    e. Select `Create Personal Access Token`
 
-        f. Copy the token generated
+    f. Copy the token generated
+    ```
 
     iii. Return to Jenkins | Select `Add` in Credentials field | Select `Jenkins`.
 
@@ -270,7 +278,7 @@ GitLab Personal Access Token credentials to Jenkins server credentials.
     
 ### Manually create hooks on GitLab Server
 
-Use the following end points for web hooks and system hooks setup on your GitLab Server. The `Jenkins Url` needs to be a fully qualified domain name (FQDN).
+Use the following end points for web hooks and system hooks setup on your GitLab Server. The `Jenkins Url` needs to be a fully qualified domain name (FQDN) so cannot be `localhost`.
 
 #### WebHook
 
@@ -408,11 +416,11 @@ To create a `GitLab Group Job`:
 
 The indexing in this group job type only needs to discover one branch with`Jenkinsfile` and thus it only shows the partial indexing log. You need to visit individual projects to see their full indexing.
 
-### SCM Trait APIs
+## SCM Trait APIs
 
 The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder Organization` (unless otherwise stated).
 
-#### Default Traits:
+### Default Traits:
 
 * `Discover branches` - To discover branches.
 
@@ -443,7 +451,7 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 		
 	If `Members` or `Trusted Members` is selected, then plugin will build the target branch of MRs from non/untrusted members.
 
-#### Additional Traits:
+### Additional Traits:
 
 These traits can be selected by selecting `Add` in the `Behaviours` section.
 
@@ -468,6 +476,283 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 * `Override hook management modes` - Override default hook management mode of web hook and system hook. `ITEM` credentials for webhook is currently not supported.
 
 * `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
+
+## Environment Variables
+
+By default Multibranch Jobs have the following environment variables (provided by Branch API Plugin):
+
+Branch - `BRANCH_NAME`
+
+Merge Request - `BRANCH_NAME`, `CHANGE_ID`, `CHANGE_TARGET`, `CHANGE_BRANCH`, `CHANGE_FORK`, `CHANGE_URL`, `CHANGE_AUTHOR`, `CHANGE_TITLE`. `CHANGE_AUTHOR_DISPLAY_NAME`
+
+Tag - `BRANCH_NAME`, `TAG_NAME`, `TAG_TIMESTAMP`, `TAG_DATE`, `TAG_UNIXTIME`
+
+This plugin adds a few more environment variables to Builds (`WorkflowRun` type only) which is the payload received as WebHook) See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events. 
+
+A few points to note: 
+
+> If no response is recorded for any field in the Web Hook Payload, it returns an empty String. To add more variables see `package io.jenkins.plugins.gitlabbranchsource.Cause`.
+> 
+> `GITLAB_OBJECT_KIND` - This environment variable should be used to check the event type before accessing the environment variables. Possible values are `none`, `push`, `tag_push` and `merge_request`.
+>
+> Any variables ending with `#` indicates the index of the list of the payload starting from 1.
+
+Environment Variables are available from Push Event, Tag Push Event and Merge Request Event.
+
+### Push Event: 
+
+See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
+
+<details>
+<summary>Expand :snowflake:	</summary><br>
+
+```
+GITLAB_OBJECT_KIND
+GITLAB_AFTER
+GITLAB_BEFORE
+GITLAB_REF
+GITLAB_CHECKOUT_SHA
+GITLAB_USER_ID
+GITLAB_USER_NAME
+GITLAB_USER_EMAIL
+GITLAB_PROJECT_ID
+GITLAB_PROJECT_ID_2
+GITLAB_PROJECT_NAME
+GITLAB_PROJECT_DESCRIPTION
+GITLAB_PROJECT_WEB_URL
+GITLAB_PROJECT_AVATAR_URL
+GITLAB_PROJECT_GIT_SSH_URL
+GITLAB_PROJECT_GIT_HTTP_URL
+GITLAB_PROJECT_NAMESPACE
+GITLAB_PROJECT_VISIBILITY_LEVEL
+GITLAB_PROJECT_PATH_NAMESPACE
+GITLAB_PROJECT_CI_CONFIG_PATH
+GITLAB_PROJECT_DEFAULT_BRANCH
+GITLAB_PROJECT_HOMEPAGE
+GITLAB_PROJECT_URL
+GITLAB_PROJECT_SSH_URL
+GITLAB_PROJECT_HTTP_URL
+GITLAB_REPO_NAME
+GITLAB_REPO_URL
+GITLAB_REPO_DESCRIPTION
+GITLAB_REPO_HOMEPAGE
+GITLAB_REPO_GIT_SSH_URL
+GITLAB_REPO_GIT_HTTP_URL
+GITLAB_REPO_VISIBILITY_LEVEL
+GITLAB_COMMIT_COUNT
+GITLAB_COMMIT_ID_#
+GITLAB_COMMIT_MESSAGE_#
+GITLAB_COMMIT_TIMESTAMP_#
+GITLAB_COMMIT_URL_#
+GITLAB_COMMIT_AUTHOR_AVATAR_URL_#
+GITLAB_COMMIT_AUTHOR_CREATED_AT_#
+GITLAB_COMMIT_AUTHOR_EMAIL_#
+GITLAB_COMMIT_AUTHOR_ID_#
+GITLAB_COMMIT_AUTHOR_NAME_#
+GITLAB_COMMIT_AUTHOR_STATE_#
+GITLAB_COMMIT_AUTHOR_USERNAME_#
+GITLAB_COMMIT_AUTHOR_WEB_URL_#
+GITLAB_COMMIT_ADDED_#
+GITLAB_COMMIT_MODIFIED_#
+GITLAB_COMMIT_REMOVED_#
+GITLAB_REQUEST_URL
+GITLAB_REQUEST_STRING
+GITLAB_REQUEST_TOKEN
+GITLAB_REFS_HEAD
+```
+
+</details>
+
+### Tag Event:
+
+Note: 
+> Jenkins by default refrains from automatically building Tags on push ([See reason](https://issues.jenkins-ci.org/browse/JENKINS-47496?focusedCommentId=332369&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-332369)). You need to install Branch Build Strategy Plugin to solve this. 
+> 
+> See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
+>
+> Do remember if you are using Basic Branch Build for tag builds you also need to add strategies for branch and pull request (change request) else they would not be automatically built (See GIF below). 
+
+![branch-build-strategy](/docs/img/branch-build-strategy.gif)
+
+See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#tag-events
+
+<details>
+<summary>Expand :sunny: </summary><br>
+
+
+```
+GITLAB_OBJECT_KIND
+GITLAB_AFTER
+GITLAB_BEFORE
+GITLAB_REF
+GITLAB_CHECKOUT_SHA
+GITLAB_USER_ID
+GITLAB_USER_NAME
+GITLAB_USER_EMAIL
+GITLAB_PROJECT_ID
+GITLAB_PROJECT_ID_2
+GITLAB_PROJECT_NAME
+GITLAB_PROJECT_DESCRIPTION
+GITLAB_PROJECT_WEB_URL
+GITLAB_PROJECT_AVATAR_URL
+GITLAB_PROJECT_GIT_SSH_URL
+GITLAB_PROJECT_GIT_HTTP_URL
+GITLAB_PROJECT_NAMESPACE
+GITLAB_PROJECT_VISIBILITY_LEVEL
+GITLAB_PROJECT_PATH_NAMESPACE
+GITLAB_PROJECT_CI_CONFIG_PATH
+GITLAB_PROJECT_DEFAULT_BRANCH
+GITLAB_PROJECT_HOMEPAGE
+GITLAB_PROJECT_URL
+GITLAB_PROJECT_SSH_URL
+GITLAB_PROJECT_HTTP_URL
+GITLAB_REPO_NAME
+GITLAB_REPO_URL
+GITLAB_REPO_DESCRIPTION
+GITLAB_REPO_HOMEPAGE
+GITLAB_REPO_GIT_SSH_URL
+GITLAB_REPO_GIT_HTTP_URL
+GITLAB_REPO_VISIBILITY_LEVEL
+GITLAB_COMMIT_COUNT
+GITLAB_REQUEST_URL
+GITLAB_REQUEST_STRING
+GITLAB_REQUEST_TOKEN
+GITLAB_REFS_HEAD
+```
+
+</details>
+
+### Merge Request Event:
+
+See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#merge-request-events
+
+<details>
+<summary>Expand :zap: </summary><br>
+
+```
+GITLAB_OBJECT_KIND
+GITLAB_USER_NAME
+GITLAB_USER_USERNAME
+GITLAB_USER_AVATAR_URL
+GITLAB_PROJECT_ID
+GITLAB_PROJECT_NAME
+GITLAB_PROJECT_DESCRIPTION
+GITLAB_PROJECT_WEB_URL
+GITLAB_PROJECT_AVATAR_URL
+GITLAB_PROJECT_GIT_SSH_URL
+GITLAB_PROJECT_GIT_HTTP_URL
+GITLAB_PROJECT_NAMESPACE
+GITLAB_PROJECT_VISIBILITY_LEVEL
+GITLAB_PROJECT_PATH_NAMESPACE
+GITLAB_PROJECT_CI_CONFIG_PATH
+GITLAB_PROJECT_DEFAULT_BRANCH
+GITLAB_PROJECT_HOMEPAGE
+GITLAB_PROJECT_URL
+GITLAB_PROJECT_SSH_URL
+GITLAB_PROJECT_HTTP_URL
+GITLAB_REPO_NAME
+GITLAB_REPO_URL
+GITLAB_REPO_DESCRIPTION
+GITLAB_REPO_HOMEPAGE
+GITLAB_REPO_GIT_SSH_URL
+GITLAB_REPO_GIT_HTTP_URL
+GITLAB_REPO_VISIBILITY_LEVEL
+GITLAB_OA_ID
+GITLAB_OA_TARGET_BRANCH
+GITLAB_OA_SOURCE_BRANCH
+GITLAB_OA_SOURCE_PROJECT_ID
+GITLAB_OA_AUTHOR_ID
+GITLAB_OA_ASSIGNEE_ID
+GITLAB_OA_TITLE
+GITLAB_OA_CREATED_AT
+GITLAB_OA_UPDATED_AT
+GITLAB_OA_MILESTONE_ID
+GITLAB_OA_STATE
+GITLAB_OA_MERGE_STATUS
+GITLAB_OA_TARGET_PROJECT_ID
+GITLAB_OA_IID
+GITLAB_OA_DESCRIPTION
+GITLAB_OA_SOURCE_NAME
+GITLAB_OA_SOURCE_DESCRIPTION
+GITLAB_OA_SOURCE_WEB_URL
+GITLAB_OA_SOURCE_AVATAR_URL
+GITLAB_OA_SOURCE_GIT_SSH_URL
+GITLAB_OA_SOURCE_GIT_HTTP_URL
+GITLAB_OA_SOURCE_NAMESPACE
+GITLAB_OA_SOURCE_VISIBILITY_LEVEL
+GITLAB_OA_SOURCE_PATH_WITH_NAMESPACE
+GITLAB_OA_SOURCE_DEFAULT_BRANCH
+GITLAB_OA_SOURCE_HOMEPAGE
+GITLAB_OA_SOURCE_URL
+GITLAB_OA_SOURCE_SSH_URL
+GITLAB_OA_SOURCE_HTTP_URL
+GITLAB_OA_TARGET_NAME
+GITLAB_OA_TARGET_DESCRIPTION
+GITLAB_OA_TARGET_WEB_URL
+GITLAB_OA_TARGET_AVATAR_URL
+GITLAB_OA_TARGET_GIT_SSH_URL
+GITLAB_OA_TARGET_GIT_HTTP_URL
+GITLAB_OA_TARGET_NAMESPACE
+GITLAB_OA_TARGET_VISIBILITY_LEVEL
+GITLAB_OA_TARGET_PATH_WITH_NAMESPACE
+GITLAB_OA_TARGET_DEFAULT_BRANCH
+GITLAB_OA_TARGET_HOMEPAGE
+GITLAB_OA_TARGE_URL
+GITLAB_OA_TARGET_SSH_URL
+GITLAB_OA_TARGET_HTTP_URL
+GITLAB_OA_LAST_COMMIT_ID
+GITLAB_OA_LAST_COMMIT_MESSAGE
+GITLAB_OA_LAST_COMMIT_TIMESTAMP
+GITLAB_OA_LAST_COMMIT_URL
+GITLAB_OA_LAST_COMMIT_AUTHOR_NAME
+GITLAB_OA_LAST_COMMIT_AUTHOR_EMAIL
+GITLAB_OA_WIP
+GITLAB_OA_URL
+GITLAB_OA_ACTION
+GITLAB_OA_ASSIGNEE_NAME
+GITLAB_OA_ASSIGNEE_USERNAME
+GITLAB_OA_ASSIGNEE_AVATAR_URL
+GITLAB_LABELS_COUNT
+GITLAB_LABEL_ID_#
+GITLAB_LABEL_TITLE_#
+GITLAB_LABEL_COLOR_#
+GITLAB_LABEL_PROJECT_ID_#
+GITLAB_LABEL_CREATED_AT_#
+GITLAB_LABEL_UPDATED_AT_#
+GITLAB_LABEL_TEMPLATE_#
+GITLAB_LABEL_DESCRIPTION_#
+GITLAB_LABEL_TYPE_#
+GITLAB_LABEL_GROUP_ID_#
+GITLAB_CHANGES_UPDATED_BY_ID_PREV
+GITLAB_CHANGES_UPDATED_BY_ID_CURR
+GITLAB_CHANGES_UPDATED_AT_PREV
+GITLAB_CHANGES_UPDATED_AT_CURR
+GITLAB_CHANGES_LABELS_PREV_COUNT
+GITLAB_CHANGES_LABEL_PREV_ID_#
+GITLAB_CHANGES_LABEL_PREV_TITLE_#
+GITLAB_CHANGES_LABEL_PREV_COLOR_#
+GITLAB_CHANGES_LABEL_PREV_PROJECT_ID_#
+GITLAB_CHANGES_LABEL_PREV_CREATED_AT_#
+GITLAB_CHANGES_LABEL_PREV_UPDATED_AT_#
+GITLAB_CHANGES_LABEL_PREV_TEMPLATE_#
+GITLAB_CHANGES_LABEL_PREV_DESCRIPTION_#
+GITLAB_CHANGES_LABEL_PREV_TYPE_#
+GITLAB_CHANGES_LABEL_PREV_GROUP_ID_#
+GITLAB_CHANGES_LABELS_CURR_COUNT
+GITLAB_CHANGES_LABEL_CURR_ID_#
+GITLAB_CHANGES_LABEL_CURR_TITLE_#
+GITLAB_CHANGES_LABEL_CURR_COLOR_#
+GITLAB_CHANGES_LABEL_CURR_PROJECT_ID_#
+GITLAB_CHANGES_LABEL_CURR_CREATED_AT_#
+GITLAB_CHANGES_LABEL_CURR_UPDATED_AT_#
+GITLAB_CHANGES_LABEL_CURR_TEMPLATE_#
+GITLAB_CHANGES_LABEL_CURR_DESCRIPTION_#
+GITLAB_CHANGES_LABEL_CURR_TYPE_#
+GITLAB_CHANGES_LABEL_PREV_GROUP_ID_#
+```
+
+</details>
+
 
 ## Job DSL seed job configuration
 
@@ -620,14 +905,14 @@ This plugin is built and maintained by the Google Summer of Code (GSoC) Team for
 
 Maintainers:
 
-* [Parichay](https://github.com/baymac)
+* [Parichay](https://github.com/baymac) 
 * [Marky](https://github.com/markyjackson-taulia) 
 * [Joseph](https://github.com/casz) 
 * [Justin](https://github.com/justinharringa) 
 
 External Support:
 
-* [Oleg](https://github.com/oleg-nenashev) 
+* [Oleg](https://github.com/oleg-nenashev) (The Jenkins Board Member)
 * [Greg](https://github.com/gmessner) (The maintainer of GitLab4J APIs)
 * [Stephen](https://github.com/stephenc) (The maintainer of SCM related Jenkins Plugins)
 
