@@ -378,7 +378,9 @@ public class GitLabPipelineStatusNotifier {
                             status);
                         LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
                     } catch (GitLabApiException e) {
-                        LOGGER.log(Level.WARNING, "Exception caught: " + e, e);
+                        if(!e.getMessage().contains(("Cannot transition status"))) {
+                            LOGGER.log(Level.WARNING, String.format("Exception caught: %s",e.getMessage()));
+                        }
                     }
                 } catch (IOException | InterruptedException e) {
                     LOGGER.log(Level.INFO,
