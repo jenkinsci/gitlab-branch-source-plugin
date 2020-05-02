@@ -15,7 +15,6 @@ public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor 
     @Override
     public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) {
         GitLabWebHookCause gitLabWebHookCause = null;
-        System.out.println(r.getClass().getName());
         if (r instanceof WorkflowRun) {
             gitLabWebHookCause = (GitLabWebHookCause) r.getCause(GitLabWebHookCause.class);
         }

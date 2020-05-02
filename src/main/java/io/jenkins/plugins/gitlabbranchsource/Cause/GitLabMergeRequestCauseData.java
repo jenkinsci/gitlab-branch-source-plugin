@@ -99,9 +99,11 @@ public class GitLabMergeRequestCauseData {
         this.variables.put("GITLAB_OA_WIP", defaultBooleanString(mergeRequestEvent.getObjectAttributes().getWorkInProgress()));
         this.variables.put("GITLAB_OA_URL", defaultString(mergeRequestEvent.getObjectAttributes().getUrl()));
         this.variables.put("GITLAB_OA_ACTION", defaultString(mergeRequestEvent.getObjectAttributes().getAction()));
-        this.variables.put("GITLAB_OA_ASSIGNEE_NAME", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getName()));
-        this.variables.put("GITLAB_OA_ASSIGNEE_USERNAME", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getUsername()));
-        this.variables.put("GITLAB_OA_ASSIGNEE_AVATAR_URL", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getAvatarUrl()));
+        if(mergeRequestEvent.getObjectAttributes().getAssignee() != null) {
+            this.variables.put("GITLAB_OA_ASSIGNEE_NAME", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getName()));
+            this.variables.put("GITLAB_OA_ASSIGNEE_USERNAME", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getUsername()));
+            this.variables.put("GITLAB_OA_ASSIGNEE_AVATAR_URL", defaultString(mergeRequestEvent.getObjectAttributes().getAssignee().getAvatarUrl()));
+        }
         int totalLabels = defaultListSize(mergeRequestEvent.getLabels());
         this.variables.put("GITLAB_LABELS_COUNT", defaultIntString(totalLabels));
         for(int i = 0; i < totalLabels; i++) {
@@ -116,37 +118,13 @@ public class GitLabMergeRequestCauseData {
             this.variables.put("GITLAB_LABEL_TYPE_" + i, defaultLabelString(mergeRequestEvent.getLabels().get(i).getType()));
             this.variables.put("GITLAB_LABEL_GROUP_ID_" + i, defaultIntString(mergeRequestEvent.getLabels().get(i).getGroupId()));
         }
-        this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_PREV", defaultString(mergeRequestEvent.getChanges().getUpdatedById().getPrevious().toString()));
-        this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_CURR", defaultString(mergeRequestEvent.getChanges().getUpdatedById().getCurrent().toString()));
-        this.variables.put("GITLAB_CHANGES_UPDATED_AT_PREV", defaultString(mergeRequestEvent.getChanges().getUpdatedAt().getPrevious().toString()));
-        this.variables.put("GITLAB_CHANGES_UPDATED_AT_CURR", defaultString(mergeRequestEvent.getChanges().getUpdatedAt().getPrevious().toString()));
-        int totalChangeLabelsPrev = defaultListSize(mergeRequestEvent.getChanges().getLabels().getCurrent());
-        this.variables.put("GITLAB_CHANGES_LABELS_PREV_COUNT", defaultIntString(totalChangeLabelsPrev));
-        for(int i = 0; i < totalChangeLabelsPrev; i++) {
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getId()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_TITLE_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getTitle()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_COLOR_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getColor()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_PROJECT_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getProjectId()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_CREATED_AT_" + i, defaultDateString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getCreatedAt()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_UPDATED_AT_" + i, defaultDateString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getUpdatedAt()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_TEMPLATE_" + i, defaultBooleanString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getTemplate()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_DESCRIPTION_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getDescription()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_TYPE_" + i, defaultLabelString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getType()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_GROUP_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getPrevious().get(i).getGroupId()));
-
+        if(mergeRequestEvent.getChanges().getUpdatedById() != null) {
+            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_PREV", defaultIntString(mergeRequestEvent.getChanges().getUpdatedById().getPrevious()));
+            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_CURR", defaultIntString(mergeRequestEvent.getChanges().getUpdatedById().getCurrent()));
         }
-        this.variables.put("GITLAB_CHANGES_LABELS_CURR_COUNT", defaultIntString(totalChangeLabelsPrev));
-        for(int i = 0; i < totalChangeLabelsPrev; i++) {
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getId()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_TITLE_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getTitle()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_COLOR_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getColor()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_PROJECT_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getProjectId()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_CREATED_AT_" + i, defaultDateString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getCreatedAt()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_UPDATED_AT_" + i, defaultDateString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getUpdatedAt()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_TEMPLATE_" + i, defaultBooleanString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getTemplate()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_DESCRIPTION_" + i, defaultString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getDescription()));
-            this.variables.put("GITLAB_CHANGES_LABEL_CURR_TYPE_" + i, defaultLabelString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getType()));
-            this.variables.put("GITLAB_CHANGES_LABEL_PREV_GROUP_ID_" + i, defaultIntString(mergeRequestEvent.getChanges().getLabels().getCurrent().get(i).getGroupId()));
+        if(mergeRequestEvent.getChanges().getUpdatedAt() != null) {
+            this.variables.put("GITLAB_CHANGES_UPDATED_AT_PREV", defaultDateString(mergeRequestEvent.getChanges().getUpdatedAt().getPrevious()));
+            this.variables.put("GITLAB_CHANGES_UPDATED_AT_CURR", defaultDateString(mergeRequestEvent.getChanges().getUpdatedAt().getPrevious()));
         }
     }
 
