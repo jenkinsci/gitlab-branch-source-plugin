@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
@@ -25,6 +24,7 @@ public class GitLabHelper {
 
     public static GitLabApi apiBuilder(String serverName, StandardCredentials credentials) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
+        GitLabApi api;
         if (server != null) {
             credentials = credentials == null ?server.getCredentials(): credentials;
 
@@ -32,8 +32,6 @@ public class GitLabHelper {
                 return new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
             } else if (credentials instanceof PersonalAccessToken) {
                 return new GitLabApi(server.getServerUrl(),((PersonalAccessToken) credentials).getToken().getPlainText());
-            } else if (credentials instanceof UsernamePasswordCredentials) {
-                return new GitLabApi(server.getServerUrl(),((UsernamePasswordCredentials) credentials).getPassword().getPlainText());
             }
             return new GitLabApi(server.getServerUrl(), GitLabServer.EMPTY_TOKEN);
         }

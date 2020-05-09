@@ -1,9 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -20,6 +19,7 @@ import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
+import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
@@ -83,12 +83,12 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Tag;
 import org.jenkins.ui.icon.IconSpec;
-import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getSourceCredentials;
@@ -719,13 +719,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         GitLabHookCreator.register(this, webhookMode, systemhookMode);
     }
 
-    public StandardCredentials credentials() {
-        SCMSourceOwner owner = getOwner();
-        String credentials = getCredentialsId();
-        if (owner == null || credentials == null) {
-            return null;
-        }
-        return getSourceCredentials(serverName, owner, credentials);
+    public PersonalAccessToken credentials() {
+        return CredentialsMatchers.firstOrNull(lookupCredentials(PersonalAccessToken.class, getOwner(),
+            Jenkins.getAuthentication(), fromUri(getServerUrlFromName(serverName)).build()),
+            GitLabServer.CREDENTIALS_MATCHER);
     }
 
     @Extension
@@ -772,28 +769,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
                 @QueryParameter String serverName, @QueryParameter String credentialsId) {
-            StandardListBoxModel result = new StandardListBoxModel();
-            if (context == null) {
-                // must have admin if you want the list without a context
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-                    result.includeCurrentValue(credentialsId);
-                    return result;
-                }
-            } else {
-                if (!context.hasPermission(Item.EXTENDED_READ)
-                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
-                    // must be able to read the configuration or use the item credentials if you
-                    // want the list
-                    result.includeCurrentValue(credentialsId);
-                    return result;
-                }
+            if (context == null
+                ? !Jenkins.get().hasPermission(Jenkins.ADMINISTER)
+                : !context.hasPermission(Item.EXTENDED_READ)) {
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
-            result.includeEmptyValue();
-            result.includeMatchingAs(
+            return new StandardListBoxModel().
+                includeEmptyValue().
+                includeMatchingAs(
                     context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
-                    context, StandardUsernameCredentials.class, fromUri(getServerUrlFromName(serverName)).build(),
-                    GitClient.CREDENTIALS_MATCHER);
-            return result;
+                    context, StandardCredentials.class, fromUri(getServerUrlFromName(serverName)).build(),
+                    CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(PersonalAccessToken.class)));
         }
 
         public int getProjectId(@AncestorInPath SCMSourceOwner context,
