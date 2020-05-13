@@ -158,7 +158,7 @@ public class GitLabPipelineStatusNotifier {
         String suffix = " - [Details](" + url + ")";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName(), source.credentials());
             String sudoUsername = sourceContext.getSudoUser();
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
@@ -274,7 +274,7 @@ public class GitLabPipelineStatusNotifier {
             }
         }
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+            GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName(), source.credentials());
             LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
             gitLabApi.getCommitsApi().addCommitStatus(
                 source.getProjectPath(),
@@ -360,7 +360,7 @@ public class GitLabPipelineStatusNotifier {
                     status.setStatus("PENDING");
                     Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                     try {
-                        GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
+                        GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName(), source.credentials());
                         // check are we still the task to set pending
                         synchronized (resolving) {
                             if (!nonce.equals(resolving.get(job))) {

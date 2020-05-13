@@ -97,7 +97,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
            @CheckForNull SCMRevision rev)
            throws IOException, InterruptedException {
             GitLabSCMSource gitlabScmSource = (GitLabSCMSource) source;
-            GitLabApi gitLabApi = apiBuilder(gitlabScmSource.getServerName());
+            GitLabApi gitLabApi = apiBuilder(gitlabScmSource.getServerName(), gitlabScmSource.credentials());
             String projectPath = gitlabScmSource.getProjectPath();
             return build(head, rev, gitLabApi, projectPath);
         }
