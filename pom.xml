@@ -9,15 +9,26 @@
   </parent>
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>gitlab-branch-source</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${revision}${sha1}-alauda${changelist}</version>
   <packaging>hpi</packaging>
   <properties>
     <revision>1.5.2</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <revision>2.11</revision>
+    <sha1></sha1>
     <jenkins.version>2.176.2</jenkins.version>
     <java.level>8</java.level>
     <jcasc.version>1.36</jcasc.version>
   </properties>
+  <distributionManagement>
+    <repository>
+      <id>${releases.id}</id>
+      <url>${releases.url}</url>
+    </repository>
+    <snapshotRepository>
+      <id>${snapshots.id}</id>
+      <url>${snapshots.url}</url>
+    </snapshotRepository>
+  </distributionManagement>
   <name>GitLab Branch Source Plugin</name>
   <description>GitLab Provides branch source and folder organisation functionality for GitLab
     Repositories in Jenkins Source Plugin
@@ -267,6 +278,20 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>nexus-oss-snapshots</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+    <repository>
+      <id>release</id>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
@@ -274,4 +299,31 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+  <profiles>
+    <profile>
+      <id>incrementals</id>
+      <properties>
+        <snapshots.url>https://nexus.acp.alauda.cn/repository/maven-snapshots/</snapshots.url>
+        <releases.id>nexus.acp.alauda.cn</releases.id>
+        <snapshots.id>nexus.acp.alauda.cn</snapshots.id>
+        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
+        <releases.url>https://nexus.acp.alauda.cn/repository/maven-incrementals/</releases.url>
+        <releases.name>nexus.acp.alauda.cn</releases.name>
+      </properties>
+    </profile>
+    <profile>
+      <id>release</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <snapshots.url>https://nexus.acp.alauda.cn/repository/maven-snapshots/</snapshots.url>
+        <releases.id>nexus.acp.alauda.cn</releases.id>
+        <snapshots.id>nexus.acp.alauda.cn</snapshots.id>
+        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
+        <releases.url>https://nexus.acp.alauda.cn/repository/maven-releases/</releases.url>
+        <releases.name>nexus.acp.alauda.cn</releases.name>
+      </properties>
+    </profile>
+  </profiles>
 </project>
