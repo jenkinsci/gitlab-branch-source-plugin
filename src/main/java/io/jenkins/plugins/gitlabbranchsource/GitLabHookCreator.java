@@ -1,8 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
-import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.net.MalformedURLException;
@@ -17,13 +17,15 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
 import org.gitlab4j.api.models.SystemHook;
 
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+
 public class GitLabHookCreator {
 
     public static final Logger LOGGER = Logger.getLogger(GitLabHookCreator.class.getName());
 
     public static void register(SCMNavigatorOwner owner, GitLabSCMNavigator navigator,
         GitLabHookRegistration systemhookMode) {
-        PersonalAccessToken credentials;
+        StandardCredentials credentials;
         GitLabServer server = GitLabServers.get().findServer(navigator.getServerName());
         if (server == null) {
             return;
@@ -57,7 +59,7 @@ public class GitLabHookCreator {
 
     public static void register(GitLabSCMSource source,
         GitLabHookRegistration webhookMode, GitLabHookRegistration systemhookMode) {
-        PersonalAccessToken credentials = null;
+        StandardCredentials credentials = null;
         GitLabServer server = GitLabServers.get().findServer(source.getServerName());
         if (server == null) {
             return;
@@ -89,8 +91,7 @@ public class GitLabHookCreator {
         }
         if (credentials != null) {
             try {
-                GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
-                    credentials.getToken().getPlainText());
+                GitLabApi gitLabApi = apiBuilder(server.getName(), credentials);
                 createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
@@ -126,11 +127,10 @@ public class GitLabHookCreator {
     }
 
     public static void createSystemHookWhenMissing(GitLabServer server,
-        PersonalAccessToken credentials) {
+        StandardCredentials credentials) {
         String systemHookUrl = getHookUrl(server, false);
         try {
-            GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
-                credentials.getToken().getPlainText());
+            GitLabApi gitLabApi = apiBuilder(server.getName(), credentials);
             SystemHook systemHook = gitLabApi.getSystemHooksApi()
                 .getSystemHookStream()
                 .filter(hook -> systemHookUrl.equals(hook.getUrl()))

@@ -69,6 +69,7 @@ import org.kohsuke.stapler.QueryParameter;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getSourceCredentials;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrl;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
@@ -225,7 +226,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
             .withTraits(traits)
             .newRequest(this, observer)) {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(serverName,
+                getSourceCredentials(serverName ,observer.getContext(), getCredentialsId()));
             getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
@@ -418,14 +420,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @Inject
         private GitLabSCMSource.DescriptorImpl delegate;
 
-        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner,
-            @QueryParameter String serverName) {
+        public static FormValidation doCheckProjectOwner(@AncestorInPath SCMSourceOwner context,
+            @QueryParameter String projectOwner,
+            @QueryParameter String serverName,
+            @QueryParameter String credentialsId) {
             if (projectOwner.equals("")) {
                 return FormValidation.ok();
             }
             GitLabApi gitLabApi = null;
             try {
-                gitLabApi = apiBuilder(serverName);
+                gitLabApi = apiBuilder(serverName,
+                    getSourceCredentials(serverName, context, credentialsId));
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (IllegalStateException e) {
