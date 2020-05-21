@@ -270,7 +270,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                     if (webhookGitLabApi != null && webHookUrl != null) {
                         observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
                             .createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace,
-                                webHookUrl, server.getSecretToken()));
+                                webHookUrl, server.getSecretToken().getPlainText()));
                     }
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger()

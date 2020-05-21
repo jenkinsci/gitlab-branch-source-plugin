@@ -86,7 +86,7 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
         try {
             List<GitLabServer> servers = GitLabServers.get().getServers();
             for(GitLabServer server: servers) {
-                if(server.getSecretToken().equals(secretToken)) {
+                if(server.getSecretToken().getPlainText().equals(secretToken)) {
                     return true;
                 }
             }

@@ -83,11 +83,15 @@ public final class GitLabSystemHookAction extends CrumbExclusion implements Unpr
     }
 
     private boolean isValidToken(String secretToken) {
-        List<GitLabServer> servers = GitLabServers.get().getServers();
-        for(GitLabServer server: servers) {
-            if(server.getSecretToken().equals(secretToken)) {
-                return true;
+        try {
+            List<GitLabServer> servers = GitLabServers.get().getServers();
+            for(GitLabServer server: servers) {
+                if(server.getSecretToken().getPlainText().equals(secretToken)) {
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, String.format("Error while validating token: %s", e.getMessage()));
         }
         return false;
     }
