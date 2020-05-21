@@ -29,7 +29,7 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
 }
 
 f.entry(title: _("Secret Token"), field: "secretToken", "description": "The secret token used while setting up hook url in the GitLab server") {
-    f.textbox()
+    f.password()
 }
 
 f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "Jenkins root URL to use in hooks URL (if different from the public Jenkins root URL)") {

@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
+import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -84,7 +85,7 @@ public class GitLabHookCreator {
                 return;
         }
         String hookUrl = getHookUrl(server, true);
-        String secretToken = server.getSecretToken();
+        String secretToken = server.getSecretToken().getPlainText();
         if (hookUrl.equals("")) {
             return;
         }
@@ -138,7 +139,7 @@ public class GitLabHookCreator {
                 .findFirst()
                 .orElse(null);
             if (systemHook == null) {
-                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, server.getSecretToken(),
+                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, server.getSecretToken().getPlainText(),
                     false, false, false);
             }
         } catch (GitLabApiException e) {
@@ -155,7 +156,7 @@ public class GitLabHookCreator {
     }
 
     /**
-     * @param server the {@code Git    abServer} for which the hooks URL would be created. If not {@code null} and it
+     * @param server the {@code GitLabServer} for which the hooks URL would be created. If not {@code null} and it
      *        has a {@link GitLabServer#getHooksRootUrl()}, then the hook URL will be based on this root URL.
      *        Otherwise, the hook URL will be based on {@link Jenkins#getRootUrl()}.
      * @param isWebHook {@code true} to get the webhook URL, {@code false} for the systemhook URL

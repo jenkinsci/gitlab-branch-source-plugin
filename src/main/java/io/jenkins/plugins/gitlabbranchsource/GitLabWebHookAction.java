@@ -8,6 +8,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -82,11 +83,15 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
     }
 
     private boolean isValidToken(String secretToken) {
-        List<GitLabServer> servers = GitLabServers.get().getServers();
-        for(GitLabServer server: servers) {
-            if(server.getSecretToken().equals(secretToken)) {
-                return true;
+        try {
+            List<GitLabServer> servers = GitLabServers.get().getServers();
+            for(GitLabServer server: servers) {
+                if(server.getSecretToken().equals(secretToken)) {
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, String.format("Error while validating token: %s", e.getMessage()));
         }
         return false;
     }

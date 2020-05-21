@@ -14,6 +14,7 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -116,7 +117,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * The secret token used while setting up hook url in the GitLab server
      */
-    private String secretToken;
+    private Secret secretToken;
 
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
@@ -251,14 +252,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     @DataBoundSetter
-    public void setSecretToken(String token) {
+    public void setSecretToken(Secret token) {
         this.secretToken = token;
     }
 
     private void generateSecretToken() {
         byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
         RANDOM.nextBytes(random);
-        this.secretToken = Util.toHexString(random);
+        this.secretToken = Secret.decrypt(Util.toHexString(random));
     }
 
     /**
@@ -269,7 +270,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return (DescriptorImpl) super.getDescriptor();
     }
 
-    public String getSecretToken() {
+    public Secret getSecretToken() {
         return secretToken;
     }
 
