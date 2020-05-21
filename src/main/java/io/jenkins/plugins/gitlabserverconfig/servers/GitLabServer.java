@@ -76,8 +76,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         "source."
     };
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     /**
      * A unique name used to identify the endpoint.
      */
@@ -256,8 +254,10 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         this.secretToken = token;
     }
 
+    // TODO: Use some UI element to trigger (what is the best way?)
     private void generateSecretToken() {
         byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
+        SecureRandom RANDOM = new SecureRandom();
         RANDOM.nextBytes(random);
         this.secretToken = Secret.decrypt(Util.toHexString(random));
     }
