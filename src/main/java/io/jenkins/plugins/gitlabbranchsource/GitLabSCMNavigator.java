@@ -266,10 +266,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                     HyperlinkNote.encodeTo(p.getWebUrl(), projectName));
                 try {
+                    GitLabServer server = GitLabServers.get().findServer(serverName);
                     if (webhookGitLabApi != null && webHookUrl != null) {
                         observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
                             .createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace,
-                                webHookUrl));
+                                webHookUrl, server.getSecretToken()));
                     }
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger()
