@@ -1,23 +1,12 @@
 package io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 
-import hudson.Util
-import hudson.util.Secret
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import lib.CredentialsTagLib
 import lib.FormTagLib
-import java.security.SecureRandom
 import org.apache.commons.lang.RandomStringUtils;
-
-byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
-SecureRandom RANDOM = new SecureRandom();
-RANDOM.nextBytes(random);
-Secret token = Secret.decrypt(Util.toHexString(random));
 
 def f = namespace(FormTagLib)
 def c = namespace(CredentialsTagLib)
-
-String secretTextId = RandomStringUtils.randomNumeric(4)
-String genButtonId = RandomStringUtils.randomNumeric(4)
 
 f.entry(title: _("Display Name"), field: "name", "description": "A unique name for the server") {
     f.textbox(default: String.format("gitlab-%s", RandomStringUtils.randomNumeric(GitLabServer.SHORT_NAME_LENGTH)))
@@ -40,22 +29,7 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
 }
 
 f.entry(title: _("Secret Token"), field: "secretToken", "description": "The secret token used while setting up hook url in the GitLab server") {
-    f.password(id: secretTextId)
-}
-
-f.entry(field: "genButton") {
-    raw("""
-        <button id="${genButtonId}">
-            Generate Secret Token
-        </button>
-        <script>
-        document.getElementById("${genButtonId}").addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log("${token}")
-            document.getElementById("${secretTextId}").value = ${token};
-        });
-    </script>
-    """)
+    f.password()
 }
 
 f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "Jenkins root URL to use in hooks URL (if different from the public Jenkins root URL)") {
