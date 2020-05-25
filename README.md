@@ -461,7 +461,8 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
 
-* `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel.
+* `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel (also includes inherited from ancestor groups). By default only trusted members of project can trigger MR.
+You may want to disable this option because trusted members do not include members inherited from shared group (there is no way to get it from GitLabApi as of GitLab 13.0.0). If disabled, MR comment trigger can be done by any user having access to your project.
 
 * `Disable GitLab project avatar` - Disable avatars of GitLab project(s). It is not possible to fetch avatars when API has no token authentication or project is private. So you may use this option as a workaround. We will fix this issue in a later release.
 
