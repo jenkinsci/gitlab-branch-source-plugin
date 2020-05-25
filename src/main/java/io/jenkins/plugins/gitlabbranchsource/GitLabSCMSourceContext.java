@@ -41,6 +41,8 @@ public class GitLabSCMSourceContext
 
     private boolean mrCommentTriggerEnabled;
 
+    private boolean onlyTrustedMembersCanTrigger;
+
     private String commentBody = "";
 
     private boolean projectAvatarDisabled;
@@ -115,6 +117,8 @@ public class GitLabSCMSourceContext
     public final boolean mrCommentTriggerEnabled() {
         return mrCommentTriggerEnabled;
     }
+
+    public final boolean onlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
 
     public final String getCommentBody() {
         return commentBody;
@@ -194,6 +198,11 @@ public class GitLabSCMSourceContext
 
     public final GitLabSCMSourceContext withMRCommentTriggerEnabled(boolean enabled) {
         this.mrCommentTriggerEnabled = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withOnlyTrustedMembersCanTrigger(boolean enabled) {
+        this.onlyTrustedMembersCanTrigger = enabled;
         return this;
     }
 

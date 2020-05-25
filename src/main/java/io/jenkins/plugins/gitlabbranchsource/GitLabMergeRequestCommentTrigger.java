@@ -54,7 +54,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                             continue;
                         }
                         if (gitLabSCMSource.getProjectId() == getPayload().getMergeRequest()
-                            .getTargetProjectId() && isTrustedMember(gitLabSCMSource)) {
+                            .getTargetProjectId() && isTrustedMember(gitLabSCMSource, sourceContext.onlyTrustedMembersCanTrigger())) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
                                 if (mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
                                     String expectedCommentBody = sourceContext.getCommentBody();
@@ -96,7 +96,11 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
         }
     }
 
-    private boolean isTrustedMember(GitLabSCMSource gitLabSCMSource) {
+    private boolean isTrustedMember(GitLabSCMSource gitLabSCMSource, boolean check) {
+        // Return true if only trusted members can trigger option is not checked
+        if(!check) {
+            return true;
+        }
         AccessLevel permission = gitLabSCMSource.getMembers()
             .get(getPayload().getUser().getUsername());
         if (permission != null) {
