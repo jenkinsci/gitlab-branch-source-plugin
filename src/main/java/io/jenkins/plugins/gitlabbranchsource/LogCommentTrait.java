@@ -12,32 +12,16 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class LogCommentTrait extends SCMSourceTrait {
 
-    @NonNull
-    private String sudoUser = "";
+    private final String sudoUser;
 
-    private boolean logSuccess = false;
+    private final boolean logSuccessOnly;
 
     /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public LogCommentTrait() {
-        // empty
-    }
-
-    /**
-     * Setter for stapler to enable logging of successful builds.
-     */
-    @DataBoundSetter
-    public void setLogSuccess(boolean logSuccess) {
-        this.logSuccess = logSuccess;
-    }
-
-    /**
-     * Setter for stapler to set the username of the sudo user.
-     */
-    @DataBoundSetter
-    public void setSudoUser(@NonNull String sudoUser) {
+    public LogCommentTrait(String sudoUser, boolean logSuccessOnly) {
+        this.logSuccessOnly = logSuccessOnly;
         this.sudoUser = sudoUser;
     }
 
@@ -46,28 +30,9 @@ public class LogCommentTrait extends SCMSourceTrait {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withLogCommentEnabled(true);
-            ctx.withLogSuccess(doLogSuccess());
-            ctx.withSudoUser(getSudoUser());
+            ctx.withLogSuccess(logSuccessOnly);
+            ctx.withSudoUser(sudoUser);
         }
-    }
-
-    /**
-     * Getter method for username of sudo user.
-     *
-     * @return username of sudo user.
-     */
-    @NonNull
-    public String getSudoUser() {
-        return sudoUser;
-    }
-
-    /**
-     * Getter method for logging successful build.
-     *
-     * @return true if logs of successful build required.
-     */
-    public boolean doLogSuccess() {
-        return logSuccess;
     }
 
     /**
