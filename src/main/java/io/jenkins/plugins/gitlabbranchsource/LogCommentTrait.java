@@ -8,31 +8,68 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public class LogCommentTrait extends SCMSourceTrait {
 
-    private final String sudoUser;
+    @NonNull
+    private String sudoUser = "";
 
-    private final boolean logSuccessOnly;
+    private boolean logSuccessOnly;
 
     /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public LogCommentTrait(String sudoUser, boolean logSuccessOnly) {
-        this.logSuccessOnly = logSuccessOnly;
-        this.sudoUser = sudoUser;
+    public LogCommentTrait() {
+        // empty
     }
+
+    /**
+     * Setter for stapler to enable logging of successful builds.
+     */
+    @DataBoundSetter
+    public void setLogSuccessOnly(boolean logSuccessOnly) {
+        this.logSuccessOnly = logSuccessOnly;
+    }
+
+    /**
+     * Setter for stapler to set the username of the sudo user.
+     */
+    @DataBoundSetter
+    public void setSudoUser(@NonNull String sudoUser) {
+            this.sudoUser = sudoUser;
+        }
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withLogCommentEnabled(true);
-            ctx.withLogSuccess(logSuccessOnly);
-            ctx.withSudoUser(sudoUser);
+            ctx.withLogSuccess(getLogSuccessOnly());
+            ctx.withSudoUser(getSudoUser());
         }
     }
+
+    /**
+     * Getter method for username of sudo user.
+     *
+     * @return username of sudo user.
+     */
+    @NonNull
+    public String getSudoUser() {
+        return sudoUser;
+    }
+
+    /**
+     * Getter method for logging successful build.
+     *
+     * @return true if logs of successful build required.
+     */
+    public boolean getLogSuccessOnly() {
+        return logSuccessOnly;
+    }
+
 
     /**
      * Our descriptor.
