@@ -38,8 +38,8 @@ public class LogCommentTrait extends SCMSourceTrait {
      */
     @DataBoundSetter
     public void setSudoUser(@NonNull String sudoUser) {
-            this.sudoUser = sudoUser;
-        }
+        this.sudoUser = sudoUser;
+    }
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
