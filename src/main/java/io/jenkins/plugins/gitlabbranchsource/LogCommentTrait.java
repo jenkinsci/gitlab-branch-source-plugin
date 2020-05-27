@@ -15,7 +15,7 @@ public class LogCommentTrait extends SCMSourceTrait {
     @NonNull
     private String sudoUser = "";
 
-    private boolean logSuccessOnly;
+    private boolean logSuccess;
 
     /**
      * Constructor for stapler.
@@ -29,8 +29,8 @@ public class LogCommentTrait extends SCMSourceTrait {
      * Setter for stapler to enable logging of successful builds.
      */
     @DataBoundSetter
-    public void setLogSuccessOnly(boolean logSuccessOnly) {
-        this.logSuccessOnly = logSuccessOnly;
+    public void setLogSuccess(boolean logSuccess) {
+        this.logSuccess = logSuccess;
     }
 
     /**
@@ -46,7 +46,7 @@ public class LogCommentTrait extends SCMSourceTrait {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withLogCommentEnabled(true);
-            ctx.withLogSuccess(getLogSuccessOnly());
+            ctx.withLogSuccess(getLogSuccess());
             ctx.withSudoUser(getSudoUser());
         }
     }
@@ -66,10 +66,9 @@ public class LogCommentTrait extends SCMSourceTrait {
      *
      * @return true if logs of successful build required.
      */
-    public boolean getLogSuccessOnly() {
-        return logSuccessOnly;
+    public boolean getLogSuccess() {
+        return logSuccess;
     }
-
 
     /**
      * Our descriptor.

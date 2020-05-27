@@ -3,7 +3,7 @@
   <f:entry title="${%Sudo username}" field="sudoUser">
     <f:textbox/>
   </f:entry>
-  <f:entry title="${%Enable logging successful builds}" field="logSuccessOnly">
+  <f:entry title="${%Enable logging successful builds}" field="logSuccess">
     <f:checkbox/>
   </f:entry>
 </j:jelly>
