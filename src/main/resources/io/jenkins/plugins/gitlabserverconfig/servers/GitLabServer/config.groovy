@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import lib.CredentialsTagLib
 import lib.FormTagLib
-import org.apache.commons.lang.RandomStringUtils
+import org.apache.commons.lang.RandomStringUtils;
 
 def f = namespace(FormTagLib)
 def c = namespace(CredentialsTagLib)
@@ -26,6 +26,10 @@ f.entry(title: _("Web Hook"), field: "manageWebHooks", "description": "Do you wa
 
 f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do you want to automatically manage GitLab System Hooks on Jenkins Server?") {
     f.checkbox(title: _("Manage System Hooks"))
+}
+
+f.entry(title: _("Secret Token"), field: "secretToken", "description": "The secret token used while setting up hook url in the GitLab server") {
+    f.password()
 }
 
 f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "Jenkins root URL to use in hooks URL (if different from the public Jenkins root URL)") {
