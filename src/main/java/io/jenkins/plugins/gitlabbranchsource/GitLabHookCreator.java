@@ -217,11 +217,21 @@ public class GitLabHookCreator {
             return "created";
         }
         // Primarily done due to legacy reason, secret token might not be configured in previous releases. So setting up hook url with the token.
-        if(!(projectHook.getToken().equals(secretToken))) {
+        if(!isTokenEqual(projectHook.getToken(), secretToken)) {
             projectHook.setToken(secretToken);
             gitLabApi.getProjectApi().modifyHook(projectHook);
             return "modified";
         }
         return "already created";
+    }
+
+    public static boolean isTokenEqual(String str1, String str2) {
+        if(str1 == null && str2.isEmpty()) {
+            return true;
+        }
+        if(str1 == null) {
+            return false;
+        }
+        return str1.equals(str2);
     }
 }
