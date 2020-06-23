@@ -105,10 +105,6 @@ pipeline {
             steps{
                 script{
                     hpiRelease.deploy("-Dmaven.test.skip=true -Dmaven.site.skip=true -Dmaven.javadoc.skip=true")
-                    if(hpiRelease.deployToUC){
-                        hpiRelease.triggerBackendIndexing(RELEASE_VERSION)
-                        hpiRelease.waitUC(PLUGIN_NAME, RELEASE_VERSION, 15)
-                    }
                 }
             }
         }
