@@ -1,24 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>3.54</version>
-    <relativePath />
+    <relativePath></relativePath>
   </parent>
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>gitlab-branch-source</artifactId>
   <version>${revision}${sha1}-alauda${changelist}</version>
   <packaging>hpi</packaging>
-  <properties>
-    <revision>1.5.2</revision>
-    <revision>2.11</revision>
-    <sha1></sha1>
-    <jenkins.version>2.176.2</jenkins.version>
-    <java.level>8</java.level>
-    <jcasc.version>1.36</jcasc.version>
-  </properties>
+  <name>GitLab Branch Source Plugin</name>
+  <description>GitLab Provides branch source and folder organisation functionality for GitLab
+    Repositories in Jenkins Source Plugin</description>
+  <url>https://github.com/jenkinsci/gitlab-branch-source-plugin</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>baymac</id>
+      <name>Parichay Barpanda</name>
+      <email>parichay.barpanda@gmail.com</email>
+    </developer>
+    <developer>
+      <id>markyjackson-taulia</id>
+      <name>Marky Jackson</name>
+      <email>marky.r.jackson@gmail.com</email>
+    </developer>
+    <developer>
+      <id>justinharringa</id>
+      <name>Justin Harringa</name>
+      <email>justin@harringa.com</email>
+    </developer>
+    <developer>
+      <id>jetersen</id>
+      <name>Joseph Peterson</name>
+      <email>josephp90@gmail.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+    <tag>${scmTag}</tag>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+  </scm>
   <distributionManagement>
     <repository>
       <id>${releases.id}</id>
@@ -29,16 +60,29 @@
       <url>${snapshots.url}</url>
     </snapshotRepository>
   </distributionManagement>
-  <name>GitLab Branch Source Plugin</name>
-  <description>GitLab Provides branch source and folder organisation functionality for GitLab
-    Repositories in Jenkins Source Plugin
-  </description>
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>https://opensource.org/licenses/MIT</url>
-    </license>
-  </licenses>
+  <properties>
+    <jcasc.version>1.36</jcasc.version>
+    <revision>2.13</revision>
+    <java.level>8</java.level>
+    <jenkins.version>2.176.2</jenkins.version>
+    <sha1></sha1>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.176.x</artifactId>
+        <version>4</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>2.9.5</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -140,8 +184,8 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>org.hamcrest</groupId>
           <artifactId>hamcrest-core</artifactId>
+          <groupId>org.hamcrest</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -164,12 +208,12 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-databind</artifactId>
+          <groupId>com.fasterxml.jackson.core</groupId>
         </exclusion>
         <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-core</artifactId>
+          <groupId>com.fasterxml.jackson.core</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -182,97 +226,6 @@
       <artifactId>workflow-job</artifactId>
     </dependency>
   </dependencies>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.176.x</artifactId>
-        <version>4</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>2.9.5</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <developers>
-    <developer>
-      <id>baymac</id>
-      <name>Parichay Barpanda</name>
-      <email>parichay.barpanda@gmail.com</email>
-    </developer>
-    <developer>
-      <id>markyjackson-taulia</id>
-      <name>Marky Jackson</name>
-      <email>marky.r.jackson@gmail.com</email>
-    </developer>
-    <developer>
-      <id>justinharringa</id>
-      <name>Justin Harringa</name>
-      <email>justin@harringa.com</email>
-    </developer>
-    <developer>
-      <id>jetersen</id>
-      <name>Joseph Peterson</name>
-      <email>josephp90@gmail.com</email>
-    </developer>
-  </developers>
-
-  <url>https://github.com/jenkinsci/gitlab-branch-source-plugin</url>
-
-  <scm>
-    <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git
-    </developerConnection>
-    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>${scmTag}</tag>
-  </scm>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.1.0</version>
-          <dependencies>
-            <dependency>
-              <groupId>com.puppycrawl.tools</groupId>
-              <artifactId>checkstyle</artifactId>
-              <version>8.29</version>
-            </dependency>
-          </dependencies>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <configuration>
-          <configLocation>${project.basedir}/.mvn/checkstyle.xml</configLocation>
-          <includeTestSourceDirectory>true</includeTestSourceDirectory>
-          <sourceDirectories>
-            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-          </sourceDirectories>
-          <testSourceDirectories>
-            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
-          </testSourceDirectories>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -299,6 +252,45 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.1.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.29</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <configLocation>${project.basedir}/.mvn/checkstyle.xml</configLocation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+          <testSourceDirectories>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+          </testSourceDirectories>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <profiles>
     <profile>
       <id>incrementals</id>
@@ -306,9 +298,9 @@
         <snapshots.url>https://nexus.acp.alauda.cn/repository/maven-snapshots/</snapshots.url>
         <releases.id>nexus.acp.alauda.cn</releases.id>
         <snapshots.id>nexus.acp.alauda.cn</snapshots.id>
-        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
-        <releases.url>https://nexus.acp.alauda.cn/repository/maven-incrementals/</releases.url>
         <releases.name>nexus.acp.alauda.cn</releases.name>
+        <releases.url>https://nexus.acp.alauda.cn/repository/maven-incrementals/</releases.url>
+        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
       </properties>
     </profile>
     <profile>
@@ -320,9 +312,9 @@
         <snapshots.url>https://nexus.acp.alauda.cn/repository/maven-snapshots/</snapshots.url>
         <releases.id>nexus.acp.alauda.cn</releases.id>
         <snapshots.id>nexus.acp.alauda.cn</snapshots.id>
-        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
-        <releases.url>https://nexus.acp.alauda.cn/repository/maven-releases/</releases.url>
         <releases.name>nexus.acp.alauda.cn</releases.name>
+        <releases.url>https://nexus.acp.alauda.cn/repository/maven-releases/</releases.url>
+        <snapshots.name>nexus.acp.alauda.cn</snapshots.name>
       </properties>
     </profile>
   </profiles>
