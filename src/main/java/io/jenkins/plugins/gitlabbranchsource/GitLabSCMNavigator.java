@@ -60,6 +60,7 @@ import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.jenkins.ui.icon.IconSpec;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -413,6 +414,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         );
     }
 
+    @Symbol("gitlab")
     @Extension
     public static class DescriptorImpl extends SCMNavigatorDescriptor implements IconSpec {
 
