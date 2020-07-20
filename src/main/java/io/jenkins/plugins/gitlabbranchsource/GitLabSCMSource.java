@@ -417,9 +417,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         } else if (fork) {
                             originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
-                        String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
+
+                        String targetSha;
+                        try {
+                            targetSha = gitLabApi.getRepositoryApi()
+                                .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
+                                .getCommit().getId();
+                        } catch(GitLabApiException e) {
+                            listener.getLogger().format("%nFailed to check merge request !%s, reason: %s%n", mr.getIid(), e.getMessage());
+                            continue;
+                        }
                         LOGGER.log(Level.FINE, String.format("%s -> %s", originOwner, (request.isMember(originOwner) ? "Trusted"
                             : "Untrusted")));
+                        String finalTargetSha = targetSha;
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                     "MR-" + mr.getIid() + (strategies.get(fork).size() > 1 ? "-" + strategy.name()
@@ -440,7 +450,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         head,
                                         new BranchSCMRevision(
                                             head.getTarget(),
-                                            targetSha // Latest revision of target branch
+                                            finalTargetSha // Latest revision of target branch
                                         ),
                                         new BranchSCMRevision(
                                             new BranchSCMHead(head.getOriginName()),
