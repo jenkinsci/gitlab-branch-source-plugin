@@ -1,3 +1,11 @@
+```
+**IMPORTANT**
+
+This plugin is not being actively maintained since June 2020. 
+There are some known issues and some of the features might break with newer GitLab versions (13.x and above) and newer Jenkins version(2.2xx and above).
+If you are interested to adopt this plugin, drop a mail at parichay.barpanda@gmail.com.
+```
+
 [![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/)
 [![Travis](https://img.shields.io/travis/jenkinsci/gitlab-branch-source-plugin.svg?logo=travis&label=build&logoColor=white)](https://travis-ci.org/jenkinsci/gitlab-branch-source-plugin)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
