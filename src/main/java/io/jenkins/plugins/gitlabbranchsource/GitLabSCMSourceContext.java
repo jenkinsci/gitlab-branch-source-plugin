@@ -118,7 +118,7 @@ public class GitLabSCMSourceContext
         return mrCommentTriggerEnabled;
     }
 
-    public final boolean onlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
+    public final boolean getOnlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
 
     public final String getCommentBody() {
         return commentBody;
