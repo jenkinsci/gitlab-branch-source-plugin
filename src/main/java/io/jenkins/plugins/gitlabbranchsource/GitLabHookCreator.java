@@ -84,6 +84,7 @@ public class GitLabHookCreator {
                 return;
         }
         String hookUrl = getHookUrl(server, true);
+        String secretToken = server.getSecretToken().getPlainText();
         if (hookUrl.equals("")) {
             return;
         }
@@ -91,7 +92,7 @@ public class GitLabHookCreator {
             try {
                 GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
                     credentials.getToken().getPlainText());
-                createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl);
+                createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl, secretToken);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
                     "Could not manage project hooks for " + source.getProjectPath() + " on "
@@ -137,7 +138,7 @@ public class GitLabHookCreator {
                 .findFirst()
                 .orElse(null);
             if (systemHook == null) {
-                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, "",
+                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, server.getSecretToken().getPlainText(),
                     false, false, false);
             }
         } catch (GitLabApiException e) {
@@ -201,22 +202,36 @@ public class GitLabHookCreator {
         enabledHooks.setMergeRequestsEvents(true);
         enabledHooks.setTagPushEvents(true);
         enabledHooks.setNoteEvents(true);
-        enabledHooks.setEnableSslVerification(false);
-        // TODO add secret token, add more events give option for sslVerification
         return enabledHooks;
     }
 
     public static String createWebHookWhenMissing(GitLabApi gitLabApi, String project,
-        String hookUrl)
+        String hookUrl, String secretToken)
         throws GitLabApiException {
         ProjectHook projectHook = gitLabApi.getProjectApi().getHooksStream(project)
             .filter(hook -> hookUrl.equals(hook.getUrl()))
             .findFirst()
             .orElseGet(GitLabHookCreator::createWebHook);
         if (projectHook.getId() == null) {
-            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, "");
+            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, secretToken);
             return "created";
         }
+        // Primarily done due to legacy reason, secret token might not be configured in previous releases. So setting up hook url with the token.
+        if(!isTokenEqual(projectHook.getToken(), secretToken)) {
+            projectHook.setToken(secretToken);
+            gitLabApi.getProjectApi().modifyHook(projectHook);
+            return "modified";
+        }
         return "already created";
+    }
+
+    public static boolean isTokenEqual(String str1, String str2) {
+        if(str1 == null && str2.isEmpty()) {
+            return true;
+        }
+        if(str1 == null) {
+            return false;
+        }
+        return str1.equals(str2);
     }
 }

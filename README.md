@@ -1,3 +1,11 @@
+```
+**IMPORTANT**
+
+This plugin is not being actively maintained since June 2020. 
+There are some known issues and some of the features might break with newer GitLab versions (13.x and above) and newer Jenkins version(2.2xx and above).
+If you are interested to adopt this plugin, drop a mail at parichay.barpanda@gmail.com.
+```
+
 [![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/)
 [![Travis](https://img.shields.io/travis/jenkinsci/gitlab-branch-source-plugin.svg?logo=travis&label=build&logoColor=white)](https://travis-ci.org/jenkinsci/gitlab-branch-source-plugin)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
@@ -116,23 +124,23 @@ Here are a few ways to setup your own Jenkins server:
 
 You can use any one of these ways:
 
-1. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
+1. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Available and search for `gitlab branch source plugin` then select Install.
+    
+2. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
     ```bash
-    $ java -jar plugin-management-tool.jar
+    java -jar plugin-management-tool.jar
         -p gitlab-branch-source
         -d <path-to-default-jenkins-plugins-directory>
         -w <path-to-jenkins-war>
     ```
-    
-2. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Available and search for `gitlab branch source plugin` then select Install.
 
 3. From Source:
 
     i. Checkout out source code to your local machine:
     
     ```
-    git clone https://github.com/baymac/gitlab-branch-source-plugin.git
+    git clone https://github.com/jenkinsci/gitlab-branch-source-plugin.git
     cd gitlab-branch-source-plugin
     ```
     
@@ -200,6 +208,10 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
     iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box. 
     
     iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token has `Admin` access. 
+
+    v. `Secret Token` - The secret token is required to authenticate the webhook payloads received from GitLab Server. Use generate secret token from Advanced options or use your own. If you are a old plugin user and did not set a secret token previously and want secret token to applied to the hooks of your existing jobs, you can add the secret token and rescan your jobs. Existing hooks with new secret token will be applied.
+
+    vi. `Root URL for hooks` - By default Root URL for hooks created by this plugin is your Jenkins instance url. You can modify the root URL in by adding your custom root URL. Leave empty if you want Jenkins URL to be your custom hook url. A path is added to your hook ROOT URL `/gitlab-webhook/post` for webhooks and `/gitlab-systemhook/post` for system hooks.
 
 6. Adding a Personal Access Token Credentials:
 
@@ -345,6 +357,8 @@ unclassified:
         manageSystemHooks: true # access token should have admin access to set system hooks
         name: "gitlab-3214"
         serverUrl: "https://gitlab.com"
+        hookRootUrl: ""
+        secretToken: ""
 ```
 
 See handling secrets [section](https://github.com/jenkinsci/configuration-as-code-plugin#handling-secrets) in JCasC documentation for better security.

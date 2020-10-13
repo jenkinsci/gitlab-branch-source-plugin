@@ -14,9 +14,11 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -109,6 +111,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Useful when the main public Jenkins URL can't be accessed from Gitlab.
      */
     private String hooksRootUrl;
+
+    /**
+     * The secret token used while setting up hook url in the GitLab server
+     */
+    private Secret secretToken;
 
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
@@ -242,12 +249,29 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return Util.ensureEndsWith(Util.fixEmptyAndTrim(hooksRootUrl), "/");
     }
 
+    @DataBoundSetter
+    public void setSecretToken(Secret token) {
+        this.secretToken = token;
+    }
+
+    // TODO: Use some UI element to trigger (what is the best way?)
+    private void generateSecretToken() {
+        byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
+        SecureRandom RANDOM = new SecureRandom();
+        RANDOM.nextBytes(random);
+        this.secretToken = Secret.decrypt(Util.toHexString(random));
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
+    }
+
+    public Secret getSecretToken() {
+        return secretToken;
     }
 
     /**

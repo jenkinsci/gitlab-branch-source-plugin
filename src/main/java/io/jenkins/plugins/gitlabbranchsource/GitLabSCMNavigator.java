@@ -60,6 +60,7 @@ import org.gitlab4j.api.models.GroupProjectsFilter;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.jenkins.ui.icon.IconSpec;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -266,10 +267,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 observer.getListener().getLogger().format("%nChecking project %s%n",
                     HyperlinkNote.encodeTo(p.getWebUrl(), projectName));
                 try {
+                    GitLabServer server = GitLabServers.get().findServer(serverName);
                     if (webhookGitLabApi != null && webHookUrl != null) {
                         observer.getListener().getLogger().format("Web hook %s%n", GitLabHookCreator
                             .createWebHookWhenMissing(webhookGitLabApi, projectPathWithNamespace,
-                                webHookUrl));
+                                webHookUrl, server.getSecretToken().getPlainText()));
                     }
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger()
@@ -412,6 +414,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         );
     }
 
+    @Symbol("gitlab")
     @Extension
     public static class DescriptorImpl extends SCMNavigatorDescriptor implements IconSpec {
 
