@@ -104,10 +104,6 @@ public class GitLabPipelineStatusNotifier {
         return getStatusName(sourceContext, build.getFullDisplayName(), revision);
     }
 
-    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Job<?, ?> job, final SCMRevision revision) {
-        return getStatusName(sourceContext, job.getFullDisplayName(), revision);
-    }
-
     private static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName, final SCMRevision revision) {
         final String type;
         if (revision instanceof BranchSCMRevision) {
@@ -246,7 +242,7 @@ public class GitLabPipelineStatusNotifier {
             if (SUCCESS.equals(result)) {
                 status.setDescription(build.getParent().getFullName() + ": This commit looks good");
                 status.setStatus("SUCCESS");
-                state = Constants.CommitBuildState.SUCCESS;
+                state = toBuildStateFromResult(result, sourceContext.isMarkUnstableAsSuccess());
             } else if (UNSTABLE.equals(result)) {
                 status.setDescription(
                     build.getParent().getFullName() + ": This commit has test failures");
@@ -255,17 +251,17 @@ public class GitLabPipelineStatusNotifier {
                 } else {
                     status.setStatus("FAILED");
                 }
-                state = Constants.CommitBuildState.FAILED;
+                state = toBuildStateFromResult(result, sourceContext.isMarkUnstableAsSuccess());
             } else if (Result.FAILURE.equals(result)) {
                 status.setDescription(
                     build.getParent().getFullName() + ": There was a failure building this commit");
                 status.setStatus("FAILED");
-                state = Constants.CommitBuildState.FAILED;
+                state = toBuildStateFromResult(result, sourceContext.isMarkUnstableAsSuccess());
             } else if (result != null) { // ABORTED, NOT_BUILT.
                 status.setDescription(build.getParent().getFullName()
                     + ": Something is wrong with the build of this commit");
                 status.setStatus("CANCELED");
-                state = Constants.CommitBuildState.CANCELED;
+                state = toBuildStateFromResult(result, sourceContext.isMarkUnstableAsSuccess());
             } else {
                 status.setDescription(build.getParent().getFullName() + ": Build started...");
                 status.setStatus("RUNNING");

@@ -49,7 +49,7 @@ public class GitLabSCMSourceContext
     private boolean projectAvatarDisabled;
 
     private String buildStatusNameCustomPart = "";
-    
+
     private boolean markUnstableAsSuccess;
 
     @NonNull
