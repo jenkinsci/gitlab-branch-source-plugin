@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabPipelineStatusStrategy;
 import java.util.EnumSet;
 import java.util.Set;
 import jenkins.scm.api.SCMHeadObserver;
@@ -31,8 +32,6 @@ public class GitLabSCMSourceContext
     @NonNull
     private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
 
-    private boolean notificationsDisabled;
-
     private boolean logCommentEnabled;
 
     private String sudoUser = "";
@@ -48,6 +47,14 @@ public class GitLabSCMSourceContext
     private boolean projectAvatarDisabled;
 
     private String buildStatusNameCustomPart = "";
+
+    private boolean markUnstableAsSuccess;
+
+    private String pipelineStatusIncludeRef = "";
+
+    @NonNull
+    private Set<GitLabPipelineStatusStrategy> pipelineStatusStrategy = EnumSet
+        .noneOf(GitLabPipelineStatusStrategy.class);
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
         @NonNull SCMHeadObserver observer) {
@@ -94,10 +101,6 @@ public class GitLabSCMSourceContext
         return systemhookRegistration;
     }
 
-    public final boolean notificationsDisabled() {
-        return notificationsDisabled;
-    }
-
     public final boolean projectAvatarDisabled() {
         return projectAvatarDisabled;
     }
@@ -118,7 +121,7 @@ public class GitLabSCMSourceContext
         return mrCommentTriggerEnabled;
     }
 
-    public final boolean onlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
+    public final boolean getOnlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
 
     public final String getCommentBody() {
         return commentBody;
@@ -126,6 +129,19 @@ public class GitLabSCMSourceContext
 
     public final String getBuildStatusNameCustomPart() {
         return buildStatusNameCustomPart;
+    }
+
+    public boolean isMarkUnstableAsSuccess() {
+        return markUnstableAsSuccess;
+    }
+
+    public String getPipelineStatusIncludeRef() {
+        return pipelineStatusIncludeRef;
+    }
+
+    @NonNull
+    public Set<GitLabPipelineStatusStrategy> getPipelineStatusStrategy() {
+        return pipelineStatusStrategy;
     }
 
     @NonNull
@@ -175,12 +191,6 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
         systemhookRegistration = mode;
-        return this;
-    }
-
-    @NonNull
-    public final GitLabSCMSourceContext withNotificationsDisabled(boolean disabled) {
-        this.notificationsDisabled = disabled;
         return this;
     }
 
@@ -235,4 +245,24 @@ public class GitLabSCMSourceContext
         @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
     }
+
+    @NonNull
+    public GitLabSCMSourceContext withPipelineStatusStrategies(
+        Set<GitLabPipelineStatusStrategy> strategy) {
+        pipelineStatusStrategy.addAll(strategy);
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean markUnstableAsSuccess) {
+        this.markUnstableAsSuccess = markUnstableAsSuccess;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withPipelineStatusIncludeRef(final String pipelineStatusIncludeRef) {
+        this.pipelineStatusIncludeRef = Util.fixNull(pipelineStatusIncludeRef);
+        return this;
+    }
+
 }
