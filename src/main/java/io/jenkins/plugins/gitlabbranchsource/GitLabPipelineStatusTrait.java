@@ -2,19 +2,24 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabPipelineStatusStrategy;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 public class GitLabPipelineStatusTrait extends SCMSourceTrait {
 
@@ -29,10 +34,16 @@ public class GitLabPipelineStatusTrait extends SCMSourceTrait {
     private boolean markUnstableAsSuccess = false;
 
     /**
+     * List of branches for which set status
+     */
+    private String pipelineStatusIncludeRef = "";
+
+    /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
     public GitLabPipelineStatusTrait() {
+        // empty
     }
 
     @DataBoundSetter
@@ -43,6 +54,11 @@ public class GitLabPipelineStatusTrait extends SCMSourceTrait {
     @DataBoundSetter
     public void setMarkUnstableAsSuccess(boolean markUnstableAsSuccess) {
         this.markUnstableAsSuccess = markUnstableAsSuccess;
+    }
+
+    @DataBoundSetter
+    public void setPipelineStatusIncludeRef(String pipelineStatusIncludeRef) {
+        this.pipelineStatusIncludeRef = pipelineStatusIncludeRef;
     }
 
     /**
@@ -61,6 +77,15 @@ public class GitLabPipelineStatusTrait extends SCMSourceTrait {
      */
     public boolean isMarkUnstableAsSuccess() {
         return markUnstableAsSuccess;
+    }
+
+    /**
+     * Gets the pipelineStatusIncludeRef.
+     *
+     * @return the pipelineStatusIncludeRef.
+     */
+    public String getPipelineStatusIncludeRef() {
+        return pipelineStatusIncludeRef;
     }
 
     /**
@@ -86,6 +111,7 @@ public class GitLabPipelineStatusTrait extends SCMSourceTrait {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withPipelineStatusStrategies(getStrategy());
             ctx.withMarkUnstableAsSuccess(isMarkUnstableAsSuccess());
+            ctx.withPipelineStatusIncludeRef(getPipelineStatusIncludeRef());
         }
     }
 
@@ -128,6 +154,21 @@ public class GitLabPipelineStatusTrait extends SCMSourceTrait {
             return result;
         }
 
+        /**
+         * Performs form validation for a proposed
+         *
+         * @param value the value to check.
+         * @return the validation results.
+         */
+        public FormValidation doCheckPipelineStatusIncludeRef(@QueryParameter String value) {
+            value = StringUtils.trimToEmpty(value);
+            try {
+                Pattern.compile(value);
+                return FormValidation.ok();
+            } catch (PatternSyntaxException e) {
+                return FormValidation.error(e.getDescription());
+            }
+        }
     }
 
 }

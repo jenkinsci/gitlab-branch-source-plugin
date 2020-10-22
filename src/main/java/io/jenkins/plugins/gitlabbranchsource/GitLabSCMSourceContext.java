@@ -32,8 +32,6 @@ public class GitLabSCMSourceContext
     @NonNull
     private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
 
-    private boolean notificationsDisabled;
-
     private boolean logCommentEnabled;
 
     private String sudoUser = "";
@@ -51,6 +49,8 @@ public class GitLabSCMSourceContext
     private String buildStatusNameCustomPart = "";
 
     private boolean markUnstableAsSuccess;
+
+    private String pipelineStatusIncludeRef = "";
 
     @NonNull
     private Set<GitLabPipelineStatusStrategy> pipelineStatusStrategy = EnumSet
@@ -101,10 +101,6 @@ public class GitLabSCMSourceContext
         return systemhookRegistration;
     }
 
-    public final boolean notificationsDisabled() {
-        return notificationsDisabled;
-    }
-
     public final boolean projectAvatarDisabled() {
         return projectAvatarDisabled;
     }
@@ -137,6 +133,10 @@ public class GitLabSCMSourceContext
 
     public boolean isMarkUnstableAsSuccess() {
         return markUnstableAsSuccess;
+    }
+
+    public String getPipelineStatusIncludeRef() {
+        return pipelineStatusIncludeRef;
     }
 
     @NonNull
@@ -191,12 +191,6 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
         systemhookRegistration = mode;
-        return this;
-    }
-
-    @NonNull
-    public final GitLabSCMSourceContext withNotificationsDisabled(boolean disabled) {
-        this.notificationsDisabled = disabled;
         return this;
     }
 
@@ -264,4 +258,11 @@ public class GitLabSCMSourceContext
         this.markUnstableAsSuccess = markUnstableAsSuccess;
         return this;
     }
+
+    @NonNull
+    public final GitLabSCMSourceContext withPipelineStatusIncludeRef(final String pipelineStatusIncludeRef) {
+        this.pipelineStatusIncludeRef = Util.fixNull(pipelineStatusIncludeRef);
+        return this;
+    }
+
 }
