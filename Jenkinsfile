@@ -88,18 +88,35 @@ pipeline {
             }
         }
 
-        stage("Code Scan"){
-            when {
-                expression { false }
-            }
-            steps{
-                container("tools"){
-                    script{
-                        deploy.scan().startACPSonar(null, "-D sonar.projectVersion=${RELEASE_VERSION}")
+		stage("Code Scan"){
+			failFast true
+			parallel {
+                stage("Code Scan"){
+                    when {
+                        expression { false }
+                    }
+                    steps{
+                        container("tools"){
+                            script{
+                                deploy.scan().startACPSonar(null, "-D sonar.projectVersion=${RELEASE_VERSION}")
+                            }
+                        }
                     }
                 }
+				stage('Sec Scan'){
+					steps {
+						script{
+							def sec = deploy.secScan("java", false, 1)
+							sec.containerName = 'java'
+							container(sec.containerName){
+								sec.install().start()
+							}
+						}
+					}
+				}
             }
         }
+
 
         stage('Deploy to Nexus') {
             steps{
