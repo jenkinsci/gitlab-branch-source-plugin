@@ -727,8 +727,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabServer.CREDENTIALS_MATCHER);
     }
 
-    @Symbol("gitlab")
     @Extension
+    @Symbol("gitlab")
     public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
 
         @Override
@@ -737,6 +737,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
 
         @NonNull
+        @Override
         public String getDisplayName() {
             return Messages.GitLabSCMSource_DisplayName();
         }
@@ -883,6 +884,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
 
         @NonNull
+        @Override
         public List<SCMSourceTrait> getTraitsDefaults() {
             return Arrays.<SCMSourceTrait>asList( // TODO finalize
                     new BranchDiscoveryTrait(true, false),

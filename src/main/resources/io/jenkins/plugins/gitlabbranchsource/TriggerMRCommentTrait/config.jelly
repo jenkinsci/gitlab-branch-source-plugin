@@ -3,7 +3,7 @@
   <f:entry title="${%Comment Body}" field="commentBody">
     <f:textbox default="jenkins rebuild"/>
   </f:entry>
-  <f:entry title="${%Enable triggers by Trusted Members only}" field="onlyTrustedMembers">
+  <f:entry title="${%Enable triggers by Trusted Members only}" field="onlyTrustedMembersCanTrigger">
       <f:checkbox default="true"/>
     </f:entry>
 </j:jelly>

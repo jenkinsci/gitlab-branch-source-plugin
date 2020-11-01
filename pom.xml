@@ -14,7 +14,7 @@
   <properties>
     <revision>1.5.2</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.176.4</jenkins.version>
+    <jenkins.version>2.235.2</jenkins.version>
     <java.level>8</java.level>
     <jcasc.version>1.36</jcasc.version>
   </properties>
@@ -89,17 +89,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -174,6 +164,17 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
+      <version>2.39</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-api</artifactId>
+      <version>2.40</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <version>2.82</version>
     </dependency>
   </dependencies>
   <dependencyManagement>
