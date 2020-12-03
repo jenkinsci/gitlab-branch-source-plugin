@@ -423,7 +423,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         try {
                             targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
                         } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, "Failed getting Branch from Merge Request:" + e, e);
+                            listener.getLogger().format("Failed getting TargetBranch from Merge Request: " + mr.getIid() + " (" + mr.getTitle() + ")%n%s", e);
                             continue;
                         }
                         LOGGER.log(Level.FINE, String.format("%s -> %s", originOwner, (request.isMember(originOwner) ? "Trusted"
