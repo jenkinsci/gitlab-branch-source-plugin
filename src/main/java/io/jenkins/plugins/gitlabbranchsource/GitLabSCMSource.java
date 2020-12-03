@@ -419,7 +419,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         } else if (fork) {
                             originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
-                        String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
+                        String targetSha;
+                        try {
+                            targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
+                        } catch (Exception e) {
+                            LOGGER.log(Level.WARNING, "Failed getting Branch from Merge Request:" + e, e);
+                            continue;
+                        }
                         LOGGER.log(Level.FINE, String.format("%s -> %s", originOwner, (request.isMember(originOwner) ? "Trusted"
                             : "Untrusted")));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
@@ -727,7 +733,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 GitLabServer.CREDENTIALS_MATCHER);
     }
 
-    @Symbol("gitlab")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
 
