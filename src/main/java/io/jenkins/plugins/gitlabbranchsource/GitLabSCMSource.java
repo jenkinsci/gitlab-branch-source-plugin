@@ -732,6 +732,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 Jenkins.getAuthentication(), fromUri(getServerUrlFromName(serverName)).build()),
                 GitLabServer.CREDENTIALS_MATCHER);
     }
+
     @Symbol("gitlab")
     @Extension
     public static class DescriptorImpl extends SCMSourceDescriptor implements IconSpec {
