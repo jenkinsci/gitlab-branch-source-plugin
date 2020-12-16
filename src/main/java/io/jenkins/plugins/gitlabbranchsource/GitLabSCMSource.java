@@ -715,7 +715,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     public void afterSave() {
         GitLabServer server = GitLabServers.get().findServer(getServerName());
-        if (server.isManageWebHooks()) {
+        if (server != null && server.isManageWebHooks()) {
             GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
             GitLabHookRegistration webhookMode = ctx.webhookRegistration();
