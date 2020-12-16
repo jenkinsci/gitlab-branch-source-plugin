@@ -305,6 +305,7 @@ public class GitLabPipelineStatusNotifier {
 
             if (revision instanceof MergeRequestSCMRevision) {
                 Integer projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
+                status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                 gitLabApi.getCommitsApi().addCommitStatus(
                     projectId,
                     hash,
@@ -395,6 +396,7 @@ public class GitLabPipelineStatusNotifier {
                     status.setTargetUrl(url);
                     status.setDescription(job.getFullName() + ": Build queued...");
                     status.setStatus("PENDING");
+
                     Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                     try {
                         GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
@@ -413,6 +415,7 @@ public class GitLabPipelineStatusNotifier {
 
                         if (revision instanceof MergeRequestSCMRevision) {
                             Integer projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
+                            status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                             gitLabApi.getCommitsApi().addCommitStatus(
                                 projectId,
                                 hash,
