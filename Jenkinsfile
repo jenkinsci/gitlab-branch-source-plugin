@@ -108,7 +108,7 @@ pipeline {
                         try{
                             deploy.scan().startACPSonar(null, "-D sonar.projectVersion=${RELEASE_VERSION}" + (sonarParams?" -D ${sonarParams}":""))
                         }catch(exec){
-                            echo "ignore sonar scan error: ${exc}"
+                            echo "ignore sonar scan error: ${exec}"
                         }
                     }
                 }
