@@ -52,6 +52,7 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
      * Allow trigger a new build by trusted members only.
      *
      * @return true if allow trusted members only
+     * @since TODO
      */
     public boolean getOnlyTrustedMembersCanTrigger() {
         return onlyTrustedMembersCanTrigger;
