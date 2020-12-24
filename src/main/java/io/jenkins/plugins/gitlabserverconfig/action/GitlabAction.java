@@ -11,6 +11,7 @@ import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
@@ -51,6 +52,10 @@ public class GitlabAction implements RootAction {
         @QueryParameter String owner) {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
+        }
+
+        if (StringUtils.isEmpty(server) || StringUtils.isEmpty(owner)) {
+            return HttpResponses.errorJSON("server or owner is empty");
         }
 
         JSONArray servers = new JSONArray();
