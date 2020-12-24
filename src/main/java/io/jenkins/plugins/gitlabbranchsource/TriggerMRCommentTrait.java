@@ -22,18 +22,18 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
     /**
      * Only comment trigger by trusted members only (members having access to project)
      */
-    private final boolean onlyTrustedMembers;
+    private final boolean onlyTrustedMembersCanTrigger;
 
     /**
      * Constructor.
      *
      * @param commentBody the comment body to trigger a new build on
-     * @param onlyTrustedMembers
+     * @param onlyTrustedMembersCanTrigger
      */
     @DataBoundConstructor
-    public TriggerMRCommentTrait(String commentBody, boolean onlyTrustedMembers) {
+    public TriggerMRCommentTrait(String commentBody, boolean onlyTrustedMembersCanTrigger) {
         this.commentBody = commentBody;
-        this.onlyTrustedMembers = onlyTrustedMembers;
+        this.onlyTrustedMembersCanTrigger = onlyTrustedMembersCanTrigger;
     }
 
     /**
@@ -49,13 +49,23 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
     }
 
     /**
+     * Allow trigger a new build by trusted members only.
+     *
+     * @return true if allow trusted members only
+     * @since TODO
+     */
+    public boolean getOnlyTrustedMembersCanTrigger() {
+        return onlyTrustedMembersCanTrigger;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
         ctx.withMRCommentTriggerEnabled(true);
-        ctx.withOnlyTrustedMembersCanTrigger(onlyTrustedMembers);
+        ctx.withOnlyTrustedMembersCanTrigger(getOnlyTrustedMembersCanTrigger());
         ctx.withCommentBody(getCommentBody());
     }
 
