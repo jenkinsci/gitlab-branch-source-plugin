@@ -90,6 +90,10 @@ Here are a few ways to setup your own Jenkins server:
 
     Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
 
+5. Using [Jenkins CLI](https://github.com/jenkins-zh/jenkins-cli) run it for development:
+    
+    Run it via: `jcli plugin run`
+
 ### Configuring Jenkins instance:
 
 1. Unlock your Jenkins instance:

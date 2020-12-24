@@ -83,9 +83,13 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      */
     @NonNull
     public List<GitLabServer> getServers() {
-        return servers == null || servers.isEmpty()
-            ? Collections.emptyList()
-            : Collections.unmodifiableList(servers);
+        if (servers == null || servers.isEmpty()) {
+            servers = new ArrayList<>();
+            // Don't really need to create this manually. Having a default one makes it be easier for a new user
+            servers.add(new GitLabServer(GitLabServer.GITLAB_SERVER_URL,
+                GitLabServer.GITLAB_SERVER_DEFAULT_NAME, ""));
+        }
+        return Collections.unmodifiableList(servers);
     }
 
     /**
