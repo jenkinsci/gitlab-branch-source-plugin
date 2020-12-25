@@ -52,7 +52,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public static final CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers
         .instanceOf(PersonalAccessToken.class);
     /**
-     * Used as default community saas version server URL for the serverUrl field
+     * Default name for community SaaS version server
+     */
+    public static final String GITLAB_SERVER_DEFAULT_NAME = "default";
+    /**
+     * Used as default community SaaS version server URL for the serverUrl field
      */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
     /**
