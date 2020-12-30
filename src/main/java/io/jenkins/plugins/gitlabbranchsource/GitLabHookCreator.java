@@ -84,7 +84,7 @@ public class GitLabHookCreator {
                 return;
         }
         String hookUrl = getHookUrl(server, true);
-        String secretToken = server.getSecretToken().getPlainText();
+        String secretToken = server.getSecretTokenAsPlainText();
         if (hookUrl.equals("")) {
             return;
         }
@@ -138,7 +138,7 @@ public class GitLabHookCreator {
                 .findFirst()
                 .orElse(null);
             if (systemHook == null) {
-                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, server.getSecretToken().getPlainText(),
+                gitLabApi.getSystemHooksApi().addSystemHook(systemHookUrl, server.getSecretTokenAsPlainText(),
                     false, false, false);
             }
         } catch (GitLabApiException e) {

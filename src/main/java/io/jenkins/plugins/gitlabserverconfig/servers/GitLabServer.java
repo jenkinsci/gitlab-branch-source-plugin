@@ -278,6 +278,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return secretToken;
     }
 
+    public String getSecretTokenAsPlainText() {
+        if (this.secretToken == null) {
+            return null;
+        }
+        return this.secretToken.getPlainText();
+    }
+
     /**
      * Our descriptor.
      */

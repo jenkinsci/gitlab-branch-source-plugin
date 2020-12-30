@@ -86,7 +86,7 @@ public final class GitLabSystemHookAction extends CrumbExclusion implements Unpr
         try {
             List<GitLabServer> servers = GitLabServers.get().getServers();
             for(GitLabServer server: servers) {
-                if(server.getSecretToken().getPlainText().equals(secretToken)) {
+                if(server.getSecretTokenAsPlainText().equals(secretToken)) {
                     return true;
                 }
             }
