@@ -720,11 +720,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     public void afterSave() {
-        GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+        GitLabServer server = GitLabServers.get().findServer(getServerName());
+        // Only register webhooks in the case webhooks wants to be managed in
+        // the jenkins instance.
+        if (server != null && server.isManageWebHooks()) {
+            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
                 .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
-        GitLabHookRegistration webhookMode = ctx.webhookRegistration();
-        GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
-        GitLabHookCreator.register(this, webhookMode, systemhookMode);
+            GitLabHookRegistration webhookMode = ctx.webhookRegistration();
+            GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
+            GitLabHookCreator.register(this, webhookMode, systemhookMode);
+        }
     }
 
     public PersonalAccessToken credentials() {
