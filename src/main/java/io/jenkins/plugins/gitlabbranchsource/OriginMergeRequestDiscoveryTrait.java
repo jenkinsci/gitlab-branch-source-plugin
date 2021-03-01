@@ -102,6 +102,10 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
         return category instanceof ChangeRequestSCMHeadCategory;
     }
 
+    /**
+     * Our descriptor
+     */
+    @Symbol("gitLabMergeRequestDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
