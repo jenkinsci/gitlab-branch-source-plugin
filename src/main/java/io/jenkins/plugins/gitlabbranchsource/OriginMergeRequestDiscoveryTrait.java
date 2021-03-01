@@ -105,7 +105,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
     /**
      * Our descriptor
      */
-    @Symbol("gitLabMergeRequestDiscovery")
+    @Symbol("gitLabOriginDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMSourceTraitDescriptor {
