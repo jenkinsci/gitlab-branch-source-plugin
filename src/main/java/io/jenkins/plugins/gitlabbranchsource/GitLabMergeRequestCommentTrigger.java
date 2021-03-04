@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import com.cloudbees.hudson.plugins.folder.computed.ComputedFolder;
 import hudson.model.CauseAction;
 import hudson.model.Job;
 import hudson.security.ACL;
@@ -38,8 +39,8 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                 boolean jobFound = false;
                 for (final SCMSourceOwner owner : SCMSourceOwners.all()) {
                     LOGGER.log(Level.FINEST, String.format("Source Owner: %s", owner.getFullDisplayName()));
-                    // This is a hack to skip owners which are children of a SCMNavigator
-                    if (owner.getFullDisplayName().contains(" » ")) {
+                    // It's better to check instance of parent instead of searching for » symbol
+                    if (owner.getParent() instanceof ComputedFolder) {
                         continue;
                     }
                     for (SCMSource source : owner.getSCMSources()) {
