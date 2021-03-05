@@ -39,6 +39,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
@@ -308,7 +309,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if (GITLAB_SERVER_URL.equals(serverUrl)) {
                 LOGGER.log(Level.FINEST, String.format("Community version of GitLab: %s", serverUrl));
             }
-            GitLabApi gitLabApi = new GitLabApi(serverUrl, "");
+            GitLabApi gitLabApi = new GitLabApi(serverUrl, "", null, getProxyConfig());
             try {
                 gitLabApi.getProjectApi().getProjects(1, 1);
                 return FormValidation.ok();
@@ -360,7 +361,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 privateToken = credentials.getToken().getPlainText();
             }
             if (privateToken.equals(EMPTY_TOKEN)) {
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN);
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN, null, getProxyConfig());
                 try {
                     /*
                     In order to validate a GitLab Server without personal access token,
@@ -378,7 +379,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 }
             } else {
 
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken);
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken, null, getProxyConfig());
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
                     LOGGER.log(Level.FINEST, String
