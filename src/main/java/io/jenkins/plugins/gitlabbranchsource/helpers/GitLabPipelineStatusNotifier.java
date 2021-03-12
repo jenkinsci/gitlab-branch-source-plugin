@@ -264,6 +264,7 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         status.setName(getStatusName(sourceContext, build, revision));
+        status.setRef(revision.getHead().getName());
 
         final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
             .get(JobScheduledListener.class);
@@ -347,6 +348,7 @@ public class GitLabPipelineStatusNotifier {
                         return;
                     }
                     status.setName(getStatusName(sourceContext, job, revision));
+                    status.setRef(revision.getHead().getName());
 
                     String url;
                     try {
