@@ -134,10 +134,10 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @DataBoundConstructor
     public GitLabServer(@NonNull String serverUrl, @NonNull String name,
         @NonNull String credentialsId) {
-        this.serverUrl = defaultIfBlank(serverUrl, GITLAB_SERVER_URL);
+        this.serverUrl = defaultIfBlank(Util.fixEmptyAndTrim(serverUrl), GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(name)
             ? getRandomName()
-            : name;
+            : StringUtils.trim(name);
         this.credentialsId = credentialsId;
     }
 
@@ -242,7 +242,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     @DataBoundSetter
     public void setHooksRootUrl(String hooksRootUrl) {
-        this.hooksRootUrl = hooksRootUrl;
+        this.hooksRootUrl = Util.fixEmptyAndTrim(hooksRootUrl);
     }
 
     /**
