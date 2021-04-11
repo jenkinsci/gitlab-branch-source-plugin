@@ -249,8 +249,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
             String webHookUrl = null;
             if (webHookCredentials != null) {
                 GitLabServer server = GitLabServers.get().findServer(serverName);
-                webhookGitLabApi = new GitLabApi(getServerUrl(server),
-                    webHookCredentials.getToken().getPlainText(), null, getProxyConfig());
+                String serverUrl = getServerUrl(server);
+                webhookGitLabApi = new GitLabApi(serverUrl,
+                        webHookCredentials.getToken().getPlainText(), null, getProxyConfig(serverUrl));
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
             for (Project p : projects) {

@@ -93,7 +93,7 @@ public class GitLabHookCreator {
         if (credentials != null) {
             try {
                 GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
-                    credentials.getToken().getPlainText(), null, getProxyConfig());
+                    credentials.getToken().getPlainText(), null, getProxyConfig(server.getServerUrl()));
                 createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl, secretToken);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING,
@@ -133,7 +133,7 @@ public class GitLabHookCreator {
         String systemHookUrl = getHookUrl(server, false);
         try {
             GitLabApi gitLabApi = new GitLabApi(server.getServerUrl(),
-                credentials.getToken().getPlainText(), null, getProxyConfig());
+                credentials.getToken().getPlainText(), null, getProxyConfig(server.getServerUrl()));
             SystemHook systemHook = gitLabApi.getSystemHooksApi()
                 .getSystemHookStream()
                 .filter(hook -> systemHookUrl.equals(hook.getUrl()))

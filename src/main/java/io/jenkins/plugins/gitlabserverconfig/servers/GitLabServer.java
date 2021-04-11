@@ -309,7 +309,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             if (GITLAB_SERVER_URL.equals(serverUrl)) {
                 LOGGER.log(Level.FINEST, String.format("Community version of GitLab: %s", serverUrl));
             }
-            GitLabApi gitLabApi = new GitLabApi(serverUrl, "", null, getProxyConfig());
+            GitLabApi gitLabApi = new GitLabApi(serverUrl, "", null, getProxyConfig(serverUrl));
             try {
                 gitLabApi.getProjectApi().getProjects(1, 1);
                 return FormValidation.ok();
@@ -361,7 +361,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 privateToken = credentials.getToken().getPlainText();
             }
             if (privateToken.equals(EMPTY_TOKEN)) {
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN, null, getProxyConfig());
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN, null, getProxyConfig(serverUrl));
                 try {
                     /*
                     In order to validate a GitLab Server without personal access token,
@@ -379,7 +379,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 }
             } else {
 
-                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken, null, getProxyConfig());
+                GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken, null, getProxyConfig(serverUrl));
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
                     LOGGER.log(Level.FINEST, String
