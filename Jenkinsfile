@@ -166,6 +166,7 @@ pipeline {
         always {
             junit allowEmptyResults: true, testResults: "**/target/surefire-reports/**/*.xml"
             script {
+                sh "cat /root/maven/repository/io/jenkins/plugins/gitlab-branch-source/maven-metadata-local.xml"
                 deploy.alaudaNotification([:])
             }
         }
