@@ -53,9 +53,9 @@ public class GitLabPipelineStatusNotifier {
     private static final Logger LOGGER = Logger
         .getLogger(GitLabPipelineStatusNotifier.class.getName());
 
-    private static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
+    static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
 
-    private static final String GITLAB_PIPELINE_STATUS_DELIMITER = "/";
+    static final String GITLAB_PIPELINE_STATUS_DELIMITER = "/";
 
     private static String getRootUrl(Run<?, ?> build) {
         try {
@@ -87,7 +87,7 @@ public class GitLabPipelineStatusNotifier {
         return getStatusName(sourceContext, job.getFullDisplayName(), revision);
     }
 
-    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName, final SCMRevision revision) {
+    static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName, final SCMRevision revision) {
         final String type;
         if (revision instanceof BranchSCMRevision) {
             type = "branch";
@@ -110,6 +110,17 @@ public class GitLabPipelineStatusNotifier {
         final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + customPrefix + type;
         LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
         return statusName;
+    }
+
+    static String getRevisionRef(final SCMRevision revision) {
+        final String refName;
+        if (revision instanceof MergeRequestSCMRevision) {
+            refName = ((MergeRequestSCMRevision) revision).getOrigin().getHead().getName();
+        } else {
+            refName = revision.getHead().getName();
+        }
+        LOGGER.log(Level.FINEST, () -> "Retrieved revision ref is: " + refName);
+        return refName;
     }
 
     private static String getMrBuildName(final String buildName) {
@@ -264,7 +275,7 @@ public class GitLabPipelineStatusNotifier {
             return;
         }
         status.setName(getStatusName(sourceContext, build, revision));
-        status.setRef(revision.getHead().getName());
+        status.setRef(getRevisionRef(revision));
 
         final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
             .get(JobScheduledListener.class);
@@ -348,7 +359,7 @@ public class GitLabPipelineStatusNotifier {
                         return;
                     }
                     status.setName(getStatusName(sourceContext, job, revision));
-                    status.setRef(revision.getHead().getName());
+                    status.setRef(getRevisionRef(revision));
 
                     String url;
                     try {
