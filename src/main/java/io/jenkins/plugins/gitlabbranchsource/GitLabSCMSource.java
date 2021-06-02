@@ -76,6 +76,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Member;
@@ -316,7 +317,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
-                    request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
+                    Pager<Branch> branchesPager = gitLabApi.getRepositoryApi().getBranches(gitlabProject, null, 10);
+                    List<Branch> branches = branchesPager.all();
+                    request.setBranches(branches);
                 }
                 if (request.isFetchMRs()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
