@@ -316,8 +316,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
-                    request.setBranches(
-                        gitLabApi.getRepositoryApi().getBranches(gitlabProject) );
+                    request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
                 if (request.isFetchMRs()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
