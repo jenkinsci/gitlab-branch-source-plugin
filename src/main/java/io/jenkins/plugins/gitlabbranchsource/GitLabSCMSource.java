@@ -316,15 +316,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
-                    List<Branch> branches = gitLabApi.getRepositoryApi()
-                        .getBranches(gitlabProject);
-                    List<Branch> upToDateBranches = new ArrayList<Branch>();
-                    // Re-fetch branches separately to make sure we get the latest commits
-                    for (final Branch branch : branches) {
-                        upToDateBranches.add( gitLabApi.getRepositoryApi()
-                                              .getBranch(gitlabProject, branch.getName()) );
-                    }
-                    request.setBranches(upToDateBranches);
+                    request.setBranches(
+                        gitLabApi.getRepositoryApi().getBranches(gitlabProject) );
                 }
                 if (request.isFetchMRs()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
