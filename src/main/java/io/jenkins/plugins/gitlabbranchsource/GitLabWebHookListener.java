@@ -11,7 +11,6 @@ import org.gitlab4j.api.webhook.TagPushEvent;
 import org.gitlab4j.api.webhook.WebHookListener;
 
 public class GitLabWebHookListener implements WebHookListener {
-
     public static final Logger LOGGER = Logger.getLogger(GitLabWebHookListener.class.getName());
 
     // Delay used for triggers to avoid GitLab cache
