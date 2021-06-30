@@ -36,6 +36,12 @@ f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "J
     f.textbox()
 }
 
+f.advanced() {
+    f.entry(title: _("Web Hook trigger delay"), field: "hookTriggerDelay", "description": "Delay in seconds to be used for GitLab Web Hook build triggers (defaults to GitLab cache timeout)") {
+        f.textbox()
+    }
+}
+
 f.validateButton(
     title: _("Test connection"),
     progress: _("Testing.."),

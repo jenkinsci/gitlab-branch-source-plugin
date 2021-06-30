@@ -123,6 +123,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private Secret secretToken;
 
     /**
+     * Delay to be used for GitLab Web Hook build triggers.
+     */
+    private Integer hookTriggerDelay;
+
+    /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
      * @param serverUrl The URL of this GitLab Server
@@ -287,6 +292,32 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
+     * Data Bound Setter for web hook trigger delay
+     *
+     * @param hookTriggerDelay Delay to be used for GitLab Web Hook build triggers.
+     * Set to {@code null} to use delay equal to GitLab cache timeout, which
+     * will avoid builds being not triggered due to GitLab caching.
+     */
+    @DataBoundSetter
+    public void setHookTriggerDelay(String hookTriggerDelay) {
+        try {
+            this.hookTriggerDelay = Integer.parseInt(hookTriggerDelay);
+        } catch (NumberFormatException e) {
+            this.hookTriggerDelay = null;
+        }
+    }
+
+    /**
+     * @return Delay to be used for GitLab Web Hook build triggers.
+     * Can be either a root URL with its trailing slash, or {@code null}.
+     * Can be {@code null} to request delay to be equal to GitLab cache timeout.
+     */
+    @CheckForNull
+    public Integer getHookTriggerDelay() {
+        return this.hookTriggerDelay;
+    }
+
+    /**
      * Our descriptor.
      */
     @Extension
@@ -342,6 +373,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 return FormValidation.warning("This looks like a full webhook URL, it should only be a root URL.");
             }
             return FormValidation.ok();
+        }
+
+        /**
+         * Checks that the supplied hook trigger delay is valid.
+         *
+         * @param hookTriggerDelay the delay to be checked.
+         * @return the validation results.
+         */
+        public static FormValidation doCheckHookTriggerDelay(@QueryParameter String hookTriggerDelay) {
+            try {
+                if (!hookTriggerDelay.isEmpty()) {
+                    Integer.parseInt(hookTriggerDelay);
+                }
+                return FormValidation.ok();
+            } catch (NumberFormatException e) {
+                LOGGER.log(Level.FINEST, "Invalid hook trigger delay: {0}", hookTriggerDelay);
+                return FormValidation.error("Invalid hook trigger delay (%s)", e.getMessage());
+            }
         }
 
         @NonNull
