@@ -104,7 +104,12 @@ public class GitLabWebHookListener implements WebHookListener {
         } catch (GitLabApiException e) {
             LOGGER.log(
                 Level.WARNING,
-                String.format("Error retrieving GitLab version: %s", e.getMessage()));
+                String.format("API error while retrieving GitLab version: %s", e.getMessage()));
+            return null;
+        } catch (Exception e) {
+            LOGGER.log(
+                Level.WARNING,
+                String.format("Error while retrieving GitLab version: %s", e.getMessage()));
             return null;
         }
     }
