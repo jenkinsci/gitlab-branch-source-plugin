@@ -27,6 +27,9 @@ public class GitLabWebHookListener implements WebHookListener {
     // GitLab API caching timeout used for branches endpoint
     private static final long GITLAB_CACHING_TIMEOUT = 30;
 
+    private static final String TRIGGER_DELAY_FALLBACK_MESSAGE =
+        "Falling back to default trigger delay equal GitLab caching timeout";
+
     private String origin;
 
     public GitLabWebHookListener(String origin) {
@@ -69,6 +72,7 @@ public class GitLabWebHookListener implements WebHookListener {
         final GitLabServer projectServer = findProjectServer(projectUrl);
 
         if (projectServer == null) {
+            LOGGER.log(Level.WARNING, TRIGGER_DELAY_FALLBACK_MESSAGE);
             return GITLAB_CACHING_TIMEOUT;
         }
 
@@ -77,10 +81,14 @@ public class GitLabWebHookListener implements WebHookListener {
             return configuredDelay;
         }
 
-        final Version gitLabVersion = retrieveGitLabVersion(projectServer);
-        final Boolean isCachingGitLabVersion = isCachingGitLabVersion(gitLabVersion);
+        final VersionNumber gitLabVersion = retrieveGitLabVersion(projectServer);
 
-        if (isCachingGitLabVersion == null || isCachingGitLabVersion) {
+        if (gitLabVersion == null) {
+            LOGGER.log(Level.WARNING, TRIGGER_DELAY_FALLBACK_MESSAGE);
+            return GITLAB_CACHING_TIMEOUT;
+        }
+
+        if (isCachingGitLabVersion(gitLabVersion)) {
             return GITLAB_CACHING_TIMEOUT;
         } else {
             return 0;
@@ -98,33 +106,34 @@ public class GitLabWebHookListener implements WebHookListener {
         return null;
     }
 
-    private Version retrieveGitLabVersion(final GitLabServer server) {
+    private VersionNumber retrieveGitLabVersion(final GitLabServer server) {
+        String versionString = null;
         try {
-            return apiBuilder(server.getName()).getVersion();
-        } catch (GitLabApiException e) {
-            LOGGER.log(
-                Level.WARNING,
-                String.format("API error while retrieving GitLab version: %s", e.getMessage()));
-            return null;
+            /* Using API is not allowed here and fails with:
+             *   hudson.security.AccessDeniedException3:
+             *   anonymous is missing the Job/Build permission
+             * So API versions should be retrieved and cached earlier from
+             * somewhere else (where?) and cached versions should be used here.
+             */
+            versionString = apiBuilder(server.getName()).getVersion().getVersion();
         } catch (Exception e) {
             LOGGER.log(
                 Level.WARNING,
-                String.format("Error while retrieving GitLab version: %s", e.getMessage()));
+                String.format("Error retrieving GitLab version: %s", e.getMessage()));
+            return null;
+        }
+        try {
+            return new VersionNumber(versionString);
+        } catch (Exception e) {
+            LOGGER.log(
+                Level.WARNING,
+                String.format("Error parsing GitLab version: %s", e.getMessage()));
             return null;
         }
     }
 
-    private Boolean isCachingGitLabVersion(final Version gitLabVersion) {
-        if (gitLabVersion == null) {
-            return null;
-        }
-        try {
-            return new VersionNumber(gitLabVersion.getVersion())
-                .isNewerThanOrEqualTo(new VersionNumber(MIN_CACHING_GITLAB_VERSION));
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING,
-                       String.format("Error comparing GitLab versions: %s", e.getMessage()));
-            return null;
-        }
+    private boolean isCachingGitLabVersion(final VersionNumber gitLabVersion) {
+        return gitLabVersion
+            .isNewerThanOrEqualTo(new VersionNumber(MIN_CACHING_GITLAB_VERSION));
     }
 }
