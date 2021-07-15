@@ -41,6 +41,7 @@ import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.CommitStatus;
+import org.gitlab4j.api.models.MergeRequest;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
@@ -204,6 +205,31 @@ public class GitLabPipelineStatusNotifier {
     }
 
     /**
+     * Retrieves the source project ID for a merge request
+     */
+    private static Integer getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
+        LOGGER.log(Level.INFO, "Getting source project ID from MR");
+        String[] jobFullNameParts = job.getFullName().split("-");
+        Integer mrId = Integer.parseInt(jobFullNameParts[jobFullNameParts.length - 1]);
+        MergeRequest mr;
+        try {
+          mr = gitLabApi.getMergeRequestApi().getMergeRequest(
+              projectPath,
+              mrId
+          );
+        } catch (GitLabApiException e) {
+            if(!e.getMessage().contains(("Cannot transition status"))) {
+                LOGGER.log(Level.WARNING, String.format("Exception caught: %s",e.getMessage()));
+            }
+            return null;
+        }
+        Integer sourceProjectId = mr.getSourceProjectId();
+        LOGGER.log(Level.INFO, "Got source project ID from MR: {0}", String.valueOf(sourceProjectId));
+
+        return sourceProjectId;
+    }
+
+    /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
      */
     private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
@@ -288,11 +314,23 @@ public class GitLabPipelineStatusNotifier {
         try {
             GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
             LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
-            gitLabApi.getCommitsApi().addCommitStatus(
-                source.getProjectPath(),
-                hash,
-                state,
-                status);
+
+            if (revision instanceof MergeRequestSCMRevision) {
+                Integer projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
+                status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
+                gitLabApi.getCommitsApi().addCommitStatus(
+                    projectId,
+                    hash,
+                    state,
+                    status);
+            } else {
+                gitLabApi.getCommitsApi().addCommitStatus(
+                    source.getProjectPath(),
+                    hash,
+                    state,
+                    status);
+            }
+
             listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
         } catch (GitLabApiException e) {
             if(!e.getMessage().contains(("Cannot transition status"))) {
@@ -371,6 +409,7 @@ public class GitLabPipelineStatusNotifier {
                     status.setTargetUrl(url);
                     status.setDescription(job.getFullName() + ": Build queued...");
                     status.setStatus("PENDING");
+
                     Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                     try {
                         GitLabApi gitLabApi = GitLabHelper.apiBuilder(source.getServerName());
@@ -386,11 +425,23 @@ public class GitLabPipelineStatusNotifier {
                             // it is our nonce, so remove it
                             resolving.remove(job);
                         }
-                        gitLabApi.getCommitsApi().addCommitStatus(
-                            source.getProjectPath(),
-                            hash,
-                            state,
-                            status);
+
+                        if (revision instanceof MergeRequestSCMRevision) {
+                            Integer projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
+                            status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
+                            gitLabApi.getCommitsApi().addCommitStatus(
+                                projectId,
+                                hash,
+                                state,
+                                status);
+                        } else {
+                            gitLabApi.getCommitsApi().addCommitStatus(
+                                source.getProjectPath(),
+                                hash,
+                                state,
+                                status);
+                        }
+
                         LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
                     } catch (GitLabApiException e) {
                         if(!e.getMessage().contains("Cannot transition status")) {
