@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import jenkins.scm.api.SCMHeadEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.NoteEvent;
+import org.gitlab4j.api.webhook.NoteEvent.NoteableType;
 import org.gitlab4j.api.webhook.PushEvent;
 import org.gitlab4j.api.webhook.TagPushEvent;
 import org.gitlab4j.api.webhook.WebHookListener;
@@ -22,8 +23,12 @@ public class GitLabWebHookListener implements WebHookListener {
     @Override
     public void onNoteEvent(NoteEvent noteEvent) {
         LOGGER.log(Level.FINE, noteEvent.toString());
-        GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(noteEvent);
-        AbstractGitLabJobTrigger.fireNow(trigger);
+
+        // Add additional checks to process different noteable types
+        if (noteEvent.getObjectAttributes().getNoteableType() == NoteableType.MERGE_REQUEST) {
+            GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(noteEvent);
+            AbstractGitLabJobTrigger.fireNow(trigger);
+        }
     }
 
     @Override

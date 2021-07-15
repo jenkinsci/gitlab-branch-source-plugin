@@ -65,7 +65,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                                         .matches()) {
                                         ParameterizedJobMixIn.scheduleBuild2(job, 0,
                                             new CauseAction(
-                                                new GitLabMergeRequestCommentCause(commentUrl)));
+                                                new GitLabMergeRequestCommentCause(commentUrl, getPayload())));
                                         LOGGER.log(Level.INFO,
                                             "Triggered build for {0} due to MR comment on {1}",
                                             new Object[]{
