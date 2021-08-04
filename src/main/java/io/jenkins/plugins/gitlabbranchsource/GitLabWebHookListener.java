@@ -28,7 +28,7 @@ public class GitLabWebHookListener implements WebHookListener {
     @Override
     public void onNoteEvent(NoteEvent noteEvent) {
         LOGGER.log(Level.FINE, noteEvent.toString());
-      
+
         // Add additional checks to process different noteable types
         if (noteEvent.getObjectAttributes().getNoteableType() == NoteableType.MERGE_REQUEST) {
             GitLabMergeRequestCommentTrigger trigger = new GitLabMergeRequestCommentTrigger(noteEvent);
