@@ -193,7 +193,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     protected Project getGitlabProject() {
         if (gitlabProject == null) {
-            getGitlabProject(apiBuilder(serverName));
+            getGitlabProject(apiBuilder(this.getOwner(), serverName));
         }
         return gitlabProject;
     }
@@ -216,7 +216,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public HashMap<String, AccessLevel> getMembers() {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
@@ -251,7 +251,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         try {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
             if (head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
@@ -304,7 +304,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         SCMHeadEvent<?> event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
             sshRemote = gitlabProject.getSshUrlToRepo();
@@ -675,7 +675,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (builder == null) {
                 throw new AssertionError();
             }
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
             final SCMFileSystem fs = builder.build(head, revision, gitLabApi, projectPath);
             return new SCMProbe() {
@@ -807,7 +807,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
-        public long getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
+        public long getProjectId(@AncestorInPath SCMSourceOwner context, @QueryParameter String projectPath, @QueryParameter String serverName) {
             List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
             if (gitLabServers.size() == 0) {
                 return -1;
@@ -815,9 +815,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try {
                 GitLabApi gitLabApi;
                 if (StringUtils.isBlank(serverName)) {
-                    gitLabApi = apiBuilder(gitLabServers.get(0).getName());
+                    gitLabApi = apiBuilder(context, gitLabServers.get(0).getName());
                 } else {
-                    gitLabApi = apiBuilder(serverName);
+                    gitLabApi = apiBuilder(context, serverName);
                 }
                 if (StringUtils.isNotBlank(projectPath)) {
                     return gitLabApi.getProjectApi().getProject(projectPath).getId();
@@ -838,9 +838,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try {
                 GitLabApi gitLabApi;
                 if (serverName.equals("")) {
-                    gitLabApi = apiBuilder(gitLabServers.get(0).getName());
+                    gitLabApi = apiBuilder(context, gitLabServers.get(0).getName());
                 } else {
-                    gitLabApi = apiBuilder(serverName);
+                    gitLabApi = apiBuilder(context, serverName);
                 }
 
                 if (projectOwner.equals("")) {

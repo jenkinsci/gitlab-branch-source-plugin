@@ -11,7 +11,9 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -230,16 +232,24 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      *
      * @return {@link PersonalAccessToken}
      */
-    public PersonalAccessToken getCredentials() {
+    public PersonalAccessToken getCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(CredentialsProvider.USE_OWN);
+        AccessControlled item;
+        if (context == null) {
+            jenkins.checkPermission(CredentialsProvider.USE_OWN);
+            item = jenkins;
+        } else {
+            context.checkPermission(CredentialsProvider.USE_OWN);
+            item = context;
+        }
         return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
             lookupCredentials(
                 PersonalAccessToken.class,
-                jenkins,
+                (Item) item,
                 ACL.SYSTEM,
                 fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
             ), withId(credentialsId));
+
     }
 
     /**

@@ -189,9 +189,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
     }
 
-    private GitLabOwner getGitlabOwner() {
+    private GitLabOwner getGitlabOwner(SCMNavigatorOwner owner) {
         if (gitlabOwner == null) {
-            getGitlabOwner(apiBuilder(serverName));
+            getGitlabOwner(apiBuilder(owner, serverName));
         }
         return gitlabOwner;
     }
@@ -229,7 +229,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext()
             .withTraits(traits);
         try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+            GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName);
             getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
@@ -260,7 +260,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
-                String projectName = getProjectName(request.withProjectNamingStrategy(), p);
+                String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
                 getNavigatorProjects().add(projectPathWithNamespace);
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger()
@@ -319,7 +319,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     @NonNull
-    private String getProjectName(int projectNamingStrategy, Project project) throws URISyntaxException {
+    private String getProjectName(GitLabApi gitLabApi, int projectNamingStrategy, Project project) throws URISyntaxException {
         String fullPath = project.getPathWithNamespace();
         String projectName;
         switch (projectNamingStrategy) {
@@ -331,7 +331,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             case 2:
                 // Project name
                 projectName = project.getNameWithNamespace()
-                    .replace(String.format("%s / ", getGitlabOwner().getFullName()), "");
+                    .replace(String.format("%s / ", getGitlabOwner(gitLabApi).getFullName()), "");
                 break;
             case 3:
                 // Contextual project path
@@ -365,7 +365,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 if (!server.isManageWebHooks()) {
                     break;
                 }
-                credentials = server.getCredentials();
+                credentials = server.getCredentials(owner);
                 if (credentials == null) {
                     LOGGER.log(Level.WARNING, "No System credentials added, cannot create web hook");
                 }
@@ -387,7 +387,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner,
         SCMNavigatorEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
-        getGitlabOwner();
+        getGitlabOwner(owner);
         String fullName = gitlabOwner.getFullName();
         String webUrl = gitlabOwner.getWebUrl();
         String avatarUrl = gitlabOwner.getAvatarUrl();
@@ -443,14 +443,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @Inject
         private GitLabSCMSource.DescriptorImpl delegate;
 
-        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner,
+        public static FormValidation doCheckProjectOwner(@AncestorInPath SCMSourceOwner context,
+            @QueryParameter String projectOwner,
             @QueryParameter String serverName) {
             if (projectOwner.equals("")) {
                 return FormValidation.ok();
             }
             GitLabApi gitLabApi = null;
             try {
-                gitLabApi = apiBuilder(serverName);
+                gitLabApi = apiBuilder(context, serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (IllegalStateException e) {

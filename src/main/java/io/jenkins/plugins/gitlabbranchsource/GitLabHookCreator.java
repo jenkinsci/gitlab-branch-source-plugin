@@ -37,7 +37,7 @@ public class GitLabHookCreator {
                 if (!server.isManageSystemHooks()) {
                     return;
                 }
-                credentials = server.getCredentials();
+                credentials = server.getCredentials(owner);
                 if (credentials == null) {
                     LOGGER.log(Level.WARNING, "No System credentials added, cannot create system hook");
                 }
@@ -71,7 +71,7 @@ public class GitLabHookCreator {
                 if (!server.isManageWebHooks()) {
                     break;
                 }
-                credentials = server.getCredentials();
+                credentials = server.getCredentials(source.getOwner());
                 if (credentials == null) {
                     LOGGER.log(Level.WARNING, "No System credentials added, cannot create web hook");
                 }
@@ -108,7 +108,7 @@ public class GitLabHookCreator {
                 if (!server.isManageSystemHooks()) {
                     return;
                 }
-                credentials = server.getCredentials();
+                credentials = server.getCredentials(source.getOwner());
                 if (credentials == null) {
                     LOGGER.log(Level.WARNING, "No System credentials added, cannot create system hook");
                 }
