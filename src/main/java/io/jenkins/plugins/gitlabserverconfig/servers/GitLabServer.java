@@ -12,6 +12,7 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
@@ -234,22 +235,32 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     public PersonalAccessToken getCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
-        AccessControlled item;
         if (context == null) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
-            item = jenkins;
+            return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                                                                                                    PersonalAccessToken.class,
+                                                                                                    jenkins,
+                                                                                                    ACL.SYSTEM,
+                                                                                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                                                                                                ), withId(credentialsId));
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
-            item = context;
+            if (context instanceof ItemGroup) {
+                return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                    PersonalAccessToken.class,
+                    (ItemGroup) context,
+                    ACL.SYSTEM,
+                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                ), withId(credentialsId));
+            } else {
+                return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                    PersonalAccessToken.class,
+                    (Item) context,
+                    ACL.SYSTEM,
+                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                ), withId(credentialsId));
+            }
         }
-        return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-            lookupCredentials(
-                PersonalAccessToken.class,
-                (Item) item,
-                ACL.SYSTEM,
-                fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-            ), withId(credentialsId));
-
     }
 
     /**
