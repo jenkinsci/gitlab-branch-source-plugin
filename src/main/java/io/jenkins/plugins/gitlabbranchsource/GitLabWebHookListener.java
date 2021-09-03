@@ -40,7 +40,7 @@ public class GitLabWebHookListener implements WebHookListener {
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
         LOGGER.log(Level.FINE, mrEvent.toString());
         final long triggerDelay = findTriggerDelay(mrEvent.getProject().getWebUrl());
-        GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
+        GitLabMergeRequestTrigger trigger = new GitLabMergeRequestTrigger(mrEvent, origin);
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
     }
 

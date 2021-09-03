@@ -49,6 +49,16 @@ public class GitLabSCMSourceContext
 
     private String buildStatusNameCustomPart = "";
 
+    private boolean alwaysBuildMROpen = true;
+
+    private boolean alwaysBuildMRReOpen = true;
+
+    private boolean alwaysIgnoreMRApprove = false;
+
+    private boolean alwaysIgnoreMRUnApprove = false;
+
+    private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
         @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -119,6 +129,26 @@ public class GitLabSCMSourceContext
     }
 
     public final boolean getOnlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
+
+    public boolean alwaysBuildMROpen() {
+        return alwaysBuildMROpen;
+    }
+
+    public boolean alwaysBuildMRReOpen() {
+        return alwaysBuildMRReOpen;
+    }
+
+    public boolean alwaysIgnoreMRApprove() {
+        return alwaysIgnoreMRApprove;
+    }
+
+    public boolean alwaysIgnoreMRUnApprove() {
+        return alwaysIgnoreMRUnApprove;
+    }
+
+    public boolean alwaysIgnoreNonCodeRelatedUpdates() {
+        return alwaysIgnoreNonCodeRelatedUpdates;
+    }
 
     public final String getCommentBody() {
         return commentBody;
@@ -234,5 +264,30 @@ public class GitLabSCMSourceContext
     public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
         @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
+    }
+
+    public final GitLabSCMSourceContext withAlwaysBuildMROpen(boolean enabled) {
+        this.alwaysBuildMROpen = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysBuildMRReOpen(boolean enabled) {
+        this.alwaysBuildMRReOpen = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApprove(boolean enabled) {
+        this.alwaysIgnoreMRApprove = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApprove(boolean enabled) {
+        this.alwaysIgnoreMRUnApprove = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreNonCodeRelatedUpdates(boolean enabled) {
+        this.alwaysIgnoreNonCodeRelatedUpdates = enabled;
+        return this;
     }
 }
