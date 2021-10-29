@@ -207,10 +207,21 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Retrieves the source project ID for a merge request
      */
-    private static Integer getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
+    static Object getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
         LOGGER.log(Level.INFO, "Getting source project ID from MR");
         String[] jobFullNameParts = job.getFullName().split("-");
-        Integer mrId = Integer.parseInt(jobFullNameParts[jobFullNameParts.length - 1]);
+        Integer mrId = null;
+        for (int i = jobFullNameParts.length - 1; i >= 0; i--) {
+            try {
+                mrId = Integer.parseInt(jobFullNameParts[i]);
+                break;
+            } catch (NumberFormatException e) {
+            }
+        }
+        if (mrId == null) {
+            LOGGER.log(Level.WARNING, String.format("Could not parse the merge request id from %s", job.getFullName()));
+            return projectPath;
+        }
         MergeRequest mr;
         try {
           mr = gitLabApi.getMergeRequestApi().getMergeRequest(
@@ -221,7 +232,7 @@ public class GitLabPipelineStatusNotifier {
             if(!e.getMessage().contains(("Cannot transition status"))) {
                 LOGGER.log(Level.WARNING, String.format("Exception caught: %s",e.getMessage()));
             }
-            return null;
+            return projectPath;
         }
         Integer sourceProjectId = mr.getSourceProjectId();
         LOGGER.log(Level.INFO, "Got source project ID from MR: {0}", String.valueOf(sourceProjectId));
@@ -316,10 +327,10 @@ public class GitLabPipelineStatusNotifier {
             LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
 
             if (revision instanceof MergeRequestSCMRevision) {
-                Integer projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
+                Object projectPathOrId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
                 status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                 gitLabApi.getCommitsApi().addCommitStatus(
-                    projectId,
+                    projectPathOrId,
                     hash,
                     state,
                     status);
@@ -427,10 +438,10 @@ public class GitLabPipelineStatusNotifier {
                         }
 
                         if (revision instanceof MergeRequestSCMRevision) {
-                            Integer projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
+                            Object projectPathOrId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
                             status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                             gitLabApi.getCommitsApi().addCommitStatus(
-                                projectId,
+                                projectPathOrId,
                                 hash,
                                 state,
                                 status);
