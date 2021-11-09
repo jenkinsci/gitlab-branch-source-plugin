@@ -224,9 +224,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer)
         throws IOException, InterruptedException {
-        try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
-            .withTraits(traits)
-            .newRequest(this, observer)) {
+        GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext()
+            .withTraits(traits);
+        try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
             GitLabApi gitLabApi = apiBuilder(serverName);
             getGitlabOwner(gitLabApi);
             List<Project> projects;
@@ -263,6 +263,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger()
                         .format("%nIgnoring project with empty repository %s%n",
+                            HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
+                    continue;
+                }
+                if (p.getArchived() && context.isExcludeArchivedRepositories()) {
+                    observer.getListener().getLogger()
+                        .format("%nIgnoring archived project %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
