@@ -106,13 +106,15 @@ public class GitLabPipelineStatusNotifier {
                 + revision.getClass().getName() + ", append" + type + " to status name");
         }
 
-        String customPrefix = sourceContext.getBuildStatusNameCustomPart();
-        if (!customPrefix.isEmpty())
-        {
-            customPrefix = customPrefix + GITLAB_PIPELINE_STATUS_DELIMITER;
+        String customPrefix = sourceContext.getBuildStatusNameCustomPart().trim();
+        final String statusName;
+        if (customPrefix.isEmpty()) {
+            statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + type;
+        } else if (sourceContext.getBuildStatusNameOverwrite()) {
+            statusName = customPrefix;
+        } else {
+            statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + customPrefix + GITLAB_PIPELINE_STATUS_DELIMITER + type;
         }
-
-        final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + customPrefix + type;
         LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
         return statusName;
     }
