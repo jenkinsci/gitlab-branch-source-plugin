@@ -18,8 +18,8 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
     private int strategyId = 1;
 
     @DataBoundConstructor
-    public ProjectNamingStrategyTrait() {
-        // empty
+    public ProjectNamingStrategyTrait(int strategyId) {
+        this.strategyId = strategyId;
     }
 
     public int getStrategyId() {
@@ -38,7 +38,7 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
     protected void decorateContext(SCMNavigatorContext<?, ?> context) {
         if (context instanceof GitLabSCMNavigatorContext) {
             GitLabSCMNavigatorContext ctx = (GitLabSCMNavigatorContext) context;
-            ctx.withProjectNamingStrategy(strategyId);
+            ctx.withProjectNamingStrategy(getStrategyId());
         }
     }
 

@@ -17,7 +17,7 @@ you require the following plugins:
      * `io.jenkins.plugins.gitlabserverconfig` - Manages server configuration and web hooks management. Ideally should reside inside another plugin with name `GitLab Plugin`. In future, this package will be moved into a new plugin.
      
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
-     Merge Requests) and Folder organisation.
+     Merge Requests) and Folder organization.
 
 ## Getting Started
 
@@ -365,7 +365,7 @@ See handling secrets [section](https://github.com/jenkinsci/configuration-as-cod
 GitLab Branch Source Plugin allows you to create 2 type of jobs:
 
 * `Multibranch Pipeline Jobs` - For single project.
-* `Folder Organisation` - For multiple projects inside a owner (user/group/subgroup).
+* `Folder Organization` - For multiple projects inside a owner (user/group/subgroup).
 
 ### Multibranch Pipeline Jobs
 
@@ -748,7 +748,7 @@ GITLAB_CHANGES_UPDATED_AT_CURR
 
 To create a Job DSL seed job see this [tutorial](https://github.com/jenkinsci/job-dsl-plugin/wiki/Tutorial---Using-the-Jenkins-Job-DSL).
 
-Here is a sample seed job script for folder organisation job:
+Here is a sample seed job script for folder organization job:
 
 ```groovy
 organizationFolder('GitLab Organization Folder') {

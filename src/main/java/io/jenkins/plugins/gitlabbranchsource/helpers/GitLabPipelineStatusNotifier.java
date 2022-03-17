@@ -256,26 +256,23 @@ public class GitLabPipelineStatusNotifier {
         status.setTargetUrl(url);
 
         if (Result.SUCCESS.equals(result)) {
-            status.setDescription(build.getParent().getFullName() + ": This commit looks good");
+            status.setDescription(build.toString() + ": This commit looks good.");
             status.setStatus("SUCCESS");
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
-            status.setDescription(
-                build.getParent().getFullName() + ": This commit has test failures");
+            status.setDescription(build.toString() + ": This commit is unstable with partial failure.");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (Result.FAILURE.equals(result)) {
-            status.setDescription(
-                build.getParent().getFullName() + ": There was a failure building this commit");
+            status.setDescription(build.toString() + ": There was a failure building this commit.");
             status.setStatus("FAILED");
             state = Constants.CommitBuildState.FAILED;
         } else if (result != null) { // ABORTED, NOT_BUILT.
-            status.setDescription(build.getParent().getFullName()
-                + ": Something is wrong with the build of this commit");
+            status.setDescription(build.toString() + ": Something is wrong with the build of this commit.");
             status.setStatus("CANCELED");
             state = Constants.CommitBuildState.CANCELED;
         } else {
-            status.setDescription(build.getParent().getFullName() + ": Build started...");
+            status.setDescription(build.toString() + ": Build started...");
             status.setStatus("RUNNING");
             state = Constants.CommitBuildState.RUNNING;
         }
