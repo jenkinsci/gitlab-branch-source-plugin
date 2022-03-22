@@ -16,6 +16,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import org.eclipse.jgit.annotations.NonNull;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.Constants.TokenType;
 
 public class GitLabHelper {
 
@@ -36,7 +37,7 @@ public class GitLabHelper {
                 gitLabApi = new GitLabApi(server.getServerUrl(),((PersonalAccessToken) credentials).getToken().getPlainText());
 
             } else if (credentials instanceof UsernamePasswordCredentials) {
-                gitLabApi = new GitLabApi(server.getServerUrl(),((UsernamePasswordCredentials) credentials).getPassword().getPlainText());
+                gitLabApi = new GitLabApi(server.getServerUrl(), TokenType.OAUTH2_ACCESS, ((UsernamePasswordCredentials) credentials).getPassword().getPlainText());
             }
             gitLabApi.setRequestTimeout(10000, 15000);
             return gitLabApi;
