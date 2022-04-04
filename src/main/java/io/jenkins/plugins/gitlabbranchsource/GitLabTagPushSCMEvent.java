@@ -3,6 +3,8 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMNavigator;
@@ -14,6 +16,8 @@ import org.gitlab4j.api.webhook.TagPushEvent;
 import static jenkins.scm.api.SCMEvent.Type.CREATED;
 
 public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEvent> {
+    
+    static final Logger LOGGER = Logger.getLogger(GitLabPushSCMEvent.class.getName())
 
     public GitLabTagPushSCMEvent(TagPushEvent tagPushEvent, String origin) {
         super(typeOf(tagPushEvent), tagPushEvent, origin);
@@ -55,7 +59,14 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
 
     @Override
     public boolean isMatch(@NonNull GitLabSCMSource source) {
-        return getPayload().getProject().getId().equals(source.getProjectId());
+        try {
+            return getPayload().getProject().getId().equals(source.getProjectId());
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.WARNING, "Can't get an id from your project webhook object, using project path");
+            LOGGER.log(Level.WARNING, "--> project path {0} ", getPayload().getProject().getPathWithNamespace());
+            LOGGER.log(Level.WARNING, "--> source path {0} ", source.getProjectPath());
+            return getPayload().getProject().getPathWithNamespace().equals(source.getProjectPath());
+        }
     }
 
     @NonNull
