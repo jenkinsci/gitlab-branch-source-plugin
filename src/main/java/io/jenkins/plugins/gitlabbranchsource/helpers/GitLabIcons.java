@@ -48,7 +48,7 @@ public final class GitLabIcons {
     }
 
     public static String iconFilePathPattern(String name) {
-        return ICON_PATH + ":size/" + name + ".png";
+        return ICON_PATH + name + ".svg";
     }
 
     private static String classSpec(String name, Size size) {
@@ -58,7 +58,7 @@ public final class GitLabIcons {
     private static void addIcon(String name) {
         for (Size size : Size.values()) {
             icons.addIcon(
-                new Icon(classSpec(name, size), ICON_PATH + size.dimensions + "/" + name + ".png",
+                new Icon(classSpec(name, size), ICON_PATH + "/" + name + ".svg",
                     size.style));
         }
     }
