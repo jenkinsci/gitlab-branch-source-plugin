@@ -354,7 +354,7 @@ unclassified:
         manageSystemHooks: true # access token should have admin access to set system hooks
         name: "gitlab-3214"
         serverUrl: "https://gitlab.com"
-        hookRootUrl: ""
+        hooksRootUrl: ""
         secretToken: ""
 ```
 
