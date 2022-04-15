@@ -63,7 +63,7 @@ Here are a few ways to setup your own Jenkins server:
 
 2. Using a Jenkins Web application Archive (WAR):
 
-    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
+    i. Download [latest stable Jenkins WAR file](https://get.jenkins.io/war-stable/latest/jenkins.war).
 
     ii. Open up a terminal/command prompt window to the download directory.
 
