@@ -11,6 +11,7 @@ import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defau
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLabelString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultListSize;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLongString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
@@ -24,7 +25,7 @@ public class GitLabMergeRequestCauseData {
         this.variables.put("GITLAB_USER_NAME", defaultString(mergeRequestEvent.getUser().getName()));
         this.variables.put("GITLAB_USER_USERNAME", defaultString(mergeRequestEvent.getUser().getUsername()));
         this.variables.put("GITLAB_USER_AVATAR_URL", defaultString(mergeRequestEvent.getUser().getAvatarUrl()));
-        this.variables.put("GITLAB_PROJECT_ID", defaultIntString(mergeRequestEvent.getProject().getId()));
+        this.variables.put("GITLAB_PROJECT_ID", defaultLongString(mergeRequestEvent.getProject().getId()));
         this.variables.put("GITLAB_PROJECT_NAME", defaultString(mergeRequestEvent.getProject().getName()));
         this.variables.put("GITLAB_PROJECT_DESCRIPTION", defaultString(mergeRequestEvent.getProject().getDescription()));
         this.variables.put("GITLAB_PROJECT_WEB_URL", defaultString(mergeRequestEvent.getProject().getWebUrl()));
@@ -47,20 +48,20 @@ public class GitLabMergeRequestCauseData {
         this.variables.put("GITLAB_REPO_GIT_SSH_URL", defaultString(mergeRequestEvent.getRepository().getGit_ssh_url()));
         this.variables.put("GITLAB_REPO_GIT_HTTP_URL", defaultString(mergeRequestEvent.getRepository().getGit_http_url()));
         this.variables.put("GITLAB_REPO_VISIBILITY_LEVEL", defaultVisibilityString(mergeRequestEvent.getRepository().getVisibility_level()));
-        this.variables.put("GITLAB_OA_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getId()));
+        this.variables.put("GITLAB_OA_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getId()));
         this.variables.put("GITLAB_OA_TARGET_BRANCH", defaultString(mergeRequestEvent.getObjectAttributes().getTargetBranch()));
         this.variables.put("GITLAB_OA_SOURCE_BRANCH", defaultString(mergeRequestEvent.getObjectAttributes().getSourceBranch()));
-        this.variables.put("GITLAB_OA_SOURCE_PROJECT_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getSourceProjectId()));
-        this.variables.put("GITLAB_OA_AUTHOR_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getAuthorId()));
-        this.variables.put("GITLAB_OA_ASSIGNEE_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getAssigneeId()));
+        this.variables.put("GITLAB_OA_SOURCE_PROJECT_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getSourceProjectId()));
+        this.variables.put("GITLAB_OA_AUTHOR_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getAuthorId()));
+        this.variables.put("GITLAB_OA_ASSIGNEE_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getAssigneeId()));
         this.variables.put("GITLAB_OA_TITLE", defaultString(mergeRequestEvent.getObjectAttributes().getTitle()));
         this.variables.put("GITLAB_OA_CREATED_AT", defaultDateString(mergeRequestEvent.getObjectAttributes().getCreatedAt()));
         this.variables.put("GITLAB_OA_UPDATED_AT", defaultDateString(mergeRequestEvent.getObjectAttributes().getUpdatedAt()));
-        this.variables.put("GITLAB_OA_MILESTONE_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getMilestoneId()));
+        this.variables.put("GITLAB_OA_MILESTONE_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getMilestoneId()));
         this.variables.put("GITLAB_OA_STATE", defaultString(mergeRequestEvent.getObjectAttributes().getState()));
         this.variables.put("GITLAB_OA_MERGE_STATUS", defaultString(mergeRequestEvent.getObjectAttributes().getMergeStatus()));
-        this.variables.put("GITLAB_OA_TARGET_PROJECT_ID", defaultIntString(mergeRequestEvent.getObjectAttributes().getTargetProjectId()));
-        this.variables.put("GITLAB_OA_IID", defaultIntString(mergeRequestEvent.getObjectAttributes().getIid()));
+        this.variables.put("GITLAB_OA_TARGET_PROJECT_ID", defaultLongString(mergeRequestEvent.getObjectAttributes().getTargetProjectId()));
+        this.variables.put("GITLAB_OA_IID", defaultLongString(mergeRequestEvent.getObjectAttributes().getIid()));
         this.variables.put("GITLAB_OA_DESCRIPTION", defaultString(mergeRequestEvent.getObjectAttributes().getDescription()));
         this.variables.put("GITLAB_OA_SOURCE_NAME", defaultString(mergeRequestEvent.getObjectAttributes().getSource().getName()));
         this.variables.put("GITLAB_OA_SOURCE_DESCRIPTION", defaultString(mergeRequestEvent.getObjectAttributes().getSource().getDescription()));
@@ -107,20 +108,20 @@ public class GitLabMergeRequestCauseData {
         int totalLabels = defaultListSize(mergeRequestEvent.getLabels());
         this.variables.put("GITLAB_LABELS_COUNT", defaultIntString(totalLabels));
         for(int i = 0; i < totalLabels; i++) {
-            this.variables.put("GITLAB_LABEL_ID_" + i, defaultIntString(mergeRequestEvent.getLabels().get(i).getId()));
+            this.variables.put("GITLAB_LABEL_ID_" + i, defaultLongString(mergeRequestEvent.getLabels().get(i).getId()));
             this.variables.put("GITLAB_LABEL_TITLE_" + i, defaultString(mergeRequestEvent.getLabels().get(i).getTitle()));
             this.variables.put("GITLAB_LABEL_COLOR_" + i, defaultString(mergeRequestEvent.getLabels().get(i).getColor()));
-            this.variables.put("GITLAB_LABEL_PROJECT_ID_" + i, defaultIntString(mergeRequestEvent.getLabels().get(i).getProjectId()));
+            this.variables.put("GITLAB_LABEL_PROJECT_ID_" + i, defaultLongString(mergeRequestEvent.getLabels().get(i).getProjectId()));
             this.variables.put("GITLAB_LABEL_CREATED_AT_" + i, defaultDateString(mergeRequestEvent.getLabels().get(i).getCreatedAt()));
             this.variables.put("GITLAB_LABEL_UPDATED_AT_" + i, defaultDateString(mergeRequestEvent.getLabels().get(i).getUpdatedAt()));
             this.variables.put("GITLAB_LABEL_TEMPLATE_" + i, defaultBooleanString(mergeRequestEvent.getLabels().get(i).getTemplate()));
             this.variables.put("GITLAB_LABEL_DESCRIPTION_" + i, defaultString(mergeRequestEvent.getLabels().get(i).getDescription()));
             this.variables.put("GITLAB_LABEL_TYPE_" + i, defaultLabelString(mergeRequestEvent.getLabels().get(i).getType()));
-            this.variables.put("GITLAB_LABEL_GROUP_ID_" + i, defaultIntString(mergeRequestEvent.getLabels().get(i).getGroupId()));
+            this.variables.put("GITLAB_LABEL_GROUP_ID_" + i, defaultLongString(mergeRequestEvent.getLabels().get(i).getGroupId()));
         }
         if(mergeRequestEvent.getChanges().getUpdatedById() != null) {
-            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_PREV", defaultIntString(mergeRequestEvent.getChanges().getUpdatedById().getPrevious()));
-            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_CURR", defaultIntString(mergeRequestEvent.getChanges().getUpdatedById().getCurrent()));
+            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_PREV", defaultLongString(mergeRequestEvent.getChanges().getUpdatedById().getPrevious()));
+            this.variables.put("GITLAB_CHANGES_UPDATED_BY_ID_CURR", defaultLongString(mergeRequestEvent.getChanges().getUpdatedById().getCurrent()));
         }
         if(mergeRequestEvent.getChanges().getUpdatedAt() != null) {
             this.variables.put("GITLAB_CHANGES_UPDATED_AT_PREV", defaultDateString(mergeRequestEvent.getChanges().getUpdatedAt().getPrevious()));

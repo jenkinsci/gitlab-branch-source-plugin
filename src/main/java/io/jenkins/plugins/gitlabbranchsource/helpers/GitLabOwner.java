@@ -11,9 +11,9 @@ public abstract class GitLabOwner {
     private String name;
     private String webUrl;
     private String avatarUrl;
-    private Integer id;
+    private Long id;
 
-    public GitLabOwner(String name, String webUrl, String avatarUrl, Integer id) {
+    public GitLabOwner(String name, String webUrl, String avatarUrl, Long id) {
         this.name = name;
         this.webUrl = webUrl;
         this.avatarUrl = avatarUrl;
@@ -74,11 +74,11 @@ public abstract class GitLabOwner {
         this.avatarUrl = avatarUrl;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

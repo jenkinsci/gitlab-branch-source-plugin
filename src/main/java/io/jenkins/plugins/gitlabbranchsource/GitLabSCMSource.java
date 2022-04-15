@@ -114,18 +114,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private int projectId;
+    private long projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
      */
     @NonNull
-    private transient /* effectively final */ Map<Integer, ObjectMetadataAction> mergeRequestMetadataCache = new ConcurrentHashMap<>();
+    private transient /* effectively final */ Map<Long, ObjectMetadataAction> mergeRequestMetadataCache = new ConcurrentHashMap<>();
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
      */
     @NonNull
-    private transient /* effectively final */ Map<Integer, ContributorMetadataAction> mergeRequestContributorCache = new ConcurrentHashMap<>();
+    private transient /* effectively final */ Map<Long, ContributorMetadataAction> mergeRequestContributorCache = new ConcurrentHashMap<>();
 
     @DataBoundConstructor
     public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
@@ -227,12 +227,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return members;
     }
 
-    public int getProjectId() {
+    public long getProjectId() {
         return projectId;
     }
 
     @DataBoundSetter
-    public void setProjectId(int projectId) {
+    public void setProjectId(long projectId) {
         this.projectId = projectId;
     }
 
@@ -263,7 +263,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 MergeRequestSCMHead h = (MergeRequestSCMHead) head;
                 listener.getLogger().format("Querying the current revision of merge request #%s...%n", h.getId());
                 MergeRequest mr = gitLabApi.getMergeRequestApi().getMergeRequest(gitlabProject,
-                        Integer.parseInt(h.getId()));
+                        Long.parseLong(h.getId()));
                 String targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
                         .getCommit().getId();
                 if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
@@ -383,7 +383,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchMRs() && !request.isComplete()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
-                    HashMap<Integer, String> forkMrSources = new HashMap<>();
+                    HashMap<Long, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
                         mergeRequestContributorCache.put(mr.getIid(),
                             new ContributorMetadataAction(
@@ -594,7 +594,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 result.add(new PrimaryInstanceMetadataAction());
             }
         } else if (head instanceof MergeRequestSCMHead) {
-            int iid = Integer.parseInt(((MergeRequestSCMHead) head).getId());
+            long iid = Long.parseLong(((MergeRequestSCMHead) head).getId());
             String mergeUrl = mergeRequestUriTemplate(serverName).set("project", splitPath(projectPath)).set("iid", iid)
                     .expand();
             ObjectMetadataAction metadataAction = mergeRequestMetadataCache.get(iid);
@@ -807,7 +807,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
-        public int getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
+        public long getProjectId(@QueryParameter String projectPath, @QueryParameter String serverName) {
             List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
             if (gitLabServers.size() == 0) {
                 return -1;

@@ -130,7 +130,7 @@ public class GitLabPipelineStatusNotifierTest {
     @Test
     public void should_get_mr_project_id() throws Exception {
         String projectPath = "project_path";
-        Integer projectId = Integer.valueOf(100);
+        Long projectId = Long.valueOf(100);
 
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
@@ -142,10 +142,10 @@ public class GitLabPipelineStatusNotifierTest {
         MergeRequest mr = Mockito.mock(MergeRequest.class);
 
         Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
-        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Long.valueOf(123)))).thenReturn(mr);
         Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
 
-        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+        Long sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
 
         assertThat(sourceProjectId, is(projectId));
     }
@@ -153,7 +153,7 @@ public class GitLabPipelineStatusNotifierTest {
     @Test
     public void should_get_mr_project_id_projects_using_both_strategy_head() throws Exception {
         String projectPath = "project_path";
-        Integer projectId = Integer.valueOf(100);
+        Long projectId = Long.valueOf(100);
 
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
@@ -165,10 +165,10 @@ public class GitLabPipelineStatusNotifierTest {
         MergeRequest mr = Mockito.mock(MergeRequest.class);
 
         Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
-        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Long.valueOf(123)))).thenReturn(mr);
         Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
 
-        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+        Long sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
 
         assertThat(sourceProjectId, is(projectId));
     }
@@ -176,7 +176,7 @@ public class GitLabPipelineStatusNotifierTest {
     @Test
     public void should_get_mr_project_id_projects_using_both_strategy_merge() throws Exception {
         String projectPath = "project_path";
-        Integer projectId = Integer.valueOf(100);
+        Long projectId = Long.valueOf(100);
 
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
@@ -188,10 +188,10 @@ public class GitLabPipelineStatusNotifierTest {
         MergeRequest mr = Mockito.mock(MergeRequest.class);
 
         Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
-        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Long.valueOf(123)))).thenReturn(mr);
         Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
 
-        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+        Long sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
 
         assertThat(sourceProjectId, is(projectId));
     }
