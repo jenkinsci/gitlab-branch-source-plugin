@@ -31,6 +31,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -57,6 +60,8 @@ public class GitLabPipelineStatusNotifier {
     static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
 
     static final String GITLAB_PIPELINE_STATUS_DELIMITER = "/";
+    
+    static final Pattern MERGE_REQUEST_PROJECT_NAME_FORMAT = Pattern.compile("MR-(\\d+)(|-(merge|head))");
 
     private static String getRootUrl(Run<?, ?> build) {
         try {
@@ -207,10 +212,16 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Retrieves the source project ID for a merge request
      */
-    private static Integer getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
+    static Integer getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
         LOGGER.log(Level.INFO, "Getting source project ID from MR");
-        String[] jobFullNameParts = job.getFullName().split("-");
-        Integer mrId = Integer.parseInt(jobFullNameParts[jobFullNameParts.length - 1]);
+        Matcher m = MERGE_REQUEST_PROJECT_NAME_FORMAT.matcher(job.getName());
+        if (!m.matches()) {
+            LOGGER.log(Level.WARNING, String.format("Job name does not match expected format: [%s], [%s]", job.getName(), 
+                    MERGE_REQUEST_PROJECT_NAME_FORMAT.pattern()));
+            return null;
+        }
+        
+        Integer mrId = Integer.parseInt(m.group(1));
         MergeRequest mr;
         try {
           mr = gitLabApi.getMergeRequestApi().getMergeRequest(

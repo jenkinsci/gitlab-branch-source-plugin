@@ -1,5 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import hudson.model.FreeStyleProject;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
 import io.jenkins.plugins.gitlabbranchsource.BranchSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.BranchSCMRevision;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
@@ -8,10 +11,16 @@ import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMRevision;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.models.MergeRequest;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 public class GitLabPipelineStatusNotifierTest {
 
@@ -116,6 +125,75 @@ public class GitLabPipelineStatusNotifierTest {
         String refName = GitLabPipelineStatusNotifier.getRevisionRef(revision);
 
         assertThat(refName, is(tagName));
+    }
+
+    @Test
+    public void should_get_mr_project_id() throws Exception {
+        String projectPath = "project_path";
+        Integer projectId = Integer.valueOf(100);
+
+        ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
+        Mockito.when(parent.getFullName()).thenReturn("folder/project");
+
+        Job<?,?> job = new FreeStyleProject(parent, "MR-123");
+
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
+        MergeRequest mr = Mockito.mock(MergeRequest.class);
+
+        Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
+
+        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+
+        assertThat(sourceProjectId, is(projectId));
+    }
+
+    @Test
+    public void should_get_mr_project_id_projects_using_both_strategy_head() throws Exception {
+        String projectPath = "project_path";
+        Integer projectId = Integer.valueOf(100);
+
+        ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
+        Mockito.when(parent.getFullName()).thenReturn("folder/project");
+
+        Job<?,?> job = new FreeStyleProject(parent, "MR-123-head");
+
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
+        MergeRequest mr = Mockito.mock(MergeRequest.class);
+
+        Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
+
+        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+
+        assertThat(sourceProjectId, is(projectId));
+    }
+
+    @Test
+    public void should_get_mr_project_id_projects_using_both_strategy_merge() throws Exception {
+        String projectPath = "project_path";
+        Integer projectId = Integer.valueOf(100);
+
+        ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
+        Mockito.when(parent.getFullName()).thenReturn("folder/project");
+
+        Job<?,?> job = new FreeStyleProject(parent, "MR-123-merge");
+
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
+        MergeRequest mr = Mockito.mock(MergeRequest.class);
+
+        Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
+        Mockito.when(mrApi.getMergeRequest(any(), eq(Integer.valueOf(123)))).thenReturn(mr);
+        Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
+
+        Integer sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
+
+        assertThat(sourceProjectId, is(projectId));
     }
 
 }
