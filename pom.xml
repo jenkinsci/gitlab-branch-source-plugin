@@ -37,7 +37,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>gitlab-api</artifactId>
-      <version>1.0.7-rc70.e0375a_6346b_c</version> <!-- TODO https://github.com/jenkinsci/gitlab-api-plugin/pull/7 -->
+      <version>1.0.7-rc71.64a_4c6877d17</version> <!-- TODO https://github.com/jenkinsci/gitlab-api-plugin/pull/7 -->
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
