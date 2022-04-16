@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.Environment;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentContributor;
@@ -8,14 +9,13 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.gitlabbranchsource.GitLabMergeRequestCommentCause;
 import io.jenkins.plugins.gitlabbranchsource.GitLabWebHookCause;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 @Extension
 public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor {
 
     @Override
-    public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener) {
+    public void buildEnvironmentFor(@NonNull Run r, @NonNull EnvVars envs, @NonNull TaskListener listener) {
         GitLabWebHookCause gitLabWebHookCause = null;
         GitLabMergeRequestCommentCause gitLabMergeRequestCommentCause = null;
 

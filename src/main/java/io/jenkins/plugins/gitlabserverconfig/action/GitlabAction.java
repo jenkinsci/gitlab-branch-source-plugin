@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabserverconfig.action;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
@@ -7,7 +8,6 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
