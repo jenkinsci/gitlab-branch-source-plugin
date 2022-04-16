@@ -239,16 +239,6 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
-    <repository> <!-- TODO https://github.com/jenkinsci/gitlab-api-plugin/pull/7 -->
-      <id>jenkins-snapshots</id>
-      <url>https://repo.jenkins-ci.org/snapshots/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
