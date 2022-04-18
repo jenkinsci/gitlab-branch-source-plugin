@@ -25,6 +25,8 @@ import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -93,7 +95,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private String credentialsId;
 
     /**
-     * The behavioural traits to apply.
+     * The behavioral traits to apply.
      */
     private List<SCMTrait<? extends SCMTrait<?>>> traits;
 
@@ -159,10 +161,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Gets the behavioural traits that are applied to this navigator and any {@link
+     * Gets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers.
      *
-     * @return the behavioural traits.
+     * @return the behavioral traits.
      */
     @NonNull
     public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
@@ -170,12 +172,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * Sets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
      * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
      * #visitSource(String, SCMSourceObserver)}.
      *
-     * @param traits the new behavioural traits.
+     * @param traits the new behavioral traits.
      */
     @DataBoundSetter
     public void setTraits(@CheckForNull SCMTrait[] traits) {
@@ -202,12 +204,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * Sets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
      * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
      * #visitSource(String, SCMSourceObserver)}.
      *
-     * @param traits the new behavioural traits.
+     * @param traits the new behavioral traits.
      */
     @Override
     public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
@@ -310,24 +312,36 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
-        } catch (GitLabApiException e) {
+        } catch (GitLabApiException | URISyntaxException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             throw new IOException("Failed to visit SCM source", e);
         }
     }
 
     @NonNull
-    private String getProjectName(int projectNamingStrategy, Project project) {
+    private String getProjectName(int projectNamingStrategy, Project project) throws URISyntaxException {
+        String fullPath = project.getPathWithNamespace();
         String projectName;
         switch (projectNamingStrategy) {
             default:
-                // for legacy reasons default naming strategy is set to full path
+                // for legacy reasons default naming strategy is set to Full Project path
             case 1:
-                projectName = project.getPathWithNamespace();
+                projectName = fullPath;
                 break;
             case 2:
+                // Project name
                 projectName = project.getNameWithNamespace()
                     .replace(String.format("%s / ", getGitlabOwner().getFullName()), "");
+                break;
+            case 3:
+                // Contextual project path
+                URI ownerPathUri = new URI(projectOwner);
+                URI fullPathUri = new URI(fullPath);
+                projectName = ownerPathUri.relativize(fullPathUri).toString();
+                break;
+            case 4:
+                // Simple project path
+                projectName = fullPath.substring(fullPath.lastIndexOf('/') + 1);
                 break;
         }
         return projectName;

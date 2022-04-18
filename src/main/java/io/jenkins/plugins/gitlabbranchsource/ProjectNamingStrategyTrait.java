@@ -38,7 +38,7 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
     protected void decorateContext(SCMNavigatorContext<?, ?> context) {
         if (context instanceof GitLabSCMNavigatorContext) {
             GitLabSCMNavigatorContext ctx = (GitLabSCMNavigatorContext) context;
-            ctx.withProjectNamingStrategy(strategyId);
+            ctx.withProjectNamingStrategy(getStrategyId());
         }
     }
 
@@ -75,6 +75,8 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
             ListBoxModel result = new ListBoxModel();
             result.add(Messages.ProjectNamingStrategyTrait_fullProjectPath(), "1");
             result.add(Messages.ProjectNamingStrategyTrait_projectName(), "2");
+            result.add(Messages.ProjectNamingStrategyTrait_contextualProjectPath(), "3");
+            result.add(Messages.ProjectNamingStrategyTrait_simpleProjectPath(), "4");
             return result;
         }
     }
