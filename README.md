@@ -1,6 +1,5 @@
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/jenkinsci/gitlab-branch-source-plugin)
 [![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/)
-[![Travis](https://img.shields.io/travis/jenkinsci/gitlab-branch-source-plugin.svg?logo=travis&label=build&logoColor=white)](https://travis-ci.org/jenkinsci/gitlab-branch-source-plugin)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
 [![Gitter](https://badges.gitter.im/jenkinsci/gitlab-branch-source-plugin.svg)](https://gitter.im/jenkinsci/gitlab-branch-source-plugin)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/gitlab-branch-source.svg?color=blue)](https://plugins.jenkins.io/gitlab-branch-source)
@@ -63,7 +62,7 @@ Here are a few ways to setup your own Jenkins server:
 
 2. Using a Jenkins Web application Archive (WAR):
 
-    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
+    i. Download [latest stable Jenkins WAR file](https://get.jenkins.io/war-stable/latest/jenkins.war).
 
     ii. Open up a terminal/command prompt window to the download directory.
 
@@ -354,7 +353,7 @@ unclassified:
         manageSystemHooks: true # access token should have admin access to set system hooks
         name: "gitlab-3214"
         serverUrl: "https://gitlab.com"
-        hookRootUrl: ""
+        hooksRootUrl: ""
         secretToken: ""
 ```
 

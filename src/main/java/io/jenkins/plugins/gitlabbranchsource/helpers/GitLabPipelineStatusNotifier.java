@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
@@ -57,6 +59,8 @@ public class GitLabPipelineStatusNotifier {
     static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
 
     static final String GITLAB_PIPELINE_STATUS_DELIMITER = "/";
+
+    static final Pattern MERGE_REQUEST_JOB_NAME_FORMAT = Pattern.compile("MR-(\\d+)(|-(merge|head))");
 
     private static String getRootUrl(Run<?, ?> build) {
         try {
@@ -188,7 +192,7 @@ public class GitLabPipelineStatusNotifier {
                 MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
                 gitLabApi.getNotesApi().createMergeRequestNote(
                     source.getProjectPath(),
-                    Integer.valueOf(head.getId()),
+                    Long.valueOf(head.getId()),
                     symbol + buildName + note + suffix
                 );
             } else if (revision instanceof GitTagSCMRevision) {
@@ -207,10 +211,16 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Retrieves the source project ID for a merge request
      */
-    private static Integer getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
+    static Long getSourceProjectId(Job job, GitLabApi gitLabApi, String projectPath) {
         LOGGER.log(Level.INFO, "Getting source project ID from MR");
-        String[] jobFullNameParts = job.getFullName().split("-");
-        Integer mrId = Integer.parseInt(jobFullNameParts[jobFullNameParts.length - 1]);
+        Matcher m = MERGE_REQUEST_JOB_NAME_FORMAT.matcher(job.getName());
+        if (!m.matches()) {
+            LOGGER.log(Level.WARNING, String.format("Job name does not match expected format: [%s], [%s]", job.getName(),
+                    MERGE_REQUEST_JOB_NAME_FORMAT.pattern()));
+            return null;
+        }
+
+        Long mrId = Long.parseLong(m.group(1));
         MergeRequest mr;
         try {
           mr = gitLabApi.getMergeRequestApi().getMergeRequest(
@@ -223,7 +233,7 @@ public class GitLabPipelineStatusNotifier {
             }
             return null;
         }
-        Integer sourceProjectId = mr.getSourceProjectId();
+        Long sourceProjectId = mr.getSourceProjectId();
         LOGGER.log(Level.INFO, "Got source project ID from MR: {0}", String.valueOf(sourceProjectId));
 
         return sourceProjectId;
@@ -313,7 +323,7 @@ public class GitLabPipelineStatusNotifier {
             LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
 
             if (revision instanceof MergeRequestSCMRevision) {
-                Integer projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
+                Long projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
                 status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                 gitLabApi.getCommitsApi().addCommitStatus(
                     projectId,
@@ -424,7 +434,7 @@ public class GitLabPipelineStatusNotifier {
                         }
 
                         if (revision instanceof MergeRequestSCMRevision) {
-                            Integer projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
+                            Long projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
                             status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                             gitLabApi.getCommitsApi().addCommitStatus(
                                 projectId,

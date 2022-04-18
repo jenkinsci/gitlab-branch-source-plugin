@@ -29,4 +29,8 @@ public class GitLabCauseUtils {
     public static  String defaultIntString(Integer val) {
         return val == null ? "" : val.toString();
     }
+
+    public static  String defaultLongString(Long val) {
+        return val == null ? "" : val.toString();
+    }
 }
