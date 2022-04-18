@@ -3,31 +3,44 @@
   <dl>
     <dt>Full Project Path</dt>
     <dd>
-      This option will use the full project path for the group and project. Example:
-      my-group/my-project
-      my-group/other-project
-      my-group/my-subgroup/third-project
+      This option will use the full project path for the group and project. 
+      Examples:
+      <ul>
+      	<li><code><mark>my-group/</mark>my-project</code></li>
+	      <li><code><mark>my-group/</mark>other-project</code></li>
+	      <li><code><mark>my-group/my-subgroup/</mark>third-project</code></li>
+	  </ul>
     </dd>
     <dt>Project Name</dt>
     <dd>
-      This option will use project names from GitLab project name. Example:
-      My Project
-      Other project
-      My Subgroup / Third project
+      This option will use project <b>names</b> from GitLab project name. 
+      This is the "friendly" name of the project and could contain capitalization, spaces or other special characters. 
+      Examples:
+      <ul>
+      	<li>My Project</li>
+	      <li>Other project</li>
+	      <li>My Subgroup / Third project</li>
+	  </ul>
     </dd>
     <dt>Contextual Project Path</dt>
     <dd>
-      This option will use the project path with nested groups and project, but not the owner segment. Example:
-      my-project
-      other-project
-      my-subgroup/third-project
+      This option will use the project path with nested groups, but not the top-level <code>owner</code> segment specified on the Jenkins pipeline. 
+      Examples where <code>owner</code> on pipeline has been set to "my-group":
+      <ul>
+	      <li><code>my-project</code></li>
+	      <li><code>other-project</code></li>
+	      <li><code><mark>my-subgroup/</mark>third-project</code></li>
+	  </ul>
     </dd>
     <dt>Simple Project Path</dt>
     <dd>
-      This option will use the project path with no groups. Example:
-      my-project
-      other-project
-      third-project
+      This option will use the project path with <i>no</i> parent group information added. 
+      Examples:
+      <ul>
+	      <li><code>my-project</code></li>
+	      <li><code>other-project</code></li>
+	      <li><code>third-project</code></li>
+	  </ul>
     </dd>
   </dl>
 </div>

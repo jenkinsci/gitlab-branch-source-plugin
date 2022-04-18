@@ -19,9 +19,7 @@
     <jcasc.version>1.36</jcasc.version>
   </properties>
   <name>GitLab Branch Source Plugin</name>
-  <description>GitLab Provides branch source and folder organization functionality for GitLab
-    Repositories in Jenkins Source Plugin
-  </description>
+  <description>GitLab Provides branch source and folder organization functionality for GitLab Repositories in Jenkins Source Plugin</description>
   <licenses>
     <license>
       <name>MIT License</name>

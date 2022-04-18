@@ -18,8 +18,8 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
     private int strategyId = 1;
 
     @DataBoundConstructor
-    public ProjectNamingStrategyTrait(int strategyId) {
-        this.strategyId = strategyId;
+    public ProjectNamingStrategyTrait() {
+        // empty
     }
 
     public int getStrategyId() {
