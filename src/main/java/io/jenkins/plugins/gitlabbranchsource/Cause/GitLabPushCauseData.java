@@ -9,6 +9,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultDateString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultListSize;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLongString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
@@ -23,11 +24,11 @@ public class GitLabPushCauseData {
         this.variables.put("GITLAB_BEFORE", defaultString(pushEvent.getBefore()));
         this.variables.put("GITLAB_REF", defaultString(pushEvent.getRef()));
         this.variables.put("GITLAB_CHECKOUT_SHA", defaultString(pushEvent.getCheckoutSha()));
-        this.variables.put("GITLAB_USER_ID", defaultIntString(pushEvent.getUserId()));
+        this.variables.put("GITLAB_USER_ID", defaultLongString(pushEvent.getUserId()));
         this.variables.put("GITLAB_USER_NAME", defaultString(pushEvent.getUserName()));
         this.variables.put("GITLAB_USER_EMAIL", defaultString(pushEvent.getUserEmail()));
-        this.variables.put("GITLAB_PROJECT_ID", defaultIntString(pushEvent.getProjectId()));
-        this.variables.put("GITLAB_PROJECT_ID_2", defaultIntString(pushEvent.getProject().getId()));
+        this.variables.put("GITLAB_PROJECT_ID", defaultLongString(pushEvent.getProjectId()));
+        this.variables.put("GITLAB_PROJECT_ID_2", defaultLongString(pushEvent.getProject().getId()));
         this.variables.put("GITLAB_PROJECT_NAME", defaultString(pushEvent.getProject().getName()));
         this.variables.put("GITLAB_PROJECT_DESCRIPTION", defaultString(pushEvent.getProject().getDescription()));
         this.variables.put("GITLAB_PROJECT_WEB_URL", defaultString(pushEvent.getProject().getWebUrl()));
@@ -60,7 +61,7 @@ public class GitLabPushCauseData {
             this.variables.put("GITLAB_COMMIT_AUTHOR_AVATAR_URL_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getAvatarUrl()));
             this.variables.put("GITLAB_COMMIT_AUTHOR_CREATED_AT_" + index+1, defaultDateString(pushEvent.getCommits().get(index).getAuthor().getCreatedAt()));
             this.variables.put("GITLAB_COMMIT_AUTHOR_EMAIL_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getEmail()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_ID_" + index+1, defaultIntString(pushEvent.getCommits().get(index).getAuthor().getId()));
+            this.variables.put("GITLAB_COMMIT_AUTHOR_ID_" + index+1, defaultLongString(pushEvent.getCommits().get(index).getAuthor().getId()));
             this.variables.put("GITLAB_COMMIT_AUTHOR_NAME_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getName()));
             this.variables.put("GITLAB_COMMIT_AUTHOR_STATE_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getState()));
             this.variables.put("GITLAB_COMMIT_AUTHOR_USERNAME_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getUsername()));
