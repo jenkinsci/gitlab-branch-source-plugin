@@ -39,25 +39,47 @@ public class GitLabWebHookListener implements WebHookListener {
     @Override
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
         LOGGER.log(Level.FINE, mrEvent.toString());
-        final long triggerDelay = findTriggerDelay(mrEvent.getProject().getWebUrl());
         GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
+        if (findImmediateHookTrigger(mrEvent.getProject().getWebUrl())) {
+            SCMHeadEvent.fireNow(trigger);
+        }
+        final long triggerDelay = findTriggerDelay(mrEvent.getProject().getWebUrl());
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
         LOGGER.log(Level.FINE, pushEvent.toString());
-        final long triggerDelay = findTriggerDelay(pushEvent.getProject().getWebUrl());
         GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
+        if (findImmediateHookTrigger(pushEvent.getProject().getWebUrl())) {
+            SCMHeadEvent.fireNow(trigger);
+        }
+        final long triggerDelay = findTriggerDelay(pushEvent.getProject().getWebUrl());
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
     }
 
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
         LOGGER.log(Level.FINE, tagPushEvent.toString());
-        final long triggerDelay = findTriggerDelay(tagPushEvent.getProject().getWebUrl());
         GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
+        if (findImmediateHookTrigger(tagPushEvent.getProject().getWebUrl())) {
+            SCMHeadEvent.fireNow(trigger);
+        }
+        final long triggerDelay = findTriggerDelay(tagPushEvent.getProject().getWebUrl());
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
+    }
+
+    private boolean findImmediateHookTrigger(final String projectUrl) {
+        final GitLabServer projectServer = findProjectServer(projectUrl);
+
+        if (projectServer == null) {
+            LOGGER.log(
+                Level.WARNING,
+                "Falling back to no immediate trigger");
+            return false;
+        }
+
+        return projectServer.isImmediateHookTrigger();
     }
 
     private long findTriggerDelay(final String projectUrl) {

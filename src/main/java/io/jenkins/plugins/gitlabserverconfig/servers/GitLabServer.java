@@ -127,6 +127,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private Secret secretToken;
 
     /**
+     * {@code true} if and only if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    private boolean immediateHookTrigger;
+
+    /**
      * Delay to be used for GitLab Web Hook build triggers.
      */
     private Integer hookTriggerDelay;
@@ -310,6 +316,28 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             return null;
         }
         return this.secretToken.getPlainText();
+    }
+
+    /**
+     * Returns {@code true} if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     *
+     * @return {@code true} if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    public boolean isImmediateHookTrigger() {
+        return immediateHookTrigger;
+    }
+
+    /**
+     * Data Bound Setter for immediate build on a GitLab Web Hook trigger.
+     *
+     * @param manageSystemHooks {@code true} if and only if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    @DataBoundSetter
+    public void setImmediateHookTrigger(boolean immediateHookTrigger) {
+        this.immediateHookTrigger = immediateHookTrigger;
     }
 
     /**
