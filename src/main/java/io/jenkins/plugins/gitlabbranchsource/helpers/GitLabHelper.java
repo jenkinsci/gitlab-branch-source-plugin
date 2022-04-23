@@ -4,6 +4,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
 import hudson.ProxyConfiguration;
+import hudson.security.AccessControlled;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -19,10 +20,10 @@ import org.gitlab4j.api.ProxyClientConfig;
 
 public class GitLabHelper {
 
-    public static GitLabApi apiBuilder(String serverName) {
+    public static GitLabApi apiBuilder(AccessControlled context, String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
-            PersonalAccessToken credentials = server.getCredentials();
+            PersonalAccessToken credentials = server.getCredentials(context);
             String serverUrl = server.getServerUrl();
             if (credentials != null) {
                 return new GitLabApi(serverUrl, credentials.getToken().getPlainText(), null, getProxyConfig(serverUrl));
