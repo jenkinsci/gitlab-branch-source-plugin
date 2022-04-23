@@ -8,4 +8,4 @@ target
 .settings
 bin
 .DS_Store
-.vscode/*
+.vscode/
