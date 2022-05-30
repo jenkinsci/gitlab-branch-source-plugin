@@ -65,7 +65,8 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements
     @Symbol("gitlabPersonalAccessToken")
     public static class DescriptorImpl extends CredentialsDescriptor {
 
-        private static final int GITLAB_ACCESS_TOKEN_LENGTH = 20;
+        private static final int GITLAB_ACCESS_TOKEN_LENGTH_LEGACY = 20;
+        private static final int GITLAB_ACCESS_TOKEN_LENGTH = 26;
 
         /**
          * {@inheritDoc}
@@ -87,11 +88,11 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements
         public FormValidation doCheckToken(@QueryParameter String value) {
             Secret secret = Secret.fromString(value);
             if (StringUtils.equals(value, secret.getPlainText())) {
-                if (value.length() != GITLAB_ACCESS_TOKEN_LENGTH) {
+                if (value.length() != GITLAB_ACCESS_TOKEN_LENGTH && value.length() != GITLAB_ACCESS_TOKEN_LENGTH_LEGACY) {
                     return FormValidation
                         .error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
                 }
-            } else if (secret.getPlainText().length() != GITLAB_ACCESS_TOKEN_LENGTH) {
+            } else if (secret.getPlainText().length() != GITLAB_ACCESS_TOKEN_LENGTH && value.length() != GITLAB_ACCESS_TOKEN_LENGTH_LEGACY) {
                 return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
             }
             return FormValidation.ok();
