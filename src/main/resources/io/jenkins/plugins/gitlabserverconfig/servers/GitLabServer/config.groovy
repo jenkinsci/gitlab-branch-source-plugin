@@ -37,6 +37,9 @@ f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "J
 }
 
 f.advanced() {
+    f.entry(title: _("Immediate Web Hook trigger"), field: "immediateHookTrigger", "description": "Trigger a build immediately on a GitLab Web Hook trigger") {
+        f.checkbox(title: _("Immediate Web Hook trigger"))
+    }
     f.entry(title: _("Web Hook trigger delay"), field: "hookTriggerDelay", "description": "Delay in seconds to be used for GitLab Web Hook build triggers (defaults to GitLab cache timeout)") {
         f.textbox()
     }

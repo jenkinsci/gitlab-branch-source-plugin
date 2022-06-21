@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.concurrent.TimeUnit;
@@ -39,30 +40,45 @@ public class GitLabWebHookListener implements WebHookListener {
     @Override
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
         LOGGER.log(Level.FINE, mrEvent.toString());
-        final long triggerDelay = findTriggerDelay(mrEvent.getProject().getWebUrl());
         GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
-        SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
+        fireTrigger(trigger, mrEvent.getProject().getWebUrl());
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
         LOGGER.log(Level.FINE, pushEvent.toString());
-        final long triggerDelay = findTriggerDelay(pushEvent.getProject().getWebUrl());
         GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
-        SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
+        fireTrigger(trigger, pushEvent.getProject().getWebUrl());
     }
 
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
         LOGGER.log(Level.FINE, tagPushEvent.toString());
-        final long triggerDelay = findTriggerDelay(tagPushEvent.getProject().getWebUrl());
         GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
+        fireTrigger(trigger, tagPushEvent.getProject().getWebUrl());
+    }
+
+    private void fireTrigger(final SCMHeadEvent<?> trigger, final String projectUrl) {
+        final GitLabServer projectServer = findProjectServer(projectUrl);
+        if (findImmediateHookTrigger(projectServer)) {
+            SCMHeadEvent.fireNow(trigger);
+        }
+        final long triggerDelay = findTriggerDelay(projectServer);
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
     }
 
-    private long findTriggerDelay(final String projectUrl) {
-        final GitLabServer projectServer = findProjectServer(projectUrl);
+    private boolean findImmediateHookTrigger(@Nullable final GitLabServer projectServer) {
+        if (projectServer == null) {
+            LOGGER.log(
+                Level.WARNING,
+                "Falling back to no immediate trigger");
+            return false;
+        }
 
+        return projectServer.isImmediateHookTrigger();
+    }
+
+    private long findTriggerDelay(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
             LOGGER.log(
                 Level.WARNING,
