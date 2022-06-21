@@ -332,7 +332,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for immediate build on a GitLab Web Hook trigger.
      *
-     * @param manageSystemHooks {@code true} if and only if Jenkins should trigger a build immediately on a
+     * @param immediateHookTrigger {@code true} if and only if Jenkins should trigger a build immediately on a
      * GitLab Web Hook trigger.
      */
     @DataBoundSetter
