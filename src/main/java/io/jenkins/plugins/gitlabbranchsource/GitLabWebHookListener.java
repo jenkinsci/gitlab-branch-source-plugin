@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.concurrent.TimeUnit;
@@ -40,38 +41,33 @@ public class GitLabWebHookListener implements WebHookListener {
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
         LOGGER.log(Level.FINE, mrEvent.toString());
         GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
-        if (findImmediateHookTrigger(mrEvent.getProject().getWebUrl())) {
-            SCMHeadEvent.fireNow(trigger);
-        }
-        final long triggerDelay = findTriggerDelay(mrEvent.getProject().getWebUrl());
-        SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
+        fireTrigger(trigger, mrEvent.getProject().getWebUrl());
     }
 
     @Override
     public void onPushEvent(PushEvent pushEvent) {
         LOGGER.log(Level.FINE, pushEvent.toString());
         GitLabPushSCMEvent trigger = new GitLabPushSCMEvent(pushEvent, origin);
-        if (findImmediateHookTrigger(pushEvent.getProject().getWebUrl())) {
-            SCMHeadEvent.fireNow(trigger);
-        }
-        final long triggerDelay = findTriggerDelay(pushEvent.getProject().getWebUrl());
-        SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
+        fireTrigger(trigger, pushEvent.getProject().getWebUrl());
     }
 
     @Override
     public void onTagPushEvent(TagPushEvent tagPushEvent) {
         LOGGER.log(Level.FINE, tagPushEvent.toString());
         GitLabTagPushSCMEvent trigger = new GitLabTagPushSCMEvent(tagPushEvent, origin);
-        if (findImmediateHookTrigger(tagPushEvent.getProject().getWebUrl())) {
+        fireTrigger(trigger, tagPushEvent.getProject().getWebUrl());
+    }
+
+    private void fireTrigger(final SCMHeadEvent<?> trigger, final String projectUrl) {
+        final GitLabServer projectServer = findProjectServer(projectUrl);
+        if (findImmediateHookTrigger(projectServer)) {
             SCMHeadEvent.fireNow(trigger);
         }
-        final long triggerDelay = findTriggerDelay(tagPushEvent.getProject().getWebUrl());
+        final long triggerDelay = findTriggerDelay(projectServer);
         SCMHeadEvent.fireLater(trigger, triggerDelay, TimeUnit.SECONDS);
     }
 
-    private boolean findImmediateHookTrigger(final String projectUrl) {
-        final GitLabServer projectServer = findProjectServer(projectUrl);
-
+    private boolean findImmediateHookTrigger(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
             LOGGER.log(
                 Level.WARNING,
@@ -82,9 +78,7 @@ public class GitLabWebHookListener implements WebHookListener {
         return projectServer.isImmediateHookTrigger();
     }
 
-    private long findTriggerDelay(final String projectUrl) {
-        final GitLabServer projectServer = findProjectServer(projectUrl);
-
+    private long findTriggerDelay(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
             LOGGER.log(
                 Level.WARNING,
