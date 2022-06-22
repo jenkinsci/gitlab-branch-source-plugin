@@ -51,25 +51,6 @@ public class GitLabPushCauseData {
         this.variables.put("GITLAB_REPO_GIT_SSH_URL", defaultString(pushEvent.getRepository().getGit_ssh_url()));
         this.variables.put("GITLAB_REPO_GIT_HTTP_URL", defaultString(pushEvent.getRepository().getGit_http_url()));
         this.variables.put("GITLAB_REPO_VISIBILITY_LEVEL", defaultVisibilityString(pushEvent.getRepository().getVisibility_level()));
-        this.variables.put("GITLAB_COMMIT_COUNT", defaultIntString(pushEvent.getTotalCommitsCount()));
-        int totalCommitsCount = defaultListSize(pushEvent.getCommits());
-        for(int index = 0; index < totalCommitsCount; index++) {
-            this.variables.put("GITLAB_COMMIT_ID_" + index+1,  defaultString(pushEvent.getCommits().get(index).getId()));
-            this.variables.put("GITLAB_COMMIT_MESSAGE_" + index+1, defaultString(pushEvent.getCommits().get(index).getMessage()));
-            this.variables.put("GITLAB_COMMIT_TIMESTAMP_" + index+1, defaultDateString(pushEvent.getCommits().get(index).getTimestamp()));
-            this.variables.put("GITLAB_COMMIT_URL_" + index+1, defaultString(pushEvent.getCommits().get(index).getUrl()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_AVATAR_URL_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getAvatarUrl()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_CREATED_AT_" + index+1, defaultDateString(pushEvent.getCommits().get(index).getAuthor().getCreatedAt()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_EMAIL_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getEmail()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_ID_" + index+1, defaultLongString(pushEvent.getCommits().get(index).getAuthor().getId()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_NAME_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getName()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_STATE_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getState()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_USERNAME_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getUsername()));
-            this.variables.put("GITLAB_COMMIT_AUTHOR_WEB_URL_" + index+1, defaultString(pushEvent.getCommits().get(index).getAuthor().getWebUrl()));
-            this.variables.put("GITLAB_COMMIT_ADDED_" + index+1, String.join(", ", pushEvent.getCommits().get(index).getAdded()));
-            this.variables.put("GITLAB_COMMIT_MODIFIED_" + index+1, String.join(", ", pushEvent.getCommits().get(index).getModified()));
-            this.variables.put("GITLAB_COMMIT_REMOVED_" + index+1, String.join(", ", pushEvent.getCommits().get(index).getRemoved()));
-        }
         this.variables.put("GITLAB_REQUEST_URL", defaultString(pushEvent.getRequestUrl()));
         this.variables.put("GITLAB_REQUEST_STRING", defaultString(pushEvent.getRequestQueryString()));
         this.variables.put("GITLAB_REQUEST_TOKEN", defaultString(pushEvent.getRequestSecretToken()));
