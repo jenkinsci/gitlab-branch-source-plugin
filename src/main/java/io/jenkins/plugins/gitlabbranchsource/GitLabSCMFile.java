@@ -98,7 +98,7 @@ public class GitLabSCMFile extends SCMFile {
             }
             try {
                 List<TreeItem> files = gitLabApi.getRepositoryApi().getTree(projectPath, getPath(), ref);
-                if (files.size() == 0 ) {
+                if (files.size() == 0) {
                     return Type.NONEXISTENT;
                 }
                 return Type.DIRECTORY;
