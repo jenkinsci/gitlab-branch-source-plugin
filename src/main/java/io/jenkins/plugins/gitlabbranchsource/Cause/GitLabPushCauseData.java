@@ -6,9 +6,6 @@ import org.gitlab4j.api.webhook.PushEvent;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultDateString;
-import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
-import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultListSize;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLongString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
