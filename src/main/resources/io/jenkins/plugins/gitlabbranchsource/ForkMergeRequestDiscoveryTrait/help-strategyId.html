@@ -1,19 +1,23 @@
 <div>
   Determines how merge requests are discovered:
-  <ul>
-    <li>Discover each merge request once with the discovered revision corresponding to the result of
+  <dl>
+    <dt>Merging the merge request with the current target branch revision</dt>
+    <dd>Discover each merge request once with the discovered revision corresponding to the result of
       merging with the
       current revision of the target branch
-    </li>
-    <li>Discover each merge request once with the discovered revision corresponding to the merge
+    </dd>
+    <dt>The current merge request revision</dt>
+    <dd>Discover each merge request once with the discovered revision corresponding to the merge
       request head revision
       without merging
-    </li>
-    <li>Discover each merge request twice. The first discovered revision corresponds to the result
+    </dd>
+    <dt>Both the current merge request revision and the merge request merged
+      with the current target branch revision</dt>
+    <dd>Discover each merge request twice. The first discovered revision corresponds to the result
       of merging with
       the current revision of the target branch in each scan. The second parallel discovered
       revision corresponds
       to the merge request head revision without merging
-    </li>
-  </ul>
+    </dd>
+  </dl>
 </div>
