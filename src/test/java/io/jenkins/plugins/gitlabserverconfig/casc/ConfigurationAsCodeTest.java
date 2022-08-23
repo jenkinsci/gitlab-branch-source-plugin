@@ -47,8 +47,8 @@ public class ConfigurationAsCodeTest {
         );
         assertThat(credentials, hasSize(1));
         final PersonalAccessTokenImpl credential = credentials.get(0);
-        assertThat(credential.getToken().getPlainText(), is("XfsqZvVtAx5YCph5bq3r"));
-        assertThat(credential.getToken().getEncryptedValue(), is(not("XfsqZvVtAx5YCph5bq3r")));
+        assertThat(credential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));
+        assertThat(credential.getToken().getEncryptedValue(), is(not("glpat-XfsqZvVtAx5YCph5bq3r")));
     }
 
     @Test

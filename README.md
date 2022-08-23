@@ -343,7 +343,7 @@ credentials:
           - gitlabPersonalAccessToken:
               scope: SYSTEM
               id: "i<3GitLab"
-              token: "XfsqZvVtAx5YCph5bq3r" # gitlab personal access token
+              token: "glpat-XfsqZvVtAx5YCph5bq3r" # gitlab personal access token
 
 unclassified:
   gitLabServers:
