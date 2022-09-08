@@ -6,6 +6,7 @@ import org.gitlab4j.api.webhook.PushEvent;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLongString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
@@ -48,6 +49,7 @@ public class GitLabPushCauseData {
         this.variables.put("GITLAB_REPO_GIT_SSH_URL", defaultString(pushEvent.getRepository().getGit_ssh_url()));
         this.variables.put("GITLAB_REPO_GIT_HTTP_URL", defaultString(pushEvent.getRepository().getGit_http_url()));
         this.variables.put("GITLAB_REPO_VISIBILITY_LEVEL", defaultVisibilityString(pushEvent.getRepository().getVisibility_level()));
+        this.variables.put("GITLAB_COMMIT_COUNT", defaultIntString(pushEvent.getTotalCommitsCount()));
         this.variables.put("GITLAB_REQUEST_URL", defaultString(pushEvent.getRequestUrl()));
         this.variables.put("GITLAB_REQUEST_STRING", defaultString(pushEvent.getRequestQueryString()));
         this.variables.put("GITLAB_REQUEST_TOKEN", defaultString(pushEvent.getRequestSecretToken()));
