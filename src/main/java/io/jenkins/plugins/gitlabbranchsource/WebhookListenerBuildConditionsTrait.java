@@ -129,7 +129,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Setter for stapler to set the alwaysBuildMROpen of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysBuildMROpen(@NonNull boolean alwaysBuildMROpen) {
+    public void setAlwaysBuildMROpen(boolean alwaysBuildMROpen) {
         this.alwaysBuildMROpen = alwaysBuildMROpen;
     }
 
@@ -137,7 +137,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Setter for stapler to set the alwaysBuildMRReOpen of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysBuildMRReOpen(@NonNull boolean alwaysBuildMRReOpen) {
+    public void setAlwaysBuildMRReOpen(boolean alwaysBuildMRReOpen) {
         this.alwaysBuildMRReOpen = alwaysBuildMRReOpen;
     }
 
@@ -145,7 +145,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Setter for stapler to set the alwaysIgnoreMRApprove of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysIgnoreMRApprove(@NonNull boolean alwaysIgnoreMRApprove) {
+    public void setAlwaysIgnoreMRApprove(boolean alwaysIgnoreMRApprove) {
         this.alwaysIgnoreMRApprove = alwaysIgnoreMRApprove;
     }
 
@@ -153,7 +153,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Setter for stapler to set the alwaysIgnoreMRUnApprove of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysIgnoreMRUnApprove(@NonNull boolean alwaysIgnoreMRUnApprove) {
+    public void setAlwaysIgnoreMRUnApprove(boolean alwaysIgnoreMRUnApprove) {
         this.alwaysIgnoreMRUnApprove = alwaysIgnoreMRUnApprove;
     }
 
@@ -161,7 +161,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Setter for stapler to set the alwaysIgnoreNonCodeRelatedUpdates of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysIgnoreNonCodeRelatedUpdates(@NonNull boolean alwaysIgnoreNonCodeRelatedUpdates) {
+    public void setAlwaysIgnoreNonCodeRelatedUpdates(boolean alwaysIgnoreNonCodeRelatedUpdates) {
         this.alwaysIgnoreNonCodeRelatedUpdates = alwaysIgnoreNonCodeRelatedUpdates;
     }
 }
