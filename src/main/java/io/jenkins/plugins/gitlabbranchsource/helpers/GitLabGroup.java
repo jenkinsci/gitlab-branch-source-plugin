@@ -5,7 +5,7 @@ public class GitLabGroup extends GitLabOwner {
     private String fullName;
     private String description;
 
-    public GitLabGroup(String name, String webUrl, String avatarUrl, Integer id,
+    public GitLabGroup(String name, String webUrl, String avatarUrl, Long id,
         String fullName, String description) {
         super(name, webUrl, avatarUrl, id);
         this.fullName = fullName;

@@ -15,13 +15,13 @@ import java.util.List;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import static com.jcabi.matchers.RegexMatchers.matchesPattern;
 import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
 import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
 import static io.jenkins.plugins.casc.misc.Util.toYamlString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 
 public class ConfigurationAsCodeTest {
@@ -47,8 +47,8 @@ public class ConfigurationAsCodeTest {
         );
         assertThat(credentials, hasSize(1));
         final PersonalAccessTokenImpl credential = credentials.get(0);
-        assertThat(credential.getToken().getPlainText(), is("XfsqZvVtAx5YCph5bq3r"));
-        assertThat(credential.getToken().getEncryptedValue(), is(not("XfsqZvVtAx5YCph5bq3r")));
+        assertThat(credential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));
+        assertThat(credential.getToken().getEncryptedValue(), is(not("glpat-XfsqZvVtAx5YCph5bq3r")));
     }
 
     @Test

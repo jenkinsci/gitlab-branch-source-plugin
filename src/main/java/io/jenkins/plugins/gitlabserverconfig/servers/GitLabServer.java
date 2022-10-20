@@ -12,6 +12,7 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -65,6 +66,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     public final static String EMPTY_TOKEN = "";
     private static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
+    private static final SecureRandom RANDOM = new SecureRandom();
     /**
      * Length of unique random numeric name for server
      */
@@ -121,6 +123,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * The secret token used while setting up hook url in the GitLab server
      */
     private Secret secretToken;
+
+    /**
+     * {@code true} if and only if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    private boolean immediateHookTrigger;
 
     /**
      * Delay to be used for GitLab Web Hook build triggers.
@@ -229,16 +237,19 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      *
      * @return {@link PersonalAccessToken}
      */
-    public PersonalAccessToken getCredentials() {
+    public PersonalAccessToken getCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(CredentialsProvider.USE_OWN);
-        return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-            lookupCredentials(
-                PersonalAccessToken.class,
-                jenkins,
-                ACL.SYSTEM,
-                fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-            ), withId(credentialsId));
+        if (context == null) {
+            jenkins.checkPermission(CredentialsProvider.USE_OWN);
+        } else {
+            context.checkPermission(CredentialsProvider.USE_OWN);
+        }
+        return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                                                                                                    PersonalAccessToken.class,
+                                                                                                    jenkins,
+                                                                                                    ACL.SYSTEM,
+                                                                                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                                                                                                ), withId(credentialsId));
     }
 
     /**
@@ -267,7 +278,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     // TODO: Use some UI element to trigger (what is the best way?)
     private void generateSecretToken() {
         byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
-        SecureRandom RANDOM = new SecureRandom();
         RANDOM.nextBytes(random);
         this.secretToken = Secret.decrypt(Util.toHexString(random));
     }
@@ -289,6 +299,28 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             return null;
         }
         return this.secretToken.getPlainText();
+    }
+
+    /**
+     * Returns {@code true} if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     *
+     * @return {@code true} if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    public boolean isImmediateHookTrigger() {
+        return immediateHookTrigger;
+    }
+
+    /**
+     * Data Bound Setter for immediate build on a GitLab Web Hook trigger.
+     *
+     * @param immediateHookTrigger {@code true} if and only if Jenkins should trigger a build immediately on a
+     * GitLab Web Hook trigger.
+     */
+    @DataBoundSetter
+    public void setImmediateHookTrigger(boolean immediateHookTrigger) {
+        this.immediateHookTrigger = immediateHookTrigger;
     }
 
     /**

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabserverconfig.action;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
@@ -7,8 +8,8 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMSourceOwner;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -18,6 +19,7 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -48,7 +50,8 @@ public class GitlabAction implements RootAction {
     }
 
     @RequirePOST
-    public HttpResponse doProjectList(@QueryParameter String server,
+    public HttpResponse doProjectList(@AncestorInPath SCMSourceOwner context,
+        @QueryParameter String server,
         @QueryParameter String owner) {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
@@ -60,7 +63,7 @@ public class GitlabAction implements RootAction {
 
         JSONArray servers = new JSONArray();
 
-        GitLabApi gitLabApi = GitLabHelper.apiBuilder(server);
+        GitLabApi gitLabApi = GitLabHelper.apiBuilder(context, server);
         try {
             for (Project project : gitLabApi.getProjectApi().getUserProjects(owner,
                 new ProjectFilter().withOwned(true))) {
