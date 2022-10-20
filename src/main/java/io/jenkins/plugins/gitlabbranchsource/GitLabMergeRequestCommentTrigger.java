@@ -29,7 +29,7 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
     public void isMatch() {
         if (getPayload().getObjectAttributes().getNoteableType()
             .equals(NoteEvent.NoteableType.MERGE_REQUEST)) {
-            Integer mergeRequestId = getPayload().getMergeRequest().getIid();
+            Long mergeRequestId = getPayload().getMergeRequest().getIid();
             final Pattern mergeRequestJobNamePattern = Pattern
                 .compile("^MR-" + mergeRequestId + "\\b.*$",
                     Pattern.CASE_INSENSITIVE);

@@ -1,6 +1,5 @@
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/jenkinsci/gitlab-branch-source-plugin)
 [![Build Status](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/gitlab-branch-source-plugin/job/master/)
-[![Travis](https://img.shields.io/travis/jenkinsci/gitlab-branch-source-plugin.svg?logo=travis&label=build&logoColor=white)](https://travis-ci.org/jenkinsci/gitlab-branch-source-plugin)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/gitlab-branch-source-plugin.svg?label=release)](https://github.com/jenkinsci/gitlab-branch-source-plugin/releases/latest)
 [![Gitter](https://badges.gitter.im/jenkinsci/gitlab-branch-source-plugin.svg)](https://gitter.im/jenkinsci/gitlab-branch-source-plugin)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/gitlab-branch-source.svg?color=blue)](https://plugins.jenkins.io/gitlab-branch-source)
@@ -17,7 +16,7 @@ you require the following plugins:
      * `io.jenkins.plugins.gitlabserverconfig` - Manages server configuration and web hooks management. Ideally should reside inside another plugin with name `GitLab Plugin`. In future, this package will be moved into a new plugin.
 
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
-     Merge Requests) and Folder organisation.
+     Merge Requests) and Folder organization.
 
 ## Getting Started
 
@@ -63,7 +62,7 @@ Here are a few ways to setup your own Jenkins server:
 
 2. Using a Jenkins Web application Archive (WAR):
 
-    i. Download [latest stable Jenkins WAR file](http://mirrors.jenkins.io/war-stable/latest/jenkins.war).
+    i. Download [latest stable Jenkins WAR file](https://get.jenkins.io/war-stable/latest/jenkins.war).
 
     ii. Open up a terminal/command prompt window to the download directory.
 
@@ -344,7 +343,7 @@ credentials:
           - gitlabPersonalAccessToken:
               scope: SYSTEM
               id: "i<3GitLab"
-              token: "XfsqZvVtAx5YCph5bq3r" # gitlab personal access token
+              token: "glpat-XfsqZvVtAx5YCph5bq3r" # gitlab personal access token
 
 unclassified:
   gitLabServers:
@@ -354,7 +353,7 @@ unclassified:
         manageSystemHooks: true # access token should have admin access to set system hooks
         name: "gitlab-3214"
         serverUrl: "https://gitlab.com"
-        hookRootUrl: ""
+        hooksRootUrl: ""
         secretToken: ""
 ```
 
@@ -365,7 +364,7 @@ See handling secrets [section](https://github.com/jenkinsci/configuration-as-cod
 GitLab Branch Source Plugin allows you to create 2 type of jobs:
 
 * `Multibranch Pipeline Jobs` - For single project.
-* `Folder Organisation` - For multiple projects inside a owner (user/group/subgroup).
+* `Folder Organization` - For multiple projects inside a owner (user/group/subgroup).
 
 ### Multibranch Pipeline Jobs
 
@@ -477,7 +476,7 @@ You may want to disable this option because trusted members do not include membe
 
 * `Disable GitLab project avatar` - Disable avatars of GitLab project(s). It is not possible to fetch avatars when API has no token authentication or project is private. So you may use this option as a workaround. We will fix this issue in a later release.
 
-* `Project Naming Strategy` - Choose whether you want `project name` or the `project path (with namespace)` as job names of each project. Users generally prefer the first option but due to legacy reasons we have `project path (with namespace)` as default naming scheme. Note if a job is already created and the naming strategy is changed it will cause projects and build logs to be destroyed.
+* `Project Naming Strategy` - Choose whether you want `project name`, the `full project path (with namespace)`, `contextual project path (partial namespace`, or `simple project path (no namespace)` as job names of each project. Due to legacy reasons, we have `project path (with namespace)` as default naming scheme. Note if a job is already created and the naming strategy is changed it will cause projects and build logs to be destroyed.
 
 * `Filter by name (with regex)` - Filter the type of items you want to discover in your project based on the regular expression specified. For example, to discover only `master` branch, `develop` branch and all Merge Requests add `(master|develop|MR-.*)`.
 
@@ -554,21 +553,6 @@ GITLAB_REPO_GIT_SSH_URL
 GITLAB_REPO_GIT_HTTP_URL
 GITLAB_REPO_VISIBILITY_LEVEL
 GITLAB_COMMIT_COUNT
-GITLAB_COMMIT_ID_#
-GITLAB_COMMIT_MESSAGE_#
-GITLAB_COMMIT_TIMESTAMP_#
-GITLAB_COMMIT_URL_#
-GITLAB_COMMIT_AUTHOR_AVATAR_URL_#
-GITLAB_COMMIT_AUTHOR_CREATED_AT_#
-GITLAB_COMMIT_AUTHOR_EMAIL_#
-GITLAB_COMMIT_AUTHOR_ID_#
-GITLAB_COMMIT_AUTHOR_NAME_#
-GITLAB_COMMIT_AUTHOR_STATE_#
-GITLAB_COMMIT_AUTHOR_USERNAME_#
-GITLAB_COMMIT_AUTHOR_WEB_URL_#
-GITLAB_COMMIT_ADDED_#
-GITLAB_COMMIT_MODIFIED_#
-GITLAB_COMMIT_REMOVED_#
 GITLAB_REQUEST_URL
 GITLAB_REQUEST_STRING
 GITLAB_REQUEST_TOKEN
@@ -750,7 +734,7 @@ GITLAB_CHANGES_UPDATED_AT_CURR
 
 To create a Job DSL seed job see this [tutorial](https://github.com/jenkinsci/job-dsl-plugin/wiki/Tutorial---Using-the-Jenkins-Job-DSL).
 
-Here is a sample seed job script for folder organisation job:
+Here is a sample seed job script for folder organization job:
 
 ```groovy
 organizationFolder('GitLab Organization Folder') {

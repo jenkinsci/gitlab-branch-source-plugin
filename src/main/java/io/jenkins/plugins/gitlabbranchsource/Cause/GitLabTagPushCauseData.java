@@ -7,6 +7,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultIntString;
+import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultLongString;
 import static io.jenkins.plugins.gitlabbranchsource.Cause.GitLabCauseUtils.defaultVisibilityString;
 import static org.apache.commons.lang.StringUtils.defaultString;
 
@@ -21,11 +22,11 @@ public class GitLabTagPushCauseData {
         this.variables.put("GITLAB_BEFORE", defaultString(tagPushEvent.getBefore()));
         this.variables.put("GITLAB_REF", defaultString(tagPushEvent.getRef()));
         this.variables.put("GITLAB_CHECKOUT_SHA", defaultString(tagPushEvent.getCheckoutSha()));
-        this.variables.put("GITLAB_USER_ID", defaultIntString(tagPushEvent.getUserId()));
+        this.variables.put("GITLAB_USER_ID", defaultLongString(tagPushEvent.getUserId()));
         this.variables.put("GITLAB_USER_NAME", defaultString(tagPushEvent.getUserName()));
         this.variables.put("GITLAB_USER_EMAIL", defaultString(tagPushEvent.getUserEmail()));
-        this.variables.put("GITLAB_PROJECT_ID", defaultIntString(tagPushEvent.getProjectId()));
-        this.variables.put("GITLAB_PROJECT_ID_2", defaultIntString(tagPushEvent.getProject().getId()));
+        this.variables.put("GITLAB_PROJECT_ID", defaultLongString(tagPushEvent.getProjectId()));
+        this.variables.put("GITLAB_PROJECT_ID_2", defaultLongString(tagPushEvent.getProject().getId()));
         this.variables.put("GITLAB_PROJECT_NAME", defaultString(tagPushEvent.getProject().getName()));
         this.variables.put("GITLAB_PROJECT_DESCRIPTION", defaultString(tagPushEvent.getProject().getDescription()));
         this.variables.put("GITLAB_PROJECT_WEB_URL", defaultString(tagPushEvent.getProject().getWebUrl()));

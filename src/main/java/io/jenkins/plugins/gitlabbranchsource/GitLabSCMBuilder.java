@@ -15,8 +15,8 @@ import hudson.security.ACL;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabBrowser;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.net.URI;
+import java.security.SecureRandom;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import jenkins.plugins.git.GitSCMBuilder;
 import jenkins.plugins.git.MergeWithGitSCMExtension;
@@ -36,6 +36,8 @@ import static org.apache.commons.lang.StringUtils.defaultIfBlank;
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
  */
 public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     /**
      * The context within which credentials should be resolved.
@@ -243,13 +245,12 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         }
                         if (localNames.contains(localName)) {
                             // ok we're just going to mangle our way to something that works
-                            Random entropy = new Random();
                             while (localNames.contains(localName)) {
                                 localName =
                                     "remotes/" + remoteName() + "/merge-requests-" + head.getId()
                                         + "-upstream-" + name
                                         + "-" + Integer
-                                        .toHexString(entropy.nextInt(Integer.MAX_VALUE));
+                                        .toHexString(RANDOM.nextInt(Integer.MAX_VALUE));
                             }
                         }
                         withRefSpec("+refs/heads/" + name + ":refs/" + localName);

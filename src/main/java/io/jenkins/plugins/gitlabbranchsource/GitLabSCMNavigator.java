@@ -25,6 +25,8 @@ import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -93,7 +95,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private String credentialsId;
 
     /**
-     * The behavioural traits to apply.
+     * The behavioral traits to apply.
      */
     private List<SCMTrait<? extends SCMTrait<?>>> traits;
 
@@ -159,10 +161,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Gets the behavioural traits that are applied to this navigator and any {@link
+     * Gets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers.
      *
-     * @return the behavioural traits.
+     * @return the behavioral traits.
      */
     @NonNull
     public List<SCMTrait<? extends SCMTrait<?>>> getTraits() {
@@ -170,12 +172,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * Sets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
      * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
      * #visitSource(String, SCMSourceObserver)}.
      *
-     * @param traits the new behavioural traits.
+     * @param traits the new behavioral traits.
      */
     @DataBoundSetter
     public void setTraits(@CheckForNull SCMTrait[] traits) {
@@ -187,9 +189,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
     }
 
-    private GitLabOwner getGitlabOwner() {
+    private GitLabOwner getGitlabOwner(SCMNavigatorOwner owner) {
         if (gitlabOwner == null) {
-            getGitlabOwner(apiBuilder(serverName));
+            getGitlabOwner(apiBuilder(owner, serverName));
         }
         return gitlabOwner;
     }
@@ -202,12 +204,12 @@ public class GitLabSCMNavigator extends SCMNavigator {
     }
 
     /**
-     * Sets the behavioural traits that are applied to this navigator and any {@link
+     * Sets the behavioral traits that are applied to this navigator and any {@link
      * GitLabSCMSource} instances it discovers. The new traits will take affect on the next
      * navigation through any of the {@link #visitSources(SCMSourceObserver)} overloads or {@link
      * #visitSource(String, SCMSourceObserver)}.
      *
-     * @param traits the new behavioural traits.
+     * @param traits the new behavioral traits.
      */
     @Override
     public void setTraits(@CheckForNull List<SCMTrait<? extends SCMTrait<?>>> traits) {
@@ -224,10 +226,10 @@ public class GitLabSCMNavigator extends SCMNavigator {
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer)
         throws IOException, InterruptedException {
-        try (GitLabSCMNavigatorRequest request = new GitLabSCMNavigatorContext()
-            .withTraits(traits)
-            .newRequest(this, observer)) {
-            GitLabApi gitLabApi = apiBuilder(serverName);
+        GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext()
+            .withTraits(traits);
+        try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
+            GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName);
             getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
@@ -258,11 +260,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
-                String projectName = getProjectName(request.withProjectNamingStrategy(), p);
+                String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
                 getNavigatorProjects().add(projectPathWithNamespace);
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
                     observer.getListener().getLogger()
                         .format("%nIgnoring project with empty repository %s%n",
+                            HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
+                    continue;
+                }
+                if (p.getArchived() && context.isExcludeArchivedRepositories()) {
+                    observer.getListener().getLogger()
+                        .format("%nIgnoring archived project %s%n",
                             HyperlinkNote.encodeTo(p.getWebUrl(), p.getName()));
                     continue;
                 }
@@ -304,24 +312,36 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             observer.getListener().getLogger().format("%n%d projects were processed%n", count);
-        } catch (GitLabApiException e) {
+        } catch (GitLabApiException | URISyntaxException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             throw new IOException("Failed to visit SCM source", e);
         }
     }
 
     @NonNull
-    private String getProjectName(int projectNamingStrategy, Project project) {
+    private String getProjectName(GitLabApi gitLabApi, int projectNamingStrategy, Project project) throws URISyntaxException {
+        String fullPath = project.getPathWithNamespace();
         String projectName;
         switch (projectNamingStrategy) {
             default:
-                // for legacy reasons default naming strategy is set to full path
+                // for legacy reasons default naming strategy is set to Full Project path
             case 1:
-                projectName = project.getPathWithNamespace();
+                projectName = fullPath;
                 break;
             case 2:
+                // Project name
                 projectName = project.getNameWithNamespace()
-                    .replace(String.format("%s / ", getGitlabOwner().getFullName()), "");
+                    .replace(String.format("%s / ", getGitlabOwner(gitLabApi).getFullName()), "");
+                break;
+            case 3:
+                // Contextual project path
+                URI ownerPathUri = new URI(projectOwner);
+                URI fullPathUri = new URI(fullPath);
+                projectName = ownerPathUri.relativize(fullPathUri).toString();
+                break;
+            case 4:
+                // Simple project path
+                projectName = fullPath.substring(fullPath.lastIndexOf('/') + 1);
                 break;
         }
         return projectName;
@@ -345,7 +365,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 if (!server.isManageWebHooks()) {
                     break;
                 }
-                credentials = server.getCredentials();
+                credentials = server.getCredentials(owner);
                 if (credentials == null) {
                     LOGGER.log(Level.WARNING, "No System credentials added, cannot create web hook");
                 }
@@ -367,7 +387,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     protected List<Action> retrieveActions(@NonNull SCMNavigatorOwner owner,
         SCMNavigatorEvent event,
         @NonNull TaskListener listener) throws IOException, InterruptedException {
-        getGitlabOwner();
+        getGitlabOwner(owner);
         String fullName = gitlabOwner.getFullName();
         String webUrl = gitlabOwner.getWebUrl();
         String avatarUrl = gitlabOwner.getAvatarUrl();
@@ -423,14 +443,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @Inject
         private GitLabSCMSource.DescriptorImpl delegate;
 
-        public static FormValidation doCheckProjectOwner(@QueryParameter String projectOwner,
+        public static FormValidation doCheckProjectOwner(@AncestorInPath SCMSourceOwner context,
+            @QueryParameter String projectOwner,
             @QueryParameter String serverName) {
             if (projectOwner.equals("")) {
                 return FormValidation.ok();
             }
             GitLabApi gitLabApi = null;
             try {
-                gitLabApi = apiBuilder(serverName);
+                gitLabApi = apiBuilder(context, serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (IllegalStateException e) {
