@@ -40,12 +40,8 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public WebhookListenerBuildConditionsTrait(boolean alwaysBuildMROpen, boolean alwaysBuildMRReOpen, boolean alwaysIgnoreMRApprove, boolean alwaysIgnoreMRUnApprove, boolean alwaysIgnoreNonCodeRelatedUpdates) {
-        this.alwaysBuildMROpen = alwaysBuildMROpen;
-        this.alwaysBuildMRReOpen = alwaysBuildMRReOpen;
-        this.alwaysIgnoreMRApprove = alwaysIgnoreMRApprove;
-        this.alwaysIgnoreMRUnApprove = alwaysIgnoreMRUnApprove;
-        this.alwaysIgnoreNonCodeRelatedUpdates = alwaysIgnoreNonCodeRelatedUpdates;
+    public WebhookListenerBuildConditionsTrait() {
+        // empty
     }
 
     @Override
@@ -129,4 +125,43 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
         return alwaysIgnoreNonCodeRelatedUpdates;
     }
 
+    /**
+     * Setter for stapler to set the alwaysBuildMROpen of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysBuildMROpen(@NonNull boolean alwaysBuildMROpen) {
+        this.alwaysBuildMROpen = alwaysBuildMROpen;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysBuildMRReOpen of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysBuildMRReOpen(@NonNull boolean alwaysBuildMRReOpen) {
+        this.alwaysBuildMRReOpen = alwaysBuildMRReOpen;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreMRApprove of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysIgnoreMRApprove(@NonNull boolean alwaysIgnoreMRApprove) {
+        this.alwaysIgnoreMRApprove = alwaysIgnoreMRApprove;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreMRUnApprove of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysIgnoreMRUnApprove(@NonNull boolean alwaysIgnoreMRUnApprove) {
+        this.alwaysIgnoreMRUnApprove = alwaysIgnoreMRUnApprove;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreNonCodeRelatedUpdates of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysIgnoreNonCodeRelatedUpdates(@NonNull boolean alwaysIgnoreNonCodeRelatedUpdates) {
+        this.alwaysIgnoreNonCodeRelatedUpdates = alwaysIgnoreNonCodeRelatedUpdates;
+    }
 }
