@@ -899,7 +899,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     new BranchDiscoveryTrait(true, false),
                     new OriginMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
-                            new ForkMergeRequestDiscoveryTrait.TrustPermission()));
+                    new ForkMergeRequestDiscoveryTrait.TrustPermission()),
+                    new WebhookListenerBuildConditionsTrait());
         }
 
         @NonNull

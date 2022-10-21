@@ -14,7 +14,7 @@ you require the following plugins:
 * GitLab Branch Source Plugin - Contains two packages:
 
      * `io.jenkins.plugins.gitlabserverconfig` - Manages server configuration and web hooks management. Ideally should reside inside another plugin with name `GitLab Plugin`. In future, this package will be moved into a new plugin.
-     
+
      * `io.jenkins.plugins.gitlabbranchsource` - Adds GitLab Branch Source for Multi-branch Pipeline Jobs (including
      Merge Requests) and Folder organization.
 
@@ -83,7 +83,7 @@ Here are a few ways to setup your own Jenkins server:
     Refer to Bitnami [docs](https://docs.bitnami.com/general/apps/jenkins/).
 
 5. Using [Jenkins CLI](https://github.com/jenkins-zh/jenkins-cli) run it for development:
-    
+
     Run it via: `jcli plugin run`
 
 ### Configuring Jenkins instance:
@@ -121,7 +121,7 @@ Here are a few ways to setup your own Jenkins server:
 You can use any one of these ways:
 
 1. Install from Jenkins Update Center. Go to Jenkins > Configure > Manage Plugins > Available and search for `gitlab branch source plugin` then select Install.
-    
+
 2. Using [Plugin Management Tool](https://github.com/jenkinsci/plugin-installation-manager-tool)
 
     ```bash
@@ -134,12 +134,12 @@ You can use any one of these ways:
 3. From Source:
 
     i. Checkout out source code to your local machine:
-    
+
     ```
     git clone https://github.com/jenkinsci/gitlab-branch-source-plugin.git
     cd gitlab-branch-source-plugin
     ```
-    
+
     ii. Install the plugin:
     ```
     mvn clean install
@@ -148,7 +148,7 @@ You can use any one of these ways:
     ```
 
     iii. Run the Plugin:
-    
+
     ```
     mvn hpi:run # runs a Jenkins instance at localhost:8080
         or
@@ -201,9 +201,9 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
 
-    iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box. 
-    
-    iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token has `Admin` access. 
+    iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box.
+
+    iv. `Mange System Hook` - If you want the plugin to setup system hook on your GitLab project(s) to detect if a project is removed then check this box. Remember plugin can only setup system hook on your server if supplied access token has `Admin` access.
 
     v. `Secret Token` - The secret token is required to authenticate the webhook payloads received from GitLab Server. Use generate secret token from Advanced options or use your own. If you are a old plugin user and did not set a secret token previously and want secret token to applied to the hooks of your existing jobs, you can add the secret token and rescan your jobs. Existing hooks with new secret token will be applied.
 
@@ -283,7 +283,7 @@ GitLab Personal Access Token credentials to Jenkins server credentials.
 7. The token creator will create a Personal Access Token in your GitLab Server for the given user with the required scope and also create a credentials for the same inside Jenkins server. You can go back to the GitLab Server Configuration to select the new credentials generated (select "-none-" first then new credentials will appear). For security reasons this token is not revealed as plain text rather returns an `id`. It is a 128-bit long UUID-4 string (36 characters).
 
     ![gitlab-token-creator](/docs/img/gitlab-token-creator.png)
-    
+
 ### Manually create hooks on GitLab Server
 
 Use the following end points for web hooks and system hooks setup on your GitLab Server. The `Jenkins Url` needs to be a fully qualified domain name (FQDN) so cannot be `localhost`.
@@ -379,17 +379,17 @@ To create a `Multibranch Pipeline Job`:
 3. In `Branch Sources` sections, select `Add source` | select `GitLab Project`.
 
 4. Now you need to configure your jobs.
- 
+
     ![branch-source](/docs/img/branch-source.png)
-    
+
     i. Select `Server` configured in the initial server setup.
-    
+
     ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) if there is any private projects that will be built by the plugin.
-    
+
     iii. Add path to the owner where the project you want to build exists. If user, enter `username`. If group, enter `group name`. If subgroup, enter `subgroup path with namespace`.
-    
+
     iv. Based on the owner provided. All the projects are discovered in the path and added to the `Projects` listbox. You can now choose the project you want to build.
-    
+
     v. `Behaviours` (a.k.a. SCM Traits) allow different configurations option to your build. More about it in the SCM Trait APIs section.
 
 5. Now you can go ahead and save the job.
@@ -402,7 +402,7 @@ The Job results are notified to the GitLab Server as Pipeline Status for the HEA
 
 We have a workaround for this. Jenkins will build the MRs from forked projects if the MR author is a trusted owner i.e. has `Developer`/`Maintainer`/`Owner` access level. More about it in the SCM Trait APIs section.
 
-As the web hook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the concerned build in Jenkins. 
+As the web hook is now setup on your Jenkins CI by the GitLab server. Any push-events or merge-request events or tag events trigger the concerned build in Jenkins.
 
 ### Folder Organization
 
@@ -415,7 +415,7 @@ To create a `GitLab Group Job`:
 2. Enter a name for your job, select `GitLab Group` | select `Ok`.
 
 3. Now you need to configure your jobs.
-    
+
     i. Select `Server` configured in the initial server setup.
 
     ii. [Optional] Add `Checkout Credentials` (SSHPrivateKey or Username/Password) only if there are any private projects required to be built.
@@ -439,7 +439,7 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 	* `All Branches` - Ignores whether the branch is also filed as a merge request and instead discovers all branches on the origin project.
 
 * `Discover merge requests from origin` - To discover merge requests made from origin branches.
-	
+
 	* `Merging the merge request merged with current target revision` - Discover each merge request once with the discovered revision corresponding to the result of merging with the current revision of the target branch.
 	* `The current merge request revision` - Discover each merge request once with the discovered revision corresponding to the merge request head revision without merging.
 	* `Both current mr revision and the mr merged with current target revision` - Discover each merge request twice. The first discovered revision corresponds to the result of merging with the current revision of the target branch in each scan. The second parallel discovered revision corresponds to the merge request head revision without merging.
@@ -447,18 +447,18 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 * `Discover merge requests from forks` - To discover merge requests made from forked project branches.
 
 	* Strategy:
-	
+
 		* `Merging the merge request merged with current target revision` - Discover each merge request once with the discovered revision corresponding to the result of merging with the current revision of the target branch.
 		* `The current merge request revision` - Discover each merge request once with the discovered revision corresponding to the merge request head revision without merging.
 		* `Both current mr revision and the mr merged with current target revision` - Discover each merge request twice. The first discovered revision corresponds to the result of merging with the current revision of the target branch in each scan. The second parallel discovered revision corresponds to the merge request head revision without merging.
-		
+
 	* Trust
-	
+
 		* `Members` - Discover MRs from Forked Projects whose author is a member of the origin project.
 		* `Trusted Members` - [Recommended] Discover MRs from Forked Projects whose author is has Developer/Maintainer/Owner accesslevel in the origin project.
 		* `Everyone` - Discover MRs from Forked Projects filed by anybody. For security reasons you should never use this option. It may be used to reveal your Pipeline secrets environment variables.
 		* `Nobody` - Discover no MRs from Forked Projects at all. Equivalent to removing the trait altogether.
-		
+
 	If `Members` or `Trusted Members` is selected, then plugin will build the target branch of MRs from non/untrusted members.
 
 ### Additional Traits:
@@ -469,7 +469,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Discover group/subgroup projects` - Discover subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
 
-* `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar. 
+* `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar.
 
 * `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel (also includes inherited from ancestor groups). By default only trusted members of project can trigger MR.
 You may want to disable this option because trusted members do not include members inherited from shared group (there is no way to get it from GitLabApi as of GitLab 13.0.0). If disabled, MR comment trigger can be done by any user having access to your project.
@@ -488,6 +488,8 @@ You may want to disable this option because trusted members do not include membe
 
 * `Checkout over SSH` - [Not Recommended] Use this mode to checkout over SSH. Use `Checkout Credentials` instead.
 
+* `Webhook Listener Conditions` - Set conditions based on the webhook content on when a build should be triggered.
+
 ## Environment Variables
 
 By default Multibranch Jobs have the following environment variables (provided by Branch API Plugin):
@@ -498,19 +500,19 @@ Merge Request - `BRANCH_NAME`, `CHANGE_ID`, `CHANGE_TARGET`, `CHANGE_BRANCH`, `C
 
 Tag - `BRANCH_NAME`, `TAG_NAME`, `TAG_TIMESTAMP`, `TAG_DATE`, `TAG_UNIXTIME`
 
-This plugin adds a few more environment variables to Builds (`WorkflowRun` type only) which is the payload received as WebHook) See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events. 
+This plugin adds a few more environment variables to Builds (`WorkflowRun` type only) which is the payload received as WebHook) See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#events.
 
-A few points to note: 
+A few points to note:
 
 > If no response is recorded for any field in the Web Hook Payload, it returns an empty String. To add more variables see `package io.jenkins.plugins.gitlabbranchsource.Cause`.
-> 
+>
 > `GITLAB_OBJECT_KIND` - This environment variable should be used to check the event type before accessing the environment variables. Possible values are `none`, `push`, `tag_push` and `merge_request`.
 >
 > Any variables ending with `#` indicates the index of the list of the payload starting from 1.
 
 Environment Variables are available from Push Event, Tag Push Event and Merge Request Event.
 
-### Push Event: 
+### Push Event:
 
 See https://docs.gitlab.com/ee/user/project/integrations/webhooks.html#push-events
 
@@ -561,12 +563,12 @@ GITLAB_REFS_HEAD
 
 ### Tag Event:
 
-Note: 
-> Jenkins by default refrains from automatically building Tags on push ([See reason](https://issues.jenkins-ci.org/browse/JENKINS-47496?focusedCommentId=332369&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-332369)). You need to install Branch Build Strategy Plugin to solve this. 
-> 
+Note:
+> Jenkins by default refrains from automatically building Tags on push ([See reason](https://issues.jenkins-ci.org/browse/JENKINS-47496?focusedCommentId=332369&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-332369)). You need to install Branch Build Strategy Plugin to solve this.
+>
 > See Guide: https://github.com/jenkinsci/basic-branch-build-strategies-plugin/blob/master/docs/user.adoc
 >
-> Do remember if you are using Basic Branch Build for tag builds you also need to add strategies for branch and pull request (change request) else they would not be automatically built (See GIF below). 
+> Do remember if you are using Basic Branch Build for tag builds you also need to add strategies for branch and pull request (change request) else they would not be automatically built (See GIF below).
 
 ![branch-build-strategy](/docs/img/branch-build-strategy.gif)
 
@@ -760,7 +762,7 @@ organizationFolder('GitLab Organization Folder') {
     // "Traits" ("Behaviours" in the GUI) that are NOT "declarative-compatible"
     // For some 'traits, we need to configure this stuff by hand until JobDSL handles it
     // https://issues.jenkins.io/browse/JENKINS-45504
-    configure { 
+    configure {
         def traits = it / navigators / 'io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator' / traits
         traits << 'io.jenkins.plugins.gitlabbranchsource.ForkMergeRequestDiscoveryTrait' {
             strategyId(2)
@@ -879,10 +881,10 @@ This plugin is built and maintained by the Google Summer of Code (GSoC) Team for
 
 Maintainers:
 
-* [Parichay](https://github.com/baymac) 
-* [Marky](https://github.com/markyjackson-taulia) 
-* [Joseph](https://github.com/casz) 
-* [Justin](https://github.com/justinharringa) 
+* [Parichay](https://github.com/baymac)
+* [Marky](https://github.com/markyjackson-taulia)
+* [Joseph](https://github.com/casz)
+* [Justin](https://github.com/justinharringa)
 
 External Support:
 

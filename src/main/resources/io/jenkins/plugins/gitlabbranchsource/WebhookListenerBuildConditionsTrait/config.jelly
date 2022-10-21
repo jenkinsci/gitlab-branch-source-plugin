@@ -1,0 +1,18 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="${%Always build pipeline on Open MR webhook}" field="alwaysBuildMROpen">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Always build pipeline on Re-Open MR webhook}" field="alwaysBuildMRReOpen">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Ignore build pipeline on MR Approval}" field="alwaysIgnoreMRApprove">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Ignore build pipeline on MR Un-Approval}" field="alwaysIgnoreMRUnApprove">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Ignore builds for non-code related MR updates}" field="alwaysIgnoreNonCodeRelatedUpdates">
+    <f:checkbox default="checked"/>
+  </f:entry>
+</j:jelly>
