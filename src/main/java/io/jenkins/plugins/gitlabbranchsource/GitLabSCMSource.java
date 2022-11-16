@@ -332,7 +332,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         request.setMergeRequests(mrs);
                     } else {
                         listener.getLogger()
-                            .format("%nIgnoring merge requests as project is a mirror...%n");
+                            .format(
+                                "%nCollecting MRs for fork except those that target its upstream...%n");
+                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi()
+                            .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
+                        mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null && !mr.getTargetProjectId().equals(gitlabProject.getForkedFromProject().getId()) )
+                            .collect(Collectors.toList());
+                        request.setMergeRequests(mrs);
                     }
                 }
                 if (request.isFetchTags()) {
