@@ -78,11 +78,11 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
                 return context.alwaysBuildMRReOpen();
             }
 
-            if (action.equals("approved")) {
+            if (action.equals("approval")) {
                 return !context.alwaysIgnoreMRApprove();
             }
 
-            if (action.equals("unapproved")) {
+            if (action.equals("unapproval")) {
                 return !context.alwaysIgnoreMRUnApprove();
             }
         }
