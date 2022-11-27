@@ -6,10 +6,16 @@
   <f:entry title="${%Always build pipeline on Re-Open MR webhook}" field="alwaysBuildMRReOpen">
     <f:checkbox default="checked"/>
   </f:entry>
-  <f:entry title="${%Ignore build pipeline on MR Approval}" field="alwaysIgnoreMRApprove">
+  <f:entry title="${%Ignore build pipeline on MR Approval}" field="alwaysIgnoreMRApproval">
     <f:checkbox default="checked"/>
   </f:entry>
-  <f:entry title="${%Ignore build pipeline on MR Un-Approval}" field="alwaysIgnoreMRUnApprove">
+  <f:entry title="${%Ignore build pipeline on MR Un-Approval}" field="alwaysIgnoreMRUnApproval">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Ignore build pipeline on MR Approved}" field="alwaysIgnoreMRApproved">
+    <f:checkbox default="checked"/>
+  </f:entry>
+  <f:entry title="${%Ignore build pipeline on MR Un-Approved}" field="alwaysIgnoreMRUnApproved">
     <f:checkbox default="checked"/>
   </f:entry>
   <f:entry title="${%Ignore builds for non-code related MR updates}" field="alwaysIgnoreNonCodeRelatedUpdates">
