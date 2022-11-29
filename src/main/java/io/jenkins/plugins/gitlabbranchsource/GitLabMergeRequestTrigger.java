@@ -10,7 +10,7 @@ import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
     public static final Logger LOGGER = Logger
-        .getLogger(GitLabMergeRequestTrigger.class.getName());
+            .getLogger(GitLabMergeRequestTrigger.class.getName());
 
     public GitLabMergeRequestTrigger(MergeRequestEvent mrEvent, String origin) {
         super(mrEvent, origin);
@@ -19,18 +19,18 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
     @Override
     public boolean isMatch(@NonNull GitLabSCMSource source) {
         final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(
-            null, SCMHeadObserver.none())
-            .withTraits(source.getTraits());
+                null, SCMHeadObserver.none())
+                .withTraits(source.getTraits());
 
         boolean shouldBuild = this.shouldBuild(getPayload(), sourceContext);
         LOGGER.log(Level.FINE, "isMatch() result for MR-{0}: {1}",
-            new Object[]{
-                getPayload().getObjectAttributes().getIid(),
-                String.valueOf(shouldBuild)
-            });
+                new Object[] {
+                        getPayload().getObjectAttributes().getIid(),
+                        String.valueOf(shouldBuild)
+                });
 
         return getPayload().getObjectAttributes().getTargetProjectId()
-            .equals(source.getProjectId()) && shouldBuild;
+                .equals(source.getProjectId()) && shouldBuild;
     }
 
     private boolean shouldBuild(MergeRequestEvent mrEvent, GitLabSCMSourceContext context) {
@@ -67,7 +67,7 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
             if (!shouldBuild) {
                 LOGGER.log(Level.FINE, "shouldBuild for MR-{0} set to false due to non-code related updates.",
-                    getPayload().getObjectAttributes().getIid());
+                        getPayload().getObjectAttributes().getIid());
             }
 
             if (action.equals("open")) {
@@ -78,12 +78,20 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
                 return context.alwaysBuildMRReOpen();
             }
 
+            if (action.equals("approval")) {
+                return !context.alwaysIgnoreMRApproval();
+            }
+
+            if (action.equals("unapproval")) {
+                return !context.alwaysIgnoreMRUnApproval();
+            }
+
             if (action.equals("approved")) {
-                return !context.alwaysIgnoreMRApprove();
+                return !context.alwaysIgnoreMRApproved();
             }
 
             if (action.equals("unapproved")) {
-                return !context.alwaysIgnoreMRUnApprove();
+                return !context.alwaysIgnoreMRUnApproved();
             }
         }
 
