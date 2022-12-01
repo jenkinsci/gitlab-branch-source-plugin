@@ -11,11 +11,12 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -125,9 +127,17 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private String hooksRootUrl;
 
     /**
-     * The secret token used while setting up hook url in the GitLab server
+     * The credentials id of the secret token used while setting up hook url in the GitLab server
      */
-    private Secret secretToken;
+    @NonNull
+    private String secretTokenCredentialsId;
+
+
+    /**
+     * The credentials matcher for StringCredentials
+     */
+    public static final CredentialsMatcher SECRET_TOKEN_CREDENTIALS_MATCHER = CredentialsMatchers
+        .instanceOf(StringCredentials.class);
 
     /**
      * {@code true} if and only if Jenkins should trigger a build immediately on a
@@ -288,15 +298,47 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     @DataBoundSetter
-    public void setSecretToken(Secret token) {
-        this.secretToken = token;
+    public void setSecretTokenCredentialsId(String token) {
+        this.secretTokenCredentialsId = token;
     }
 
-    // TODO: Use some UI element to trigger (what is the best way?)
-    private void generateSecretToken() {
-        byte[] random = new byte[16]; // 16x8=128bit worth of randomness, since we use md5 digest as the API token
-        RANDOM.nextBytes(random);
-        this.secretToken = Secret.decrypt(Util.toHexString(random));
+    public String getSecretTokenCredentialsId() {
+        return secretTokenCredentialsId;
+    }
+
+    /**
+     * Looks up for StringCredentials
+     *
+     * @return {@link StringCredentials}
+     */
+    public StringCredentials getSecretTokenCredentials(AccessControlled context) {
+        Jenkins jenkins = Jenkins.get();
+        if (context == null) {
+            jenkins.checkPermission(CredentialsProvider.USE_OWN);
+            return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                                                                                                    StringCredentials.class,
+                                                                                                    jenkins,
+                                                                                                    ACL.SYSTEM,
+                                                                                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                                                                                                ), withId(secretTokenCredentialsId));
+        } else {
+            context.checkPermission(CredentialsProvider.USE_OWN);
+            if (context instanceof ItemGroup) {
+                return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                    StringCredentials.class,
+                    (ItemGroup) context,
+                    ACL.SYSTEM,
+                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                ), withId(secretTokenCredentialsId));
+            } else {
+                return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                    StringCredentials.class,
+                    (Item) context,
+                    ACL.SYSTEM,
+                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+                ), withId(secretTokenCredentialsId));
+            }
+        }
     }
 
     /**
@@ -307,15 +349,25 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return (DescriptorImpl) super.getDescriptor();
     }
 
-    public Secret getSecretToken() {
-        return secretToken;
+    private StringCredentials getSecretTokenCredentials(String secretTokenCredentialsId) {
+        Jenkins jenkins = Jenkins.get();
+        jenkins.checkPermission(Jenkins.ADMINISTER);
+        return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull(
+            lookupCredentials(StringCredentials.class, jenkins),
+            withId(secretTokenCredentialsId)
+        );
     }
 
     public String getSecretTokenAsPlainText() {
-        if (this.secretToken == null) {
+        if (this.secretTokenCredentialsId == null) {
             return null;
         }
-        return this.secretToken.getPlainText();
+        StringCredentials credentials = getSecretTokenCredentials(secretTokenCredentialsId);
+        String secretToken = "";
+        if (credentials != null) {
+            secretToken = credentials.getSecret().getPlainText();
+        }
+        return secretToken;
     }
 
     /**
@@ -485,13 +537,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
                     LOGGER.log(Level.FINEST, String
-                            .format("Connection established with the GitLab Server for %s",
-                                    user.getUsername()));
+                            .format("Connection established with the GitLab Server for %s", user.getUsername()));
                     return FormValidation
                             .ok(String.format("Credentials verified for user %s", user.getUsername()));
                 } catch (GitLabApiException e) {
-                    LOGGER.log(Level.SEVERE,
-                            "Failed to connect with GitLab Server - %s", e.getMessage());
+                    LOGGER.log(Level.SEVERE, "Failed to connect with GitLab Server - %s", e.getMessage());
                     return FormValidation.error(e,
                             Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
                 }
@@ -520,6 +570,30 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
                             CREDENTIALS_MATCHER);
+        }
+
+        /**
+         * Stapler form completion.
+         *
+         * @param secretTokenCredentialsId the credentials Id
+         * @return the available credentials.
+         */
+        @Restricted(NoExternalUse.class) // stapler
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillSecretTokenCredentialsIdItems(@QueryParameter String serverUrl,
+            @QueryParameter String secretTokenCredentialsId) {
+            Jenkins jenkins = Jenkins.get();
+            if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
+                return new StandardListBoxModel().includeCurrentValue(secretTokenCredentialsId);
+            }
+            return new StandardListBoxModel()
+                .includeEmptyValue()
+                .includeMatchingAs(ACL.SYSTEM,
+                    jenkins,
+                    StringCredentials.class,
+                    fromUri(serverUrl).build(),
+                    SECRET_TOKEN_CREDENTIALS_MATCHER
+                );
         }
 
         private PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
