@@ -28,8 +28,8 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
     f.checkbox(title: _("Manage System Hooks"))
 }
 
-f.entry(title: _("Secret Token"), field: "secretToken", "description": "The secret token used while setting up hook url in the GitLab server") {
-    f.password()
+f.entry(title: _("Secret Token"), field: "secretTokenCredentialsId", "description": "The secret token used while setting up hook url in the GitLab server") {
+    c.select(context: app)
 }
 
 f.entry(title: _("Root URL for hooks"), field: "hooksRootUrl", "description": "Jenkins root URL to use in hooks URL (if different from the public Jenkins root URL)") {
