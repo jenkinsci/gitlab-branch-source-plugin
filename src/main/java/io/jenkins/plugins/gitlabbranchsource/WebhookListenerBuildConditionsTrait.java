@@ -25,12 +25,22 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     /**
      * Always ignore webhook if it's an approval event
      */
-    private boolean alwaysIgnoreMRApprove = false;
+    private boolean alwaysIgnoreMRApproval = false;
 
     /**
      * Always ignore webhook if it's an un-approval event
      */
-    private boolean alwaysIgnoreMRUnApprove = false;
+    private boolean alwaysIgnoreMRUnApproval = false;
+
+    /**
+     * Always ignore webhook if it's an approved event
+     */
+    private boolean alwaysIgnoreMRApproved = false;
+
+    /**
+     * Always ignore webhook if it's an un-approved event
+     */
+    private boolean alwaysIgnoreMRUnApproved = false;
 
     /**
      * Always ignore webhook if it's a non code related update such as title change
@@ -50,10 +60,12 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withAlwaysBuildMROpen(getAlwaysBuildMROpen())
-                .withAlwaysBuildMRReOpen(getAlwaysBuildMRReOpen())
-                .withAlwaysIgnoreMRApprove(getAlwaysIgnoreMRApprove())
-                .withAlwaysIgnoreMRUnApprove(getAlwaysIgnoreMRUnApprove())
-                .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates());
+                    .withAlwaysBuildMRReOpen(getAlwaysBuildMRReOpen())
+                    .withalwaysIgnoreMRApproval(getalwaysIgnoreMRApproval())
+                    .withalwaysIgnoreMRUnApproval(getalwaysIgnoreMRUnApproval())
+                    .withalwaysIgnoreMRApproved(getalwaysIgnoreMRApproved())
+                    .withalwaysIgnoreMRUnApproved(getalwaysIgnoreMRUnApproved())
+                    .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates());
         }
     }
 
@@ -104,8 +116,8 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      *
      * @return false to run build on MR approval
      */
-    public boolean getAlwaysIgnoreMRApprove() {
-        return alwaysIgnoreMRApprove;
+    public boolean getalwaysIgnoreMRApproval() {
+        return alwaysIgnoreMRApproval;
     }
 
     /**
@@ -113,8 +125,26 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
      *
      * @return false to run build on non-code related MR updates
      */
-    public boolean getAlwaysIgnoreMRUnApprove() {
-        return alwaysIgnoreMRUnApprove;
+    public boolean getalwaysIgnoreMRUnApproval() {
+        return alwaysIgnoreMRUnApproval;
+    }
+
+    /**
+     * Run build on MR approved
+     *
+     * @return false to run build on MR approved
+     */
+    public boolean getalwaysIgnoreMRApproved() {
+        return alwaysIgnoreMRApproved;
+    }
+
+    /**
+     * Run build on MR un-approved
+     *
+     * @return false to run build on non-code related MR updates
+     */
+    public boolean getalwaysIgnoreMRUnApproved() {
+        return alwaysIgnoreMRUnApproved;
     }
 
     /**
@@ -143,23 +173,41 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     }
 
     /**
-     * Setter for stapler to set the alwaysIgnoreMRApprove of the WebhookListener
+     * Setter for stapler to set the alwaysIgnoreMRApproval of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysIgnoreMRApprove(boolean alwaysIgnoreMRApprove) {
-        this.alwaysIgnoreMRApprove = alwaysIgnoreMRApprove;
+    public void setalwaysIgnoreMRApproval(boolean alwaysIgnoreMRApproval) {
+        this.alwaysIgnoreMRApproval = alwaysIgnoreMRApproval;
     }
 
     /**
-     * Setter for stapler to set the alwaysIgnoreMRUnApprove of the WebhookListener
+     * Setter for stapler to set the alwaysIgnoreMRUnApproval of the WebhookListener
      */
     @DataBoundSetter
-    public void setAlwaysIgnoreMRUnApprove(boolean alwaysIgnoreMRUnApprove) {
-        this.alwaysIgnoreMRUnApprove = alwaysIgnoreMRUnApprove;
+    public void setalwaysIgnoreMRUnApproval(boolean alwaysIgnoreMRUnApproval) {
+        this.alwaysIgnoreMRUnApproval = alwaysIgnoreMRUnApproval;
     }
 
     /**
-     * Setter for stapler to set the alwaysIgnoreNonCodeRelatedUpdates of the WebhookListener
+     * Setter for stapler to set the alwaysIgnoreMRApproved of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setalwaysIgnoreMRApproved(boolean alwaysIgnoreMRApproved) {
+        this.alwaysIgnoreMRApproved = alwaysIgnoreMRApproved;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreMRUnApproved of the
+     * WebhookListener
+     */
+    @DataBoundSetter
+    public void setalwaysIgnoreMRUnApproved(boolean alwaysIgnoreMRUnApproved) {
+        this.alwaysIgnoreMRUnApproved = alwaysIgnoreMRUnApproved;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreNonCodeRelatedUpdates of the
+     * WebhookListener
      */
     @DataBoundSetter
     public void setAlwaysIgnoreNonCodeRelatedUpdates(boolean alwaysIgnoreNonCodeRelatedUpdates) {

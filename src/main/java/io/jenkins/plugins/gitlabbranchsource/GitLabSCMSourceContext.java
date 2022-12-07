@@ -13,7 +13,7 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceContext;
 
 public class GitLabSCMSourceContext
-    extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
+        extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
 
     private boolean wantBranches;
     private boolean wantTags;
@@ -22,10 +22,10 @@ public class GitLabSCMSourceContext
 
     @NonNull
     private Set<ChangeRequestCheckoutStrategy> originMRStrategies = EnumSet
-        .noneOf(ChangeRequestCheckoutStrategy.class);
+            .noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
     private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet
-        .noneOf(ChangeRequestCheckoutStrategy.class);
+            .noneOf(ChangeRequestCheckoutStrategy.class);
     @NonNull
     private GitLabHookRegistration webhookRegistration = GitLabHookRegistration.SYSTEM;
     @NonNull
@@ -53,14 +53,18 @@ public class GitLabSCMSourceContext
 
     private boolean alwaysBuildMRReOpen = true;
 
-    private boolean alwaysIgnoreMRApprove = false;
+    private boolean alwaysIgnoreMRApproval = false;
 
-    private boolean alwaysIgnoreMRUnApprove = false;
+    private boolean alwaysIgnoreMRUnApproval = false;
+
+    private boolean alwaysIgnoreMRApproved = false;
+
+    private boolean alwaysIgnoreMRUnApproved = false;
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
-        @NonNull SCMHeadObserver observer) {
+            @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
 
@@ -128,7 +132,9 @@ public class GitLabSCMSourceContext
         return mrCommentTriggerEnabled;
     }
 
-    public final boolean getOnlyTrustedMembersCanTrigger() { return onlyTrustedMembersCanTrigger; }
+    public final boolean getOnlyTrustedMembersCanTrigger() {
+        return onlyTrustedMembersCanTrigger;
+    }
 
     public boolean alwaysBuildMROpen() {
         return alwaysBuildMROpen;
@@ -138,12 +144,20 @@ public class GitLabSCMSourceContext
         return alwaysBuildMRReOpen;
     }
 
-    public boolean alwaysIgnoreMRApprove() {
-        return alwaysIgnoreMRApprove;
+    public boolean alwaysIgnoreMRApproval() {
+        return alwaysIgnoreMRApproval;
     }
 
-    public boolean alwaysIgnoreMRUnApprove() {
-        return alwaysIgnoreMRUnApprove;
+    public boolean alwaysIgnoreMRUnApproval() {
+        return alwaysIgnoreMRUnApproval;
+    }
+
+    public boolean alwaysIgnoreMRApproved() {
+        return alwaysIgnoreMRApproved;
+    }
+
+    public boolean alwaysIgnoreMRUnApproved() {
+        return alwaysIgnoreMRUnApproved;
     }
 
     public boolean alwaysIgnoreNonCodeRelatedUpdates() {
@@ -184,14 +198,14 @@ public class GitLabSCMSourceContext
 
     @NonNull
     public GitLabSCMSourceContext withOriginMRStrategies(
-        Set<ChangeRequestCheckoutStrategy> strategies) {
+            Set<ChangeRequestCheckoutStrategy> strategies) {
         originMRStrategies.addAll(strategies);
         return this;
     }
 
     @NonNull
     public GitLabSCMSourceContext withForkMRStrategies(
-        Set<ChangeRequestCheckoutStrategy> strategies) {
+            Set<ChangeRequestCheckoutStrategy> strategies) {
         forkMRStrategies.addAll(strategies);
         return this;
     }
@@ -262,7 +276,7 @@ public class GitLabSCMSourceContext
     @NonNull
     @Override
     public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
-        @CheckForNull TaskListener listener) {
+            @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
     }
 
@@ -276,13 +290,23 @@ public class GitLabSCMSourceContext
         return this;
     }
 
-    public final GitLabSCMSourceContext withAlwaysIgnoreMRApprove(boolean enabled) {
-        this.alwaysIgnoreMRApprove = enabled;
+    public final GitLabSCMSourceContext withalwaysIgnoreMRApproval(boolean enabled) {
+        this.alwaysIgnoreMRApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApprove(boolean enabled) {
-        this.alwaysIgnoreMRUnApprove = enabled;
+    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproval(boolean enabled) {
+        this.alwaysIgnoreMRUnApproval = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withalwaysIgnoreMRApproved(boolean enabled) {
+        this.alwaysIgnoreMRApproved = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproved(boolean enabled) {
+        this.alwaysIgnoreMRUnApproved = enabled;
         return this;
     }
 
