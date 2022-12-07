@@ -31,7 +31,8 @@ public class GitLabPipelineStatusNotifierTest {
         BranchSCMHead head = new BranchSCMHead("head");
         SCMRevision revision = new BranchSCMRevision(head, "hash");
 
-        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision);
+        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision,
+                new hudson.EnvVars());
 
         assertThat(statusName, is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX
                 + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
@@ -49,7 +50,8 @@ public class GitLabPipelineStatusNotifierTest {
         BranchSCMRevision source = new BranchSCMRevision(new BranchSCMHead("source"), "source-hash");
         SCMRevision revision = new MergeRequestSCMRevision(head, target, source);
 
-        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, "head", revision);
+        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, "head", revision,
+                new hudson.EnvVars());
 
         assertThat(statusName, is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX
                 + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
@@ -67,7 +69,8 @@ public class GitLabPipelineStatusNotifierTest {
         BranchSCMRevision source = new BranchSCMRevision(new BranchSCMHead("source"), "source-hash");
         SCMRevision revision = new MergeRequestSCMRevision(head, target, source);
 
-        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, "merge", revision);
+        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, "merge", revision,
+                new hudson.EnvVars());
 
         assertThat(statusName, is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX
                 + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
@@ -81,7 +84,8 @@ public class GitLabPipelineStatusNotifierTest {
         GitTagSCMHead head = new GitTagSCMHead("tagName", 0);
         SCMRevision revision = new GitTagSCMRevision(head, "tag-hash");
 
-        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision);
+        String statusName = GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision,
+                new hudson.EnvVars());
 
         assertThat(statusName, is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX
                 + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
@@ -135,7 +139,7 @@ public class GitLabPipelineStatusNotifierTest {
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
 
-        Job<?,?> job = new FreeStyleProject(parent, "MR-123");
+        Job<?, ?> job = new FreeStyleProject(parent, "MR-123");
 
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
@@ -158,7 +162,7 @@ public class GitLabPipelineStatusNotifierTest {
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
 
-        Job<?,?> job = new FreeStyleProject(parent, "MR-123-head");
+        Job<?, ?> job = new FreeStyleProject(parent, "MR-123-head");
 
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
@@ -181,7 +185,7 @@ public class GitLabPipelineStatusNotifierTest {
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
 
-        Job<?,?> job = new FreeStyleProject(parent, "MR-123-merge");
+        Job<?, ?> job = new FreeStyleProject(parent, "MR-123-merge");
 
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
