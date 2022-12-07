@@ -31,6 +31,8 @@ public class GitLabSCMSourceContext
     @NonNull
     private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
 
+    private boolean buildMRForksNotMirror;
+
     private boolean notificationsDisabled;
 
     private boolean logCommentEnabled;
@@ -110,6 +112,10 @@ public class GitLabSCMSourceContext
         return systemhookRegistration;
     }
 
+    public final boolean buildMRForksNotMirror() {
+        return buildMRForksNotMirror;
+    }
+
     public final boolean notificationsDisabled() {
         return notificationsDisabled;
     }
@@ -174,7 +180,9 @@ public class GitLabSCMSourceContext
         return buildStatusNameCustomPart;
     }
 
-    public boolean getBuildStatusNameOverwrite() { return buildStatusNameOverwrite; }
+    public boolean getBuildStatusNameOverwrite() {
+        return buildStatusNameOverwrite;
+    }
 
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
@@ -223,6 +231,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
         systemhookRegistration = mode;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withBuildMRForksNotMirror(boolean disabled) {
+        this.buildMRForksNotMirror = disabled;
         return this;
     }
 

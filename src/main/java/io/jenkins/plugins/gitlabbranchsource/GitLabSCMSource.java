@@ -268,18 +268,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         .getCommit().getId();
                 if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
                     listener.getLogger().format("Current revision of merge request #%s is %s%n",
-                        h.getId(), mr.getSha());
+                            h.getId(), mr.getSha());
                     return new MergeRequestSCMRevision(
-                        h,
-                        new BranchSCMRevision(
-                            h.getTarget(),
-                            targetSha
-                        ),
-                        new BranchSCMRevision(
-                            new BranchSCMHead(h.getOriginName()),
-                            mr.getSha()
-                        )
-                    );
+                            h,
+                            new BranchSCMRevision(
+                                    h.getTarget(),
+                                    targetSha),
+                            new BranchSCMRevision(
+                                    new BranchSCMHead(h.getOriginName()),
+                                    mr.getSha()));
                 } else {
                     listener.getLogger().format("Merge request #%s is CLOSED%n", h.getId());
                     return null;
@@ -301,17 +298,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected void retrieve(SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer,
-        SCMHeadEvent<?> event,
-        @NonNull TaskListener listener) throws IOException, InterruptedException {
+            SCMHeadEvent<?> event,
+            @NonNull TaskListener listener) throws IOException, InterruptedException {
         try {
             GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
             setProjectId(gitlabProject.getId());
             sshRemote = gitlabProject.getSshUrlToRepo();
             httpRemote = gitlabProject.getHttpUrlToRepo();
-            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(criteria, observer)
-                .withTraits(getTraits())
-                .newRequest(this, listener)) {
+            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer);
+            try (GitLabSCMSourceRequest request = ctx
+                    .withTraits(getTraits())
+                    .newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
@@ -323,22 +321,26 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     // If `forkedFromProject` is null it doesn't mean anything
                     if (gitlabProject.getForkedFromProject() == null) {
                         listener.getLogger()
-                            .format(
-                                "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
+                                .format(
+                                        "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
                         List<MergeRequest> mrs = gitLabApi.getMergeRequestApi()
-                            .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
+                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
                         mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null)
-                            .collect(Collectors.toList());
+                                .collect(Collectors.toList());
+                        request.setMergeRequests(mrs);
+                    } else if (ctx.buildMRForksNotMirror()) {
+                        listener.getLogger()
+                                .format(
+                                        "%nCollecting MRs for fork except those that target its upstream...%n");
+                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi()
+                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
+                        mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null
+                                && !mr.getTargetProjectId().equals(gitlabProject.getForkedFromProject().getId()))
+                                .collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     } else {
                         listener.getLogger()
-                            .format(
-                                "%nCollecting MRs for fork except those that target its upstream...%n");
-                        List<MergeRequest> mrs = gitLabApi.getMergeRequestApi()
-                            .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
-                        mrs = mrs.stream().filter(mr -> mr.getSourceProjectId() != null && !mr.getTargetProjectId().equals(gitlabProject.getForkedFromProject().getId()) )
-                            .collect(Collectors.toList());
-                        request.setMergeRequests(mrs);
+                                .format("%nIgnoring merge requests as project is a mirror...%n");
                     }
                 }
                 if (request.isFetchTags()) {
@@ -353,34 +355,32 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         String branchName = branch.getName();
                         String sha = branch.getCommit().getId();
                         listener.getLogger().format("%nChecking branch %s%n",
-                            HyperlinkNote.encodeTo(
-                                branchUriTemplate(gitlabProject.getWebUrl())
-                                    .set("branch", splitPath(branchName))
-                                    .expand(),
-                                branchName
-                            )
-                        );
+                                HyperlinkNote.encodeTo(
+                                        branchUriTemplate(gitlabProject.getWebUrl())
+                                                .set("branch", splitPath(branchName))
+                                                .expand(),
+                                        branchName));
                         if (request.process(new BranchSCMHead(branchName),
-                            (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>) head ->
-                                new BranchSCMRevision(head, sha),
-                            new SCMSourceRequest.ProbeLambda<BranchSCMHead, BranchSCMRevision>() {
-                                @NonNull
-                                @Override
-                                public SCMSourceCriteria.Probe create(@NonNull BranchSCMHead head,
-                                    @Nullable BranchSCMRevision revision)
-                                    throws IOException {
-                                    return createProbe(head, revision);
-                                }
-                            },
-                            (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
-                                if (isMatch) {
-                                    listener.getLogger().format("Met criteria%n");
-                                } else {
-                                    listener.getLogger().format("Does not meet criteria%n");
-                                }
-                            })) {
+                                (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>) head -> new BranchSCMRevision(
+                                        head, sha),
+                                new SCMSourceRequest.ProbeLambda<BranchSCMHead, BranchSCMRevision>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(@NonNull BranchSCMHead head,
+                                            @Nullable BranchSCMRevision revision)
+                                            throws IOException {
+                                        return createProbe(head, revision);
+                                    }
+                                },
+                                (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
+                                    if (isMatch) {
+                                        listener.getLogger().format("Met criteria%n");
+                                    } else {
+                                        listener.getLogger().format("Does not meet criteria%n");
+                                    }
+                                })) {
                             listener.getLogger()
-                                .format("%n%d branches were processed (query completed)%n", count);
+                                    .format("%n%d branches were processed (query completed)%n", count);
                             return;
                         }
                     }
@@ -392,103 +392,98 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     HashMap<Long, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
                         mergeRequestContributorCache.put(mr.getIid(),
-                            new ContributorMetadataAction(
-                                mr.getAuthor().getUsername(),
-                                mr.getAuthor().getName(),
-                                mr.getAuthor().getEmail()
-                            ));
+                                new ContributorMetadataAction(
+                                        mr.getAuthor().getUsername(),
+                                        mr.getAuthor().getName(),
+                                        mr.getAuthor().getEmail()));
                         mergeRequestMetadataCache.put(mr.getIid(),
-                            new ObjectMetadataAction(
-                                mr.getTitle(),
-                                mr.getDescription(),
-                                mr.getWebUrl()
-                            ));
+                                new ObjectMetadataAction(
+                                        mr.getTitle(),
+                                        mr.getDescription(),
+                                        mr.getWebUrl()));
                         count++;
                         listener.getLogger().format("%nChecking merge request %s%n",
-                            HyperlinkNote.encodeTo(
-                                mergeRequestUriTemplate(gitlabProject.getWebUrl())
-                                    .set("iid", mr.getIid())
-                                    .expand(),
-                                "!" + mr.getIid()
-                            )
-                        );
+                                HyperlinkNote.encodeTo(
+                                        mergeRequestUriTemplate(gitlabProject.getWebUrl())
+                                                .set("iid", mr.getIid())
+                                                .expand(),
+                                        "!" + mr.getIid()));
                         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request
-                            .getMRStrategies();
+                                .getMRStrategies();
                         boolean fork = !mr.getSourceProjectId().equals(mr.getTargetProjectId());
                         String originOwner = mr.getAuthor().getUsername();
                         String originProjectPath = projectPath;
                         if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
-                            // This is a hack to get the path with namespace of source project for forked mrs
+                            // This is a hack to get the path with namespace of source project for forked
+                            // mrs
                             originProjectPath = gitLabApi.getProjectApi()
-                                .getProject(mr.getSourceProjectId()).getPathWithNamespace();
+                                    .getProject(mr.getSourceProjectId()).getPathWithNamespace();
                             forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
                         } else if (fork) {
                             originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
                         String targetSha;
                         try {
-                            targetSha = gitLabApi.getRepositoryApi().getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
+                            targetSha = gitLabApi.getRepositoryApi()
+                                    .getBranch(mr.getTargetProjectId(), mr.getTargetBranch()).getCommit().getId();
                         } catch (Exception e) {
-                            listener.getLogger().format("Failed getting TargetBranch from Merge Request: " + mr.getIid() + " (" + mr.getTitle() + ")%n%s", e);
+                            listener.getLogger().format("Failed getting TargetBranch from Merge Request: " + mr.getIid()
+                                    + " (" + mr.getTitle() + ")%n%s", e);
                             continue;
                         }
-                        LOGGER.log(Level.FINE, String.format("%s -> %s", originOwner, (request.isMember(originOwner) ? "Trusted"
-                            : "Untrusted")));
+                        LOGGER.log(Level.FINE,
+                                String.format("%s -> %s", originOwner, (request.isMember(originOwner) ? "Trusted"
+                                        : "Untrusted")));
                         for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
                             if (request.process(new MergeRequestSCMHead(
                                     "MR-" + mr.getIid() + (strategies.get(fork).size() > 1 ? "-" + strategy.name()
-                                        .toLowerCase(Locale.ENGLISH) : ""),
+                                            .toLowerCase(Locale.ENGLISH) : ""),
                                     mr.getIid(),
                                     new BranchSCMHead(mr.getTargetBranch()),
                                     strategy,
                                     fork
-                                        ? new SCMHeadOrigin.Fork(originProjectPath)
-                                        : SCMHeadOrigin.DEFAULT,
+                                            ? new SCMHeadOrigin.Fork(originProjectPath)
+                                            : SCMHeadOrigin.DEFAULT,
                                     originOwner,
                                     originProjectPath,
                                     mr.getSourceBranch(),
-                                    mr.getTitle()
-                                ),
-                                (SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>) head ->
-                                    new MergeRequestSCMRevision(
-                                        head,
-                                        new BranchSCMRevision(
-                                            head.getTarget(),
-                                            targetSha // Latest revision of target branch
-                                        ),
-                                        new BranchSCMRevision(
-                                            new BranchSCMHead(head.getOriginName()),
-                                            mr.getSha()
-                                        )
-                                    ),
-                                new SCMSourceRequest.ProbeLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
-                                    @NonNull
-                                    @Override
-                                    public SCMSourceCriteria.Probe create(
-                                        @NonNull MergeRequestSCMHead head,
-                                        @Nullable MergeRequestSCMRevision revision)
-                                        throws IOException, InterruptedException {
-                                        boolean isTrusted = request.isTrusted(head);
-                                        if (!isTrusted) {
-                                            listener.getLogger()
-                                                .format("(not from a trusted source)%n");
+                                    mr.getTitle()),
+                                    (SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>) head -> new MergeRequestSCMRevision(
+                                            head,
+                                            new BranchSCMRevision(
+                                                    head.getTarget(),
+                                                    targetSha // Latest revision of target branch
+                                            ),
+                                            new BranchSCMRevision(
+                                                    new BranchSCMHead(head.getOriginName()),
+                                                    mr.getSha())),
+                                    new SCMSourceRequest.ProbeLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
+                                        @NonNull
+                                        @Override
+                                        public SCMSourceCriteria.Probe create(
+                                                @NonNull MergeRequestSCMHead head,
+                                                @Nullable MergeRequestSCMRevision revision)
+                                                throws IOException, InterruptedException {
+                                            boolean isTrusted = request.isTrusted(head);
+                                            if (!isTrusted) {
+                                                listener.getLogger()
+                                                        .format("(not from a trusted source)%n");
+                                            }
+                                            return createProbe(isTrusted ? head : head.getTarget(),
+                                                    revision);
                                         }
-                                        return createProbe(isTrusted ? head : head.getTarget(),
-                                            revision);
-                                    }
-                                },
-                                (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
-                                    if (isMatch) {
-                                        listener.getLogger().format("Met criteria%n");
-                                    } else {
-                                        listener.getLogger().format("Does not meet criteria%n");
-                                    }
-                                }
-                            )) {
+                                    },
+                                    (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
+                                        if (isMatch) {
+                                            listener.getLogger().format("Met criteria%n");
+                                        } else {
+                                            listener.getLogger().format("Does not meet criteria%n");
+                                        }
+                                    })) {
                                 listener.getLogger()
-                                    .format(
-                                        "%n%d merge requests were processed (query completed)%n",
-                                        count);
+                                        .format(
+                                                "%n%d merge requests were processed (query completed)%n",
+                                                count);
                                 return;
                             }
                         }
@@ -505,38 +500,36 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         Long tagDate = tag.getCommit().getCommittedDate().getTime();
                         String sha = tag.getCommit().getId();
                         listener.getLogger().format("%nChecking tag %s%n",
-                            HyperlinkNote.encodeTo(
-                                tagUriTemplate(gitlabProject.getWebUrl())
-                                    .set("tag", splitPath(tag.getName()))
-                                    .expand(),
-                                tag.getName()
-                            )
-                        );
+                                HyperlinkNote.encodeTo(
+                                        tagUriTemplate(gitlabProject.getWebUrl())
+                                                .set("tag", splitPath(tag.getName()))
+                                                .expand(),
+                                        tag.getName()));
                         GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
                         if (request.process(head, new GitTagSCMRevision(head, sha),
-                            new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
-                                @NonNull
-                                @Override
-                                public SCMSourceCriteria.Probe create(
-                                    @NonNull GitLabTagSCMHead head,
-                                    @Nullable GitTagSCMRevision revision)
-                                    throws IOException {
-                                    return createProbe(head, revision);
-                                }
-                            }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
-                                if (isMatch) {
-                                    listener.getLogger().format("Met criteria%n");
-                                } else {
-                                    listener.getLogger().format("Does not meet criteria%n");
-                                }
-                            })) {
+                                new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
+                                    @NonNull
+                                    @Override
+                                    public SCMSourceCriteria.Probe create(
+                                            @NonNull GitLabTagSCMHead head,
+                                            @Nullable GitTagSCMRevision revision)
+                                            throws IOException {
+                                        return createProbe(head, revision);
+                                    }
+                                }, (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
+                                    if (isMatch) {
+                                        listener.getLogger().format("Met criteria%n");
+                                    } else {
+                                        listener.getLogger().format("Does not meet criteria%n");
+                                    }
+                                })) {
                             listener.getLogger()
-                                .format("%n%d tags were processed (query completed)%n", count);
+                                    .format("%n%d tags were processed (query completed)%n", count);
                             return;
                         }
                     }
                     listener.getLogger()
-                        .format("%n%d tags were processed (query completed)%n", count);
+                            .format("%n%d tags were processed (query completed)%n", count);
                 }
             }
         } catch (GitLabApiException e) {
@@ -731,7 +724,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         // the jenkins instance.
         if (server != null && server.isManageWebHooks()) {
             GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
+                    .withTraits(new GitLabSCMNavigatorContext().withTraits(traits).traits());
             GitLabHookRegistration webhookMode = ctx.webhookRegistration();
             GitLabHookRegistration systemhookMode = ctx.systemhookRegistration();
             GitLabHookCreator.register(this, webhookMode, systemhookMode);
@@ -813,7 +806,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return result;
         }
 
-        public long getProjectId(@AncestorInPath SCMSourceOwner context, @QueryParameter String projectPath, @QueryParameter String serverName) {
+        public long getProjectId(@AncestorInPath SCMSourceOwner context, @QueryParameter String projectPath,
+                @QueryParameter String serverName) {
             List<GitLabServer> gitLabServers = GitLabServers.get().getServers();
             if (gitLabServers.size() == 0) {
                 return -1;
@@ -905,7 +899,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     new BranchDiscoveryTrait(true, false),
                     new OriginMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE)),
                     new ForkMergeRequestDiscoveryTrait(EnumSet.of(ChangeRequestCheckoutStrategy.MERGE),
-                    new ForkMergeRequestDiscoveryTrait.TrustPermission()),
+                            new ForkMergeRequestDiscoveryTrait.TrustPermission(), false),
                     new WebhookListenerBuildConditionsTrait());
         }
 
