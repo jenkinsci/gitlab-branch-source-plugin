@@ -49,6 +49,8 @@ public class GitLabSCMSourceContext
 
     private String buildStatusNameCustomPart = "";
 
+    private boolean buildStatusNameOverwrite;
+
     private boolean alwaysBuildMROpen = true;
 
     private boolean alwaysBuildMRReOpen = true;
@@ -172,6 +174,8 @@ public class GitLabSCMSourceContext
         return buildStatusNameCustomPart;
     }
 
+    public boolean getBuildStatusNameOverwrite() { return buildStatusNameOverwrite; }
+
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
         wantBranches = wantBranches || include;
@@ -270,6 +274,11 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext withBuildStatusNameCustomPart(final String buildStatusNameCustomPart) {
         this.buildStatusNameCustomPart = Util.fixNull(buildStatusNameCustomPart);
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withBuildStatusNameOverwrite(final Boolean buildStatusNameOverwrite) {
+        this.buildStatusNameOverwrite = buildStatusNameOverwrite;
         return this;
     }
 
