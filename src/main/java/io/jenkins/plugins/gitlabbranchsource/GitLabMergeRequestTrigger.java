@@ -70,28 +70,35 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
                         getPayload().getObjectAttributes().getIid());
             }
 
+            LOGGER.log(Level.FINEST,
+                    "shouldBuild for MR-{0} will be set for action {1} based on pipeline configuration.",
+                    new Object[] {
+                            getPayload().getObjectAttributes().getIid(),
+                            action
+                    });
+
             if (action.equals("open")) {
-                return context.alwaysBuildMROpen();
+                return shouldBuild && context.alwaysBuildMROpen();
             }
 
             if (action.equals("reopen")) {
-                return context.alwaysBuildMRReOpen();
+                return shouldBuild && context.alwaysBuildMRReOpen();
             }
 
             if (action.equals("approval")) {
-                return !context.alwaysIgnoreMRApproval();
+                return shouldBuild && !context.alwaysIgnoreMRApproval();
             }
 
             if (action.equals("unapproval")) {
-                return !context.alwaysIgnoreMRUnApproval();
+                return shouldBuild && !context.alwaysIgnoreMRUnApproval();
             }
 
             if (action.equals("approved")) {
-                return !context.alwaysIgnoreMRApproved();
+                return shouldBuild && !context.alwaysIgnoreMRApproved();
             }
 
             if (action.equals("unapproved")) {
-                return !context.alwaysIgnoreMRUnApproved();
+                return shouldBuild && !context.alwaysIgnoreMRUnApproved();
             }
         }
 
