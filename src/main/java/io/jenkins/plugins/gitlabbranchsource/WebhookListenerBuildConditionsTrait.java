@@ -61,10 +61,10 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withAlwaysBuildMROpen(getAlwaysBuildMROpen())
                     .withAlwaysBuildMRReOpen(getAlwaysBuildMRReOpen())
-                    .withalwaysIgnoreMRApproval(getalwaysIgnoreMRApproval())
-                    .withalwaysIgnoreMRUnApproval(getalwaysIgnoreMRUnApproval())
-                    .withalwaysIgnoreMRApproved(getalwaysIgnoreMRApproved())
-                    .withalwaysIgnoreMRUnApproved(getalwaysIgnoreMRUnApproved())
+                    .withAlwaysIgnoreMRApproval(getalwaysIgnoreMRApproval())
+                    .withAlwaysIgnoreMRUnApproval(getalwaysIgnoreMRUnApproval())
+                    .withAlwaysIgnoreMRApproved(getalwaysIgnoreMRApproved())
+                    .withAlwaysIgnoreMRUnApproved(getalwaysIgnoreMRUnApproved())
                     .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates());
         }
     }

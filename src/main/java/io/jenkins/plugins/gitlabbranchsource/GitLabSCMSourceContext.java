@@ -313,22 +313,22 @@ public class GitLabSCMSourceContext
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproval(boolean enabled) {
         this.alwaysIgnoreMRApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproval(boolean enabled) {
         this.alwaysIgnoreMRUnApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproved(boolean enabled) {
         this.alwaysIgnoreMRApproved = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproved(boolean enabled) {
         this.alwaysIgnoreMRUnApproved = enabled;
         return this;
     }
