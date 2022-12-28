@@ -21,7 +21,7 @@ public class GitLabSCMSourceDeserializationTest {
     @Test
     public void afterRestartingJenkinsTransientFieldsAreNotNull() throws Exception {
         plan.then(j -> {
-            GitLabSCMSourceBuilder sb = new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project");
+            GitLabSCMSourceBuilder sb = new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project", true);
             WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
             project.getSourcesList().add(new BranchSource(sb.build()));
         });
