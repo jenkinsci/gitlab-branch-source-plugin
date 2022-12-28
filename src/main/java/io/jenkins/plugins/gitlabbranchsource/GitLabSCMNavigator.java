@@ -115,6 +115,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private boolean wantSubGroupProjects;
     private transient GitLabOwner gitlabOwner; // TODO check if a better data structure can be used
 
+    private boolean markUnstableAsSuccess;
+
     @DataBoundConstructor
     public GitLabSCMNavigator(String projectOwner) {
         this.projectOwner = projectOwner;
@@ -158,6 +160,15 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     public String getProjectOwner() {
         return projectOwner;
+    }
+
+    public boolean getMarkUnstableAsSuccess() {
+        return markUnstableAsSuccess;
+    }
+
+    @DataBoundSetter
+    public void setMarkUnstableAsSuccess(boolean markUnstableAsSuccess) {
+        this.markUnstableAsSuccess = markUnstableAsSuccess;
     }
 
     /**
@@ -260,6 +271,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
+                boolean markUnstableAsSuccess = getMarkUnstableAsSuccess();
                 String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
                 getNavigatorProjects().add(projectPathWithNamespace);
                 if (StringUtils.isEmpty(p.getDefaultBranch())) {
@@ -294,7 +306,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         credentialsId,
                         projectOwner,
                         projectPathWithNamespace,
-                        name
+                        name,
+                        markUnstableAsSuccess
                     ).withTraits(traits).build(),
                     null,
                     (Witness) (name, isMatch) -> {

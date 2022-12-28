@@ -19,10 +19,12 @@ public class GitLabSCMSourceBuilder extends
     private final String projectPath;
     @NonNull
     private final String projectName;
+    @NonNull
+    private final boolean markUnstableAsSuccess;
 
     public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverName,
         @CheckForNull String credentialsId, @NonNull String projectOwner,
-        @NonNull String projectPath, @NonNull String projectName) {
+        @NonNull String projectPath, @NonNull String projectName, @NonNull boolean markUnstableAsSuccess) {
         super(GitLabSCMSource.class, projectName);
         this.id = id;
         this.serverName = serverName;
@@ -30,6 +32,7 @@ public class GitLabSCMSourceBuilder extends
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
         this.projectName = projectName;
+        this.markUnstableAsSuccess = markUnstableAsSuccess;
     }
 
     @CheckForNull
@@ -46,10 +49,11 @@ public class GitLabSCMSourceBuilder extends
     @Override
     public GitLabSCMSource build() {
         // projectName() should have been getProjectName()
-        GitLabSCMSource result = new GitLabSCMSource(serverName, projectOwner, projectPath);
+        GitLabSCMSource result = new GitLabSCMSource(serverName, projectOwner, projectPath, markUnstableAsSuccess);
         result.setId(id);
         result.setCredentialsId(credentialsId);
         result.setTraits(traits());
+        result.setMarkUnstableAsSuccess(markUnstableAsSuccess);
         result.setProjectName(projectName);
         return result;
     }
