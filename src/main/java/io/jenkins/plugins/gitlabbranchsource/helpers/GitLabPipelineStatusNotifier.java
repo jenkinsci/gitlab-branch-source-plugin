@@ -1,11 +1,13 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.Computer;
 import hudson.model.Job;
+import hudson.model.Node;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -47,14 +49,16 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
- * Publishes Build-Status to GitLab using separate threads so it does not block while sending
- * messages TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if there is no better
+ * Publishes Build-Status to GitLab using separate threads so it does not block
+ * while sending
+ * messages TODO: Multi-Threading is easy to get wrong and wreak havoc. Check if
+ * there is no better
  * way to do this built into Jenkins
  */
 public class GitLabPipelineStatusNotifier {
 
     private static final Logger LOGGER = Logger
-        .getLogger(GitLabPipelineStatusNotifier.class.getName());
+            .getLogger(GitLabPipelineStatusNotifier.class.getName());
 
     static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
 
@@ -71,9 +75,9 @@ public class GitLabPipelineStatusNotifier {
     }
 
     private static GitLabSCMSourceContext getSourceContext(Run<?, ?> build,
-        GitLabSCMSource source) {
+            GitLabSCMSource source) {
         return new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-            .withTraits((source.getTraits()));
+                .withTraits((source.getTraits()));
     }
 
     private static GitLabSCMSource getSource(Run<?, ?> build) {
@@ -84,15 +88,18 @@ public class GitLabPipelineStatusNotifier {
         return null;
     }
 
-    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Run<?, ?> build, final SCMRevision revision) {
-        return getStatusName(sourceContext, build.getFullDisplayName(), revision);
+    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Run<?, ?> build,
+            @NonNull EnvVars envVars, final SCMRevision revision) {
+        return getStatusName(sourceContext, build.getFullDisplayName(), revision, envVars);
     }
 
-    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Job<?, ?> job, final SCMRevision revision) {
-        return getStatusName(sourceContext, job.getFullDisplayName(), revision);
+    private static String getStatusName(final GitLabSCMSourceContext sourceContext, final Job<?, ?> job,
+            @NonNull EnvVars envVars, final SCMRevision revision) {
+        return getStatusName(sourceContext, job.getFullDisplayName(), revision, envVars);
     }
 
-    static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName, final SCMRevision revision) {
+    static String getStatusName(final GitLabSCMSourceContext sourceContext, final String fullDisplayName,
+            final SCMRevision revision, @NonNull EnvVars envVars) {
         final String type;
         if (revision instanceof BranchSCMRevision) {
             type = "branch";
@@ -103,16 +110,19 @@ public class GitLabPipelineStatusNotifier {
         } else {
             type = "UNKNOWN";
             LOGGER.log(Level.WARNING, () -> "Unknown SCMRevision implementation "
-                + revision.getClass().getName() + ", append" + type + " to status name");
+                    + revision.getClass().getName() + ", append" + type + " to status name");
         }
 
-        String customPrefix = sourceContext.getBuildStatusNameCustomPart();
-        if (!customPrefix.isEmpty())
-        {
-            customPrefix = customPrefix + GITLAB_PIPELINE_STATUS_DELIMITER;
+        String pipelinePrefix = sourceContext.getBuildStatusNameCustomPart().trim();
+        if (!pipelinePrefix.isEmpty()) {
+            pipelinePrefix = envVars.expand(pipelinePrefix) + GITLAB_PIPELINE_STATUS_DELIMITER;
+            if (!sourceContext.getBuildStatusNameOverwrite()) {
+                pipelinePrefix = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + pipelinePrefix;
+            }
+        } else {
+            pipelinePrefix = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER;
         }
-
-        final String statusName = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + customPrefix + type;
+        final String statusName = pipelinePrefix + type;
         LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
         return statusName;
     }
@@ -147,8 +157,8 @@ public class GitLabPipelineStatusNotifier {
         String url = getRootUrl(build);
         if (url.isEmpty()) {
             listener.getLogger().println(
-                "Can not determine Jenkins root URL. Comments are disabled until a root URL is"
-                    + " configured in Jenkins global configuration.");
+                    "Can not determine Jenkins root URL. Comments are disabled until a root URL is"
+                            + " configured in Jenkins global configuration.");
             return;
         }
         Result result = build.getResult();
@@ -179,29 +189,35 @@ public class GitLabPipelineStatusNotifier {
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
             }
-            final String buildName = "**" + getStatusName(sourceContext, build, revision) + ":** ";
-            final String hash;
-            if (revision instanceof BranchSCMRevision) {
-                hash = ((BranchSCMRevision) revision).getHash();
-                gitLabApi.getCommitsApi().addComment(
-                    source.getProjectPath(),
-                    hash,
-                    symbol + buildName + note + suffix
-                );
-            } else if (revision instanceof MergeRequestSCMRevision) {
-                MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-                gitLabApi.getNotesApi().createMergeRequestNote(
-                    source.getProjectPath(),
-                    Long.valueOf(head.getId()),
-                    symbol + buildName + note + suffix
-                );
-            } else if (revision instanceof GitTagSCMRevision) {
-                hash = ((GitTagSCMRevision) revision).getHash();
-                gitLabApi.getCommitsApi().addComment(
-                    source.getProjectPath(),
-                    hash,
-                    symbol + buildName + note + suffix
-                );
+            try {
+                EnvVars envVars = build.getEnvironment(listener);
+                final String buildName = "**" + getStatusName(sourceContext, build, envVars, revision) + ":** ";
+                final String hash;
+                if (revision instanceof BranchSCMRevision) {
+                    hash = ((BranchSCMRevision) revision).getHash();
+                    gitLabApi.getCommitsApi().addComment(
+                            source.getProjectPath(),
+                            hash,
+                            symbol + buildName + note + suffix);
+                } else if (revision instanceof MergeRequestSCMRevision) {
+                    MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
+                    gitLabApi.getNotesApi().createMergeRequestNote(
+                            source.getProjectPath(),
+                            Long.valueOf(head.getId()),
+                            symbol + buildName + note + suffix);
+                } else if (revision instanceof GitTagSCMRevision) {
+                    hash = ((GitTagSCMRevision) revision).getHash();
+                    gitLabApi.getCommitsApi().addComment(
+                            source.getProjectPath(),
+                            hash,
+                            symbol + buildName + note + suffix);
+                }
+            } catch (IOException | InterruptedException e) {
+                LOGGER.log(Level.INFO,
+                        "Could not send status notification for " + build.getFullDisplayName()
+                                + " to " + source
+                                        .getServerName(),
+                        e);
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
@@ -215,21 +231,21 @@ public class GitLabPipelineStatusNotifier {
         LOGGER.log(Level.INFO, "Getting source project ID from MR");
         Matcher m = MERGE_REQUEST_JOB_NAME_FORMAT.matcher(job.getName());
         if (!m.matches()) {
-            LOGGER.log(Level.WARNING, String.format("Job name does not match expected format: [%s], [%s]", job.getName(),
-                    MERGE_REQUEST_JOB_NAME_FORMAT.pattern()));
+            LOGGER.log(Level.WARNING,
+                    String.format("Job name does not match expected format: [%s], [%s]", job.getName(),
+                            MERGE_REQUEST_JOB_NAME_FORMAT.pattern()));
             return null;
         }
 
         Long mrId = Long.parseLong(m.group(1));
         MergeRequest mr;
         try {
-          mr = gitLabApi.getMergeRequestApi().getMergeRequest(
-              projectPath,
-              mrId
-          );
+            mr = gitLabApi.getMergeRequestApi().getMergeRequest(
+                    projectPath,
+                    mrId);
         } catch (GitLabApiException e) {
-            if(!e.getMessage().contains(("Cannot transition status"))) {
-                LOGGER.log(Level.WARNING, String.format("Exception caught: %s",e.getMessage()));
+            if (!e.getMessage().contains(("Cannot transition status"))) {
+                LOGGER.log(Level.WARNING, String.format("Exception caught: %s", e.getMessage()));
             }
             return null;
         }
@@ -254,8 +270,8 @@ public class GitLabPipelineStatusNotifier {
         String url = getRootUrl(build);
         if (url.isEmpty()) {
             listener.getLogger().println(
-                "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
-                    + " configured in Jenkins global configuration.");
+                    "Can not determine Jenkins root URL. Commit status notifications are disabled until a root URL is"
+                            + " configured in Jenkins global configuration.");
             return;
         }
         Result result = build.getResult();
@@ -291,58 +307,68 @@ public class GitLabPipelineStatusNotifier {
         String hash;
         if (revision instanceof BranchSCMRevision) {
             listener.getLogger()
-                .format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
-                    status.getStatus(), status.getDescription());
+                    .format("[GitLab Pipeline Status] Notifying branch build status: %s %s%n",
+                            status.getStatus(), status.getDescription());
             hash = ((BranchSCMRevision) revision).getHash();
         } else if (revision instanceof MergeRequestSCMRevision) {
             listener.getLogger()
-                .format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
-                    status.getStatus(), status.getDescription());
+                    .format("[GitLab Pipeline Status] Notifying merge request build status: %s %s%n",
+                            status.getStatus(), status.getDescription());
             hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
         } else if (revision instanceof GitTagSCMRevision) {
             listener.getLogger()
-                .format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
-                    status.getStatus(), status.getDescription());
+                    .format("[GitLab Pipeline Status] Notifying tag build status: %s %s%n",
+                            status.getStatus(), status.getDescription());
             hash = ((GitTagSCMRevision) revision).getHash();
         } else {
             return;
         }
-        status.setName(getStatusName(sourceContext, build, revision));
-        status.setRef(getRevisionRef(revision));
-
-        final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
-            .get(JobScheduledListener.class);
-        if (jsl != null) {
-            // we are setting the status, so don't let the queue listener background thread change it to pending
-            synchronized (jsl.resolving) {
-                jsl.resolving.remove(build.getParent());
-            }
-        }
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(build.getParent(), source.getServerName());
-            LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
+            EnvVars envVars = build.getEnvironment(listener);
+            status.setName(getStatusName(sourceContext, build, envVars, revision));
+            status.setRef(getRevisionRef(revision));
 
-            if (revision instanceof MergeRequestSCMRevision) {
-                Long projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
-                status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
-                gitLabApi.getCommitsApi().addCommitStatus(
-                    projectId,
-                    hash,
-                    state,
-                    status);
-            } else {
-                gitLabApi.getCommitsApi().addCommitStatus(
-                    source.getProjectPath(),
-                    hash,
-                    state,
-                    status);
+            final JobScheduledListener jsl = ExtensionList.lookup(QueueListener.class)
+                    .get(JobScheduledListener.class);
+            if (jsl != null) {
+                // we are setting the status, so don't let the queue listener background thread
+                // change it to pending
+                synchronized (jsl.resolving) {
+                    jsl.resolving.remove(build.getParent());
+                }
             }
+            try {
+                GitLabApi gitLabApi = GitLabHelper.apiBuilder(build.getParent(), source.getServerName());
+                LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
 
-            listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
-        } catch (GitLabApiException e) {
-            if(!e.getMessage().contains(("Cannot transition status"))) {
-                LOGGER.log(Level.WARNING, String.format("Exception caught: %s",e.getMessage()));
+                if (revision instanceof MergeRequestSCMRevision) {
+                    Long projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
+                    status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
+                    gitLabApi.getCommitsApi().addCommitStatus(
+                            projectId,
+                            hash,
+                            state,
+                            status);
+                } else {
+                    gitLabApi.getCommitsApi().addCommitStatus(
+                            source.getProjectPath(),
+                            hash,
+                            state,
+                            status);
+                }
+
+                listener.getLogger().format("[GitLab Pipeline Status] Notified%n");
+            } catch (GitLabApiException e) {
+                if (!e.getMessage().contains(("Cannot transition status"))) {
+                    LOGGER.log(Level.WARNING, String.format("Exception caught: %s", e.getMessage()));
+                }
             }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.log(Level.INFO,
+                    "Could not send status notification for " + build.getFullDisplayName()
+                            + " to " + source
+                                    .getServerName(),
+                    e);
         }
     }
 
@@ -368,8 +394,8 @@ public class GitLabPipelineStatusNotifier {
             }
             final GitLabSCMSource source = (GitLabSCMSource) src;
             final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null,
-                SCMHeadObserver.none())
-                .withTraits((source.getTraits()));
+                    SCMHeadObserver.none())
+                    .withTraits((source.getTraits()));
             if (sourceContext.notificationsDisabled()) {
                 return;
             }
@@ -384,26 +410,30 @@ public class GitLabPipelineStatusNotifier {
             // prevent delays in the queue when updating GitLab
             Computer.threadPoolForRemoting.submit(() -> {
                 try (ACLContext ctx = ACL.as(Tasks.getAuthenticationOf(wi.task))) {
+                    final TaskListener listener = new LogTaskListener(LOGGER, Level.INFO);
                     final SCMRevision revision = source
-                        .fetch(head, new LogTaskListener(LOGGER, Level.INFO));
+                            .fetch(head, listener);
                     String hash;
                     final CommitStatus status = new CommitStatus();
                     if (revision instanceof BranchSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying branch pending build {0}",
-                            job.getFullName());
+                                job.getFullName());
                         hash = ((BranchSCMRevision) revision).getHash();
                     } else if (revision instanceof MergeRequestSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying merge request pending build {0}",
-                            job.getFullName());
+                                job.getFullName());
                         hash = ((MergeRequestSCMRevision) revision).getOrigin().getHash();
                     } else if (revision instanceof GitTagSCMRevision) {
                         LOGGER.log(Level.INFO, "Notifying tag pending build {0}",
-                            job.getFullName());
+                                job.getFullName());
                         hash = ((GitTagSCMRevision) revision).getHash();
                     } else {
                         return;
                     }
-                    status.setName(getStatusName(sourceContext, job, revision));
+                    Computer c = Computer.currentComputer();
+                    Node n = c == null ? null : c.getNode();
+                    EnvVars envVars = job.getEnvironment(n, listener);
+                    status.setName(getStatusName(sourceContext, job, envVars, revision));
                     status.setRef(getRevisionRef(revision));
 
                     String url;
@@ -425,8 +455,8 @@ public class GitLabPipelineStatusNotifier {
                             if (!nonce.equals(resolving.get(job))) {
                                 // it's not our nonce, so drop
                                 LOGGER.log(Level.INFO,
-                                    "{0} has already started, skipping notification of queued",
-                                    job.getFullName());
+                                        "{0} has already started, skipping notification of queued",
+                                        job.getFullName());
                                 return;
                             }
                             // it is our nonce, so remove it
@@ -437,29 +467,30 @@ public class GitLabPipelineStatusNotifier {
                             Long projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
                             status.setRef(((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
                             gitLabApi.getCommitsApi().addCommitStatus(
-                                projectId,
-                                hash,
-                                state,
-                                status);
+                                    projectId,
+                                    hash,
+                                    state,
+                                    status);
                         } else {
                             gitLabApi.getCommitsApi().addCommitStatus(
-                                source.getProjectPath(),
-                                hash,
-                                state,
-                                status);
+                                    source.getProjectPath(),
+                                    hash,
+                                    state,
+                                    status);
                         }
 
                         LOGGER.log(Level.INFO, "{0} Notified", job.getFullName());
                     } catch (GitLabApiException e) {
-                        if(!e.getMessage().contains("Cannot transition status")) {
+                        if (!e.getMessage().contains("Cannot transition status")) {
                             LOGGER.log(Level.WARNING, String.format("Exception caught: %s", e.getMessage()));
                         }
                     }
                 } catch (IOException | InterruptedException e) {
                     LOGGER.log(Level.INFO,
-                        "Could not send commit status notification for " + job.getFullName()
-                            + " to " + source
-                            .getServerName(), e);
+                            "Could not send commit status notification for " + job.getFullName()
+                                    + " to " + source
+                                            .getServerName(),
+                            e);
                 }
             });
         }
@@ -471,8 +502,8 @@ public class GitLabPipelineStatusNotifier {
 
         @Override
         public void onCheckout(Run<?, ?> build, SCM scm, FilePath workspace, TaskListener listener,
-            File changelogFile,
-            SCMRevisionState pollingBaseline) {
+                File changelogFile,
+                SCMRevisionState pollingBaseline) {
             LOGGER.log(Level.FINE, String.format("SCMListener: Checkout > %s", build.getFullDisplayName()));
             sendNotifications(build, listener);
         }

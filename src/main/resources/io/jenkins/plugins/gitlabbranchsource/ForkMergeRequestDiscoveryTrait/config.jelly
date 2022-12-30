@@ -6,4 +6,7 @@
   </f:entry>
   <f:dropdownDescriptorSelector field="trust" title="${%Trust}" default="${descriptor.defaultTrust}"
     descriptors="${descriptor.trustDescriptors}"/>
+  <f:entry title="${%Build MRs of forks that are not mirrors}" field="buildMRForksNotMirror">
+    <f:checkbox default="unchecked"/>
+  </f:entry>
 </j:jelly>

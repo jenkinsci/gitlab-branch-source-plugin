@@ -70,6 +70,13 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
                         getPayload().getObjectAttributes().getIid());
             }
 
+            LOGGER.log(Level.FINEST,
+                    "shouldBuild for MR-{0} will be set for action {1} based on pipeline configuration.",
+                    new Object[] {
+                            getPayload().getObjectAttributes().getIid(),
+                            action
+                    });
+
             if (action.equals("open")) {
                 return context.alwaysBuildMROpen();
             }

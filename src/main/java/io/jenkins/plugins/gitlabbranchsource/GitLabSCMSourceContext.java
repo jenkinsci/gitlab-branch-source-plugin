@@ -31,6 +31,8 @@ public class GitLabSCMSourceContext
     @NonNull
     private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
 
+    private boolean buildMRForksNotMirror;
+
     private boolean notificationsDisabled;
 
     private boolean logCommentEnabled;
@@ -48,6 +50,8 @@ public class GitLabSCMSourceContext
     private boolean projectAvatarDisabled;
 
     private String buildStatusNameCustomPart = "";
+
+    private boolean buildStatusNameOverwrite;
 
     private boolean alwaysBuildMROpen = true;
 
@@ -106,6 +110,10 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabHookRegistration systemhookRegistration() {
         return systemhookRegistration;
+    }
+
+    public final boolean buildMRForksNotMirror() {
+        return buildMRForksNotMirror;
     }
 
     public final boolean notificationsDisabled() {
@@ -172,6 +180,10 @@ public class GitLabSCMSourceContext
         return buildStatusNameCustomPart;
     }
 
+    public boolean getBuildStatusNameOverwrite() {
+        return buildStatusNameOverwrite;
+    }
+
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
         wantBranches = wantBranches || include;
@@ -219,6 +231,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
         systemhookRegistration = mode;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withBuildMRForksNotMirror(boolean disabled) {
+        this.buildMRForksNotMirror = disabled;
         return this;
     }
 
@@ -273,6 +291,11 @@ public class GitLabSCMSourceContext
         return this;
     }
 
+    public final GitLabSCMSourceContext withBuildStatusNameOverwrite(final Boolean buildStatusNameOverwrite) {
+        this.buildStatusNameOverwrite = buildStatusNameOverwrite;
+        return this;
+    }
+
     @NonNull
     @Override
     public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
@@ -290,22 +313,22 @@ public class GitLabSCMSourceContext
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproval(boolean enabled) {
         this.alwaysIgnoreMRApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproval(boolean enabled) {
         this.alwaysIgnoreMRUnApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproved(boolean enabled) {
         this.alwaysIgnoreMRApproved = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproved(boolean enabled) {
         this.alwaysIgnoreMRUnApproved = enabled;
         return this;
     }
