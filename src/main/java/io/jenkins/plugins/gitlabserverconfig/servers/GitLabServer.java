@@ -169,6 +169,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 ? getRandomName()
                 : StringUtils.trim(name);
         this.credentialsId = credentialsId;
+        this.secretTokenCredentialsId = "";
     }
 
     /**
@@ -359,13 +360,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     public String getSecretTokenAsPlainText() {
-        if (this.secretTokenCredentialsId == null) {
-            return null;
-        }
         StringCredentials credentials = getSecretTokenCredentials(secretTokenCredentialsId);
         String secretToken = "";
         if (credentials != null) {
             secretToken = credentials.getSecret().getPlainText();
+        } else {
+            return null;
         }
         return secretToken;
     }
