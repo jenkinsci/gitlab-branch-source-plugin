@@ -52,7 +52,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * The credentials matcher for GitLab Personal Access Token
      */
     public static final CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers
-        .instanceOf(PersonalAccessToken.class);
+            .instanceOf(PersonalAccessToken.class);
     /**
      * Default name for community SaaS version server
      */
@@ -62,10 +62,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     public static final String GITLAB_SERVER_URL = "https://gitlab.com";
     /**
-     * Used as default token value if no any credentials found by given credentialsId.
+     * Used as default token value if no any credentials found by given
+     * credentialsId.
      */
     public final static String EMPTY_TOKEN = "";
-    private static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
     private static final SecureRandom RANDOM = new SecureRandom();
     /**
      * Length of unique random numeric name for server
@@ -76,11 +77,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Common prefixes that we should remove when inferring a display name.
      */
     private static final String[] COMMON_PREFIX_HOSTNAMES = {
-        "git.",
-        "gitlab.",
-        "vcs.",
-        "scm.",
-        "source."
+            "git.",
+            "gitlab.",
+            "vcs.",
+            "scm.",
+            "source."
     };
 
     /**
@@ -96,25 +97,29 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private final String serverUrl;
 
     /**
-     * {@code true} if and only if Jenkins is supposed to auto-manage web hooks for this end-point.
+     * {@code true} if and only if Jenkins is supposed to auto-manage web hooks for
+     * this end-point.
      */
     private boolean manageWebHooks;
 
     /**
-     * {@code true} if and only if Jenkins is supposed to auto-manage system hooks for this
+     * {@code true} if and only if Jenkins is supposed to auto-manage system hooks
+     * for this
      * end-point.
      */
     private boolean manageSystemHooks;
 
     /**
-     * The {@link PersonalAccessToken#getId()} of the credentials to use for auto-management of
+     * The {@link PersonalAccessToken#getId()} of the credentials to use for
+     * auto-management of
      * hooks.
      */
     @NonNull
     private String credentialsId;
 
     /**
-     * The Jenkins root URL to use in Gitlab hooks, instead of {@link Jenkins#getRootUrl()}.
+     * The Jenkins root URL to use in Gitlab hooks, instead of
+     * {@link Jenkins#getRootUrl()}.
      * Useful when the main public Jenkins URL can't be accessed from Gitlab.
      */
     private String hooksRootUrl;
@@ -138,19 +143,21 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
      *
-     * @param serverUrl The URL of this GitLab Server
-     * @param name A unique name to use to describe the end-point, if empty replaced with a random
-     * name
-     * @param credentialsId The {@link PersonalAccessToken#getId()} of the credentials to use for
-     * GitLab Server Authentication to access GitLab APIs
+     * @param serverUrl     The URL of this GitLab Server
+     * @param name          A unique name to use to describe the end-point, if empty
+     *                      replaced with a random
+     *                      name
+     * @param credentialsId The {@link PersonalAccessToken#getId()} of the
+     *                      credentials to use for
+     *                      GitLab Server Authentication to access GitLab APIs
      */
     @DataBoundConstructor
     public GitLabServer(@NonNull String serverUrl, @NonNull String name,
-        @NonNull String credentialsId) {
+            @NonNull String credentialsId) {
         this.serverUrl = defaultIfBlank(StringUtils.trim(serverUrl), GITLAB_SERVER_URL);
         this.name = StringUtils.isBlank(name)
-            ? getRandomName()
-            : StringUtils.trim(name);
+                ? getRandomName()
+                : StringUtils.trim(name);
         this.credentialsId = credentialsId;
     }
 
@@ -161,7 +168,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     private String getRandomName() {
         return String.format("%s-%s", SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES),
-            RandomStringUtils.randomNumeric(SHORT_NAME_LENGTH));
+                RandomStringUtils.randomNumeric(SHORT_NAME_LENGTH));
     }
 
     /**
@@ -181,9 +188,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns {@code true} if Jenkins is supposed to auto-manage web hooks for this end-point.
+     * Returns {@code true} if Jenkins is supposed to auto-manage web hooks for this
+     * end-point.
      *
-     * @return {@code true} if Jenkins is supposed to auto-manage web hooks for this end-point.
+     * @return {@code true} if Jenkins is supposed to auto-manage web hooks for this
+     *         end-point.
      */
     public boolean isManageWebHooks() {
         return manageWebHooks;
@@ -192,8 +201,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for auto management of web hooks
      *
-     * @param manageWebHooks {@code true} if and only if Jenkins is supposed to auto-manage web
-     * hooks for this end-point.
+     * @param manageWebHooks {@code true} if and only if Jenkins is supposed to
+     *                       auto-manage web
+     *                       hooks for this end-point.
      */
     @DataBoundSetter
     public void setManageWebHooks(boolean manageWebHooks) {
@@ -201,9 +211,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns {@code true} if Jenkins is supposed to auto-manage system hooks for this end-point.
+     * Returns {@code true} if Jenkins is supposed to auto-manage system hooks for
+     * this end-point.
      *
-     * @return {@code true} if Jenkins is supposed to auto-manage system hooks for this end-point.
+     * @return {@code true} if Jenkins is supposed to auto-manage system hooks for
+     *         this end-point.
      */
     public boolean isManageSystemHooks() {
         return manageSystemHooks;
@@ -212,8 +224,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for auto management of system hooks
      *
-     * @param manageSystemHooks {@code true} if and only if Jenkins is supposed to auto-manage
-     * system hooks for this end-point.
+     * @param manageSystemHooks {@code true} if and only if Jenkins is supposed to
+     *                          auto-manage
+     *                          system hooks for this end-point.
      */
     @DataBoundSetter
     public void setManageSystemHooks(boolean manageSystemHooks) {
@@ -221,11 +234,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns The {@link PersonalAccessToken#getId()} of the credentials to use for GitLab Server
+     * Returns The {@link PersonalAccessToken#getId()} of the credentials to use for
+     * GitLab Server
      * Authentication to access GitLab APIs.
      *
-     * @return The {@link PersonalAccessToken#getId()} of the credentials to use for GitLab Server
-     * Authentication to access GitLab APIs.
+     * @return The {@link PersonalAccessToken#getId()} of the credentials to use for
+     *         GitLab Server
+     *         Authentication to access GitLab APIs.
      */
     @NonNull
     public String getCredentialsId() {
@@ -244,17 +259,18 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
         }
-        return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
-                                                                                                    PersonalAccessToken.class,
-                                                                                                    jenkins,
-                                                                                                    ACL.SYSTEM,
-                                                                                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                                                                                                ), withId(credentialsId));
+        return StringUtils.isBlank(credentialsId) ? null
+                : CredentialsMatchers.firstOrNull(lookupCredentials(
+                        PersonalAccessToken.class,
+                        jenkins,
+                        ACL.SYSTEM,
+                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()), withId(credentialsId));
     }
 
     /**
-     * @param hooksRootUrl a custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
-     * Set to {@code null} for default behavior.
+     * @param hooksRootUrl a custom root URL, to be used in hooks instead of
+     *                     {@link Jenkins#getRootUrl()}.
+     *                     Set to {@code null} for default behavior.
      */
     @DataBoundSetter
     public void setHooksRootUrl(String hooksRootUrl) {
@@ -262,8 +278,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * @return the custom root URL, to be used in hooks instead of {@link Jenkins#getRootUrl()}.
-     * Can be either a root URL with its trailing slash, or {@code null}.
+     * @return the custom root URL, to be used in hooks instead of
+     *         {@link Jenkins#getRootUrl()}.
+     *         Can be either a root URL with its trailing slash, or {@code null}.
      */
     @CheckForNull
     public String getHooksRootUrl() {
@@ -277,7 +294,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     // TODO: Use some UI element to trigger (what is the best way?)
     private void generateSecretToken() {
-        byte[] random = new byte[16];   // 16x8=128bit worth of randomness, since we use md5 digest as the API token
+        byte[] random = new byte[16]; // 16x8=128bit worth of randomness, since we use md5 digest as the API token
         RANDOM.nextBytes(random);
         this.secretToken = Secret.decrypt(Util.toHexString(random));
     }
@@ -306,7 +323,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * GitLab Web Hook trigger.
      *
      * @return {@code true} if Jenkins should trigger a build immediately on a
-     * GitLab Web Hook trigger.
+     *         GitLab Web Hook trigger.
      */
     public boolean isImmediateHookTrigger() {
         return immediateHookTrigger;
@@ -315,8 +332,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Data Bound Setter for immediate build on a GitLab Web Hook trigger.
      *
-     * @param immediateHookTrigger {@code true} if and only if Jenkins should trigger a build immediately on a
-     * GitLab Web Hook trigger.
+     * @param immediateHookTrigger {@code true} if and only if Jenkins should
+     *                             trigger a build immediately on a
+     *                             GitLab Web Hook trigger.
      */
     @DataBoundSetter
     public void setImmediateHookTrigger(boolean immediateHookTrigger) {
@@ -327,8 +345,10 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Data Bound Setter for web hook trigger delay
      *
      * @param hookTriggerDelay Delay to be used for GitLab Web Hook build triggers.
-     * Set to {@code null} to use delay equal to GitLab cache timeout, which
-     * will avoid builds being not triggered due to GitLab caching.
+     *                         Set to {@code null} to use delay equal to GitLab
+     *                         cache timeout, which
+     *                         will avoid builds being not triggered due to GitLab
+     *                         caching.
      */
     @DataBoundSetter
     public void setHookTriggerDelay(String hookTriggerDelay) {
@@ -341,8 +361,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
      * @return Delay to be used for GitLab Web Hook build triggers.
-     * Can be either a root URL with its trailing slash, or {@code null}.
-     * Can be {@code null} to request delay to be equal to GitLab cache timeout.
+     *         Can be either a root URL with its trailing slash, or {@code null}.
+     *         Can be {@code null} to request delay to be equal to GitLab cache
+     *         timeout.
      */
     @CheckForNull
     public Integer getHookTriggerDelay() {
@@ -435,7 +456,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @Restricted(DoNotUse.class)
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl,
-            @QueryParameter String credentialsId) {
+                @QueryParameter String credentialsId) {
             PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
             String privateToken = "";
             if (credentials != null) {
@@ -445,18 +466,18 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN, null, getProxyConfig(serverUrl));
                 try {
                     /*
-                    In order to validate a GitLab Server without personal access token,
-                    we are fetching 1 project from the GitLab Server. If no project exists,
-                    it returns an empty list. If no server exists at the specified endpoint,
-                    it raises GitLabAPIException.
+                     * In order to validate a GitLab Server without personal access token,
+                     * we are fetching 1 project from the GitLab Server. If no project exists,
+                     * it returns an empty list. If no server exists at the specified endpoint,
+                     * it raises GitLabAPIException.
                      */
                     gitLabApi.getProjectApi().getProjects(1, 1);
                     return FormValidation.ok("Valid GitLab Server but no credentials specified");
                 } catch (GitLabApiException e) {
                     LOGGER.log(Level.SEVERE, "Invalid GitLab Server Url");
                     return FormValidation
-                        .errorWithMarkup(Messages
-                            .GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+                            .errorWithMarkup(Messages
+                                    .GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
                 }
             } else {
 
@@ -464,15 +485,15 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
                     LOGGER.log(Level.FINEST, String
-                        .format("Connection established with the GitLab Server for %s",
-                            user.getUsername()));
+                            .format("Connection established with the GitLab Server for %s",
+                                    user.getUsername()));
                     return FormValidation
-                        .ok(String.format("Credentials verified for user %s", user.getUsername()));
+                            .ok(String.format("Credentials verified for user %s", user.getUsername()));
                 } catch (GitLabApiException e) {
                     LOGGER.log(Level.SEVERE,
-                        "Failed to connect with GitLab Server - %s", e.getMessage());
+                            "Failed to connect with GitLab Server - %s", e.getMessage());
                     return FormValidation.error(e,
-                        Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
+                            Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
                 }
             }
         }
@@ -480,41 +501,39 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         /**
          * Stapler form completion.
          *
-         * @param serverUrl the server URL.
+         * @param serverUrl     the server URL.
          * @param credentialsId the credentials Id
          * @return the available credentials.
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
         public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
-            @QueryParameter String credentialsId) {
+                @QueryParameter String credentialsId) {
             Jenkins jenkins = Jenkins.get();
             if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
-                .includeEmptyValue()
-                .includeMatchingAs(ACL.SYSTEM,
-                    jenkins,
-                    StandardCredentials.class,
-                    fromUri(serverUrl).build(),
-                    CREDENTIALS_MATCHER
-                );
+                    .includeEmptyValue()
+                    .includeMatchingAs(ACL.SYSTEM,
+                            jenkins,
+                            StandardCredentials.class,
+                            fromUri(serverUrl).build(),
+                            CREDENTIALS_MATCHER);
         }
 
         private PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
             Jenkins jenkins = Jenkins.get();
             jenkins.checkPermission(Jenkins.ADMINISTER);
-            return StringUtils.isBlank(credentialsId) ? null : CredentialsMatchers.firstOrNull(
-                lookupCredentials(
-                    PersonalAccessToken.class,
-                    jenkins,
-                    ACL.SYSTEM,
-                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
-                withId(credentialsId)
-            );
+            return StringUtils.isBlank(credentialsId) ? null
+                    : CredentialsMatchers.firstOrNull(
+                            lookupCredentials(
+                                    PersonalAccessToken.class,
+                                    jenkins,
+                                    ACL.SYSTEM,
+                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
+                            withId(credentialsId));
         }
-
 
     }
 }

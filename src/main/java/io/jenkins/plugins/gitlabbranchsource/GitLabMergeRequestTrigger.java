@@ -9,8 +9,7 @@ import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 
 public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
-    public static final Logger LOGGER = Logger
-            .getLogger(GitLabMergeRequestTrigger.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabMergeRequestTrigger.class.getName());
 
     public GitLabMergeRequestTrigger(MergeRequestEvent mrEvent, String origin) {
         super(mrEvent, origin);

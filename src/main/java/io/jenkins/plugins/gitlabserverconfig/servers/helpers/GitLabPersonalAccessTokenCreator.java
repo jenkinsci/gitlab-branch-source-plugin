@@ -47,17 +47,16 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 @Extension
 public class GitLabPersonalAccessTokenCreator extends
-    Descriptor<GitLabPersonalAccessTokenCreator> implements
-    Describable<GitLabPersonalAccessTokenCreator> {
+        Descriptor<GitLabPersonalAccessTokenCreator> implements
+        Describable<GitLabPersonalAccessTokenCreator> {
 
-    private static final Logger LOGGER = Logger.getLogger(GitLabPersonalAccessTokenCreator.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabPersonalAccessTokenCreator.class.getName());
 
     private static final List<AccessTokenUtils.Scope> GL_PLUGIN_REQUIRED_SCOPE = ImmutableList.of(
-        AccessTokenUtils.Scope.API,
-        AccessTokenUtils.Scope.READ_REGISTRY,
-        AccessTokenUtils.Scope.READ_USER,
-        AccessTokenUtils.Scope.READ_REPOSITORY
-    );
+            AccessTokenUtils.Scope.API,
+            AccessTokenUtils.Scope.READ_REGISTRY,
+            AccessTokenUtils.Scope.READ_USER,
+            AccessTokenUtils.Scope.READ_REPOSITORY);
 
     public GitLabPersonalAccessTokenCreator() {
         super(GitLabPersonalAccessTokenCreator.class);
@@ -81,33 +80,32 @@ public class GitLabPersonalAccessTokenCreator extends
 
     @SuppressWarnings("unused")
     public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
-        @QueryParameter String credentialsId) {
+            @QueryParameter String credentialsId) {
         Jenkins jenkins = Jenkins.get();
         if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
             return new StandardListBoxModel().includeCurrentValue(credentialsId);
         }
         return new StandardUsernameListBoxModel()
-            .includeEmptyValue()
-            .includeMatchingAs(
-                ACL.SYSTEM,
-                jenkins,
-                StandardUsernamePasswordCredentials.class,
-                fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
-                CredentialsMatchers.always()
-            ).includeMatchingAs(
-                Jenkins.getAuthentication(),
-                jenkins,
-                StandardUsernamePasswordCredentials.class,
-                fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
-                CredentialsMatchers.always()
-            );
+                .includeEmptyValue()
+                .includeMatchingAs(
+                        ACL.SYSTEM,
+                        jenkins,
+                        StandardUsernamePasswordCredentials.class,
+                        fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
+                        CredentialsMatchers.always())
+                .includeMatchingAs(
+                        Jenkins.getAuthentication(),
+                        jenkins,
+                        StandardUsernamePasswordCredentials.class,
+                        fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build(),
+                        CredentialsMatchers.always());
     }
 
     @SuppressWarnings("unused")
     @RequirePOST
     public FormValidation doCreateTokenByCredentials(
-        @QueryParameter String serverUrl,
-        @QueryParameter String credentialsId) {
+            @QueryParameter String serverUrl,
+            @QueryParameter String credentialsId) {
 
         Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.ADMINISTER);
@@ -116,19 +114,19 @@ public class GitLabPersonalAccessTokenCreator extends
         }
 
         StandardUsernamePasswordCredentials credentials = firstOrNull(lookupCredentials(
-            StandardUsernamePasswordCredentials.class,
-            jenkins,
-            ACL.SYSTEM,
-            fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
-            withId(credentialsId));
+                StandardUsernamePasswordCredentials.class,
+                jenkins,
+                ACL.SYSTEM,
+                fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
+                withId(credentialsId));
 
         if (credentials == null) {
             credentials = firstOrNull(lookupCredentials(
-                StandardUsernamePasswordCredentials.class,
-                jenkins,
-                Jenkins.getAuthentication(),
-                fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
-                withId(credentialsId));
+                    StandardUsernamePasswordCredentials.class,
+                    jenkins,
+                    Jenkins.getAuthentication(),
+                    fromUri(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL)).build()),
+                    withId(credentialsId));
         }
 
         if (Objects.isNull(credentials)) {
@@ -137,12 +135,11 @@ public class GitLabPersonalAccessTokenCreator extends
         try {
             String tokenName = UUID.randomUUID().toString();
             String token = AccessTokenUtils.createPersonalAccessToken(
-                defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
-                credentials.getUsername(),
-                Secret.toString(credentials.getPassword()),
-                tokenName,
-                GL_PLUGIN_REQUIRED_SCOPE
-            );
+                    defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
+                    credentials.getUsername(),
+                    Secret.toString(credentials.getPassword()),
+                    tokenName,
+                    GL_PLUGIN_REQUIRED_SCOPE);
             tokenName = getShortName(tokenName);
             createCredentials(serverUrl, token, credentials.getUsername(), tokenName);
             return FormValidation.ok("Created credentials with id %s ", tokenName);
@@ -154,71 +151,72 @@ public class GitLabPersonalAccessTokenCreator extends
     @SuppressWarnings("unused")
     @RequirePOST
     public FormValidation doCreateTokenByPassword(
-        @QueryParameter String serverUrl,
-        @QueryParameter String login,
-        @QueryParameter String password) {
+            @QueryParameter String serverUrl,
+            @QueryParameter String login,
+            @QueryParameter String password) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         try {
             String tokenName = UUID.randomUUID().toString();
             String token = AccessTokenUtils.createPersonalAccessToken(
-                defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
-                login,
-                password,
-                tokenName,
-                GL_PLUGIN_REQUIRED_SCOPE
-            );
+                    defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL),
+                    login,
+                    password,
+                    tokenName,
+                    GL_PLUGIN_REQUIRED_SCOPE);
             tokenName = getShortName(tokenName);
             createCredentials(serverUrl, token, login, tokenName);
             return FormValidation.ok(
-                "Created credentials with id %s", tokenName
-            );
+                    "Created credentials with id %s", tokenName);
         } catch (GitLabApiException e) {
             return FormValidation
-                .error(e, "Can't create GL token for %s - %s", login, e.getMessage());
+                    .error(e, "Can't create GL token for %s - %s", login, e.getMessage());
         }
     }
 
     /**
-     * Creates {@link io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken} with
+     * Creates
+     * {@link io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken}
+     * with
      * previously created GitLab Personal Access Token.
      *
-     * @param serverUrl to add to domain with host and scheme requirement from this url
-     * @param token GitLab Personal Access Token
-     * @param username used to add to description of newly created credentials
+     * @param serverUrl to add to domain with host and scheme requirement from this
+     *                  url
+     * @param token     GitLab Personal Access Token
+     * @param username  used to add to description of newly created credentials
      * @see #saveCredentials(String, PersonalAccessToken)
      */
     private void createCredentials(@Nullable String serverUrl, String token, String username,
-        String tokenName) {
+            String tokenName) {
         String url = defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL);
         String description = String
-            .format("Auto Generated by %s server for %s user", url, username);
+                .format("Auto Generated by %s server for %s user", url, username);
         PersonalAccessToken credentials = new PersonalAccessTokenImpl(
-            CredentialsScope.GLOBAL,
-            tokenName,
-            description,
-            token
-        );
+                CredentialsScope.GLOBAL,
+                tokenName,
+                description,
+                token);
         saveCredentials(url, credentials);
     }
 
     /**
-     * Saves given credentials in jenkins for domain extracted from server url Adds them to domain
-     * extracted from server url (will be generated if no any exists before). Domain will have
+     * Saves given credentials in jenkins for domain extracted from server url Adds
+     * them to domain
+     * extracted from server url (will be generated if no any exists before). Domain
+     * will have
      * domain requirements consists of scheme and host from serverUrl arg
      *
-     * @param serverUrl to extract (and create if no any) domain
+     * @param serverUrl   to extract (and create if no any) domain
      * @param credentials to save credentials
      */
     private void saveCredentials(String serverUrl, final PersonalAccessToken credentials) {
         URI serverUri = URI.create(defaultIfBlank(serverUrl, GitLabServer.GITLAB_SERVER_URL));
 
         List<DomainSpecification> specifications = asList(
-            new SchemeSpecification(serverUri.getScheme()),
-            new HostnameSpecification(serverUri.getHost(), null)
-        );
+                new SchemeSpecification(serverUri.getScheme()),
+                new HostnameSpecification(serverUri.getHost(), null));
 
         final Domain domain = new Domain(serverUri.getHost(), "GitLab domain (autogenerated)",
-            specifications);
+                specifications);
         try (ACLContext acl = ACL.as(ACL.SYSTEM)) {
             new SystemCredentialsProvider.StoreImpl().addDomain(domain, credentials);
         } catch (IOException e) {

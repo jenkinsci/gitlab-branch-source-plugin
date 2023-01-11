@@ -104,7 +104,7 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GIT
 
 public class GitLabSCMSource extends AbstractGitSCMSource {
 
-    private static final Logger LOGGER = Logger.getLogger(GitLabSCMSource.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabSCMSource.class.getName());
     private final String serverName;
     private final String projectOwner;
     private final String projectPath;
