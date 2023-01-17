@@ -37,6 +37,12 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
         String action = attributes.getAction();
         boolean shouldBuild = true;
 
+        if (attributes.getWorkInProgress() && context.alwaysIgnoreMRWorkInProgress()) {
+            LOGGER.log(Level.FINE, "shouldBuild for MR-{0} set to false due to WorkInProgress=true.",
+                    getPayload().getObjectAttributes().getIid());
+            return false;
+        }
+
         if (action != null) {
             if (action.equals("update") && context.alwaysIgnoreNonCodeRelatedUpdates()) {
                 if (mrEvent.getChanges().getAssignees() != null) {
