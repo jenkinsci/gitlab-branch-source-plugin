@@ -54,7 +54,8 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                                         return "Merge request !" + getPayload().getObjectAttributes().getIid()
                                                         + " state:" + state
                                                         + " action:" + getPayload().getObjectAttributes().getAction()
-                                                        + " in project " + getPayload().getProject().getName();
+                                                        + " in project " + getPayload().getProject().getName()
+                                                        + " changes:" + getPayload().getChanges().toString();
                         }
                 }
                 return "Merge request !" + getPayload().getObjectAttributes().getIid()
@@ -95,7 +96,8 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                                 case "closed":
                                         return "Merge request !" + getPayload().getObjectAttributes().getIid()
                                                         + " state:" + state
-                                                        + " action:" + getPayload().getObjectAttributes().getAction();
+                                                        + " action:" + getPayload().getObjectAttributes().getAction()
+                                                        + " changes:" + getPayload().getChanges().toString();
                         }
                 }
                 return "Merge request !" + getPayload().getObjectAttributes().getIid() + " event";
@@ -120,7 +122,8 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
                                                         + " state:" + state
                                                         + " action:" + getPayload().getObjectAttributes().getAction()
                                                         + " in project "
-                                                        + getPayload().getProject().getPathWithNamespace();
+                                                        + getPayload().getProject().getPathWithNamespace()
+                                                        + " changes:" + getPayload().getChanges().toString();
                         }
                 }
                 return "Merge request !" + getPayload().getObjectAttributes().getIid() + " event";
