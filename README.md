@@ -877,16 +877,14 @@ You can also use file or url to load the script, see [this](https://github.com/j
 
 ## Acknowledgements
 
-This plugin is built and maintained by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
-
-Maintainers:
+This plugin was built by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/):
 
 * [Parichay](https://github.com/baymac)
 * [Marky](https://github.com/markyjackson-taulia)
 * [Joseph](https://github.com/casz)
 * [Justin](https://github.com/justinharringa)
 
-External Support:
+With external support from:
 
 * [Oleg](https://github.com/oleg-nenashev) (The Jenkins Board Member)
 * [Greg](https://github.com/gmessner) (The maintainer of GitLab4J APIs)
