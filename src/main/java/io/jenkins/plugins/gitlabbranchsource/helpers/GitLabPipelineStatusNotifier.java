@@ -271,7 +271,7 @@ public class GitLabPipelineStatusNotifier {
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
             status.setDescription(build.toString() + ": This commit is unstable with partial failure.");
-            if (source.getMarkUnstableAsSuccess()) {
+            if (sourceContext.getMarkUnstableAsSuccess()) {
                 status.setStatus("SUCCESS");
                 state = Constants.CommitBuildState.SUCCESS;
             } else {

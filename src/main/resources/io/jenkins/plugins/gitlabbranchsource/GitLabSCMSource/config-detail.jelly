@@ -35,7 +35,4 @@
     //     projectOwner.item(0).value = currentPath;
     // })
   </script>
-  <f:entry title="${%Mark unstable as succeess}" field="markUnstableAsSuccess">
-    <f:checkbox default="checked"/>
-  </f:entry>
 </j:jelly>

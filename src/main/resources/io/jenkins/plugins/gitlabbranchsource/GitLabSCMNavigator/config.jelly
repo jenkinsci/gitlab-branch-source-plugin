@@ -13,7 +13,4 @@
   <f:entry title="${%Behaviours}">
     <scm:traits field="traits"/>
   </f:entry>
-  <f:entry title="${%Mark unstable as success}" field="markUnstableAsSuccess">
-    <f:checkbox default="checked"/>
-  </f:entry>
 </j:jelly>

@@ -115,7 +115,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String httpRemote;
     private transient Project gitlabProject;
     private long projectId;
-    private boolean markUnstableAsSuccess;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -129,11 +128,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private transient /* effectively final */ Map<Long, ContributorMetadataAction> mergeRequestContributorCache = new ConcurrentHashMap<>();
 
     @DataBoundConstructor
-    public GitLabSCMSource(String serverName, String projectOwner, String projectPath, boolean markUnstableAsSuccess) {
+    public GitLabSCMSource(String serverName, String projectOwner, String projectPath) {
         this.serverName = serverName;
         this.projectOwner = projectOwner;
         this.projectPath = projectPath;
-        this.markUnstableAsSuccess = markUnstableAsSuccess;
     }
 
     public String getServerName() {
@@ -142,10 +140,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     public String getProjectOwner() {
         return projectOwner;
-    }
-
-    public boolean getMarkUnstableAsSuccess() {
-        return markUnstableAsSuccess;
     }
 
     public String getProjectPath() {
@@ -179,11 +173,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      */
     public void setProjectName(String projectName) {
         this.projectName = projectName;
-    }
-
-    @DataBoundSetter
-    public void setMarkUnstableAsSuccess(boolean markUnstableAsSuccess) {
-        this.markUnstableAsSuccess = markUnstableAsSuccess;
     }
 
     @Override
