@@ -63,6 +63,8 @@ public class GitLabSCMSourceContext
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
+    private boolean markUnstableAsSuccess;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
             @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -170,6 +172,10 @@ public class GitLabSCMSourceContext
 
     public final String getBuildStatusNameCustomPart() {
         return buildStatusNameCustomPart;
+    }
+
+    public final boolean getMarkUnstableAsSuccess() {
+        return markUnstableAsSuccess;
     }
 
     @NonNull
@@ -312,6 +318,12 @@ public class GitLabSCMSourceContext
 
     public final GitLabSCMSourceContext withAlwaysIgnoreNonCodeRelatedUpdates(boolean enabled) {
         this.alwaysIgnoreNonCodeRelatedUpdates = enabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean disabled) {
+        this.markUnstableAsSuccess = disabled;
         return this;
     }
 }
