@@ -63,7 +63,7 @@ public class GitLabSCMSourceContext
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
-    private boolean markUnstableAsSuccess;
+    private boolean markUnstableAsSuccess = false;
 
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
             @NonNull SCMHeadObserver observer) {
