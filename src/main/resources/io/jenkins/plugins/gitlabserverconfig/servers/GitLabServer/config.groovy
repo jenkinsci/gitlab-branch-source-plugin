@@ -28,7 +28,7 @@ f.entry(title: _("System Hook"), field: "manageSystemHooks", "description": "Do 
     f.checkbox(title: _("Manage System Hooks"))
 }
 
-f.entry(title: _("Secret Token"), field: "secretTokenCredentialsId", "description": "The secret token used while setting up hook url in the GitLab server") {
+f.entry(title: _("Secret Token"), field: "webhookSecretCredentialsId", "description": "The secret token used while setting up hook url in the GitLab server") {
     c.select(context: app)
 }
 

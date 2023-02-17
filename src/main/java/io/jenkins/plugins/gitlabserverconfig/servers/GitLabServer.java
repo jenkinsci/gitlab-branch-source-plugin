@@ -3,6 +3,8 @@ package io.jenkins.plugins.gitlabserverconfig.servers;
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -17,10 +19,13 @@ import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -31,6 +36,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -127,16 +133,22 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private String hooksRootUrl;
 
     /**
-     * The credentials id of the secret token used while setting up hook url in the GitLab server
+     * The secret token used while setting up hook url in the GitLab server
+     * @Deprecated Use webhookSecretCredentialsId instead
+     */
+    private transient Secret secretToken;
+
+    /**
+     * The credentials id of the webhook secret token used while setting up hook url in the GitLab server
      */
     @NonNull
-    private String secretTokenCredentialsId;
+    private String webhookSecretCredentialsId;
 
 
     /**
      * The credentials matcher for StringCredentials
      */
-    public static final CredentialsMatcher SECRET_TOKEN_CREDENTIALS_MATCHER = CredentialsMatchers
+    public static final CredentialsMatcher WEBHOOK_SECRET_CREDENTIALS_MATCHER = CredentialsMatchers
         .instanceOf(StringCredentials.class);
 
     /**
@@ -169,7 +181,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 ? getRandomName()
                 : StringUtils.trim(name);
         this.credentialsId = credentialsId;
-        this.secretTokenCredentialsId = "";
+        this.webhookSecretCredentialsId = "";
     }
 
     /**
@@ -298,13 +310,18 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return Util.ensureEndsWith(Util.fixEmptyAndTrim(hooksRootUrl), "/");
     }
 
-    @DataBoundSetter
-    public void setSecretTokenCredentialsId(String token) {
-        this.secretTokenCredentialsId = token;
+    @DataBoundSetter @Deprecated
+    public void setSecretToken(Secret token) {
+        this.secretToken = token;
     }
 
-    public String getSecretTokenCredentialsId() {
-        return secretTokenCredentialsId;
+    @DataBoundSetter
+    public void setWebhookSecretCredentialsId(String token) {
+        this.webhookSecretCredentialsId = token;
+    }
+
+    public String getWebhookSecretCredentialsId() {
+        return webhookSecretCredentialsId;
     }
 
     /**
@@ -312,32 +329,32 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      *
      * @return {@link StringCredentials}
      */
-    public StringCredentials getSecretTokenCredentials(AccessControlled context) {
+    public StringCredentials getWebhookSecretCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
         if (context == null) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
-            return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+            return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
                                                                                                     StringCredentials.class,
                                                                                                     jenkins,
                                                                                                     ACL.SYSTEM,
                                                                                                     fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                                                                                                ), withId(secretTokenCredentialsId));
+                                                                                                ), withId(webhookSecretCredentialsId));
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
             if (context instanceof ItemGroup) {
-                return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
                     StringCredentials.class,
                     (ItemGroup) context,
                     ACL.SYSTEM,
                     fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ), withId(secretTokenCredentialsId));
+                ), withId(webhookSecretCredentialsId));
             } else {
-                return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
+                return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
                     StringCredentials.class,
                     (Item) context,
                     ACL.SYSTEM,
                     fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ), withId(secretTokenCredentialsId));
+                ), withId(webhookSecretCredentialsId));
             }
         }
     }
@@ -350,17 +367,22 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return (DescriptorImpl) super.getDescriptor();
     }
 
-    private StringCredentials getSecretTokenCredentials(String secretTokenCredentialsId) {
+    @Deprecated
+    public Secret getSecretToken() {
+        return secretToken;
+    }
+
+    private StringCredentials getWebhookSecretCredentials(String webhookSecretCredentialsId) {
         Jenkins jenkins = Jenkins.get();
         jenkins.checkPermission(Jenkins.ADMINISTER);
-        return StringUtils.isBlank(secretTokenCredentialsId) ? null : CredentialsMatchers.firstOrNull(
+        return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull(
             lookupCredentials(StringCredentials.class, jenkins),
-            withId(secretTokenCredentialsId)
+            withId(webhookSecretCredentialsId)
         );
     }
 
     public String getSecretTokenAsPlainText() {
-        StringCredentials credentials = getSecretTokenCredentials(secretTokenCredentialsId);
+        StringCredentials credentials = getWebhookSecretCredentials(webhookSecretCredentialsId);
         String secretToken = "";
         if (credentials != null) {
             secretToken = credentials.getSecret().getPlainText();
@@ -368,6 +390,40 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             return null;
         }
         return secretToken;
+    }
+
+    private Object readResolve() {
+        if(StringUtils.isBlank(webhookSecretCredentialsId) && secretToken != null) {
+            migrateWebhookSecretCredentials();
+        }
+        return this;
+    }
+
+    /**
+     * Migrate webhook secret token to Jenkins credentials
+     */
+    private void migrateWebhookSecretCredentials() {
+        final List<StringCredentials> credentials = 
+            CredentialsProvider.lookupCredentials(StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
+        for (final StringCredentials cred : credentials) {
+            if (StringUtils.equals(secretToken.getPlainText(), Secret.toString(cred.getSecret()))) {
+                // If a credential has the same secret, use it.
+                webhookSecretCredentialsId = cred.getId();
+                break;
+            }
+        }
+        if (StringUtils.isBlank(webhookSecretCredentialsId)) {
+            // If we couldn't find any existing credentials, create new credential
+            final StringCredentials newCredentials =
+                    new StringCredentialsImpl(
+                            CredentialsScope.GLOBAL,
+                            null,
+                            "Migrated from gitlab-branch-source-plugin webhook secret",
+                            secretToken);
+            SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
+            webhookSecretCredentialsId = newCredentials.getId();
+        }
+        secretToken = null;
     }
 
     /**
@@ -575,16 +631,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         /**
          * Stapler form completion.
          *
-         * @param secretTokenCredentialsId the credentials Id
+         * @param webhookSecretCredentialsId the webhook secret credentials Id
          * @return the available credentials.
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
-        public ListBoxModel doFillSecretTokenCredentialsIdItems(@QueryParameter String serverUrl,
-            @QueryParameter String secretTokenCredentialsId) {
+        public ListBoxModel doFillWebhookSecretCredentialsIdItems(@QueryParameter String serverUrl,
+            @QueryParameter String webhookSecretCredentialsId) {
             Jenkins jenkins = Jenkins.get();
             if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
-                return new StandardListBoxModel().includeCurrentValue(secretTokenCredentialsId);
+                return new StandardListBoxModel().includeCurrentValue(webhookSecretCredentialsId);
             }
             return new StandardListBoxModel()
                 .includeEmptyValue()
@@ -592,7 +648,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     jenkins,
                     StringCredentials.class,
                     fromUri(serverUrl).build(),
-                    SECRET_TOKEN_CREDENTIALS_MATCHER
+                    WEBHOOK_SECRET_CREDENTIALS_MATCHER
                 );
         }
 
