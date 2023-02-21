@@ -403,7 +403,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Migrate webhook secret token to Jenkins credentials
      */
     private void migrateWebhookSecretCredentials() {
-        final List<StringCredentials> credentials = 
+        final List<StringCredentials> credentials =
             CredentialsProvider.lookupCredentials(StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
         for (final StringCredentials cred : credentials) {
             if (StringUtils.equals(secretToken.getPlainText(), Secret.toString(cred.getSecret()))) {
