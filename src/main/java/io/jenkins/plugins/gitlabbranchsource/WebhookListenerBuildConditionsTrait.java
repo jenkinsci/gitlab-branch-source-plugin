@@ -48,6 +48,11 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
     /**
+     * Always ignore webhook if MR is WIP
+     */
+    private boolean alwaysIgnoreMRWorkInProgress = false;
+
+    /**
      * Constructor for stapler.
      */
     @DataBoundConstructor
@@ -65,7 +70,8 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
                     .withAlwaysIgnoreMRUnApproval(getAlwaysIgnoreMRUnApproval())
                     .withAlwaysIgnoreMRApproved(getAlwaysIgnoreMRApproved())
                     .withAlwaysIgnoreMRUnApproved(getAlwaysIgnoreMRUnApproved())
-                    .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates());
+                    .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates())
+                    .withAlwaysIgnoreMRWorkInProgress(getAlwaysIgnoreMRWorkInProgress());
         }
     }
 
@@ -157,6 +163,15 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     }
 
     /**
+     * Do not run build on MR WIP
+     *
+     * @return false to run build on non-code related MR updates
+     */
+    public boolean getAlwaysIgnoreMRWorkInProgress() {
+        return alwaysIgnoreMRWorkInProgress;
+    }
+
+    /**
      * Setter for stapler to set the alwaysBuildMROpen of the WebhookListener
      */
     @DataBoundSetter
@@ -212,5 +227,14 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     @DataBoundSetter
     public void setAlwaysIgnoreNonCodeRelatedUpdates(boolean alwaysIgnoreNonCodeRelatedUpdates) {
         this.alwaysIgnoreNonCodeRelatedUpdates = alwaysIgnoreNonCodeRelatedUpdates;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreMRWorkInProgress of the
+     * WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysIgnoreMRWorkInProgress(boolean alwaysIgnoreMRWorkInProgress) {
+        this.alwaysIgnoreMRWorkInProgress = alwaysIgnoreMRWorkInProgress;
     }
 }

@@ -67,6 +67,8 @@ public class GitLabSCMSourceContext
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
+    private boolean alwaysIgnoreMRWorkInProgress = false;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
             @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
@@ -170,6 +172,10 @@ public class GitLabSCMSourceContext
 
     public boolean alwaysIgnoreNonCodeRelatedUpdates() {
         return alwaysIgnoreNonCodeRelatedUpdates;
+    }
+
+    public boolean alwaysIgnoreMRWorkInProgress() {
+        return alwaysIgnoreMRWorkInProgress;
     }
 
     public final String getCommentBody() {
@@ -335,6 +341,11 @@ public class GitLabSCMSourceContext
 
     public final GitLabSCMSourceContext withAlwaysIgnoreNonCodeRelatedUpdates(boolean enabled) {
         this.alwaysIgnoreNonCodeRelatedUpdates = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRWorkInProgress(boolean enabled) {
+        this.alwaysIgnoreMRWorkInProgress = enabled;
         return this;
     }
 }

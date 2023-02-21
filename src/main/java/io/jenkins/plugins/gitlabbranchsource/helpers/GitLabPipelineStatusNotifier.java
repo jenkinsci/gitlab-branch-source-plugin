@@ -57,8 +57,7 @@ import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
  */
 public class GitLabPipelineStatusNotifier {
 
-    private static final Logger LOGGER = Logger
-            .getLogger(GitLabPipelineStatusNotifier.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabPipelineStatusNotifier.class.getName());
 
     static final String GITLAB_PIPELINE_STATUS_PREFIX = "jenkinsci";
 

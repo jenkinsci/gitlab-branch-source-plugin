@@ -9,8 +9,7 @@ import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 
 public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
-    public static final Logger LOGGER = Logger
-            .getLogger(GitLabMergeRequestTrigger.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabMergeRequestTrigger.class.getName());
 
     public GitLabMergeRequestTrigger(MergeRequestEvent mrEvent, String origin) {
         super(mrEvent, origin);
@@ -37,6 +36,12 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
         ObjectAttributes attributes = mrEvent.getObjectAttributes();
         String action = attributes.getAction();
         boolean shouldBuild = true;
+
+        if (attributes.getWorkInProgress() && context.alwaysIgnoreMRWorkInProgress()) {
+            LOGGER.log(Level.FINE, "shouldBuild for MR-{0} set to false due to WorkInProgress=true.",
+                    getPayload().getObjectAttributes().getIid());
+            return false;
+        }
 
         if (action != null) {
             if (action.equals("update") && context.alwaysIgnoreNonCodeRelatedUpdates()) {
