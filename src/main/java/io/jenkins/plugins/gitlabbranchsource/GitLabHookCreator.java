@@ -228,7 +228,7 @@ public class GitLabHookCreator {
     }
 
     public static boolean isTokenEqual(String str1, String str2) {
-        if(str1 == null && str2.isEmpty()) {
+        if(str1 == null && (str2 == null || str2.isEmpty())) {
             return true;
         }
         if(str1 == null) {
