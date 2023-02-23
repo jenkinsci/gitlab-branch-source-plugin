@@ -334,11 +334,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         if (context == null) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
             return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
-                                                                                                    StringCredentials.class,
-                                                                                                    jenkins,
-                                                                                                    ACL.SYSTEM,
-                                                                                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                                                                                                ), withId(webhookSecretCredentialsId));
+                StringCredentials.class,
+                jenkins,
+                ACL.SYSTEM,
+                fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
+            ), withId(webhookSecretCredentialsId));
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
             if (context instanceof ItemGroup) {
