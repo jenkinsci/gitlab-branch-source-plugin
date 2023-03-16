@@ -8,7 +8,6 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -377,7 +376,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     private StringCredentials getWebhookSecretCredentials(String webhookSecretCredentialsId) {
         Jenkins jenkins = Jenkins.get();
-        return StringUtils.isBlank(webhookSecretCredentialsId) ? null 
+        return StringUtils.isBlank(webhookSecretCredentialsId) ? null
                 : CredentialsMatchers.firstOrNull(lookupCredentials(
                         StringCredentials.class,
                         jenkins,
