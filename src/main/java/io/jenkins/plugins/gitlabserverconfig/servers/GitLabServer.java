@@ -7,6 +7,8 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -24,6 +26,7 @@ import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -374,9 +377,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     private StringCredentials getWebhookSecretCredentials(String webhookSecretCredentialsId) {
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.ADMINISTER);
-        return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull(
-            lookupCredentials(StringCredentials.class, jenkins),
+        return StringUtils.isBlank(webhookSecretCredentialsId) ? null 
+                : CredentialsMatchers.firstOrNull(lookupCredentials(
+                        StringCredentials.class,
+                        jenkins,
+                        ACL.SYSTEM,
+                        new ArrayList<DomainRequirement>()),
             withId(webhookSecretCredentialsId)
         );
     }
