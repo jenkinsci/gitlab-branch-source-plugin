@@ -8,6 +8,7 @@ import hudson.security.ACLContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import jenkins.branch.MultiBranchProject;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
@@ -56,29 +57,33 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         if (gitLabSCMSource.getProjectId() == getPayload().getMergeRequest().getTargetProjectId()
                                 && isTrustedMember(gitLabSCMSource, sourceContext.getOnlyTrustedMembersCanTrigger())) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
-                                if (mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
-                                    String expectedCommentBody = sourceContext.getCommentBody();
-                                    Pattern pattern = Pattern.compile(expectedCommentBody,
-                                            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-                                    if (commentBody == null || pattern.matcher(commentBody)
-                                            .matches()) {
-                                        ParameterizedJobMixIn.scheduleBuild2(job, 0,
-                                                new CauseAction(
-                                                        new GitLabMergeRequestCommentCause(commentUrl, getPayload())));
-                                        LOGGER.log(Level.INFO,
-                                                "Triggered build for {0} due to MR comment on {1}",
-                                                new Object[] {
-                                                        job.getFullName(),
-                                                        getPayload().getProject().getPathWithNamespace()
-                                                });
-                                    } else {
-                                        LOGGER.log(Level.INFO,
-                                                "MR comment does not match the trigger build string ({0}) for {1}",
-                                                new Object[] { expectedCommentBody, job.getFullName() });
+                                if (MultiBranchProject.class.isAssignableFrom(job.getParent().getClass()) ) {
+                                    MultiBranchProject parentJob = (MultiBranchProject) job.getParent();
+                                    if (parentJob.getSCMSource(gitLabSCMSource.getId()) == gitLabSCMSource
+                                            && mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
+                                        String expectedCommentBody = sourceContext.getCommentBody();
+                                        Pattern pattern = Pattern.compile(expectedCommentBody,
+                                                Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+                                        if (commentBody == null || pattern.matcher(commentBody)
+                                                .matches()) {
+                                            ParameterizedJobMixIn.scheduleBuild2(job, 0,
+                                                    new CauseAction(
+                                                            new GitLabMergeRequestCommentCause(commentUrl, getPayload())));
+                                            LOGGER.log(Level.INFO,
+                                                    "Triggered build for {0} due to MR comment on {1}",
+                                                    new Object[] {
+                                                            job.getFullName(),
+                                                            getPayload().getProject().getPathWithNamespace()
+                                                    });
+                                        } else {
+                                            LOGGER.log(Level.INFO,
+                                                    "MR comment does not match the trigger build string ({0}) for {1}",
+                                                    new Object[] { expectedCommentBody, job.getFullName() });
+                                        }
+                                        break;
                                     }
-                                    break;
+                                    jobFound = true;
                                 }
-                                jobFound = true;
                             }
                         }
                     }
