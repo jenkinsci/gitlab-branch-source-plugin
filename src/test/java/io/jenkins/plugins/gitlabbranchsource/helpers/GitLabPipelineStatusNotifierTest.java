@@ -11,6 +11,8 @@ import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
 import jenkins.plugins.git.GitTagSCMHead;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.MergeRequest;
@@ -44,7 +46,7 @@ public class GitLabPipelineStatusNotifierTest {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         BranchSCMHead targetHead = new BranchSCMHead("target");
-        MergeRequestSCMHead head = new MergeRequestSCMHead("head", 0, targetHead, null, null, null, null, null, null);
+        MergeRequestSCMHead head = new MergeRequestSCMHead("head", 0, targetHead, ChangeRequestCheckoutStrategy.HEAD, null, null, null, null, null);
 
         BranchSCMRevision target = new BranchSCMRevision(targetHead, "target-hash");
         BranchSCMRevision source = new BranchSCMRevision(new BranchSCMHead("source"), "source-hash");
@@ -63,7 +65,7 @@ public class GitLabPipelineStatusNotifierTest {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         BranchSCMHead targetHead = new BranchSCMHead("target");
-        MergeRequestSCMHead head = new MergeRequestSCMHead("head", 0, targetHead, null, null, null, null, null, null);
+        MergeRequestSCMHead head = new MergeRequestSCMHead("head", 0, targetHead, ChangeRequestCheckoutStrategy.MERGE, null, null, null, null, null);
 
         BranchSCMRevision target = new BranchSCMRevision(targetHead, "target-hash");
         BranchSCMRevision source = new BranchSCMRevision(new BranchSCMHead("source"), "source-hash");
