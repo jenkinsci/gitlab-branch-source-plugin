@@ -33,11 +33,11 @@ public class GitLabAvatarTrait extends SCMSourceTrait {
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
-            ctx.withProjectAvatarDisabled(doDisableProjectAvatar());
+            ctx.withProjectAvatarDisabled(isDisableProjectAvatar());
         }
     }
 
-    public boolean doDisableProjectAvatar() {
+    public boolean isDisableProjectAvatar() {
         return disableProjectAvatar;
     }
 
