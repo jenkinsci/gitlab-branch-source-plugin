@@ -17,7 +17,7 @@ public class GitLabPushCauseData {
     private Map<String, String> variables = new HashMap<>();
 
     public GitLabPushCauseData(PushEvent pushEvent) {
-        this.variables.put("GITLAB_OBJECT_KIND", defaultString(pushEvent.OBJECT_KIND));
+        this.variables.put("GITLAB_OBJECT_KIND", defaultString(PushEvent.OBJECT_KIND));
         this.variables.put("GITLAB_AFTER", defaultString(pushEvent.getAfter()));
         this.variables.put("GITLAB_BEFORE", defaultString(pushEvent.getBefore()));
         this.variables.put("GITLAB_REF", defaultString(pushEvent.getRef()));

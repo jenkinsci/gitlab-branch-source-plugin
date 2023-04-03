@@ -21,7 +21,7 @@ public class GitLabMergeRequestCauseData {
     private Map<String, String> variables = new HashMap<>();
 
     public GitLabMergeRequestCauseData(MergeRequestEvent mergeRequestEvent) {
-        this.variables.put("GITLAB_OBJECT_KIND", defaultString(mergeRequestEvent.OBJECT_KIND));
+        this.variables.put("GITLAB_OBJECT_KIND", defaultString(MergeRequestEvent.OBJECT_KIND));
         this.variables.put("GITLAB_USER_NAME", defaultString(mergeRequestEvent.getUser().getName()));
         this.variables.put("GITLAB_USER_USERNAME", defaultString(mergeRequestEvent.getUser().getUsername()));
         this.variables.put("GITLAB_USER_AVATAR_URL", defaultString(mergeRequestEvent.getUser().getAvatarUrl()));

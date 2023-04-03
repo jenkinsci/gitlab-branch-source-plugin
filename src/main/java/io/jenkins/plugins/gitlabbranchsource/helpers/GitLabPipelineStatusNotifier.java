@@ -103,7 +103,7 @@ public class GitLabPipelineStatusNotifier {
         if (revision instanceof BranchSCMRevision) {
             type = "branch";
         } else if (revision instanceof MergeRequestSCMRevision) {
-            type = getMrBuildName(fullDisplayName);
+            type = getMrBuildName((MergeRequestSCMRevision)revision);
         } else if (revision instanceof GitTagSCMRevision) {
             type = "tag";
         } else {
@@ -137,8 +137,8 @@ public class GitLabPipelineStatusNotifier {
         return refName;
     }
 
-    private static String getMrBuildName(final String buildName) {
-        return (buildName.contains("merge") ? "mr-merge" : "mr-head");
+    private static String getMrBuildName(final MergeRequestSCMRevision revision) {
+        return (revision.isMerge() ? "mr-merge" : "mr-head");
     }
 
     /**
