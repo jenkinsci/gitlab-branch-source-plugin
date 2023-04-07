@@ -1,5 +1,5 @@
 /**
- * <h1>Jenkins SCM API implementation for <a href="https://gitlab.com/">GitLab</a></h1>.
+ * <h2>Jenkins SCM API implementation for <a href="https://gitlab.com/">GitLab</a></h2>.
  *
  * The primary entry points for the implementation are:
  *
