@@ -13,7 +13,7 @@
   <packaging>hpi</packaging>
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <jenkins.version>2.289.3</jenkins.version>
+    <jenkins.version>2.361.4</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
   </properties>
   <name>GitLab Branch Source Plugin</name>
@@ -136,8 +136,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.289.x</artifactId>
-        <version>1500.ve4d05cd32975</version>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>1981.v17df70e84a_a_1</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
