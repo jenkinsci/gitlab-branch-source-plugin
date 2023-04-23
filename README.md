@@ -877,7 +877,7 @@ You can also use file or url to load the script, see [this](https://github.com/j
 
 ## Acknowledgements
 
-This plugin is built and maintained by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
+This plugin was created by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
 
 Current Maintainers:
 
