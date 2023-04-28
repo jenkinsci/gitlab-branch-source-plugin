@@ -882,4 +882,4 @@ This plugin was created by the Google Summer of Code (GSoC) Team for [Multibranc
 Current Maintainers:
 
 * [Michael Fitoussi](https://github.com/mifitous)
-* [Joseph](https://github.com/casz)
+* [Joseph](https://github.com/jetersen)
