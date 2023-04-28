@@ -877,19 +877,9 @@ You can also use file or url to load the script, see [this](https://github.com/j
 
 ## Acknowledgements
 
-This plugin is built and maintained by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
+This plugin was created by the Google Summer of Code (GSoC) Team for [Multibranch Pipeline Support for GitLab](https://jenkins.io/projects/gsoc/2019/gitlab-support-for-multibranch-pipeline/).
 
-Maintainers:
+Current Maintainers:
 
-* [Parichay](https://github.com/baymac)
-* [Marky](https://github.com/markyjackson-taulia)
-* [Joseph](https://github.com/casz)
-* [Justin](https://github.com/justinharringa)
-
-External Support:
-
-* [Oleg](https://github.com/oleg-nenashev) (The Jenkins Board Member)
-* [Greg](https://github.com/gmessner) (The maintainer of GitLab4J APIs)
-* [Stephen](https://github.com/stephenc) (The maintainer of SCM related Jenkins Plugins)
-
-Also thanks to entire Jenkins community for contributing with technical expertise and inspiration.
+* [Michael Fitoussi](https://github.com/mifitous)
+* [Joseph](https://github.com/jetersen)
