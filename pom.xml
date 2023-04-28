@@ -144,29 +144,6 @@
     </dependencies>
   </dependencyManagement>
 
-  <developers>
-    <developer>
-      <id>baymac</id>
-      <name>Parichay Barpanda</name>
-      <email>parichay.barpanda@gmail.com</email>
-    </developer>
-    <developer>
-      <id>markyjackson-taulia</id>
-      <name>Marky Jackson</name>
-      <email>marky.r.jackson@gmail.com</email>
-    </developer>
-    <developer>
-      <id>justinharringa</id>
-      <name>Justin Harringa</name>
-      <email>justin@harringa.com</email>
-    </developer>
-    <developer>
-      <id>jetersen</id>
-      <name>Joseph Peterson</name>
-      <email>josephp90@gmail.com</email>
-    </developer>
-  </developers>
-
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
   <scm>
