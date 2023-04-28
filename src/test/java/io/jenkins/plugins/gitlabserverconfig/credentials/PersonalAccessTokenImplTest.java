@@ -11,7 +11,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-
 public class PersonalAccessTokenImplTest {
 
     @ClassRule
@@ -20,10 +19,7 @@ public class PersonalAccessTokenImplTest {
     @Test
     public void configRoundtrip() throws Exception {
         PersonalAccessTokenImpl expected = new PersonalAccessTokenImpl(
-            CredentialsScope.GLOBAL,
-            "magic-id",
-            "configRoundtrip",
-            "sAf_Xasnou47yxoAsC");
+                CredentialsScope.GLOBAL, "magic-id", "configRoundtrip", "sAf_Xasnou47yxoAsC");
         CredentialsBuilder builder = new CredentialsBuilder(expected);
         j.configRoundtrip(builder);
         j.assertEqualDataBoundBeans(expected, builder.credentials);
@@ -54,8 +50,6 @@ public class PersonalAccessTokenImplTest {
             public boolean isApplicable(Class<? extends AbstractProject> jobType) {
                 return true;
             }
-
         }
-
     }
 }

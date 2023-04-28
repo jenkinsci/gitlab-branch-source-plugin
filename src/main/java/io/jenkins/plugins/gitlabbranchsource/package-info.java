@@ -35,5 +35,4 @@
  * {@linkplain jenkins.scm.api.trait.SCMSourceTrait}s</li>
  * </ul>
  */
-
 package io.jenkins.plugins.gitlabbranchsource;

@@ -1,5 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
 import jenkins.model.Jenkins;
@@ -8,8 +10,6 @@ import org.jenkins.ui.icon.Icon;
 import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconSpec;
 import org.kohsuke.stapler.Stapler;
-
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
  * Link to GitLab
@@ -83,8 +83,7 @@ public class GitLabLink implements Action, IconSpec {
         Icon icon = IconSet.icons.getIconByClassSpec(iconClassName + " icon-md");
         if (icon != null) {
             JellyContext ctx = new JellyContext();
-            ctx.setVariable("resURL",
-                Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
+            ctx.setVariable("resURL", Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
             return icon.getQualifiedUrl(ctx);
         }
         return null;
@@ -130,10 +129,6 @@ public class GitLabLink implements Action, IconSpec {
 
     @Override
     public String toString() {
-        return "GitLabLink{" +
-            "iconClassName='" + iconClassName + '\'' +
-            ", url='" + url + '\'' +
-            '}';
+        return "GitLabLink{" + "iconClassName='" + iconClassName + '\'' + ", url='" + url + '\'' + '}';
     }
-
 }

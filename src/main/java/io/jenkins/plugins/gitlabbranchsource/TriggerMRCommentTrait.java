@@ -88,6 +88,5 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
 }

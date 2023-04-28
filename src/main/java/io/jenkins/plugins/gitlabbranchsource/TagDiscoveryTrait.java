@@ -26,9 +26,7 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
      * Constructor for stapler.
      */
     @DataBoundConstructor
-    public TagDiscoveryTrait() {
-
-    }
+    public TagDiscoveryTrait() {}
 
     /**
      * {@inheritDoc}
@@ -80,21 +78,19 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
 
     /**
      * Trusts tags from the origin project.
      */
-    public static class TagSCMHeadAuthority extends
-        SCMHeadAuthority<SCMSourceRequest, GitLabTagSCMHead, GitTagSCMRevision> {
+    public static class TagSCMHeadAuthority
+            extends SCMHeadAuthority<SCMSourceRequest, GitLabTagSCMHead, GitTagSCMRevision> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
-            @NonNull GitLabTagSCMHead head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull GitLabTagSCMHead head) {
             return true;
         }
 
@@ -117,11 +113,9 @@ public class TagDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(
-                @NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
             }
         }
     }
 }
-

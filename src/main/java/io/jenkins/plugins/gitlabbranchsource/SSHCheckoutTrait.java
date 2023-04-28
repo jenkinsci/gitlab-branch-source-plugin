@@ -80,9 +80,10 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
 
         @Restricted(NoExternalUse.class)
         @SuppressWarnings("unused") // stapler form binding
-        public ListBoxModel doFillCredentialsIdItems(@CheckForNull @AncestorInPath Item context,
-            @QueryParameter String serverUrl,
-            @QueryParameter String credentialsId) {
+        public ListBoxModel doFillCredentialsIdItems(
+                @CheckForNull @AncestorInPath Item context,
+                @QueryParameter String serverUrl,
+                @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
                 if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
@@ -92,7 +93,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
                 }
             } else {
                 if (!context.hasPermission(Item.EXTENDED_READ)
-                    && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
                     // must be able to read the configuration or use the item credentials if you want the list
                     result.includeCurrentValue(credentialsId);
                     return result;
@@ -100,14 +101,11 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
             }
             result.includeEmptyValue();
             result.includeMatchingAs(
-                context instanceof Queue.Task
-                    ? ((Queue.Task) context).getDefaultAuthentication()
-                    : ACL.SYSTEM,
-                context,
-                StandardUsernameCredentials.class,
-                URIRequirementBuilder.fromUri(serverUrl).build(),
-                CredentialsMatchers.instanceOf(SSHUserPrivateKey.class)
-            );
+                    context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
+                    context,
+                    StandardUsernameCredentials.class,
+                    URIRequirementBuilder.fromUri(serverUrl).build(),
+                    CredentialsMatchers.instanceOf(SSHUserPrivateKey.class));
             return result;
         }
     }

@@ -1,5 +1,10 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -26,11 +31,6 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.transport.RefSpec;
-
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.projectUriTemplate;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 /**
  * Builds a {@link GitSCM} for {@link GitLabSCMSource}.
@@ -68,17 +68,11 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      * @param head the {@link SCMHead}
      * @param revision the (optional) {@link SCMRevision}
      */
-    public GitLabSCMBuilder(@NonNull GitLabSCMSource source, @NonNull SCMHead head,
-        @CheckForNull SCMRevision revision) {
-        super(
-            head,
-            revision,
-            source.getHttpRemote(),
-            source.getCredentialsId()
-        );
+    public GitLabSCMBuilder(
+            @NonNull GitLabSCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision revision) {
+        super(head, revision, source.getHttpRemote(), source.getCredentialsId());
         this.context = source.getOwner();
-        serverUrl = defaultIfBlank(getServerUrlFromName(source.getServerName()),
-            GitLabServer.GITLAB_SERVER_URL);
+        serverUrl = defaultIfBlank(getServerUrlFromName(source.getServerName()), GitLabServer.GITLAB_SERVER_URL);
         projectPath = source.getProjectPath();
         sshRemote = source.getSshRemote();
         httpRemote = source.getHttpRemote();
@@ -87,16 +81,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
         String projectUrl;
         if (head instanceof MergeRequestSCMHead) {
             MergeRequestSCMHead h = (MergeRequestSCMHead) head;
-            withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head
-                .getName());
+            withRefSpec("+refs/merge-requests/" + h.getId() + "/head:refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(h.getOriginProjectPath());
         } else if (head instanceof GitLabTagSCMHead) {
             withRefSpec("+refs/tags/" + head.getName() + ":refs/tags/" + head.getName());
             projectUrl = projectUrl(projectPath);
         } else {
 
-            withRefSpec(
-                "+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
+            withRefSpec("+refs/heads/" + head.getName() + ":refs/remotes/@{remote}/" + head.getName());
             projectUrl = projectUrl(projectPath);
         }
         withBrowser(new GitLabBrowser(projectUrl));
@@ -113,12 +105,13 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      * @param projectPath the full path to the project (with namespace).
      * @return a {@link UriTemplate}
      */
-    public static UriTemplate checkoutUriTemplate(@CheckForNull Item context,
-        @NonNull String serverUrl,
-        @CheckForNull String httpRemote,
-        @CheckForNull String sshRemote,
-        @CheckForNull String credentialsId,
-        @NonNull String projectPath) {
+    public static UriTemplate checkoutUriTemplate(
+            @CheckForNull Item context,
+            @NonNull String serverUrl,
+            @CheckForNull String httpRemote,
+            @CheckForNull String sshRemote,
+            @CheckForNull String credentialsId,
+            @NonNull String projectPath) {
 
         if (credentialsId != null && sshRemote != null) {
             URIRequirementBuilder builder = URIRequirementBuilder.create();
@@ -127,37 +120,32 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                 builder.withHostname(serverUri.getHost());
             }
             StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(
-                CredentialsProvider.lookupCredentials(
-                    StandardUsernameCredentials.class,
-                    context,
-                    context instanceof Queue.Task
-                        ? ((Queue.Task) context).getDefaultAuthentication()
-                        : ACL.SYSTEM,
-                    builder.build()
-                ),
-                CredentialsMatchers.allOf(
-                    CredentialsMatchers.withId(credentialsId),
-                    CredentialsMatchers.instanceOf(StandardUsernameCredentials.class)
-                )
-            );
+                    CredentialsProvider.lookupCredentials(
+                            StandardUsernameCredentials.class,
+                            context,
+                            context instanceof Queue.Task
+                                    ? ((Queue.Task) context).getDefaultAuthentication()
+                                    : ACL.SYSTEM,
+                            builder.build()),
+                    CredentialsMatchers.allOf(
+                            CredentialsMatchers.withId(credentialsId),
+                            CredentialsMatchers.instanceOf(StandardUsernameCredentials.class)));
             if (credentials instanceof SSHUserPrivateKey) {
-                return UriTemplate.buildFromTemplate(sshRemote)
-                    .build();
+                return UriTemplate.buildFromTemplate(sshRemote).build();
             }
         }
         if (httpRemote != null) {
-            return UriTemplate.buildFromTemplate(httpRemote)
-                .build();
+            return UriTemplate.buildFromTemplate(httpRemote).build();
         }
         return UriTemplate.buildFromTemplate(serverUrl + '/' + projectPath)
-            .literal(".git")
-            .build();
+                .literal(".git")
+                .build();
     }
 
     private String projectUrl(String projectPath) {
         return projectUriTemplate(serverUrl)
-            .set("project", splitPath(projectPath))
-            .expand();
+                .set("project", splitPath(projectPath))
+                .expand();
     }
 
     /**
@@ -168,8 +156,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
      */
     @NonNull
     public final UriTemplate checkoutUriTemplate() {
-        return checkoutUriTemplate(context, serverUrl, httpRemote, sshRemote, credentialsId(),
-            projectPath);
+        return checkoutUriTemplate(context, serverUrl, httpRemote, sshRemote, credentialsId(), projectPath);
     }
 
     /**
@@ -218,8 +205,7 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     String targetDst = Constants.R_REMOTES + remoteName() + "/" + name;
                     for (RefSpec b : asRefSpecs()) {
                         String dst = b.getDestination();
-                        assert dst.startsWith(Constants.R_REFS)
-                            : "All git references must start with refs/";
+                        assert dst.startsWith(Constants.R_REFS) : "All git references must start with refs/";
                         if (targetSrc.equals(b.getSource())) {
                             if (targetDst.equals(dst)) {
                                 match = true;
@@ -240,17 +226,14 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                         if (localNames.contains(localName)) {
                             // conflict with intended alternative name
                             localName =
-                                "remotes/" + remoteName() + "/merge-requests-" + head.getId()
-                                    + "-upstream-" + name;
+                                    "remotes/" + remoteName() + "/merge-requests-" + head.getId() + "-upstream-" + name;
                         }
                         if (localNames.contains(localName)) {
                             // ok we're just going to mangle our way to something that works
                             while (localNames.contains(localName)) {
-                                localName =
-                                    "remotes/" + remoteName() + "/merge-requests-" + head.getId()
+                                localName = "remotes/" + remoteName() + "/merge-requests-" + head.getId()
                                         + "-upstream-" + name
-                                        + "-" + Integer
-                                        .toHexString(RANDOM.nextInt(Integer.MAX_VALUE));
+                                        + "-" + Integer.toHexString(RANDOM.nextInt(Integer.MAX_VALUE));
                             }
                         }
                         withRefSpec("+refs/heads/" + name + ":refs/" + localName);
@@ -258,11 +241,8 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
                     withExtension(new MergeWithGitSCMExtension(
                             localName,
                             r instanceof MergeRequestSCMRevision
-                                ? ((BranchSCMRevision) ((MergeRequestSCMRevision) r).getTarget())
-                                .getHash()
-                                : null
-                        )
-                    );
+                                    ? ((BranchSCMRevision) ((MergeRequestSCMRevision) r).getTarget()).getHash()
+                                    : null));
                 }
                 if (r instanceof MergeRequestSCMRevision) {
                     withRevision(((MergeRequestSCMRevision) r).getOrigin());
@@ -274,5 +254,4 @@ public class GitLabSCMBuilder extends GitSCMBuilder<GitLabSCMBuilder> {
             withRevision(r);
         }
     }
-
 }

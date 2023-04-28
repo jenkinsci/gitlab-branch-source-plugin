@@ -1,17 +1,17 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static org.jenkins.ui.icon.Icon.ICON_LARGE_STYLE;
+import static org.jenkins.ui.icon.Icon.ICON_MEDIUM_STYLE;
+import static org.jenkins.ui.icon.Icon.ICON_SMALL_STYLE;
+import static org.jenkins.ui.icon.Icon.ICON_XLARGE_STYLE;
+import static org.jenkins.ui.icon.IconSet.icons;
+
 import hudson.init.Initializer;
 import java.util.NoSuchElementException;
 import jenkins.model.Jenkins;
 import org.apache.commons.jelly.JellyContext;
 import org.jenkins.ui.icon.Icon;
 import org.kohsuke.stapler.Stapler;
-
-import static org.jenkins.ui.icon.Icon.ICON_LARGE_STYLE;
-import static org.jenkins.ui.icon.Icon.ICON_MEDIUM_STYLE;
-import static org.jenkins.ui.icon.Icon.ICON_SMALL_STYLE;
-import static org.jenkins.ui.icon.Icon.ICON_XLARGE_STYLE;
-import static org.jenkins.ui.icon.IconSet.icons;
 
 public final class GitLabIcons {
 
@@ -23,7 +23,9 @@ public final class GitLabIcons {
     public static final String ICON_TAG = "gitlab-tag";
     private static final String ICON_PATH = "plugin/gitlab-branch-source/images/";
 
-    private GitLabIcons() { /* no instances allowed */}
+    private GitLabIcons() {
+        /* no instances allowed */
+    }
 
     @Initializer
     public static void initialize() {
@@ -42,8 +44,7 @@ public final class GitLabIcons {
         }
 
         JellyContext ctx = new JellyContext();
-        ctx.setVariable("resURL",
-            Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
+        ctx.setVariable("resURL", Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
         return icon.getQualifiedUrl(ctx);
     }
 
@@ -57,9 +58,7 @@ public final class GitLabIcons {
 
     private static void addIcon(String name) {
         for (Size size : Size.values()) {
-            icons.addIcon(
-                new Icon(classSpec(name, size), ICON_PATH + "/" + name + ".svg",
-                    size.style));
+            icons.addIcon(new Icon(classSpec(name, size), ICON_PATH + "/" + name + ".svg", size.style));
         }
     }
 
@@ -89,4 +88,3 @@ public final class GitLabIcons {
         }
     }
 }
-

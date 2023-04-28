@@ -52,7 +52,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
      */
     public OriginMergeRequestDiscoveryTrait(Set<ChangeRequestCheckoutStrategy> strategies) {
         this((strategies.contains(ChangeRequestCheckoutStrategy.MERGE) ? 1 : 0)
-            + (strategies.contains(ChangeRequestCheckoutStrategy.HEAD) ? 2 : 0));
+                + (strategies.contains(ChangeRequestCheckoutStrategy.HEAD) ? 2 : 0));
     }
 
     /**
@@ -77,8 +77,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
             case 2:
                 return EnumSet.of(ChangeRequestCheckoutStrategy.HEAD);
             case 3:
-                return EnumSet
-                    .of(ChangeRequestCheckoutStrategy.HEAD, ChangeRequestCheckoutStrategy.MERGE);
+                return EnumSet.of(ChangeRequestCheckoutStrategy.HEAD, ChangeRequestCheckoutStrategy.MERGE);
             default:
                 return EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
         }
@@ -157,14 +156,13 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
      * A {@link SCMHeadAuthority} that trusts origin merge requests
      */
     public static class OriginChangeRequestSCMHeadAuthority
-        extends SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
+            extends SCMHeadAuthority<SCMSourceRequest, ChangeRequestSCMHead2, SCMRevision> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
-            @NonNull ChangeRequestSCMHead2 head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull ChangeRequestSCMHead2 head) {
             return SCMHeadOrigin.DEFAULT.equals(head.getOrigin());
         }
 
@@ -178,8 +176,7 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(
-                @NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
             }
 
@@ -191,9 +188,6 @@ public class OriginMergeRequestDiscoveryTrait extends SCMSourceTrait {
             public String getDisplayName() {
                 return Messages.OriginMergeRequestDiscoveryTrait_authorityDisplayName();
             }
-
-
         }
     }
-
 }

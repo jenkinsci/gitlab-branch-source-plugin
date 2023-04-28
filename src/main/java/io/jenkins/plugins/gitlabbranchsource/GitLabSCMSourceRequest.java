@@ -115,8 +115,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      * @param context  the context.
      * @param listener the listener.
      */
-    GitLabSCMSourceRequest(SCMSource source, GitLabSCMSourceContext context,
-            TaskListener listener) {
+    GitLabSCMSourceRequest(SCMSource source, GitLabSCMSourceContext context, TaskListener listener) {
         super(source, context, listener);
         fetchBranches = context.wantBranches();
         fetchTags = context.wantTags();
@@ -238,11 +237,9 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
     @NonNull
     public final Set<ChangeRequestCheckoutStrategy> getMRStrategies(boolean fork) {
         if (fork) {
-            return fetchForkMRs ? getForkMRStrategies()
-                    : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+            return fetchForkMRs ? getForkMRStrategies() : Collections.<ChangeRequestCheckoutStrategy>emptySet();
         }
-        return fetchOriginMRs ? getOriginMRStrategies()
-                : Collections.<ChangeRequestCheckoutStrategy>emptySet();
+        return fetchOriginMRs ? getOriginMRStrategies() : Collections.<ChangeRequestCheckoutStrategy>emptySet();
     }
 
     /**
@@ -257,7 +254,7 @@ public class GitLabSCMSourceRequest extends SCMSourceRequest {
      */
     public final Map<Boolean, Set<ChangeRequestCheckoutStrategy>> getMRStrategies() {
         Map<Boolean, Set<ChangeRequestCheckoutStrategy>> result = new HashMap<>();
-        for (Boolean fork : new Boolean[] { Boolean.TRUE, Boolean.FALSE }) {
+        for (Boolean fork : new Boolean[] {Boolean.TRUE, Boolean.FALSE}) {
             result.put(fork, getMRStrategies(fork));
         }
         return result;

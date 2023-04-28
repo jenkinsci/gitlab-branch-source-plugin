@@ -30,9 +30,16 @@ public class MergeRequestSCMHead extends SCMHead implements ChangeRequestSCMHead
      * @param originName the name of the branch in the origin project
      * @param title the title of the merge request
      */
-    public MergeRequestSCMHead(@NonNull String name, long id, BranchSCMHead target,
-        ChangeRequestCheckoutStrategy strategy, SCMHeadOrigin origin, String originOwner,
-        String originProjectPath, String originName, String title) {
+    public MergeRequestSCMHead(
+            @NonNull String name,
+            long id,
+            BranchSCMHead target,
+            ChangeRequestCheckoutStrategy strategy,
+            SCMHeadOrigin origin,
+            String originOwner,
+            String originProjectPath,
+            String originName,
+            String title) {
         super(name);
         this.id = id;
         this.target = target;
