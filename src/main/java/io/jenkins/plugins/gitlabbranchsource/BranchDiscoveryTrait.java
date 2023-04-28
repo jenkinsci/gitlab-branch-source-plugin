@@ -69,7 +69,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     @Restricted(NoExternalUse.class)
     public boolean isBuildBranch() {
         return (strategyId & 1) != 0;
-
     }
 
     /**
@@ -168,15 +167,13 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Trusts branches from the origin repository.
      */
-    public static class BranchSCMHeadAuthority extends
-        SCMHeadAuthority<SCMSourceRequest, BranchSCMHead, SCMRevision> {
+    public static class BranchSCMHeadAuthority extends SCMHeadAuthority<SCMSourceRequest, BranchSCMHead, SCMRevision> {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        protected boolean checkTrusted(@NonNull SCMSourceRequest request,
-            @NonNull BranchSCMHead head) {
+        protected boolean checkTrusted(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head) {
             return true;
         }
 
@@ -191,8 +188,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
              * {@inheritDoc}
              */
             @Override
-            public boolean isApplicableToOrigin(
-                @NonNull Class<? extends SCMHeadOrigin> originClass) {
+            public boolean isApplicableToOrigin(@NonNull Class<? extends SCMHeadOrigin> originClass) {
                 return SCMHeadOrigin.Default.class.isAssignableFrom(originClass);
             }
 
@@ -204,8 +200,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             public String getDisplayName() {
                 return Messages.BranchDiscoveryTrait_authorityDisplayName();
             }
-
-
         }
     }
 
@@ -223,7 +217,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     // only match if the merge request is an origin merge request
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
-                        && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
+                            && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
                         return true;
                     }
                 }
@@ -245,7 +239,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
-                        && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
+                            && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
                         return true;
                     }
                 }
@@ -254,4 +248,3 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         }
     }
 }
-

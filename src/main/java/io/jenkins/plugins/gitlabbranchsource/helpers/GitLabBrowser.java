@@ -1,5 +1,9 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getUriTemplateFromServer;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
+
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -14,10 +18,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.commitUriTemplate;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getUriTemplateFromServer;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.splitPath;
-
 public class GitLabBrowser extends GitRepositoryBrowser {
 
     @DataBoundConstructor
@@ -31,52 +31,47 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     @Override
     public URL getChangeSetLink(GitChangeSet changeSet) throws IOException {
-        return new URL(
-            commitUriTemplate(getProjectUrl())
+        return new URL(commitUriTemplate(getProjectUrl())
                 .set("hash", changeSet.getId())
-                .expand()
-        );
+                .expand());
     }
 
     @Override
     public URL getDiffLink(GitChangeSet.Path path) throws IOException {
-        if (path.getEditType() != EditType.EDIT || path.getSrc() == null || path.getDst() == null
-            || path.getChangeSet().getParentCommit() == null) {
+        if (path.getEditType() != EditType.EDIT
+                || path.getSrc() == null
+                || path.getDst() == null
+                || path.getChangeSet().getParentCommit() == null) {
             return null;
         }
         return diffLink(path);
     }
-
 
     @Override
     public URL getFileLink(GitChangeSet.Path path) throws IOException {
         if (path.getEditType().equals(EditType.DELETE)) {
             return diffLink(path);
         } else {
-            return new URL(
-                getUriTemplateFromServer(getProjectUrl())
+            return new URL(getUriTemplateFromServer(getProjectUrl())
                     .literal("/blob")
                     .path(UriTemplateBuilder.var("changeSet"))
                     .path(UriTemplateBuilder.var("path", true))
                     .build()
                     .set("changeSet", path.getChangeSet().getId())
                     .set("path", splitPath(path.getPath()))
-                    .expand()
-            );
+                    .expand());
         }
     }
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
-        return new URL(
-            getUriTemplateFromServer(getProjectUrl())
+        return new URL(getUriTemplateFromServer(getProjectUrl())
                 .literal("/commit")
                 .path(UriTemplateBuilder.var("changeSet"))
                 .fragment(UriTemplateBuilder.var("diff"))
                 .build()
                 .set("changeSet", path.getChangeSet().getId())
                 .set("diff", "#diff-" + getIndexOfPath(path))
-                .expand()
-        );
+                .expand());
     }
 
     @Extension
@@ -88,10 +83,8 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         }
 
         @Override
-        public GitLabBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject)
-            throws FormException {
+        public GitLabBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(GitLabBrowser.class, jsonObject);
         }
     }
-
 }

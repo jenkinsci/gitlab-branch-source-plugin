@@ -21,8 +21,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
             case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
                 return Type.UPDATED;
             default:
-                throw new IllegalArgumentException(
-                    "cannot handle system-hook " + projectSystemHookEvent);
+                throw new IllegalArgumentException("cannot handle system-hook " + projectSystemHookEvent);
         }
     }
 
@@ -39,8 +38,8 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
      */
     @Override
     public String description() {
-        return "Project event to branch " + getPayload().getPath() + " in namespace " +
-            getPayload().getPathWithNamespace();
+        return "Project event to branch " + getPayload().getPath() + " in namespace "
+                + getPayload().getPathWithNamespace();
     }
 
     /**
@@ -66,12 +65,12 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
         switch (getType()) {
             case CREATED:
                 String projectPathWithNamespace = getPayload().getPathWithNamespace();
-                String projectOwner = GitLabSCMNavigator
-                    .getProjectOwnerFromNamespace(projectPathWithNamespace);
+                String projectOwner = GitLabSCMNavigator.getProjectOwnerFromNamespace(projectPathWithNamespace);
                 if (navigator.isGroup()) {
                     // checks when project owner is a Group
                     if (navigator.isWantSubGroupProjects()) {
-                        // can be a subgroup so needs to at least start with the project owner when subgroup projects are required
+                        // can be a subgroup so needs to at least start with the project owner when subgroup projects
+                        // are required
                         return projectOwner.startsWith(navigator.getProjectOwner());
                     } else {
                         // when subgroup projects are not required, project owner should match project owner
@@ -83,11 +82,9 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
                     return projectOwner.equals(navigator.getProjectOwner());
                 }
             case UPDATED:
-                return navigator.getNavigatorProjects()
-                    .contains(getPayload().getPathWithNamespace());
+                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
             case REMOVED:
-                return navigator.getNavigatorProjects()
-                    .contains(getPayload().getPathWithNamespace());
+                return navigator.getNavigatorProjects().contains(getPayload().getPathWithNamespace());
             default:
                 return false;
         }
@@ -95,8 +92,7 @@ public class GitLabProjectSCMEvent extends SCMSourceEvent<ProjectSystemHookEvent
 
     @Override
     public boolean isMatch(@NonNull SCMSource source) {
-        return source instanceof GitLabSCMSource && getPayload().getProjectId()
-            .equals(((GitLabSCMSource) source).getProjectId());
+        return source instanceof GitLabSCMSource
+                && getPayload().getProjectId().equals(((GitLabSCMSource) source).getProjectId());
     }
-
 }

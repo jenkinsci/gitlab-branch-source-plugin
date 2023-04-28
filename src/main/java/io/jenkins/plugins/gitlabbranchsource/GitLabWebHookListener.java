@@ -69,9 +69,7 @@ public class GitLabWebHookListener implements WebHookListener {
 
     private boolean findImmediateHookTrigger(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
-            LOGGER.log(
-                    Level.WARNING,
-                    "Falling back to no immediate trigger");
+            LOGGER.log(Level.WARNING, "Falling back to no immediate trigger");
             return false;
         }
 
@@ -80,9 +78,7 @@ public class GitLabWebHookListener implements WebHookListener {
 
     private long findTriggerDelay(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
-            LOGGER.log(
-                    Level.WARNING,
-                    "Falling back to default trigger delay equal GitLab caching timeout");
+            LOGGER.log(Level.WARNING, "Falling back to default trigger delay equal GitLab caching timeout");
             return GITLAB_CACHING_TIMEOUT;
         }
 
@@ -100,8 +96,7 @@ public class GitLabWebHookListener implements WebHookListener {
                 return server;
             }
         }
-        LOGGER.log(Level.WARNING,
-                String.format("No GitLab server for project URL: %s", projectUrl));
+        LOGGER.log(Level.WARNING, String.format("No GitLab server for project URL: %s", projectUrl));
         return null;
     }
 }

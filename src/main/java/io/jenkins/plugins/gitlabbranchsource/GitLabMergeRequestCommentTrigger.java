@@ -27,12 +27,10 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
 
     @Override
     public void isMatch() {
-        if (getPayload().getObjectAttributes().getNoteableType()
-                .equals(NoteEvent.NoteableType.MERGE_REQUEST)) {
+        if (getPayload().getObjectAttributes().getNoteableType().equals(NoteEvent.NoteableType.MERGE_REQUEST)) {
             Long mergeRequestId = getPayload().getMergeRequest().getIid();
-            final Pattern mergeRequestJobNamePattern = Pattern
-                    .compile("^MR-" + mergeRequestId + "\\b.*$",
-                            Pattern.CASE_INSENSITIVE);
+            final Pattern mergeRequestJobNamePattern =
+                    Pattern.compile("^MR-" + mergeRequestId + "\\b.*$", Pattern.CASE_INSENSITIVE);
             final String commentBody = getPayload().getObjectAttributes().getNote();
             final String commentUrl = getPayload().getObjectAttributes().getUrl();
             try (ACLContext ctx = ACL.as(ACL.SYSTEM)) {
@@ -49,36 +47,46 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         }
                         GitLabSCMSource gitLabSCMSource = (GitLabSCMSource) source;
                         final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(
-                                null, SCMHeadObserver.none())
+                                        null, SCMHeadObserver.none())
                                 .withTraits(gitLabSCMSource.getTraits());
                         if (!sourceContext.mrCommentTriggerEnabled()) {
                             continue;
                         }
-                        if (gitLabSCMSource.getProjectId() == getPayload().getMergeRequest().getTargetProjectId()
+                        if (gitLabSCMSource.getProjectId()
+                                        == getPayload().getMergeRequest().getTargetProjectId()
                                 && isTrustedMember(gitLabSCMSource, sourceContext.getOnlyTrustedMembersCanTrigger())) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
-                                if (MultiBranchProject.class.isAssignableFrom(job.getParent().getClass()) ) {
+                                if (MultiBranchProject.class.isAssignableFrom(
+                                        job.getParent().getClass())) {
                                     MultiBranchProject parentJob = (MultiBranchProject) job.getParent();
                                     if (parentJob.getSCMSource(gitLabSCMSource.getId()) == gitLabSCMSource
-                                            && mergeRequestJobNamePattern.matcher(job.getName()).matches()) {
+                                            && mergeRequestJobNamePattern
+                                                    .matcher(job.getName())
+                                                    .matches()) {
                                         String expectedCommentBody = sourceContext.getCommentBody();
-                                        Pattern pattern = Pattern.compile(expectedCommentBody,
-                                                Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-                                        if (commentBody == null || pattern.matcher(commentBody)
-                                                .matches()) {
-                                            ParameterizedJobMixIn.scheduleBuild2(job, 0,
-                                                    new CauseAction(
-                                                            new GitLabMergeRequestCommentCause(commentUrl, getPayload())));
-                                            LOGGER.log(Level.INFO,
+                                        Pattern pattern = Pattern.compile(
+                                                expectedCommentBody, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+                                        if (commentBody == null
+                                                || pattern.matcher(commentBody).matches()) {
+                                            ParameterizedJobMixIn.scheduleBuild2(
+                                                    job,
+                                                    0,
+                                                    new CauseAction(new GitLabMergeRequestCommentCause(
+                                                            commentUrl, getPayload())));
+                                            LOGGER.log(
+                                                    Level.INFO,
                                                     "Triggered build for {0} due to MR comment on {1}",
                                                     new Object[] {
-                                                            job.getFullName(),
-                                                            getPayload().getProject().getPathWithNamespace()
+                                                        job.getFullName(),
+                                                        getPayload()
+                                                                .getProject()
+                                                                .getPathWithNamespace()
                                                     });
                                         } else {
-                                            LOGGER.log(Level.INFO,
+                                            LOGGER.log(
+                                                    Level.INFO,
                                                     "MR comment does not match the trigger build string ({0}) for {1}",
-                                                    new Object[] { expectedCommentBody, job.getFullName() });
+                                                    new Object[] {expectedCommentBody, job.getFullName()});
                                         }
                                         break;
                                     }
@@ -89,10 +97,9 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                     }
                 }
                 if (!jobFound) {
-                    LOGGER.log(Level.INFO, "MR comment on {0} did not match any job",
-                            new Object[] {
-                                    getPayload().getProject().getPathWithNamespace()
-                            });
+                    LOGGER.log(Level.INFO, "MR comment on {0} did not match any job", new Object[] {
+                        getPayload().getProject().getPathWithNamespace()
+                    });
                 }
             }
         }
@@ -103,8 +110,8 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
         if (!check) {
             return true;
         }
-        AccessLevel permission = gitLabSCMSource.getMembers()
-                .get(getPayload().getUser().getUsername());
+        AccessLevel permission =
+                gitLabSCMSource.getMembers().get(getPayload().getUser().getUsername());
         if (permission != null) {
             switch (permission) {
                 case MAINTAINER:

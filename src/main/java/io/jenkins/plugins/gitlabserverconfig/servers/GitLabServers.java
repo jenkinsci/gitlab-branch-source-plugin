@@ -1,5 +1,7 @@
 package io.jenkins.plugins.gitlabserverconfig.servers;
 
+import static hudson.Util.fixNull;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -20,8 +22,6 @@ import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-
-import static hudson.Util.fixNull;
 
 /**
  * Represents the global configuration of GitLab servers.
@@ -54,8 +54,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @param <T>          In this case it is server
      * @return a predicate to filter servers list
      */
-    private static <T> Predicate<T> distinctByKey(
-            Function<? super T, ?> keyExtractor) {
+    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         Map<Object, Boolean> seen = new ConcurrentHashMap<>();
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
@@ -70,9 +69,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
         for (GitLabServer server : getServers()) {
             String serverUrl = server.getServerUrl();
             String serverName = server.getName(); // serverName or name or displayName
-            result.add(
-                    StringUtils.isBlank(serverName) ? serverUrl : serverName + " (" + serverUrl + ")",
-                    serverName);
+            result.add(StringUtils.isBlank(serverName) ? serverUrl : serverName + " (" + serverUrl + ")", serverName);
         }
         return result;
     }
@@ -88,8 +85,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
             servers = new ArrayList<>();
             // Don't really need to create this manually. Having a default one makes it be
             // easier for a new user
-            servers.add(new GitLabServer(GitLabServer.GITLAB_SERVER_URL,
-                    GitLabServer.GITLAB_SERVER_DEFAULT_NAME, ""));
+            servers.add(new GitLabServer(GitLabServer.GITLAB_SERVER_URL, GitLabServer.GITLAB_SERVER_DEFAULT_NAME, ""));
         }
         return Collections.unmodifiableList(servers);
     }
@@ -102,7 +98,8 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
     public void setServers(@CheckForNull List<? extends GitLabServer> servers) {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         this.servers = fixNull(servers).stream()
-                .filter(distinctByKey(GitLabServer::getName)).collect(Collectors.toList());
+                .filter(distinctByKey(GitLabServer::getName))
+                .collect(Collectors.toList());
         save();
     }
 
@@ -118,8 +115,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @return the list of descriptors
      */
     public List<Descriptor> actions() {
-        return Collections
-                .singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
+        return Collections.singletonList(Jenkins.get().getDescriptor(GitLabPersonalAccessTokenCreator.class));
     }
 
     /**
@@ -193,5 +189,4 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
                 .findAny()
                 .orElse(null);
     }
-
 }

@@ -62,7 +62,9 @@ public class BuildStatusNameCustomPartTrait extends SCMSourceTrait {
      *
      * @return build status name overwrite option
      */
-    public boolean getBuildStatusNameOverwrite() { return buildStatusNameOverwrite; }
+    public boolean getBuildStatusNameOverwrite() {
+        return buildStatusNameOverwrite;
+    }
 
     /**
      * Our descriptor.
