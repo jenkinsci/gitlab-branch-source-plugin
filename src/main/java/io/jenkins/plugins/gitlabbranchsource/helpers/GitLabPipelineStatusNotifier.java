@@ -29,6 +29,7 @@ import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -46,6 +47,8 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.CommitStatus;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Pipeline;
+import org.gitlab4j.api.models.PipelineFilter;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 
 /**
@@ -355,10 +358,33 @@ public class GitLabPipelineStatusNotifier {
 
                 if (revision instanceof MergeRequestSCMRevision) {
                     Long projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
-                    status.setRef(((MergeRequestSCMRevision) revision)
-                            .getOrigin()
-                            .getHead()
-                            .getName());
+                    String ref = "refs/merge-requests/" + ((MergeRequestSCMHead) revision.getHead()).getId() + "/head";
+                    List<Pipeline> pipelines = gitLabApi
+                            .getPipelineApi()
+                            .getPipelines(
+                                    projectId, new PipelineFilter().withRef(ref).withSha(hash));
+                    if (pipelines.size() > 0) {
+                        LOGGER.log(
+                                Level.INFO,
+                                "Merge Request Pipeline exist for {0}, updating its status",
+                                build.toString());
+                        LOGGER.log(Level.INFO, "Notifying merge request build {0}: setRef to {1}", new Object[] {
+                            build.toString(), ref
+                        });
+                        status.setRef(ref);
+                    } else {
+                        LOGGER.log(
+                                Level.INFO,
+                                "Merge Request Pipeline does not exist for {0}, updating branch Pipeline instead",
+                                build.toString());
+                        status.setRef(((MergeRequestSCMRevision) revision)
+                                .getOrigin()
+                                .getHead()
+                                .getName());
+                    }
+                    LOGGER.log(Level.INFO, "Notifying merge request build {0}: full status {1}", new Object[] {
+                        build.toString(), status.toString()
+                    });
                     gitLabApi.getCommitsApi().addCommitStatus(projectId, hash, state, status);
                 } else {
                     gitLabApi.getCommitsApi().addCommitStatus(source.getProjectPath(), hash, state, status);
@@ -468,10 +494,36 @@ public class GitLabPipelineStatusNotifier {
 
                         if (revision instanceof MergeRequestSCMRevision) {
                             Long projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
-                            status.setRef(((MergeRequestSCMRevision) revision)
-                                    .getOrigin()
-                                    .getHead()
-                                    .getName());
+                            String ref = "refs/merge-requests/" + ((MergeRequestSCMHead) revision.getHead()).getId()
+                                    + "/head";
+                            List<Pipeline> pipelines = gitLabApi
+                                    .getPipelineApi()
+                                    .getPipelines(
+                                            projectId,
+                                            new PipelineFilter().withRef(ref).withSha(hash));
+                            if (pipelines.size() > 0) {
+                                LOGGER.log(
+                                        Level.INFO,
+                                        "Merge Request Pipeline exist for {0}, updating its status",
+                                        job.getFullName());
+                                LOGGER.log(
+                                        Level.INFO,
+                                        "Notifying merge request build {0}: setRef to {1}",
+                                        new Object[] {job.getFullName(), ref});
+                                status.setRef(ref);
+                            } else {
+                                LOGGER.log(
+                                        Level.INFO,
+                                        "Merge Request Pipeline does not exist for {0}, updating branch Pipeline instead",
+                                        job.getFullName());
+                                status.setRef(((MergeRequestSCMRevision) revision)
+                                        .getOrigin()
+                                        .getHead()
+                                        .getName());
+                            }
+                            LOGGER.log(Level.INFO, "Notifying merge request build {0}: full status {1}", new Object[] {
+                                job.getFullName(), status.toString()
+                            });
                             gitLabApi.getCommitsApi().addCommitStatus(projectId, hash, state, status);
                         } else {
                             gitLabApi.getCommitsApi().addCommitStatus(source.getProjectPath(), hash, state, status);
