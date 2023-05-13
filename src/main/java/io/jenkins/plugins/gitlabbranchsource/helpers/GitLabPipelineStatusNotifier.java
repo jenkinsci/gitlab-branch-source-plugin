@@ -267,6 +267,72 @@ public class GitLabPipelineStatusNotifier {
     }
 
     /**
+     * Return True if merge-requests pipeline detected on Gitlab server
+     */
+    private static Boolean mergeRequestPipelineFound(
+            GitLabApi gitLabApi, Long projectId, String ref, String hash, String jobName) {
+        Boolean flag = Boolean.FALSE;
+        int ATTEMPTS = 3;
+        int WAIT_ATTEMPTS = 5000; // ms
+
+        List<Pipeline> pipelines;
+        for (int i = 0; i < ATTEMPTS; i++) {
+            try {
+                LOGGER.log(Level.INFO, "Retrieve Pipelines for hash {0} Ref {1} ", new Object[] {hash, ref});
+                pipelines = gitLabApi
+                        .getPipelineApi()
+                        .getPipelines(
+                                projectId, new PipelineFilter().withRef(ref).withSha(hash));
+                // verify if Pipeline for given hash really found
+                for (Pipeline pipeline : pipelines) {
+                    LOGGER.log(Level.INFO, "Examine retrieved Pipeline: {0}", pipeline.toString());
+                    if (ref.equals(pipeline.getRef()) && hash.equals(pipeline.getSha())) {
+                        flag = Boolean.TRUE;
+                        break;
+                    }
+                }
+                if (flag) {
+                    break;
+                }
+                LOGGER.log(Level.WARNING, "Merge Request Pipeline not found for {0} {1} {2}", new Object[] {
+                    jobName, hash, ref
+                });
+            } catch (GitLabApiException e) {
+                LOGGER.log(Level.WARNING, String.format("Exception caught during getPipelines: %s", e.getMessage()));
+            }
+            // something wrong, we better wait a bit and try one more time
+            LOGGER.log(Level.WARNING, String.format("Wait a bit and retrieve Pipelines again"));
+            try {
+                Thread.sleep(WAIT_ATTEMPTS);
+            } catch (InterruptedException e) {
+                LOGGER.log(Level.WARNING, String.format("Exception caught during sleep: %s", e.getMessage()));
+            }
+        }
+
+        return (flag);
+    }
+
+    /**
+     * Find corresponding Pipeline on GitLab server
+     * and generate Ref if found
+     */
+    private static String genMergeRequestRef(
+            GitLabApi gitLabApi, Long projectId, SCMRevision revision, String hash, String jobName) {
+        String mergeRequestRef = "refs/merge-requests/" + ((MergeRequestSCMHead) revision.getHead()).getId() + "/head";
+        LOGGER.log(Level.INFO, "Checking if Merge Request Pipeline exists for {0} {1}", new Object[] {jobName, hash});
+        if (mergeRequestPipelineFound(gitLabApi, projectId, mergeRequestRef, hash, jobName)) {
+            LOGGER.log(Level.INFO, "Merge Request Pipeline found for {0} {1}", new Object[] {jobName, hash});
+            return (mergeRequestRef);
+        } else {
+            LOGGER.log(
+                    Level.INFO,
+                    "Merge Request Pipeline not found for {0} {1}, will update branch Pipeline instead",
+                    new Object[] {jobName, hash});
+            return (((MergeRequestSCMRevision) revision).getOrigin().getHead().getName());
+        }
+    }
+
+    /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
      */
     private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
@@ -358,35 +424,16 @@ public class GitLabPipelineStatusNotifier {
 
                 if (revision instanceof MergeRequestSCMRevision) {
                     Long projectId = getSourceProjectId(build.getParent(), gitLabApi, source.getProjectPath());
-                    String ref = "refs/merge-requests/" + ((MergeRequestSCMHead) revision.getHead()).getId() + "/head";
-                    List<Pipeline> pipelines = gitLabApi
-                            .getPipelineApi()
-                            .getPipelines(
-                                    projectId, new PipelineFilter().withRef(ref).withSha(hash));
-                    if (pipelines.size() > 0) {
-                        LOGGER.log(
-                                Level.INFO,
-                                "Merge Request Pipeline exist for {0}, updating its status",
-                                build.toString());
-                        LOGGER.log(Level.INFO, "Notifying merge request build {0}: setRef to {1}", new Object[] {
-                            build.toString(), ref
-                        });
-                        status.setRef(ref);
-                    } else {
-                        LOGGER.log(
-                                Level.INFO,
-                                "Merge Request Pipeline does not exist for {0}, updating branch Pipeline instead",
-                                build.toString());
-                        status.setRef(((MergeRequestSCMRevision) revision)
-                                .getOrigin()
-                                .getHead()
-                                .getName());
-                    }
+                    status.setRef(genMergeRequestRef(gitLabApi, projectId, revision, hash, build.toString()));
+
                     LOGGER.log(Level.INFO, "Notifying merge request build {0}: full status {1}", new Object[] {
                         build.toString(), status.toString()
                     });
                     gitLabApi.getCommitsApi().addCommitStatus(projectId, hash, state, status);
                 } else {
+                    LOGGER.log(Level.INFO, "Notifying branch build {0} {1}: full status {2}", new Object[] {
+                        build.toString(), hash, status.toString()
+                    });
                     gitLabApi.getCommitsApi().addCommitStatus(source.getProjectPath(), hash, state, status);
                 }
 
@@ -494,38 +541,16 @@ public class GitLabPipelineStatusNotifier {
 
                         if (revision instanceof MergeRequestSCMRevision) {
                             Long projectId = getSourceProjectId(job, gitLabApi, source.getProjectPath());
-                            String ref = "refs/merge-requests/" + ((MergeRequestSCMHead) revision.getHead()).getId()
-                                    + "/head";
-                            List<Pipeline> pipelines = gitLabApi
-                                    .getPipelineApi()
-                                    .getPipelines(
-                                            projectId,
-                                            new PipelineFilter().withRef(ref).withSha(hash));
-                            if (pipelines.size() > 0) {
-                                LOGGER.log(
-                                        Level.INFO,
-                                        "Merge Request Pipeline exist for {0}, updating its status",
-                                        job.getFullName());
-                                LOGGER.log(
-                                        Level.INFO,
-                                        "Notifying merge request build {0}: setRef to {1}",
-                                        new Object[] {job.getFullName(), ref});
-                                status.setRef(ref);
-                            } else {
-                                LOGGER.log(
-                                        Level.INFO,
-                                        "Merge Request Pipeline does not exist for {0}, updating branch Pipeline instead",
-                                        job.getFullName());
-                                status.setRef(((MergeRequestSCMRevision) revision)
-                                        .getOrigin()
-                                        .getHead()
-                                        .getName());
-                            }
+                            status.setRef(genMergeRequestRef(gitLabApi, projectId, revision, hash, job.getFullName()));
+
                             LOGGER.log(Level.INFO, "Notifying merge request build {0}: full status {1}", new Object[] {
                                 job.getFullName(), status.toString()
                             });
                             gitLabApi.getCommitsApi().addCommitStatus(projectId, hash, state, status);
                         } else {
+                            LOGGER.log(Level.INFO, "Notifying branch build {0} {1}: full status {2}", new Object[] {
+                                job.getFullName(), hash, status.toString()
+                            });
                             gitLabApi.getCommitsApi().addCommitStatus(source.getProjectPath(), hash, state, status);
                         }
 
