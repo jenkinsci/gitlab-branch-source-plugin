@@ -101,19 +101,19 @@ public class GitLabHelper {
 
     public static UriTemplate mergeRequestUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/merge_requests/{iid}")
+                .template("{/project*}/-/merge_requests/{iid}")
                 .build();
     }
 
     public static UriTemplate tagUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/tree/{tag*}")
+                .template("{/project*}/-/tree/{tag*}")
                 .build();
     }
 
     public static UriTemplate commitUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/commit/{hash}")
+                .template("{/project*}/-/commit/{hash}")
                 .build();
     }
 
