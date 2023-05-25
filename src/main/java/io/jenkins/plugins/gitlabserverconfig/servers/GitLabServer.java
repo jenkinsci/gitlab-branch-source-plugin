@@ -1,5 +1,11 @@
 package io.jenkins.plugins.gitlabserverconfig.servers;
 
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
+import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
+import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -47,12 +53,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
-import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
-import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-
 /**
  * Represents a GitLab Server instance.
  */
@@ -61,8 +61,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * The credentials matcher for GitLab Personal Access Token
      */
-    public static final CredentialsMatcher CREDENTIALS_MATCHER = CredentialsMatchers
-            .instanceOf(PersonalAccessToken.class);
+    public static final CredentialsMatcher CREDENTIALS_MATCHER =
+            CredentialsMatchers.instanceOf(PersonalAccessToken.class);
     /**
      * Default name for community SaaS version server
      */
@@ -75,7 +75,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Used as default token value if no any credentials found by given
      * credentialsId.
      */
-    public final static String EMPTY_TOKEN = "";
+    public static final String EMPTY_TOKEN = "";
+
     public static final Logger LOGGER = Logger.getLogger(GitLabServer.class.getName());
     private static final SecureRandom RANDOM = new SecureRandom();
     /**
@@ -86,13 +87,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Common prefixes that we should remove when inferring a display name.
      */
-    private static final String[] COMMON_PREFIX_HOSTNAMES = {
-            "git.",
-            "gitlab.",
-            "vcs.",
-            "scm.",
-            "source."
-    };
+    private static final String[] COMMON_PREFIX_HOSTNAMES = {"git.", "gitlab.", "vcs.", "scm.", "source."};
 
     /**
      * A unique name used to identify the endpoint.
@@ -146,12 +141,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @NonNull
     private String webhookSecretCredentialsId;
 
-
     /**
      * The credentials matcher for StringCredentials
      */
-    public static final CredentialsMatcher WEBHOOK_SECRET_CREDENTIALS_MATCHER = CredentialsMatchers
-        .instanceOf(StringCredentials.class);
+    public static final CredentialsMatcher WEBHOOK_SECRET_CREDENTIALS_MATCHER =
+            CredentialsMatchers.instanceOf(StringCredentials.class);
 
     /**
      * {@code true} if and only if Jenkins should trigger a build immediately on a
@@ -176,12 +170,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      *                      GitLab Server Authentication to access GitLab APIs
      */
     @DataBoundConstructor
-    public GitLabServer(@NonNull String serverUrl, @NonNull String name,
-            @NonNull String credentialsId) {
+    public GitLabServer(@NonNull String serverUrl, @NonNull String name, @NonNull String credentialsId) {
         this.serverUrl = defaultIfBlank(StringUtils.trim(serverUrl), GITLAB_SERVER_URL);
-        this.name = StringUtils.isBlank(name)
-                ? getRandomName()
-                : StringUtils.trim(name);
+        this.name = StringUtils.isBlank(name) ? getRandomName() : StringUtils.trim(name);
         this.credentialsId = credentialsId;
         this.webhookSecretCredentialsId = "";
     }
@@ -192,7 +183,9 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @return String
      */
     private String getRandomName() {
-        return String.format("%s-%s", SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES),
+        return String.format(
+                "%s-%s",
+                SCMName.fromUrl(this.serverUrl, COMMON_PREFIX_HOSTNAMES),
                 RandomStringUtils.randomNumeric(SHORT_NAME_LENGTH));
     }
 
@@ -284,12 +277,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
         }
-        return StringUtils.isBlank(credentialsId) ? null
-                : CredentialsMatchers.firstOrNull(lookupCredentials(
-                        PersonalAccessToken.class,
-                        jenkins,
-                        ACL.SYSTEM,
-                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()), withId(credentialsId));
+        return StringUtils.isBlank(credentialsId)
+                ? null
+                : CredentialsMatchers.firstOrNull(
+                        lookupCredentials(
+                                PersonalAccessToken.class,
+                                jenkins,
+                                ACL.SYSTEM,
+                                fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
+                                        .build()),
+                        withId(credentialsId));
     }
 
     /**
@@ -312,7 +309,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return Util.ensureEndsWith(Util.fixEmptyAndTrim(hooksRootUrl), "/");
     }
 
-    @DataBoundSetter @Deprecated
+    @DataBoundSetter
+    @Deprecated
     public void setSecretToken(Secret token) {
         this.secretToken = token;
     }
@@ -335,28 +333,40 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         Jenkins jenkins = Jenkins.get();
         if (context == null) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
-            return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
-                StringCredentials.class,
-                jenkins,
-                ACL.SYSTEM,
-                fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-            ), withId(webhookSecretCredentialsId));
+            return StringUtils.isBlank(webhookSecretCredentialsId)
+                    ? null
+                    : CredentialsMatchers.firstOrNull(
+                            lookupCredentials(
+                                    StringCredentials.class,
+                                    jenkins,
+                                    ACL.SYSTEM,
+                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
+                                            .build()),
+                            withId(webhookSecretCredentialsId));
         } else {
             context.checkPermission(CredentialsProvider.USE_OWN);
             if (context instanceof ItemGroup) {
-                return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
-                    StringCredentials.class,
-                    (ItemGroup) context,
-                    ACL.SYSTEM,
-                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ), withId(webhookSecretCredentialsId));
+                return StringUtils.isBlank(webhookSecretCredentialsId)
+                        ? null
+                        : CredentialsMatchers.firstOrNull(
+                                lookupCredentials(
+                                        StringCredentials.class,
+                                        (ItemGroup) context,
+                                        ACL.SYSTEM,
+                                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
+                                                .build()),
+                                withId(webhookSecretCredentialsId));
             } else {
-                return StringUtils.isBlank(webhookSecretCredentialsId) ? null : CredentialsMatchers.firstOrNull( lookupCredentials(
-                    StringCredentials.class,
-                    (Item) context,
-                    ACL.SYSTEM,
-                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()
-                ), withId(webhookSecretCredentialsId));
+                return StringUtils.isBlank(webhookSecretCredentialsId)
+                        ? null
+                        : CredentialsMatchers.firstOrNull(
+                                lookupCredentials(
+                                        StringCredentials.class,
+                                        (Item) context,
+                                        ACL.SYSTEM,
+                                        fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
+                                                .build()),
+                                withId(webhookSecretCredentialsId));
             }
         }
     }
@@ -376,14 +386,12 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     private StringCredentials getWebhookSecretCredentials(String webhookSecretCredentialsId) {
         Jenkins jenkins = Jenkins.get();
-        return StringUtils.isBlank(webhookSecretCredentialsId) ? null
-                : CredentialsMatchers.firstOrNull(lookupCredentials(
-                        StringCredentials.class,
-                        jenkins,
-                        ACL.SYSTEM,
-                        new ArrayList<DomainRequirement>()),
-            withId(webhookSecretCredentialsId)
-        );
+        return StringUtils.isBlank(webhookSecretCredentialsId)
+                ? null
+                : CredentialsMatchers.firstOrNull(
+                        lookupCredentials(
+                                StringCredentials.class, jenkins, ACL.SYSTEM, new ArrayList<DomainRequirement>()),
+                        withId(webhookSecretCredentialsId));
     }
 
     public String getSecretTokenAsPlainText() {
@@ -398,7 +406,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     private Object readResolve() {
-        if(StringUtils.isBlank(webhookSecretCredentialsId) && secretToken != null) {
+        if (StringUtils.isBlank(webhookSecretCredentialsId) && secretToken != null) {
             migrateWebhookSecretCredentials();
         }
         return this;
@@ -408,8 +416,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Migrate webhook secret token to Jenkins credentials
      */
     private void migrateWebhookSecretCredentials() {
-        final List<StringCredentials> credentials =
-            CredentialsProvider.lookupCredentials(StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
+        final List<StringCredentials> credentials = CredentialsProvider.lookupCredentials(
+                StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
         for (final StringCredentials cred : credentials) {
             if (StringUtils.equals(secretToken.getPlainText(), Secret.toString(cred.getSecret()))) {
                 // If a credential has the same secret, use it.
@@ -419,12 +427,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         }
         if (StringUtils.isBlank(webhookSecretCredentialsId)) {
             // If we couldn't find any existing credentials, create new credential
-            final StringCredentials newCredentials =
-                    new StringCredentialsImpl(
-                            CredentialsScope.GLOBAL,
-                            null,
-                            "Migrated from gitlab-branch-source-plugin webhook secret",
-                            secretToken);
+            final StringCredentials newCredentials = new StringCredentialsImpl(
+                    CredentialsScope.GLOBAL,
+                    null,
+                    "Migrated from gitlab-branch-source-plugin webhook secret",
+                    secretToken);
             SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
             webhookSecretCredentialsId = newCredentials.getId();
         }
@@ -568,8 +575,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @RequirePOST
         @Restricted(DoNotUse.class)
         @SuppressWarnings("unused")
-        public FormValidation doTestConnection(@QueryParameter String serverUrl,
-                @QueryParameter String credentialsId) {
+        public FormValidation doTestConnection(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
             PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
             String privateToken = "";
             if (credentials != null) {
@@ -588,23 +594,21 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                     return FormValidation.ok("Valid GitLab Server but no credentials specified");
                 } catch (GitLabApiException e) {
                     LOGGER.log(Level.SEVERE, "Invalid GitLab Server Url");
-                    return FormValidation
-                            .errorWithMarkup(Messages
-                                    .GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
+                    return FormValidation.errorWithMarkup(
+                            Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
                 }
             } else {
 
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken, null, getProxyConfig(serverUrl));
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
-                    LOGGER.log(Level.FINEST, String
-                            .format("Connection established with the GitLab Server for %s", user.getUsername()));
-                    return FormValidation
-                            .ok(String.format("Credentials verified for user %s", user.getUsername()));
+                    LOGGER.log(
+                            Level.FINEST,
+                            String.format("Connection established with the GitLab Server for %s", user.getUsername()));
+                    return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
                 } catch (GitLabApiException e) {
                     LOGGER.log(Level.SEVERE, "Failed to connect with GitLab Server - %s", e.getMessage());
-                    return FormValidation.error(e,
-                            Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
+                    return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
                 }
             }
         }
@@ -618,15 +622,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
-        public ListBoxModel doFillCredentialsIdItems(@QueryParameter String serverUrl,
-                @QueryParameter String credentialsId) {
+        public ListBoxModel doFillCredentialsIdItems(
+                @QueryParameter String serverUrl, @QueryParameter String credentialsId) {
             Jenkins jenkins = Jenkins.get();
             if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
                     .includeEmptyValue()
-                    .includeMatchingAs(ACL.SYSTEM,
+                    .includeMatchingAs(
+                            ACL.SYSTEM,
                             jenkins,
                             StandardCredentials.class,
                             fromUri(serverUrl).build(),
@@ -641,34 +646,35 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
-        public ListBoxModel doFillWebhookSecretCredentialsIdItems(@QueryParameter String serverUrl,
-            @QueryParameter String webhookSecretCredentialsId) {
+        public ListBoxModel doFillWebhookSecretCredentialsIdItems(
+                @QueryParameter String serverUrl, @QueryParameter String webhookSecretCredentialsId) {
             Jenkins jenkins = Jenkins.get();
             if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardListBoxModel().includeCurrentValue(webhookSecretCredentialsId);
             }
             return new StandardListBoxModel()
-                .includeEmptyValue()
-                .includeMatchingAs(ACL.SYSTEM,
-                    jenkins,
-                    StringCredentials.class,
-                    fromUri(serverUrl).build(),
-                    WEBHOOK_SECRET_CREDENTIALS_MATCHER
-                );
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            ACL.SYSTEM,
+                            jenkins,
+                            StringCredentials.class,
+                            fromUri(serverUrl).build(),
+                            WEBHOOK_SECRET_CREDENTIALS_MATCHER);
         }
 
         private PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
             Jenkins jenkins = Jenkins.get();
             jenkins.checkPermission(Jenkins.ADMINISTER);
-            return StringUtils.isBlank(credentialsId) ? null
+            return StringUtils.isBlank(credentialsId)
+                    ? null
                     : CredentialsMatchers.firstOrNull(
                             lookupCredentials(
                                     PersonalAccessToken.class,
                                     jenkins,
                                     ACL.SYSTEM,
-                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL)).build()),
+                                    fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
+                                            .build()),
                             withId(credentialsId));
         }
-
     }
 }

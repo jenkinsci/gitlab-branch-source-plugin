@@ -1,5 +1,10 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
+import static java.awt.RenderingHints.KEY_INTERPOLATION;
+import static java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
+import static java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC;
+
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -47,11 +52,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
-import static java.awt.RenderingHints.KEY_INTERPOLATION;
-import static java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
-import static java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC;
-
 /**
  * An avatar cache that will serve URLs that have been recently registered
  * through {@link #buildUrl(String, String)}
@@ -69,8 +69,12 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     /**
      * A background thread pool to refresh images.
      */
-    private final ExecutorService service = new ThreadPoolExecutor(0, 4,
-            1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+    private final ExecutorService service = new ThreadPoolExecutor(
+            0,
+            4,
+            1L,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(),
             new NamingThreadFactory(new DaemonThreadFactory(), getClass().getName()));
     /**
      * The lock to ensure we prevent concurrent requests for the same URL.
@@ -85,8 +89,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     /**
      * Constructor.
      */
-    public GitLabAvatarCache() {
-    }
+    public GitLabAvatarCache() {}
 
     /**
      * Builds the URL for the cached avatar image of the required size.
@@ -294,11 +297,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             // serve a temporary avatar until we get the remote one, no caching as we could
             // have the real deal
             // real soon now
-            return new ImageResponse(
-                    generateAvatar(avatar.url, targetSize),
-                    true,
-                    -1L,
-                    "no-cache, public");
+            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "no-cache, public");
         }
         long since = req.getDateHeader("If-Modified-Since");
         if (avatar.lastModified <= since) {
@@ -314,11 +313,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
         if (avatar.image == null) {
             // we can retry in an hour
-            return new ImageResponse(
-                    generateAvatar(avatar.url, targetSize),
-                    true,
-                    -1L,
-                    "max-age=3600, public");
+            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "max-age=3600, public");
         }
 
         BufferedImage image = avatar.image;
@@ -436,7 +431,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 } catch (InterruptedException | ExecutionException e) {
                     // ignore
                 }
-
             }
             return true;
         }
@@ -456,7 +450,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         public boolean isUnused() {
             return lastAccessed > 0L && System.currentTimeMillis() - lastAccessed > TimeUnit.HOURS.toMillis(2);
         }
-
     }
 
     private static class ImageResponse implements HttpResponse {
@@ -493,7 +486,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             rsp.setContentLength(bytes.length);
             rsp.getOutputStream().write(bytes);
         }
-
     }
 
     private static class FetchImage implements Callable<CacheEntry> {
@@ -536,8 +528,9 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             } finally {
                 long end = System.nanoTime();
                 long duration = TimeUnit.NANOSECONDS.toMillis(end - start);
-                LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms",
-                        new Object[] { url, duration });
+                LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms", new Object[] {
+                    url, duration
+                });
             }
         }
     }

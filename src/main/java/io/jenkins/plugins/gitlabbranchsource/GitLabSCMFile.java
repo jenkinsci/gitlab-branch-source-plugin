@@ -89,8 +89,7 @@ public class GitLabSCMFile extends SCMFile {
             return Type.DIRECTORY;
         }
         try {
-            gitLabApi.getRepositoryFileApi()
-                .getFile(projectPath, getPath(), ref);
+            gitLabApi.getRepositoryFileApi().getFile(projectPath, getPath(), ref);
             return Type.REGULAR_FILE;
         } catch (GitLabApiException e) {
             if (e.getHttpStatus() != 404) {
@@ -136,5 +135,4 @@ public class GitLabSCMFile extends SCMFile {
             throw new IOException(String.format("%s not found at %s", getPath(), ref));
         }
     }
-
 }

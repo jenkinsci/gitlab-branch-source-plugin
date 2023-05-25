@@ -1,5 +1,14 @@
 package io.jenkins.plugins.gitlabserverconfig.casc;
 
+import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
+import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
+import static io.jenkins.plugins.casc.misc.Util.toYamlString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
+
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import hudson.security.ACL;
 import io.jenkins.plugins.casc.ConfigurationContext;
@@ -14,15 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import static io.jenkins.plugins.casc.misc.Util.getUnclassifiedRoot;
-import static io.jenkins.plugins.casc.misc.Util.toStringFromYamlFile;
-import static io.jenkins.plugins.casc.misc.Util.toYamlString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.Matchers.not;
 
 public class ConfigurationAsCodeTest {
 
@@ -42,9 +42,7 @@ public class ConfigurationAsCodeTest {
         assertThat(server.getHooksRootUrl(), is("https://jenkins.intranet/"));
 
         List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
-            PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM,
-            Collections.emptyList()
-        );
+                PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM, Collections.emptyList());
         assertThat(credentials, hasSize(1));
         final PersonalAccessTokenImpl credential = credentials.get(0);
         assertThat(credential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));

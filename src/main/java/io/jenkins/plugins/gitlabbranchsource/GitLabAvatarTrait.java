@@ -21,7 +21,7 @@ public class GitLabAvatarTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public GitLabAvatarTrait() {
-        //empty
+        // empty
     }
 
     @DataBoundSetter
@@ -62,7 +62,5 @@ public class GitLabAvatarTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
-
 }

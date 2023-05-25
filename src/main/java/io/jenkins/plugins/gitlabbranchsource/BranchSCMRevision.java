@@ -8,4 +8,3 @@ public class BranchSCMRevision extends AbstractGitSCMSource.SCMRevisionImpl {
         super(head, hash);
     }
 }
-

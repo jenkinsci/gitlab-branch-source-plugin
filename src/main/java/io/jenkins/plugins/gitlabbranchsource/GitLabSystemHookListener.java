@@ -26,12 +26,15 @@ public class GitLabSystemHookListener implements SystemHookListener {
             case ProjectSystemHookEvent.PROJECT_CREATE_EVENT:
             case ProjectSystemHookEvent.PROJECT_DESTROY_EVENT:
             case ProjectSystemHookEvent.PROJECT_UPDATE_EVENT:
-                GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent,
-                    origin);
+                GitLabProjectSCMEvent trigger = new GitLabProjectSCMEvent(projectSystemHookEvent, origin);
                 SCMSourceEvent.fireLater(trigger, 5, TimeUnit.SECONDS);
                 break;
             default:
-                LOGGER.log(Level.INFO, String.format("unsupported System hook event: %s", projectSystemHookEvent.getEventName().toString()));
+                LOGGER.log(
+                        Level.INFO,
+                        String.format(
+                                "unsupported System hook event: %s",
+                                projectSystemHookEvent.getEventName().toString()));
         }
     }
 

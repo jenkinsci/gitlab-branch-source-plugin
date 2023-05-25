@@ -1,5 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import static jenkins.scm.api.SCMEvent.Type.CREATED;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
@@ -10,8 +12,6 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import org.eclipse.jgit.lib.Constants;
 import org.gitlab4j.api.webhook.TagPushEvent;
-
-import static jenkins.scm.api.SCMEvent.Type.CREATED;
 
 public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEvent> {
 
@@ -43,14 +43,15 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
     public String descriptionFor(SCMSource source) {
         String ref = getPayload().getRef();
         ref = ref.startsWith(Constants.R_TAGS) ? ref.substring(Constants.R_TAGS.length()) : ref;
-        return "Tag push event of tag " + ref + " in project " + getPayload().getProject()
-            .getPathWithNamespace();
+        return "Tag push event of tag " + ref + " in project "
+                + getPayload().getProject().getPathWithNamespace();
     }
 
     @Override
     public boolean isMatch(@NonNull GitLabSCMNavigator navigator) {
-        return navigator.getNavigatorProjects()
-            .contains(getPayload().getProject().getPathWithNamespace());
+        return navigator
+                .getNavigatorProjects()
+                .contains(getPayload().getProject().getPathWithNamespace());
     }
 
     @Override
@@ -69,14 +70,12 @@ public class GitLabTagPushSCMEvent extends AbstractGitLabSCMHeadEvent<TagPushEve
         }
         GitLabTagSCMHead h = new GitLabTagSCMHead(ref, time);
         String hash = getPayload().getCheckoutSha();
-        return Collections.<SCMHead, SCMRevision>singletonMap(h,
-            (getType() == CREATED)
-                ? new GitTagSCMRevision(h, hash) : null);
+        return Collections.<SCMHead, SCMRevision>singletonMap(
+                h, (getType() == CREATED) ? new GitTagSCMRevision(h, hash) : null);
     }
 
     @Override
     public GitLabWebHookCause getCause() {
         return new GitLabWebHookCause().fromTag(getPayload());
     }
-
 }

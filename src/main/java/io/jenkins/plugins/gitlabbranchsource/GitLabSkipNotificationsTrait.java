@@ -16,7 +16,7 @@ public class GitLabSkipNotificationsTrait extends SCMSourceTrait {
      */
     @DataBoundConstructor
     public GitLabSkipNotificationsTrait() {
-        //empty
+        // empty
     }
 
     @Override
@@ -49,7 +49,5 @@ public class GitLabSkipNotificationsTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
-
 }
