@@ -86,9 +86,13 @@ public class GitLabHookCreator {
                 return;
         }
         String hookUrl = getHookUrl(server, true);
-        String secretToken = server.getSecretTokenAsPlainText();
         if (hookUrl.equals("")) {
             return;
+        }
+        String secretToken = server.getSecretTokenAsPlainText();
+        if(secretToken == null) {
+            //sending 'null' to GitLab will ignore the value, when we want to update it to be empty.
+            secretToken = "";
         }
         if (credentials != null) {
             try {
