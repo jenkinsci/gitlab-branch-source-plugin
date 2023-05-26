@@ -3,4 +3,7 @@
   <f:entry title="${%Build status name custom part}" field="buildStatusNameCustomPart">
     <f:textbox/>
   </f:entry>
+  <f:entry title="${%Overwrite full name}" field="buildStatusNameOverwrite">
+    <f:checkbox default="unchecked"/>
+  </f:entry>
 </j:jelly>

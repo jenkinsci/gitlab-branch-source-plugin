@@ -24,8 +24,13 @@ public abstract class GitLabOwner {
     public static GitLabOwner fetchOwner(GitLabApi gitLabApi, String projectOwner) {
         try {
             Group group = gitLabApi.getGroupApi().getGroup(projectOwner);
-            return new GitLabGroup(group.getName(), group.getWebUrl(), group.getAvatarUrl(),
-                group.getId(), group.getFullName(), group.getDescription());
+            return new GitLabGroup(
+                    group.getName(),
+                    group.getWebUrl(),
+                    group.getAvatarUrl(),
+                    group.getId(),
+                    group.getFullName(),
+                    group.getDescription());
         } catch (GitLabApiException e) {
             if (e.getHttpStatus() != 404) {
                 throw new IllegalStateException("Unable to fetch Group", e);
@@ -36,10 +41,9 @@ public abstract class GitLabOwner {
                 // If user is not found, null is returned
                 if (user == null) {
                     throw new IllegalStateException(
-                        String.format("Owner '%s' is neither a user/group/subgroup", projectOwner));
+                            String.format("Owner '%s' is neither a user/group/subgroup", projectOwner));
                 }
-                return new GitLabUser(user.getName(), user.getWebUrl(), user.getAvatarUrl(),
-                    user.getId());
+                return new GitLabUser(user.getName(), user.getWebUrl(), user.getAvatarUrl(), user.getId());
             } catch (GitLabApiException e1) {
                 throw new IllegalStateException("Unable to fetch User", e1);
             }

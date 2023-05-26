@@ -9,8 +9,7 @@ import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 
 public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
-    public static final Logger LOGGER = Logger
-            .getLogger(GitLabMergeRequestTrigger.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabMergeRequestTrigger.class.getName());
 
     public GitLabMergeRequestTrigger(MergeRequestEvent mrEvent, String origin) {
         super(mrEvent, origin);
@@ -18,25 +17,29 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
     @Override
     public boolean isMatch(@NonNull GitLabSCMSource source) {
-        final GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(
-                null, SCMHeadObserver.none())
-                .withTraits(source.getTraits());
+        final GitLabSCMSourceContext sourceContext =
+                new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(source.getTraits());
 
         boolean shouldBuild = this.shouldBuild(getPayload(), sourceContext);
-        LOGGER.log(Level.FINE, "isMatch() result for MR-{0}: {1}",
-                new Object[] {
-                        getPayload().getObjectAttributes().getIid(),
-                        String.valueOf(shouldBuild)
-                });
+        LOGGER.log(Level.FINE, "isMatch() result for MR-{0}: {1}", new Object[] {
+            getPayload().getObjectAttributes().getIid(), String.valueOf(shouldBuild)
+        });
 
-        return getPayload().getObjectAttributes().getTargetProjectId()
-                .equals(source.getProjectId()) && shouldBuild;
+        return getPayload().getObjectAttributes().getTargetProjectId().equals(source.getProjectId()) && shouldBuild;
     }
 
     private boolean shouldBuild(MergeRequestEvent mrEvent, GitLabSCMSourceContext context) {
         ObjectAttributes attributes = mrEvent.getObjectAttributes();
         String action = attributes.getAction();
         boolean shouldBuild = true;
+
+        if (attributes.getWorkInProgress() && context.alwaysIgnoreMRWorkInProgress()) {
+            LOGGER.log(
+                    Level.FINE,
+                    "shouldBuild for MR-{0} set to false due to WorkInProgress=true.",
+                    getPayload().getObjectAttributes().getIid());
+            return false;
+        }
 
         if (action != null) {
             if (action.equals("update") && context.alwaysIgnoreNonCodeRelatedUpdates()) {
@@ -66,9 +69,16 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
             }
 
             if (!shouldBuild) {
-                LOGGER.log(Level.FINE, "shouldBuild for MR-{0} set to false due to non-code related updates.",
+                LOGGER.log(
+                        Level.FINE,
+                        "shouldBuild for MR-{0} set to false due to non-code related updates.",
                         getPayload().getObjectAttributes().getIid());
             }
+
+            LOGGER.log(
+                    Level.FINEST,
+                    "shouldBuild for MR-{0} will be set for action {1} based on pipeline configuration.",
+                    new Object[] {getPayload().getObjectAttributes().getIid(), action});
 
             if (action.equals("open")) {
                 return context.alwaysBuildMROpen();

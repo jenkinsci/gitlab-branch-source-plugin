@@ -40,7 +40,7 @@ public class GitLabWebHookListener implements WebHookListener {
     @Override
     public void onMergeRequestEvent(MergeRequestEvent mrEvent) {
         LOGGER.log(Level.FINE, mrEvent.toString());
-        GitLabMergeRequestSCMEvent trigger = new GitLabMergeRequestSCMEvent(mrEvent, origin);
+        GitLabMergeRequestTrigger trigger = new GitLabMergeRequestTrigger(mrEvent, origin);
         fireTrigger(trigger, mrEvent.getProject().getWebUrl());
     }
 
@@ -69,9 +69,7 @@ public class GitLabWebHookListener implements WebHookListener {
 
     private boolean findImmediateHookTrigger(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
-            LOGGER.log(
-                Level.WARNING,
-                "Falling back to no immediate trigger");
+            LOGGER.log(Level.WARNING, "Falling back to no immediate trigger");
             return false;
         }
 
@@ -80,9 +78,7 @@ public class GitLabWebHookListener implements WebHookListener {
 
     private long findTriggerDelay(@Nullable final GitLabServer projectServer) {
         if (projectServer == null) {
-            LOGGER.log(
-                Level.WARNING,
-                "Falling back to default trigger delay equal GitLab caching timeout");
+            LOGGER.log(Level.WARNING, "Falling back to default trigger delay equal GitLab caching timeout");
             return GITLAB_CACHING_TIMEOUT;
         }
 
@@ -95,13 +91,12 @@ public class GitLabWebHookListener implements WebHookListener {
     }
 
     private GitLabServer findProjectServer(final String projectUrl) {
-        for (GitLabServer server: GitLabServers.get().getServers()) {
+        for (GitLabServer server : GitLabServers.get().getServers()) {
             if (projectUrl.startsWith(server.getServerUrl())) {
                 return server;
             }
         }
-        LOGGER.log(Level.WARNING,
-                   String.format("No GitLab server for project URL: %s", projectUrl));
+        LOGGER.log(Level.WARNING, String.format("No GitLab server for project URL: %s", projectUrl));
         return null;
     }
 }

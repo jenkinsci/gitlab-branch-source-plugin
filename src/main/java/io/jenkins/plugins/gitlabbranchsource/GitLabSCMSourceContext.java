@@ -12,8 +12,7 @@ import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.trait.SCMSourceContext;
 
-public class GitLabSCMSourceContext
-        extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
+public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceContext, GitLabSCMSourceRequest> {
 
     private boolean wantBranches;
     private boolean wantTags;
@@ -21,15 +20,18 @@ public class GitLabSCMSourceContext
     private boolean wantForkMRs;
 
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> originMRStrategies = EnumSet
-            .noneOf(ChangeRequestCheckoutStrategy.class);
+    private Set<ChangeRequestCheckoutStrategy> originMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+
     @NonNull
-    private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet
-            .noneOf(ChangeRequestCheckoutStrategy.class);
+    private Set<ChangeRequestCheckoutStrategy> forkMRStrategies = EnumSet.noneOf(ChangeRequestCheckoutStrategy.class);
+
     @NonNull
     private GitLabHookRegistration webhookRegistration = GitLabHookRegistration.SYSTEM;
+
     @NonNull
     private GitLabHookRegistration systemhookRegistration = GitLabHookRegistration.SYSTEM;
+
+    private boolean buildMRForksNotMirror;
 
     private boolean notificationsDisabled;
 
@@ -49,6 +51,8 @@ public class GitLabSCMSourceContext
 
     private String buildStatusNameCustomPart = "";
 
+    private boolean buildStatusNameOverwrite;
+
     private boolean alwaysBuildMROpen = true;
 
     private boolean alwaysBuildMRReOpen = true;
@@ -63,10 +67,11 @@ public class GitLabSCMSourceContext
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
+    private boolean alwaysIgnoreMRWorkInProgress = false;
+
     private boolean markUnstableAsSuccess = false;
 
-    public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria,
-            @NonNull SCMHeadObserver observer) {
+    public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
 
@@ -108,6 +113,10 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabHookRegistration systemhookRegistration() {
         return systemhookRegistration;
+    }
+
+    public final boolean buildMRForksNotMirror() {
+        return buildMRForksNotMirror;
     }
 
     public final boolean notificationsDisabled() {
@@ -166,12 +175,20 @@ public class GitLabSCMSourceContext
         return alwaysIgnoreNonCodeRelatedUpdates;
     }
 
+    public boolean alwaysIgnoreMRWorkInProgress() {
+        return alwaysIgnoreMRWorkInProgress;
+    }
+
     public final String getCommentBody() {
         return commentBody;
     }
 
     public final String getBuildStatusNameCustomPart() {
         return buildStatusNameCustomPart;
+    }
+
+    public boolean getBuildStatusNameOverwrite() {
+        return buildStatusNameOverwrite;
     }
 
     public final boolean getMarkUnstableAsSuccess() {
@@ -203,15 +220,13 @@ public class GitLabSCMSourceContext
     }
 
     @NonNull
-    public GitLabSCMSourceContext withOriginMRStrategies(
-            Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withOriginMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
         originMRStrategies.addAll(strategies);
         return this;
     }
 
     @NonNull
-    public GitLabSCMSourceContext withForkMRStrategies(
-            Set<ChangeRequestCheckoutStrategy> strategies) {
+    public GitLabSCMSourceContext withForkMRStrategies(Set<ChangeRequestCheckoutStrategy> strategies) {
         forkMRStrategies.addAll(strategies);
         return this;
     }
@@ -225,6 +240,12 @@ public class GitLabSCMSourceContext
     @NonNull
     public final GitLabSCMSourceContext systemhookRegistration(GitLabHookRegistration mode) {
         systemhookRegistration = mode;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withBuildMRForksNotMirror(boolean disabled) {
+        this.buildMRForksNotMirror = disabled;
         return this;
     }
 
@@ -279,10 +300,14 @@ public class GitLabSCMSourceContext
         return this;
     }
 
+    public final GitLabSCMSourceContext withBuildStatusNameOverwrite(final Boolean buildStatusNameOverwrite) {
+        this.buildStatusNameOverwrite = buildStatusNameOverwrite;
+        return this;
+    }
+
     @NonNull
     @Override
-    public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source,
-            @CheckForNull TaskListener listener) {
+    public GitLabSCMSourceRequest newRequest(@NonNull SCMSource source, @CheckForNull TaskListener listener) {
         return new GitLabSCMSourceRequest(source, this, listener);
     }
 
@@ -296,28 +321,33 @@ public class GitLabSCMSourceContext
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproval(boolean enabled) {
         this.alwaysIgnoreMRApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproval(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproval(boolean enabled) {
         this.alwaysIgnoreMRUnApproval = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRApproved(boolean enabled) {
         this.alwaysIgnoreMRApproved = enabled;
         return this;
     }
 
-    public final GitLabSCMSourceContext withalwaysIgnoreMRUnApproved(boolean enabled) {
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRUnApproved(boolean enabled) {
         this.alwaysIgnoreMRUnApproved = enabled;
         return this;
     }
 
     public final GitLabSCMSourceContext withAlwaysIgnoreNonCodeRelatedUpdates(boolean enabled) {
         this.alwaysIgnoreNonCodeRelatedUpdates = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRWorkInProgress(boolean enabled) {
+        this.alwaysIgnoreMRWorkInProgress = enabled;
         return this;
     }
 

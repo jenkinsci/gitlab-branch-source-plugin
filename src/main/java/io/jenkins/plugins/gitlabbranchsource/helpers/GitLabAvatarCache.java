@@ -1,5 +1,10 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
+import static java.awt.RenderingHints.KEY_INTERPOLATION;
+import static java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
+import static java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC;
+
 import com.damnhandy.uri.template.UriTemplate;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -47,20 +52,16 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
-import static java.awt.RenderingHints.KEY_INTERPOLATION;
-import static java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
-import static java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC;
-
 /**
- * An avatar cache that will serve URLs that have been recently registered through {@link #buildUrl(String, String)}
+ * An avatar cache that will serve URLs that have been recently registered
+ * through {@link #buildUrl(String, String)}
  */
 @Extension
 public class GitLabAvatarCache implements UnprotectedRootAction {
     /**
      * Our logger.
      */
-    private static final Logger LOGGER = Logger.getLogger(GitLabSCMNavigator.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitLabSCMNavigator.class.getName());
     /**
      * The cache of entries. Unused entries will be removed over time.
      */
@@ -68,24 +69,27 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     /**
      * A background thread pool to refresh images.
      */
-    private final ExecutorService service = new ThreadPoolExecutor(0, 4,
-        1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-        new NamingThreadFactory(new DaemonThreadFactory(), getClass().getName())
-    );
+    private final ExecutorService service = new ThreadPoolExecutor(
+            0,
+            4,
+            1L,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(),
+            new NamingThreadFactory(new DaemonThreadFactory(), getClass().getName()));
     /**
      * The lock to ensure we prevent concurrent requests for the same URL.
      */
     private final Object serviceLock = new Object();
     /**
-     * The iterator that searches for unused entries. The search is amortized over every access.
+     * The iterator that searches for unused entries. The search is amortized over
+     * every access.
      */
     private Iterator<Map.Entry<String, CacheEntry>> iterator = null;
 
     /**
      * Constructor.
      */
-    public GitLabAvatarCache() {
-    }
+    public GitLabAvatarCache() {}
 
     /**
      * Builds the URL for the cached avatar image of the required size.
@@ -104,13 +108,13 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         // seed the cache
         instance.getCacheEntry(key, url);
         return UriTemplate.buildFromTemplate(j.getRootUrlFromRequest())
-            .literal(instance.getUrlName())
-            .path("key")
-            .query("size")
-            .build()
-            .set("key", key)
-            .set("size", size)
-            .expand();
+                .literal(instance.getUrlName())
+                .path("key")
+                .query("size")
+                .build()
+                .set("key", key)
+                .set("size", size)
+                .expand();
     }
 
     private static BufferedImage scaleImage(BufferedImage src, int size) {
@@ -127,12 +131,14 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
         boolean flushSrc = false;
         if (newWidth <= src.getWidth() * 6 / 7 && newHeight <= src.getWidth() * 6 / 7) {
-            // when scaling down, you get better image quality if you scale down in multiple rounds
+            // when scaling down, you get better image quality if you scale down in multiple
+            // rounds
             // see https://community.oracle.com/docs/DOC-983611
             // we scale each round by 6/7 = ~85% as this gives nicer looking images
             int curWidth = src.getWidth();
             int curHeight = src.getHeight();
-            // we want to break the rounds and do the final round and centre when the src image is this size
+            // we want to break the rounds and do the final round and centre when the src
+            // image is this size
             final int penultimateSize = size * 7 / 6;
             while (true) {
                 curWidth = curWidth - curWidth / 7;
@@ -144,7 +150,8 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 BufferedImage tmp = new BufferedImage(curWidth, curHeight, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g = tmp.createGraphics();
                 try {
-                    // important, if we don't set these two hints then scaling will not work headless
+                    // important, if we don't set these two hints then scaling will not work
+                    // headless
                     g.setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC);
                     g.setRenderingHint(KEY_ALPHA_INTERPOLATION, VALUE_ALPHA_INTERPOLATION_QUALITY);
                     g.scale(((double) curWidth) / src.getWidth(), ((double) curHeight) / src.getHeight());
@@ -162,7 +169,8 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         BufferedImage tmp = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = tmp.createGraphics();
         try {
-            // important, if we don't set these two hints then scaling will not work headless
+            // important, if we don't set these two hints then scaling will not work
+            // headless
             g.setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC);
             g.setRenderingHint(KEY_ALPHA_INTERPOLATION, VALUE_ALPHA_INTERPOLATION_QUALITY);
             g.scale(((double) newWidth) / src.getWidth(), ((double) newHeight) / src.getHeight());
@@ -178,7 +186,8 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     }
 
     /**
-     * Generates a consistent (for any given seed) 5x5 symmetric pixel avatar that should be unique but recognizable.
+     * Generates a consistent (for any given seed) 5x5 symmetric pixel avatar that
+     * should be unique but recognizable.
      *
      * @param seed the seed.
      * @param size the size.
@@ -198,10 +207,12 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         Graphics2D g = canvas.createGraphics();
         try {
             // we want the colour in the range 16-245 to prevent pure white and pure black
-            // 0xdf == 1101111 so we throw away the 32 place and add in 16 to give 16 on either side
+            // 0xdf == 1101111 so we throw away the 32 place and add in 16 to give 16 on
+            // either side
             g.setColor(new Color(bytes[0] & 0xdf + 16, bytes[1] & 0xdf + 16, bytes[2] & 0xdf + 16));
             int pSize = size / 5;
-            // likely there will be some remainder from dividing by 5, so half the remainder will be used
+            // likely there will be some remainder from dividing by 5, so half the remainder
+            // will be used
             // as an offset to centre the image
             int pOffset = (size - pSize * 5) / 2;
             for (int y = 0; y < 5; y++) {
@@ -274,30 +285,26 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         final CacheEntry avatar = getCacheEntry(key, null);
         if (avatar == null || !(avatar.url.startsWith("http://") || avatar.url.startsWith("https://"))) {
             // we will generate avatars if the URL is not HTTP based
-            // since the url string will not magically turn itself into a HTTP url this avatar is immutable
+            // since the url string will not magically turn itself into a HTTP url this
+            // avatar is immutable
             return new ImageResponse(
-                generateAvatar(avatar == null ? "" : avatar.url, targetSize),
-                true,
-                System.currentTimeMillis(),
-                "max-age=365000000, immutable, public"
-            );
+                    generateAvatar(avatar == null ? "" : avatar.url, targetSize),
+                    true,
+                    System.currentTimeMillis(),
+                    "max-age=365000000, immutable, public");
         }
         if (avatar.pending() && avatar.image == null) {
-            // serve a temporary avatar until we get the remote one, no caching as we could have the real deal
+            // serve a temporary avatar until we get the remote one, no caching as we could
+            // have the real deal
             // real soon now
-            return new ImageResponse(
-                generateAvatar(avatar.url, targetSize),
-                true,
-                -1L,
-                "no-cache, public"
-            );
+            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "no-cache, public");
         }
         long since = req.getDateHeader("If-Modified-Since");
         if (avatar.lastModified <= since) {
             return new HttpResponse() {
                 @Override
                 public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
-                    throws IOException, ServletException {
+                        throws IOException, ServletException {
                     rsp.addDateHeader("Last-Modified", avatar.lastModified);
                     rsp.addHeader("Cache-control", "max-age=3600, public");
                     rsp.sendError(HttpServletResponse.SC_NOT_MODIFIED);
@@ -306,12 +313,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
         if (avatar.image == null) {
             // we can retry in an hour
-            return new ImageResponse(
-                generateAvatar(avatar.url, targetSize),
-                true,
-                -1L,
-                "max-age=3600, public"
-            );
+            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "max-age=3600, public");
         }
 
         BufferedImage image = avatar.image;
@@ -327,8 +329,10 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
      * Retrieves the entry from the cache.
      *
      * @param key the cache key.
-     * @param url the URL to fetch if the entry is missing or {@code null} to perform a read-only check.
-     * @return the entry or {@code null} if a read-only check found no matching entry.
+     * @param url the URL to fetch if the entry is missing or {@code null} to
+     *            perform a read-only check.
+     * @return the entry or {@code null} if a read-only check found no matching
+     *         entry.
      */
     @Nullable
     private CacheEntry getCacheEntry(@NonNull final String key, @Nullable final String url) {
@@ -427,7 +431,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 } catch (InterruptedException | ExecutionException e) {
                     // ignore
                 }
-
             }
             return true;
         }
@@ -447,7 +450,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         public boolean isUnused() {
             return lastAccessed > 0L && System.currentTimeMillis() - lastAccessed > TimeUnit.HOURS.toMillis(2);
         }
-
     }
 
     private static class ImageResponse implements HttpResponse {
@@ -466,7 +468,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
 
         @Override
         public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
-            throws IOException, ServletException {
+                throws IOException, ServletException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {
                 ImageIO.write(image, "png", bos);
@@ -484,7 +486,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             rsp.setContentLength(bytes.length);
             rsp.getOutputStream().write(bytes);
         }
-
     }
 
     private static class FetchImage implements Callable<CacheEntry> {
@@ -511,7 +512,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                     // if we don't know the length then 8k is what we will use
                     length = length > 0 ? Math.min(16384, length) : 8192;
                     try (InputStream is = connection.getInputStream();
-                        BufferedInputStream bis = new BufferedInputStream(is, length)) {
+                            BufferedInputStream bis = new BufferedInputStream(is, length)) {
                         BufferedImage image = ImageIO.read(bis);
                         if (image == null) {
                             return new CacheEntry(url);
@@ -527,9 +528,9 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             } finally {
                 long end = System.nanoTime();
                 long duration = TimeUnit.NANOSECONDS.toMillis(end - start);
-                LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms",
-                    new Object[]{url, duration}
-                );
+                LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms", new Object[] {
+                    url, duration
+                });
             }
         }
     }

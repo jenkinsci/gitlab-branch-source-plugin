@@ -13,5 +13,4 @@ public class GitLabSCMCauseAction extends CauseAction {
         GitLabWebHookCause cause = findCause(GitLabWebHookCause.class);
         return (cause != null) ? cause.getShortDescription() : null;
     }
-
 }

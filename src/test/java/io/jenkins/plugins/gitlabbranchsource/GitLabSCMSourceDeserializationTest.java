@@ -1,5 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.lang.reflect.Field;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMSource;
@@ -7,8 +9,6 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
-
-import static org.junit.Assert.assertNotNull;
 
 public class GitLabSCMSourceDeserializationTest {
 
@@ -21,15 +21,15 @@ public class GitLabSCMSourceDeserializationTest {
     @Test
     public void afterRestartingJenkinsTransientFieldsAreNotNull() throws Exception {
         plan.then(j -> {
-            GitLabSCMSourceBuilder sb = new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project");
+            GitLabSCMSourceBuilder sb =
+                    new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project");
             WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
             project.getSourcesList().add(new BranchSource(sb.build()));
         });
 
         plan.then(j -> {
-            SCMSource source = j.getInstance()
-                    .getAllItems(WorkflowMultiBranchProject.class)
-                    .stream().filter(p -> PROJECT_NAME.equals(p.getName()))
+            SCMSource source = j.getInstance().getAllItems(WorkflowMultiBranchProject.class).stream()
+                    .filter(p -> PROJECT_NAME.equals(p.getName()))
                     .map(p -> p.getSCMSource(SOURCE_ID))
                     .findFirst()
                     .get();
@@ -43,5 +43,4 @@ public class GitLabSCMSourceDeserializationTest {
             assertNotNull(mergeRequestContributorCache.get(source));
         });
     }
-
 }

@@ -15,6 +15,8 @@ public class BuildStatusNameCustomPartTrait extends SCMSourceTrait {
     @NonNull
     private String buildStatusNameCustomPart = "";
 
+    private boolean buildStatusNameOverwrite;
+
     /**
      * Constructor for stapler.
      */
@@ -31,11 +33,17 @@ public class BuildStatusNameCustomPartTrait extends SCMSourceTrait {
         this.buildStatusNameCustomPart = buildStatusNameCustomPart;
     }
 
+    @DataBoundSetter
+    public void setBuildStatusNameOverwrite(@NonNull Boolean buildStatusNameOverwrite) {
+        this.buildStatusNameOverwrite = buildStatusNameOverwrite;
+    }
+
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (context instanceof GitLabSCMSourceContext) {
             GitLabSCMSourceContext ctx = (GitLabSCMSourceContext) context;
             ctx.withBuildStatusNameCustomPart(getBuildStatusNameCustomPart());
+            ctx.withBuildStatusNameOverwrite(getBuildStatusNameOverwrite());
         }
     }
 
@@ -47,6 +55,15 @@ public class BuildStatusNameCustomPartTrait extends SCMSourceTrait {
     @NonNull
     public String getBuildStatusNameCustomPart() {
         return buildStatusNameCustomPart;
+    }
+
+    /**
+     * Getter method for the build status name overwrite
+     *
+     * @return build status name overwrite option
+     */
+    public boolean getBuildStatusNameOverwrite() {
+        return buildStatusNameOverwrite;
     }
 
     /**

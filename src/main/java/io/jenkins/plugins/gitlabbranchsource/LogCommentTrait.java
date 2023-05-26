@@ -92,7 +92,5 @@ public class LogCommentTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
-
 }

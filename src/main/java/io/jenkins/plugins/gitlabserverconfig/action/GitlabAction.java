@@ -30,7 +30,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 @Extension
 @Restricted(NoExternalUse.class)
 public class GitlabAction implements RootAction {
-    private static final Logger LOGGER = Logger.getLogger(GitlabAction.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(GitlabAction.class.getName());
 
     @RequirePOST
     public HttpResponse doServerList() {
@@ -50,9 +50,8 @@ public class GitlabAction implements RootAction {
     }
 
     @RequirePOST
-    public HttpResponse doProjectList(@AncestorInPath SCMSourceOwner context,
-        @QueryParameter String server,
-        @QueryParameter String owner) {
+    public HttpResponse doProjectList(
+            @AncestorInPath SCMSourceOwner context, @QueryParameter String server, @QueryParameter String owner) {
         if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
         }
@@ -65,8 +64,8 @@ public class GitlabAction implements RootAction {
 
         GitLabApi gitLabApi = GitLabHelper.apiBuilder(context, server);
         try {
-            for (Project project : gitLabApi.getProjectApi().getUserProjects(owner,
-                new ProjectFilter().withOwned(true))) {
+            for (Project project :
+                    gitLabApi.getProjectApi().getUserProjects(owner, new ProjectFilter().withOwned(true))) {
                 servers.add(project.getPathWithNamespace());
             }
         } catch (GitLabApiException e) {
@@ -83,7 +82,6 @@ public class GitlabAction implements RootAction {
 
         return HttpResponses.okJSON(servers);
     }
-
 
     @CheckForNull
     @Override

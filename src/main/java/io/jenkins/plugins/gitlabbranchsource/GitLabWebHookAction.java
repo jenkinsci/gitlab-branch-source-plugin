@@ -43,7 +43,7 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
 
     @Override
     public boolean process(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
-        throws IOException, ServletException {
+            throws IOException, ServletException {
         String pathInfo = req.getPathInfo();
         if (pathInfo != null && pathInfo.startsWith("/" + getUrlName() + "/post")) {
             chain.doFilter(req, resp);
@@ -54,26 +54,24 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
 
     public HttpResponse doPost(StaplerRequest request) throws IOException, GitLabApiException {
         if (!request.getMethod().equals("POST")) {
-            return HttpResponses
-                .error(HttpServletResponse.SC_BAD_REQUEST,
-                    "Only POST requests are supported, this was a " + request.getMethod()
-                        + " request");
+            return HttpResponses.error(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Only POST requests are supported, this was a " + request.getMethod() + " request");
         }
         if (!"application/json".equals(request.getContentType())) {
-            return HttpResponses
-                .error(HttpServletResponse.SC_BAD_REQUEST,
-                    "Only application/json content is supported, this was " + request
-                        .getContentType());
+            return HttpResponses.error(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Only application/json content is supported, this was " + request.getContentType());
         }
         String type = request.getHeader("X-Gitlab-Event");
         if (StringUtils.isBlank(type)) {
-            return HttpResponses.error(HttpServletResponse.SC_BAD_REQUEST,
-                "Expecting a GitLab event, missing expected X-Gitlab-Event header");
+            return HttpResponses.error(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Expecting a GitLab event, missing expected X-Gitlab-Event header");
         }
         String secretToken = request.getHeader("X-Gitlab-Token");
-        if(!isValidToken(secretToken)) {
-            return HttpResponses.error(HttpServletResponse.SC_UNAUTHORIZED,
-                "Expecting a valid secret token");
+        if (!isValidToken(secretToken)) {
+            return HttpResponses.error(HttpServletResponse.SC_UNAUTHORIZED, "Expecting a valid secret token");
         }
         String origin = SCMEvent.originOf(request);
         WebHookManager webHookManager = new WebHookManager();
@@ -85,8 +83,9 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
     private boolean isValidToken(String secretToken) {
         try {
             List<GitLabServer> servers = GitLabServers.get().getServers();
-            for(GitLabServer server: servers) {
-                if(server.getSecretTokenAsPlainText().equals(secretToken) || (server.getSecretTokenAsPlainText().isEmpty() && secretToken == null)) {
+            for (GitLabServer server : servers) {
+                if (server.getSecretTokenAsPlainText().equals(secretToken)
+                        || (server.getSecretTokenAsPlainText().isEmpty() && secretToken == null)) {
                     return true;
                 }
             }

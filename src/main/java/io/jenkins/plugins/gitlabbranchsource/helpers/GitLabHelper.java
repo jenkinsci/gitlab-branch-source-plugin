@@ -30,37 +30,37 @@ public class GitLabHelper {
             }
             return new GitLabApi(serverUrl, GitLabServer.EMPTY_TOKEN, null, getProxyConfig(serverUrl));
         }
-        throw new IllegalStateException(
-            String.format("No server found with the name: %s", serverName));
+        throw new IllegalStateException(String.format("No server found with the name: %s", serverName));
     }
 
-    public static Map<String, Object> getProxyConfig (String serverUrl) {
+    public static Map<String, Object> getProxyConfig(String serverUrl) {
         ProxyConfiguration proxyConfiguration = Jenkins.get().getProxy();
         if (proxyConfiguration != null) {
-                final URL url;
-                try {
-                    url = new URL(serverUrl);
-                } catch (MalformedURLException e) {
-                    // let it crash somewhere else
-                    return null;
-                }
-                if (!"http".equals(url.getProtocol()) && !"https".equals(url.getProtocol())) {
-                    // non-http(s) URL, proxy won't handle it
-                    return null;
-                }
-                List<Pattern> nonProxyHostPatterns = proxyConfiguration.getNoProxyHostPatterns();
-                if (nonProxyHostPatterns.stream().anyMatch(p -> p.matcher(url.getHost()).matches())) {
-                    // target host is excluded by proxy configuration
-                    return null;
-                }
+            final URL url;
+            try {
+                url = new URL(serverUrl);
+            } catch (MalformedURLException e) {
+                // let it crash somewhere else
+                return null;
+            }
+            if (!"http".equals(url.getProtocol()) && !"https".equals(url.getProtocol())) {
+                // non-http(s) URL, proxy won't handle it
+                return null;
+            }
+            List<Pattern> nonProxyHostPatterns = proxyConfiguration.getNoProxyHostPatterns();
+            if (nonProxyHostPatterns.stream()
+                    .anyMatch(p -> p.matcher(url.getHost()).matches())) {
+                // target host is excluded by proxy configuration
+                return null;
+            }
             if (proxyConfiguration.getUserName() != null && proxyConfiguration.getSecretPassword() != null) {
                 return ProxyClientConfig.createProxyClientConfig(
-                    "http://" + proxyConfiguration.getName() + ":" + proxyConfiguration.getPort(),
-                    proxyConfiguration.getUserName(),
-                    proxyConfiguration.getSecretPassword().getPlainText());
+                        "http://" + proxyConfiguration.getName() + ":" + proxyConfiguration.getPort(),
+                        proxyConfiguration.getUserName(),
+                        proxyConfiguration.getSecretPassword().getPlainText());
             }
             return ProxyClientConfig.createProxyClientConfig(
-                "http://" + proxyConfiguration.getName() + ":" + proxyConfiguration.getPort());
+                    "http://" + proxyConfiguration.getName() + ":" + proxyConfiguration.getPort());
         }
         return null;
     }
@@ -90,33 +90,34 @@ public class GitLabHelper {
     }
 
     public static UriTemplate projectUriTemplate(String serverNameOrUrl) {
-        return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}").build();
+        return getUriTemplateFromServer(serverNameOrUrl).template("{/project*}").build();
     }
 
     public static UriTemplate branchUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}/tree/{branch*}").build();
+                .template("{/project*}/tree/{branch*}")
+                .build();
     }
 
     public static UriTemplate mergeRequestUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}/merge_requests/{iid}").build();
+                .template("{/project*}/-/merge_requests/{iid}")
+                .build();
     }
 
     public static UriTemplate tagUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}/tree/{tag*}").build();
+                .template("{/project*}/-/tree/{tag*}")
+                .build();
     }
 
     public static UriTemplate commitUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-            .template("{/project*}/commit/{hash}")
-            .build();
+                .template("{/project*}/-/commit/{hash}")
+                .build();
     }
 
     public static String[] splitPath(String path) {
         return path.split(Operator.PATH.getSeparator());
     }
-
 }

@@ -15,7 +15,7 @@ import org.gitlab4j.api.webhook.AbstractPushEvent;
 
 public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractGitLabSCMHeadEvent.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(AbstractGitLabSCMHeadEvent.class.getName());
 
     private static final Pattern NONE_HASH_PATTERN = Pattern.compile("^0+$");
 
@@ -30,7 +30,8 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
         } else if (hasBefore) {
             result = Type.REMOVED;
         } else {
-            LOGGER.warning("Received push event with both \"before\" and \"after\" set to non-existing revision. Assuming removal.");
+            LOGGER.warning(
+                    "Received push event with both \"before\" and \"after\" set to non-existing revision. Assuming removal.");
             result = Type.REMOVED;
         }
         return result;
@@ -77,5 +78,4 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
     protected abstract Map<SCMHead, SCMRevision> headsFor(GitLabSCMSource source);
 
     public abstract GitLabWebHookCause getCause();
-
 }
