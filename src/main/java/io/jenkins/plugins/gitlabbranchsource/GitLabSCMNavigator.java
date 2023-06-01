@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilder;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getPrivateTokenAsPlainText;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrl;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
@@ -11,6 +12,7 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFile
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -30,7 +32,7 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabGroup;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabOwner;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
-import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserverconfig.credentials.GitLabCredentialMatcher;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
@@ -247,14 +249,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
-            PersonalAccessToken webHookCredentials = getWebHookCredentials(observer.getContext());
+            StandardCredentials webHookCredentials = getWebHookCredentials(observer.getContext());
             GitLabApi webhookGitLabApi = null;
             String webHookUrl = null;
             if (webHookCredentials != null) {
                 GitLabServer server = GitLabServers.get().findServer(serverName);
                 String serverUrl = getServerUrl(server);
                 webhookGitLabApi = new GitLabApi(
-                        serverUrl, webHookCredentials.getToken().getPlainText(), null, getProxyConfig(serverUrl));
+                        serverUrl, getPrivateTokenAsPlainText(webHookCredentials), null, getProxyConfig(serverUrl));
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
             for (Project p : projects) {
@@ -361,8 +363,8 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return projectName;
     }
 
-    private PersonalAccessToken getWebHookCredentials(SCMSourceOwner owner) {
-        PersonalAccessToken credentials = null;
+    private StandardCredentials getWebHookCredentials(SCMSourceOwner owner) {
+        StandardCredentials credentials = null;
         GitLabServer server = GitLabServers.get().findServer(getServerName());
         if (server == null) {
             return null;
@@ -435,14 +437,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
         GitLabHookCreator.register(owner, this, systemhookMode);
     }
 
-    public PersonalAccessToken credentials(SCMSourceOwner owner) {
+    public StandardCredentials credentials(SCMSourceOwner owner) {
         return CredentialsMatchers.firstOrNull(
                 lookupCredentials(
-                        PersonalAccessToken.class,
+                        StandardCredentials.class,
                         owner,
                         Jenkins.getAuthentication(),
                         fromUri(getServerUrlFromName(serverName)).build()),
-                credentials -> credentials instanceof PersonalAccessToken);
+                new GitLabCredentialMatcher());
     }
 
     @Symbol("gitlab")

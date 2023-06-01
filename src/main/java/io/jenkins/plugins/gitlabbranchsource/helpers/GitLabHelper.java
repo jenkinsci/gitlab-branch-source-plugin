@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
@@ -17,18 +18,21 @@ import jenkins.model.Jenkins;
 import org.eclipse.jgit.annotations.NonNull;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.ProxyClientConfig;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 public class GitLabHelper {
 
     public static GitLabApi apiBuilder(AccessControlled context, String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
-            PersonalAccessToken credentials = server.getCredentials(context);
+            StandardCredentials credentials = server.getCredentials(context);
             String serverUrl = server.getServerUrl();
-            if (credentials != null) {
-                return new GitLabApi(serverUrl, credentials.getToken().getPlainText(), null, getProxyConfig(serverUrl));
+            String privateToken = getPrivateTokenAsPlainText(credentials);
+            if (privateToken.equals(GitLabServer.EMPTY_TOKEN)) {
+                return new GitLabApi(serverUrl, GitLabServer.EMPTY_TOKEN, null, getProxyConfig(serverUrl));
+            } else {
+                return new GitLabApi(serverUrl, privateToken, null, getProxyConfig(serverUrl));
             }
-            return new GitLabApi(serverUrl, GitLabServer.EMPTY_TOKEN, null, getProxyConfig(serverUrl));
         }
         throw new IllegalStateException(String.format("No server found with the name: %s", serverName));
     }
@@ -83,6 +87,19 @@ public class GitLabHelper {
         } else {
             return getServerUrlFromName(server);
         }
+    }
+
+    public static String getPrivateTokenAsPlainText(StandardCredentials credentials) {
+        String privateToken = "";
+        if (credentials != null) {
+            if (credentials instanceof PersonalAccessToken) {
+                privateToken = ((PersonalAccessToken) credentials).getToken().getPlainText();
+            }
+            if (credentials instanceof StringCredentials) {
+                privateToken = ((StringCredentials) credentials).getSecret().getPlainText();
+            }
+        }
+        return privateToken;
     }
 
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {
