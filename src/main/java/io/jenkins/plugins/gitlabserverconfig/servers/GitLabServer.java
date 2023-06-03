@@ -28,7 +28,7 @@ import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import io.jenkins.plugins.gitlabserverconfig.credentials.GitLabCredentialMatcher;
+import io.jenkins.plugins.gitlabserverconfig.credentials.helpers.GitLabCredentialMatcher;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
