@@ -262,6 +262,12 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
     }
 
     @NonNull
+    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean disabled) {
+        this.markUnstableAsSuccess = disabled;
+        return this;
+    }
+
+    @NonNull
     public final GitLabSCMSourceContext withLogCommentEnabled(boolean enabled) {
         this.logCommentEnabled = enabled;
         return this;
@@ -348,12 +354,6 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     public final GitLabSCMSourceContext withAlwaysIgnoreMRWorkInProgress(boolean enabled) {
         this.alwaysIgnoreMRWorkInProgress = enabled;
-        return this;
-    }
-
-    @NonNull
-    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean disabled) {
-        this.markUnstableAsSuccess = disabled;
         return this;
     }
 }

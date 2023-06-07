@@ -15,7 +15,7 @@ public class GitLabMarkUnstableAsSuccessTrait extends SCMSourceTrait {
 
     @DataBoundConstructor
     public GitLabMarkUnstableAsSuccessTrait() {
-        //empty
+        // empty
     }
 
     @DataBoundSetter
@@ -60,7 +60,5 @@ public class GitLabMarkUnstableAsSuccessTrait extends SCMSourceTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
-
     }
-
 }
