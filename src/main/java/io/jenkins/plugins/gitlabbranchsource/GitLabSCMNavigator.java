@@ -285,15 +285,17 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 try {
                     GitLabServer server = GitLabServers.get().findServer(serverName);
                     if (webhookGitLabApi != null && webHookUrl != null) {
+                        String secretToken = server.getSecretTokenAsPlainText();
+                        if (secretToken == null) {
+                            // sending 'null' to GitLab will ignore the value, when we want to update it to be empty.
+                            secretToken = "";
+                        }
                         observer.getListener()
                                 .getLogger()
                                 .format(
                                         "Web hook %s%n",
                                         GitLabHookCreator.createWebHookWhenMissing(
-                                                webhookGitLabApi,
-                                                projectPathWithNamespace,
-                                                webHookUrl,
-                                                server.getSecretTokenAsPlainText()));
+                                                webhookGitLabApi, projectPathWithNamespace, webHookUrl, secretToken));
                     }
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger().format("Cannot set web hook: %s%n", e.getReason());
