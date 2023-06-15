@@ -78,5 +78,4 @@ public abstract class AbstractGitLabSCMHeadEvent<E> extends SCMHeadEvent<E> {
     protected abstract Map<SCMHead, SCMRevision> headsFor(GitLabSCMSource source);
 
     public abstract GitLabWebHookCause getCause();
-
 }

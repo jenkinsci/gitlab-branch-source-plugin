@@ -4,25 +4,33 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.trait.SCMSourceBuilder;
 
-public class GitLabSCMSourceBuilder extends
-    SCMSourceBuilder<GitLabSCMSourceBuilder, GitLabSCMSource> {
+public class GitLabSCMSourceBuilder extends SCMSourceBuilder<GitLabSCMSourceBuilder, GitLabSCMSource> {
 
     @CheckForNull
     private final String id;
+
     @CheckForNull
     private final String serverName;
+
     @CheckForNull
     private final String credentialsId;
+
     @NonNull
     private final String projectOwner;
+
     @NonNull
     private final String projectPath;
+
     @NonNull
     private final String projectName;
 
-    public GitLabSCMSourceBuilder(@CheckForNull String id, @CheckForNull String serverName,
-        @CheckForNull String credentialsId, @NonNull String projectOwner,
-        @NonNull String projectPath, @NonNull String projectName) {
+    public GitLabSCMSourceBuilder(
+            @CheckForNull String id,
+            @CheckForNull String serverName,
+            @CheckForNull String credentialsId,
+            @NonNull String projectOwner,
+            @NonNull String projectPath,
+            @NonNull String projectName) {
         super(GitLabSCMSource.class, projectName);
         this.id = id;
         this.serverName = serverName;

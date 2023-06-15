@@ -21,17 +21,18 @@ public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor 
 
         if (r instanceof WorkflowRun) {
             gitLabWebHookCause = (GitLabWebHookCause) r.getCause(GitLabWebHookCause.class);
-            gitLabMergeRequestCommentCause = (GitLabMergeRequestCommentCause)
-                r.getCause(GitLabMergeRequestCommentCause.class);
+            gitLabMergeRequestCommentCause =
+                    (GitLabMergeRequestCommentCause) r.getCause(GitLabMergeRequestCommentCause.class);
         }
         envs.override("GITLAB_OBJECT_KIND", "none");
 
         if (gitLabWebHookCause != null) {
-            if(gitLabWebHookCause.getGitLabPushCauseData() != null) {
+            if (gitLabWebHookCause.getGitLabPushCauseData() != null) {
                 envs.overrideAll(gitLabWebHookCause.getGitLabPushCauseData().getBuildVariables());
-            } else if(gitLabWebHookCause.getGitLabMergeRequestCauseData() != null) {
-                envs.overrideAll(gitLabWebHookCause.getGitLabMergeRequestCauseData().getBuildVariables());
-            } else if(gitLabWebHookCause.getGitLabTagPushCauseData() != null) {
+            } else if (gitLabWebHookCause.getGitLabMergeRequestCauseData() != null) {
+                envs.overrideAll(
+                        gitLabWebHookCause.getGitLabMergeRequestCauseData().getBuildVariables());
+            } else if (gitLabWebHookCause.getGitLabTagPushCauseData() != null) {
                 envs.overrideAll(gitLabWebHookCause.getGitLabTagPushCauseData().getBuildVariables());
             }
         }
@@ -43,7 +44,8 @@ public class GitLabWebHookEnvironmentContributor extends EnvironmentContributor 
         if (gitLabMergeRequestCommentCause != null) {
             if (gitLabMergeRequestCommentCause.getGitLabMergeRequestNoteData() != null) {
                 Map<String, String> buildVariables = gitLabMergeRequestCommentCause
-                    .getGitLabMergeRequestNoteData().getBuildVariables();
+                        .getGitLabMergeRequestNoteData()
+                        .getBuildVariables();
                 envs.overrideAll(buildVariables);
             }
         }

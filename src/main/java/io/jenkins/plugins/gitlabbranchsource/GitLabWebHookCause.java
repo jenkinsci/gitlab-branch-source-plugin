@@ -38,11 +38,10 @@ public class GitLabWebHookCause extends SCMTriggerCause {
         String id = String.valueOf(objectAttributes.getIid());
         String sourceNameSpace = objectAttributes.getSource().getNamespace();
         String targetNameSpace = objectAttributes.getTarget().getNamespace();
-        String nameSpace =
-            StringUtils.equals(sourceNameSpace, targetNameSpace) ? "" : sourceNameSpace + "/";
+        String nameSpace = StringUtils.equals(sourceNameSpace, targetNameSpace) ? "" : sourceNameSpace + "/";
         String source = String.format("%s%s", nameSpace, objectAttributes.getSourceBranch());
         description = Messages.GitLabWebHookCause_ShortDescription_MergeRequestHook(
-            id, source, objectAttributes.getTargetBranch());
+                id, source, objectAttributes.getTargetBranch());
         this.gitLabMergeRequestCauseData = new GitLabMergeRequestCauseData(mergeRequestEvent);
         return this;
     }

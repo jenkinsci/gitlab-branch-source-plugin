@@ -11,9 +11,10 @@ public class GitLabSCMNavigatorRequest extends SCMNavigatorRequest {
 
     private int projectNamingStrategy;
 
-    protected GitLabSCMNavigatorRequest(@NonNull SCMNavigator source,
-        @NonNull GitLabSCMNavigatorContext context,
-        @NonNull SCMSourceObserver observer) {
+    protected GitLabSCMNavigatorRequest(
+            @NonNull SCMNavigator source,
+            @NonNull GitLabSCMNavigatorContext context,
+            @NonNull SCMSourceObserver observer) {
         super(source, context, observer);
         wantSubgroupProjects = context.wantSubgroupProjects();
         projectNamingStrategy = context.withProjectNamingStrategy();
