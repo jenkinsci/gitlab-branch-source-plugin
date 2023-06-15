@@ -73,16 +73,27 @@ public class GitLabHelper {
 
     @NonNull
     public static String getServerUrl(GitLabServer server) {
-        return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
+        if (server == null) {
+            return GitLabServer.GITLAB_SERVER_URL;
+        }
+        String url = server.getServerUrl();
+        return sanitizeUrlValue(url);
     }
 
     @NonNull
     private static String getServerUrl(String server) {
         if (server.startsWith("http://") || server.startsWith("https://")) {
-            return server;
+            return sanitizeUrlValue(server);
         } else {
             return getServerUrlFromName(server);
         }
+    }
+
+    private static String sanitizeUrlValue(String url) {
+        if (url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        }
+        return url;
     }
 
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {
