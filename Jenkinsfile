@@ -6,4 +6,4 @@ def configurations = [
     [ platform: "linux", jdk: "17", jenkins: null ],
     [ platform: "windows", jdk: "17", jenkins: null ]
 ]
-buildPlugin(configurations: configurations)
+buildPlugin(useContainerAgent: true, configurations: configurations)
