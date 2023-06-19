@@ -43,27 +43,7 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
 
         if (action != null) {
             if (action.equals("update") && context.alwaysIgnoreNonCodeRelatedUpdates()) {
-                if (mrEvent.getChanges().getAssignees() != null) {
-                    shouldBuild = false;
-                }
-
-                if (mrEvent.getChanges().getDescription() != null) {
-                    shouldBuild = false;
-                }
-
-                if (mrEvent.getChanges().getMilestoneId() != null) {
-                    shouldBuild = false;
-                }
-
-                if (mrEvent.getChanges().getTitle() != null) {
-                    shouldBuild = false;
-                }
-
-                if (mrEvent.getChanges().getTotalTimeSpent() != null) {
-                    shouldBuild = false;
-                }
-
-                if (mrEvent.getChanges().getLabels() != null) {
+                if (attributes.getOldrev() == null) {
                     shouldBuild = false;
                 }
             }
