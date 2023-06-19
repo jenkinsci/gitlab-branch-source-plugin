@@ -43,6 +43,41 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
+    public void should_set_branch_status_name_withBuildStatusNameCustomPart() {
+        GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
+        sourceContext.withBuildStatusNameCustomPart("CUSTOM");
+        sourceContext.withBuildStatusNameOverwrite(false);
+
+        BranchSCMHead head = new BranchSCMHead("head");
+        SCMRevision revision = new BranchSCMRevision(head, "hash");
+
+        String statusName =
+                GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision, new hudson.EnvVars());
+
+        assertThat(
+                statusName,
+                is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX
+                        + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
+                        + "CUSTOM"
+                        + GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_DELIMITER
+                        + "branch"));
+    }
+
+    @Test
+    public void should_set_branch_status_name_withIgnoreTypeInStatusName() {
+        GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
+        sourceContext.withIgnoreTypeInStatusName(true);
+
+        BranchSCMHead head = new BranchSCMHead("head");
+        SCMRevision revision = new BranchSCMRevision(head, "hash");
+
+        String statusName =
+                GitLabPipelineStatusNotifier.getStatusName(sourceContext, null, revision, new hudson.EnvVars());
+
+        assertThat(statusName, is(GitLabPipelineStatusNotifier.GITLAB_PIPELINE_STATUS_PREFIX));
+    }
+
+    @Test
     public void should_set_merge_request_head_status_name() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
