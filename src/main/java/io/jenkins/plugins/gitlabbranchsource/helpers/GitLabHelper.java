@@ -106,7 +106,7 @@ public class GitLabHelper {
 
     public static UriTemplate branchUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/tree/{branch*}")
+                .template("{/project*}/-/tree/{branch*}")
                 .build();
     }
 
