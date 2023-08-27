@@ -6,4 +6,7 @@
   <f:entry title="${%Overwrite full name}" field="buildStatusNameOverwrite">
     <f:checkbox default="unchecked"/>
   </f:entry>
+  <f:entry title="${%Do not append type in status name}" field="ignoreTypeInStatusName">
+    <f:checkbox default="unchecked"/>
+  </f:entry>
 </j:jelly>

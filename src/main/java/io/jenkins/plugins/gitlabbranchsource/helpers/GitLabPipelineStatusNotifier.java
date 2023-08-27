@@ -121,16 +121,31 @@ public class GitLabPipelineStatusNotifier {
                             + revision.getClass().getName() + ", append" + type + " to status name");
         }
 
+        // Some comments regarding this implementation :
+        // Old code was :
+        // GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + (optional:
+        // pipelinePrefix + GITLAB_PIPELINE_STATUS_DELIMITER) + type
+        // New implementation:
+        // 1- BuildStatusNameCustomPart empty : use default
+        // GITLAB_PIPELINE_STATUS_PREFIX
+        // 2- else: depending on BuildStatusNameOverwrite : use
+        // BuildStatusNameCustomPart appended to GITLAB_PIPELINE_STATUS_PREFIX or use it
+        // as is
+        // 3- add type only if required (no ignoreTypeInStatusName)
+
         String pipelinePrefix = sourceContext.getBuildStatusNameCustomPart().trim();
         if (!pipelinePrefix.isEmpty()) {
-            pipelinePrefix = envVars.expand(pipelinePrefix) + GITLAB_PIPELINE_STATUS_DELIMITER;
+            pipelinePrefix = envVars.expand(pipelinePrefix);
             if (!sourceContext.getBuildStatusNameOverwrite()) {
                 pipelinePrefix = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER + pipelinePrefix;
             }
         } else {
-            pipelinePrefix = GITLAB_PIPELINE_STATUS_PREFIX + GITLAB_PIPELINE_STATUS_DELIMITER;
+            pipelinePrefix = GITLAB_PIPELINE_STATUS_PREFIX;
         }
-        final String statusName = pipelinePrefix + type;
+        if (!sourceContext.getIgnoreTypeInStatusName()) {
+            pipelinePrefix = pipelinePrefix + GITLAB_PIPELINE_STATUS_DELIMITER + type;
+        }
+        final String statusName = pipelinePrefix;
         LOGGER.log(Level.FINEST, () -> "Retrieved status name is: " + statusName);
         return statusName;
     }

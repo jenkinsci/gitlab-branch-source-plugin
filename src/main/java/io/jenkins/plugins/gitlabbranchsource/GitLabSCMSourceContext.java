@@ -53,6 +53,8 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     private boolean buildStatusNameOverwrite;
 
+    private boolean ignoreTypeInStatusName;
+
     private boolean alwaysBuildMROpen = true;
 
     private boolean alwaysBuildMRReOpen = true;
@@ -189,6 +191,10 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
         return buildStatusNameOverwrite;
     }
 
+    public boolean getIgnoreTypeInStatusName() {
+        return ignoreTypeInStatusName;
+    }
+
     @NonNull
     public GitLabSCMSourceContext wantBranches(boolean include) {
         wantBranches = wantBranches || include;
@@ -296,6 +302,11 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     public final GitLabSCMSourceContext withBuildStatusNameOverwrite(final Boolean buildStatusNameOverwrite) {
         this.buildStatusNameOverwrite = buildStatusNameOverwrite;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withIgnoreTypeInStatusName(final Boolean ignoreTypeInStatusName) {
+        this.ignoreTypeInStatusName = ignoreTypeInStatusName;
         return this;
     }
 
