@@ -199,7 +199,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     ii. `Server URL` - Contains the URL to your GitLab Server. By default it is set to "https://gitlab.com". User can modify it to enter their GitLab Server URL e.g. https://gitlab.gnome.org/, http://gitlab.example.com:7990. etc.
 
-    iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
+    iii. `Credentials` - Contains a list of credentials entries that are of type GitLab Personal Access Token or any String Credentials. When no credential has been added it shows "-none-". User can add a credential by clicking "Add" button.
 
     iv. `Mange Web Hook` - If you want the plugin to setup web hook on your GitLab project(s) to get push/mr/tag/note events then check this box.
 
@@ -213,8 +213,7 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
    This is a manual setup. To automatically generate Personal Access Token see [next section](#creating-personal-access-token-within-jenkins).
 
-    i. User is required to add a `GitLab Personal Access Token` type credentials entry to securely persist the token
-    inside Jenkins.
+    i. User is required to add a `GitLab Personal Access Token` or any `String Credential` type credentials entry to securely persist the token inside Jenkins.
 
     ii. Generate a `Personal Access Token` on your GitLab Server
 
