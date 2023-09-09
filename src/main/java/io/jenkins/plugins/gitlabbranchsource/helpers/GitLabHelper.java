@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
 import com.damnhandy.uri.template.impl.Operator;
@@ -17,18 +18,21 @@ import jenkins.model.Jenkins;
 import org.eclipse.jgit.annotations.NonNull;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.ProxyClientConfig;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 public class GitLabHelper {
 
     public static GitLabApi apiBuilder(AccessControlled context, String serverName) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
-            PersonalAccessToken credentials = server.getCredentials(context);
+            StandardCredentials credentials = server.getCredentials(context);
             String serverUrl = server.getServerUrl();
-            if (credentials != null) {
-                return new GitLabApi(serverUrl, credentials.getToken().getPlainText(), null, getProxyConfig(serverUrl));
+            String privateToken = getPrivateTokenAsPlainText(credentials);
+            if (privateToken.equals(GitLabServer.EMPTY_TOKEN)) {
+                return new GitLabApi(serverUrl, GitLabServer.EMPTY_TOKEN, null, getProxyConfig(serverUrl));
+            } else {
+                return new GitLabApi(serverUrl, privateToken, null, getProxyConfig(serverUrl));
             }
-            return new GitLabApi(serverUrl, GitLabServer.EMPTY_TOKEN, null, getProxyConfig(serverUrl));
         }
         throw new IllegalStateException(String.format("No server found with the name: %s", serverName));
     }
@@ -73,16 +77,40 @@ public class GitLabHelper {
 
     @NonNull
     public static String getServerUrl(GitLabServer server) {
-        return server != null ? server.getServerUrl() : GitLabServer.GITLAB_SERVER_URL;
+        if (server == null) {
+            return GitLabServer.GITLAB_SERVER_URL;
+        }
+        String url = server.getServerUrl();
+        return sanitizeUrlValue(url);
     }
 
     @NonNull
     private static String getServerUrl(String server) {
         if (server.startsWith("http://") || server.startsWith("https://")) {
-            return server;
+            return sanitizeUrlValue(server);
         } else {
             return getServerUrlFromName(server);
         }
+    }
+
+    private static String sanitizeUrlValue(String url) {
+        if (url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        }
+        return url;
+    }
+
+    public static String getPrivateTokenAsPlainText(StandardCredentials credentials) {
+        String privateToken = "";
+        if (credentials != null) {
+            if (credentials instanceof PersonalAccessToken) {
+                privateToken = ((PersonalAccessToken) credentials).getToken().getPlainText();
+            }
+            if (credentials instanceof StringCredentials) {
+                privateToken = ((StringCredentials) credentials).getSecret().getPlainText();
+            }
+        }
+        return privateToken;
     }
 
     public static UriTemplateBuilder getUriTemplateFromServer(String server) {
@@ -95,7 +123,7 @@ public class GitLabHelper {
 
     public static UriTemplate branchUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/tree/{branch*}")
+                .template("{/project*}/-/tree/{branch*}")
                 .build();
     }
 

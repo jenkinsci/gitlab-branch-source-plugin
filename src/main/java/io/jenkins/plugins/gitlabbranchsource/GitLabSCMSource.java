@@ -323,9 +323,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
-            setProjectId(gitlabProject.getId());
-            sshRemote = gitlabProject.getSshUrlToRepo();
-            httpRemote = gitlabProject.getHttpUrlToRepo();
             GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer);
             try (GitLabSCMSourceRequest request = ctx.withTraits(getTraits()).newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
@@ -334,7 +331,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                if (request.isFetchMRs()) {
+                if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
                     // If `forkedFromProject` is null it doesn't mean anything
                     if (gitlabProject.getForkedFromProject() == null) {
@@ -410,7 +407,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
                 }
-                if (request.isFetchMRs() && !request.isComplete()) {
+                if (request.isFetchMRs() && !request.isComplete() && gitlabProject.getMergeRequestsEnabled()) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Long, String> forkMrSources = new HashMap<>();
