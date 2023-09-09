@@ -148,7 +148,7 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
     public final boolean getOnlyTrustedMembersCanTrigger() {
         return onlyTrustedMembersCanTrigger;
     }
-  
+
     public final boolean getMarkUnstableAsSuccess() {
         return markUnstableAsSuccess;
     }
