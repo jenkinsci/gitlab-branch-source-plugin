@@ -7,6 +7,7 @@ import jenkins.scm.api.trait.SCMNavigatorContext;
 import jenkins.scm.api.trait.SCMNavigatorTrait;
 import jenkins.scm.api.trait.SCMNavigatorTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SubGroupProjectDiscoveryTrait extends SCMNavigatorTrait {
@@ -30,6 +31,7 @@ public class SubGroupProjectDiscoveryTrait extends SCMNavigatorTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitLabSubGroupProjectDiscovery")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMNavigatorTraitDescriptor {

@@ -8,6 +8,7 @@ import jenkins.scm.api.trait.SCMNavigatorContext;
 import jenkins.scm.api.trait.SCMNavigatorTrait;
 import jenkins.scm.api.trait.SCMNavigatorTraitDescriptor;
 import jenkins.scm.impl.trait.Discovery;
+import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -45,6 +46,7 @@ public class ProjectNamingStrategyTrait extends SCMNavigatorTrait {
     /**
      * Our descriptor.
      */
+    @Symbol("gitLabProjectNamingStrategy")
     @Extension
     @Discovery
     public static class DescriptorImpl extends SCMNavigatorTraitDescriptor {
