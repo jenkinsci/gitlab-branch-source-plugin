@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabserverconfig.servers;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getPrivateTokenAsPlainText;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
@@ -27,7 +28,7 @@ import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
+import io.jenkins.plugins.gitlabserverconfig.credentials.helpers.GitLabCredentialMatcher;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
@@ -60,10 +61,9 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
-     * The credentials matcher for GitLab Personal Access Token
+     * The credentials matcher for PersonalAccessToken and StringCredentials
      */
-    public static final CredentialsMatcher CREDENTIALS_MATCHER =
-            CredentialsMatchers.instanceOf(PersonalAccessToken.class);
+    public static final CredentialsMatcher CREDENTIALS_MATCHER = new GitLabCredentialMatcher();
     /**
      * Default name for community SaaS version server
      */
@@ -116,7 +116,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private boolean manageSystemHooks;
 
     /**
-     * The {@link PersonalAccessToken#getId()} of the credentials to use for
+     * The {@link StandardCredentials#getId()} of the credentials to use for
      * auto-management of
      * hooks.
      */
@@ -166,7 +166,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * @param name          A unique name to use to describe the end-point, if empty
      *                      replaced with a random
      *                      name
-     * @param credentialsId The {@link PersonalAccessToken#getId()} of the
+     * @param credentialsId The {@link StandardCredentials#getId()} of the
      *                      credentials to use for
      *                      GitLab Server Authentication to access GitLab APIs
      */
@@ -253,11 +253,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Returns The {@link PersonalAccessToken#getId()} of the credentials to use for
+     * Returns The {@link StandardCredentials#getId()} of the credentials to use for
      * GitLab Server
      * Authentication to access GitLab APIs.
      *
-     * @return The {@link PersonalAccessToken#getId()} of the credentials to use for
+     * @return The {@link StandardCredentials#getId()} of the credentials to use for
      *         GitLab Server
      *         Authentication to access GitLab APIs.
      */
@@ -267,11 +267,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up for Personal Access Token
+     * Looks up for PersonalAccessToken and StringCredentials
      *
-     * @return {@link PersonalAccessToken}
+     * @return {@link StandardCredentials}
      */
-    public PersonalAccessToken getCredentials(AccessControlled context) {
+    public StandardCredentials getCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
         if (context == null) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
@@ -282,7 +282,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                 ? null
                 : CredentialsMatchers.firstOrNull(
                         lookupCredentials(
-                                PersonalAccessToken.class,
+                                StandardCredentials.class,
                                 jenkins,
                                 ACL.SYSTEM,
                                 fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))
@@ -578,11 +578,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         @Restricted(DoNotUse.class)
         @SuppressWarnings("unused")
         public FormValidation doTestConnection(@QueryParameter String serverUrl, @QueryParameter String credentialsId) {
-            PersonalAccessToken credentials = getCredentials(serverUrl, credentialsId);
-            String privateToken = "";
-            if (credentials != null) {
-                privateToken = credentials.getToken().getPlainText();
-            }
+            StandardCredentials credentials = getCredentials(serverUrl, credentialsId);
+            String privateToken = getPrivateTokenAsPlainText(credentials);
             if (privateToken.equals(EMPTY_TOKEN)) {
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, EMPTY_TOKEN, null, getProxyConfig(serverUrl));
                 try {
@@ -600,7 +597,6 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             Messages.GitLabServer_credentialsNotResolved(Util.escape(credentialsId)));
                 }
             } else {
-
                 GitLabApi gitLabApi = new GitLabApi(serverUrl, privateToken, null, getProxyConfig(serverUrl));
                 try {
                     User user = gitLabApi.getUserApi().getCurrentUser();
@@ -664,14 +660,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             WEBHOOK_SECRET_CREDENTIALS_MATCHER);
         }
 
-        private PersonalAccessToken getCredentials(String serverUrl, String credentialsId) {
+        private StandardCredentials getCredentials(String serverUrl, String credentialsId) {
             Jenkins jenkins = Jenkins.get();
             jenkins.checkPermission(Jenkins.ADMINISTER);
             return StringUtils.isBlank(credentialsId)
                     ? null
                     : CredentialsMatchers.firstOrNull(
                             lookupCredentials(
-                                    PersonalAccessToken.class,
+                                    StandardCredentials.class,
                                     jenkins,
                                     ACL.SYSTEM,
                                     fromUri(defaultIfBlank(serverUrl, GITLAB_SERVER_URL))

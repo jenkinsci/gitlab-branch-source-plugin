@@ -281,7 +281,7 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
      */
-    private static void sendNotifications(Run<?, ?> build, TaskListener listener) {
+    private static void sendNotifications(Run<?, ?> build, TaskListener listener, Boolean useResult) {
         GitLabSCMSource source = getSource(build);
         if (source == null) {
             return;
@@ -298,8 +298,11 @@ public class GitLabPipelineStatusNotifier {
                                     + " configured in Jenkins global configuration.");
             return;
         }
-        Result result = build.getResult();
-        LOGGER.log(Level.FINE, String.format("Result: %s", result));
+        Result result = null;
+        if (useResult) {
+            result = build.getResult();
+            LOGGER.log(Level.FINE, String.format("Result: %s", result));
+        }
 
         CommitStatus status = new CommitStatus();
         Constants.CommitBuildState state;
@@ -311,8 +314,13 @@ public class GitLabPipelineStatusNotifier {
             state = Constants.CommitBuildState.SUCCESS;
         } else if (Result.UNSTABLE.equals(result)) {
             status.setDescription(build.toString() + ": This commit is unstable with partial failure.");
-            status.setStatus("FAILED");
-            state = Constants.CommitBuildState.FAILED;
+            if (sourceContext.getMarkUnstableAsSuccess()) {
+                status.setStatus("SUCCESS");
+                state = Constants.CommitBuildState.SUCCESS;
+            } else {
+                status.setStatus("FAILED");
+                state = Constants.CommitBuildState.FAILED;
+            }
         } else if (Result.FAILURE.equals(result)) {
             status.setDescription(build.toString() + ": There was a failure building this commit.");
             status.setStatus("FAILED");
@@ -521,7 +529,7 @@ public class GitLabPipelineStatusNotifier {
                 File changelogFile,
                 SCMRevisionState pollingBaseline) {
             LOGGER.log(Level.FINE, String.format("SCMListener: Checkout > %s", build.getFullDisplayName()));
-            sendNotifications(build, listener);
+            sendNotifications(build, listener, false);
         }
     }
 
@@ -534,14 +542,14 @@ public class GitLabPipelineStatusNotifier {
         @Override
         public void onCompleted(Run<?, ?> build, @NonNull TaskListener listener) {
             LOGGER.log(Level.FINE, String.format("RunListener: Complete > %s", build.getFullDisplayName()));
-            sendNotifications(build, listener);
+            sendNotifications(build, listener, true);
             logComment(build, listener);
         }
 
         @Override
         public void onStarted(Run<?, ?> run, TaskListener listener) {
             LOGGER.log(Level.FINE, String.format("RunListener: Started > %s", run.getFullDisplayName()));
-            sendNotifications(run, listener);
+            sendNotifications(run, listener, false);
         }
     }
 }

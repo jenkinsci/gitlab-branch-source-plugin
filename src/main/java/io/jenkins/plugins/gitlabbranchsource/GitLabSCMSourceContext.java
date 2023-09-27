@@ -71,6 +71,8 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     private boolean alwaysIgnoreMRWorkInProgress = false;
 
+    private boolean markUnstableAsSuccess = false;
+
     public GitLabSCMSourceContext(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer) {
         super(criteria, observer);
     }
@@ -145,6 +147,10 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     public final boolean getOnlyTrustedMembersCanTrigger() {
         return onlyTrustedMembersCanTrigger;
+    }
+
+    public final boolean getMarkUnstableAsSuccess() {
+        return markUnstableAsSuccess;
     }
 
     public boolean alwaysBuildMROpen() {
@@ -258,6 +264,12 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
     @NonNull
     public final GitLabSCMSourceContext withProjectAvatarDisabled(boolean disabled) {
         this.projectAvatarDisabled = disabled;
+        return this;
+    }
+
+    @NonNull
+    public final GitLabSCMSourceContext withMarkUnstableAsSuccess(boolean disabled) {
+        this.markUnstableAsSuccess = disabled;
         return this;
     }
 
