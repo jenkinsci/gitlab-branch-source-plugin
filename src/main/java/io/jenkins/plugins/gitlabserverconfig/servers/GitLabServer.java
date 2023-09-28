@@ -44,6 +44,7 @@ import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.accmod.Restricted;
@@ -493,6 +494,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Our descriptor.
      */
+    @Symbol("gitLabServer")
     @Extension
     public static class DescriptorImpl extends Descriptor<GitLabServer> {
 

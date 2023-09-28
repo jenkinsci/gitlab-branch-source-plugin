@@ -15,6 +15,7 @@ import hudson.scm.RepositoryBrowser;
 import java.io.IOException;
 import java.net.URL;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -74,6 +75,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
                 .expand());
     }
 
+    @Symbol("gitLab")
     @Extension
     public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
