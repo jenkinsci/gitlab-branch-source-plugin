@@ -75,7 +75,11 @@ public class GitLabBrowser extends GitRepositoryBrowser {
                 .expand());
     }
 
-    @Symbol("gitLab")
+    // [JENKINS-72104] notes that the symbol 'gitLabBrowser' is used
+    // instead of the preferred 'gitLab' symbol in order to not break
+    // compatibility for existing git plugin users.  The git plugin
+    // already defines a repository browser with the symbol "gitLab".
+    @Symbol("gitLabBrowser")
     @Extension
     public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
