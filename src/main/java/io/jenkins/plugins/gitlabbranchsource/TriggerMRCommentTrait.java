@@ -28,7 +28,7 @@ public class TriggerMRCommentTrait extends SCMSourceTrait {
      * Constructor.
      *
      * @param commentBody the comment body to trigger a new build on
-     * @param onlyTrustedMembersCanTrigger
+     * @param onlyTrustedMembersCanTrigger if true then only trusted members can trigger the job
      */
     @DataBoundConstructor
     public TriggerMRCommentTrait(String commentBody, boolean onlyTrustedMembersCanTrigger) {
