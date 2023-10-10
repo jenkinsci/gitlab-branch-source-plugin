@@ -9,13 +9,13 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import java.io.IOException;
-import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
+import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 
@@ -30,19 +30,7 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
         super(rev);
         this.gitLabApi = gitLabApi;
         this.projectPath = projectPath;
-        if (rev != null) {
-            if (rev.getHead() instanceof MergeRequestSCMHead) {
-                this.ref = ((MergeRequestSCMRevision) rev).getOrigin().getHash();
-            } else if (rev instanceof BranchSCMRevision) {
-                this.ref = ((BranchSCMRevision) rev).getHash();
-            } else if (rev instanceof GitTagSCMRevision) {
-                this.ref = ((GitTagSCMRevision) rev).getHash();
-            } else {
-                this.ref = ref;
-            }
-        } else {
-            this.ref = ref;
-        }
+        this.ref = ref;
     }
 
     @Override
@@ -109,7 +97,17 @@ public class GitLabSCMFileSystem extends SCMFileSystem {
                 throws IOException, InterruptedException {
             String ref;
             if (head instanceof MergeRequestSCMHead) {
-                ref = ((MergeRequestSCMHead) head).getOriginName();
+                MergeRequestSCMHead mrHead = (MergeRequestSCMHead) head;
+                ChangeRequestCheckoutStrategy checkoutStrategy = mrHead.getCheckoutStrategy();
+                String mrRef;
+                if (checkoutStrategy == ChangeRequestCheckoutStrategy.HEAD) {
+                    mrRef = "head";
+                } else if (checkoutStrategy == ChangeRequestCheckoutStrategy.MERGE) {
+                    mrRef = "merge";
+                } else {
+                    return null;
+                }
+                ref = String.format("merge-requests/%s/%s", mrHead.getId(), mrRef);
             } else if (head instanceof BranchSCMHead) {
                 ref = head.getName();
             } else if (head instanceof GitLabTagSCMHead) {
