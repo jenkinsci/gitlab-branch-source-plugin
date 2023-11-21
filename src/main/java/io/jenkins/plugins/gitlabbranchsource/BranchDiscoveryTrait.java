@@ -297,7 +297,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         /**
          * Constructor
          *
-         * @param branchesAlwaysIncludedRegex the branchesAlwaysIncludedRegexPattern.
+         * @param branchesAlwaysIncludedRegexPattern the branchesAlwaysIncludedRegexPattern.
          */
         public OnlyOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
             this.branchesAlwaysIncludedRegexPattern = branchesAlwaysIncludedRegexPattern;
