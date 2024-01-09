@@ -54,6 +54,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Represents a GitLab Server instance.
@@ -504,6 +505,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          * @param serverUrl the URL to check.
          * @return the validation results.
          */
+        @POST
         public static FormValidation doCheckServerUrl(@QueryParameter String serverUrl) {
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
