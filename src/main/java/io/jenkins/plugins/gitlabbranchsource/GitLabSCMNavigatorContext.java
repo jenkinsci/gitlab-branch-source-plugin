@@ -10,6 +10,8 @@ public class GitLabSCMNavigatorContext
 
     private boolean wantSubgroupProjects;
 
+    private boolean wantSharedProjects;
+
     private int projectNamingStrategy = 1;
 
     /** If true, archived repositories will be ignored. */
@@ -30,6 +32,15 @@ public class GitLabSCMNavigatorContext
 
     public GitLabSCMNavigatorContext wantSubgroupProjects(boolean include) {
         this.wantSubgroupProjects = include;
+        return this;
+    }
+
+    public boolean wantSharedProjects() {
+        return wantSharedProjects;
+    }
+
+    public GitLabSCMNavigatorContext wantSharedProjects(boolean include) {
+        this.wantSharedProjects = include;
         return this;
     }
 

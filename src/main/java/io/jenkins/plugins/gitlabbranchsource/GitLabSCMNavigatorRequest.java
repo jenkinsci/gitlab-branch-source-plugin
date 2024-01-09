@@ -7,6 +7,7 @@ import jenkins.scm.api.trait.SCMNavigatorRequest;
 
 public class GitLabSCMNavigatorRequest extends SCMNavigatorRequest {
 
+    private final boolean wantSharedProjects;
     private boolean wantSubgroupProjects;
 
     private int projectNamingStrategy;
@@ -17,6 +18,7 @@ public class GitLabSCMNavigatorRequest extends SCMNavigatorRequest {
             @NonNull SCMSourceObserver observer) {
         super(source, context, observer);
         wantSubgroupProjects = context.wantSubgroupProjects();
+        wantSharedProjects = context.wantSharedProjects();
         projectNamingStrategy = context.withProjectNamingStrategy();
     }
 
@@ -25,6 +27,14 @@ public class GitLabSCMNavigatorRequest extends SCMNavigatorRequest {
      */
     public boolean wantSubgroupProjects() {
         return wantSubgroupProjects;
+    }
+
+    /**
+     *
+     * @return wether to include projects that are shared with the group from other groups.
+     */
+    public boolean wantSharedProjects() {
+        return wantSharedProjects;
     }
 
     /**
