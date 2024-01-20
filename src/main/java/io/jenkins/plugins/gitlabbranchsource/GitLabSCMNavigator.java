@@ -230,7 +230,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
-    // this checks all of our project source files 
+    // this checks all of our project source files
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
         GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext().withTraits(traits);
@@ -262,13 +262,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
 	    // we may check with web hooks but we don't check if the projects returned are null
-	    
+
             for (Project p : projects) {
                 count++;
 		//in here we should check if the project is null
 		//in this loop we should check to see if there is a null pointer
 		if(p == null){
 		    System.out.println("null project");
+            continue;
 		}
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
