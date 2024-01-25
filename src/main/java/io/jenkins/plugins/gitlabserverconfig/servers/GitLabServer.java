@@ -511,7 +511,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             try {
                 new URL(serverUrl);
             } catch (MalformedURLException e) {
-                LOGGER.log(Level.SEVERE, "Incorrect url: %s", serverUrl);
+                LOGGER.log(Level.SEVERE, String.format("Incorrect url: %s", serverUrl));
                 return FormValidation.error("Malformed url (%s)", e.getMessage());
             }
             if (GITLAB_SERVER_URL.equals(serverUrl)) {
@@ -607,7 +607,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                             String.format("Connection established with the GitLab Server for %s", user.getUsername()));
                     return FormValidation.ok(String.format("Credentials verified for user %s", user.getUsername()));
                 } catch (GitLabApiException e) {
-                    LOGGER.log(Level.SEVERE, "Failed to connect with GitLab Server - %s", e.getMessage());
+                    LOGGER.log(
+                            Level.SEVERE, String.format("Failed to connect with GitLab Server - %s", e.getMessage()));
                     return FormValidation.error(e, Messages.GitLabServer_failedValidation(Util.escape(e.getMessage())));
                 }
             }
