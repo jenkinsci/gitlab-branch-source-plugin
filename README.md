@@ -411,9 +411,13 @@ To create a `GitLab Group Job`:
 
 1. Select `New Item` on Jenkins home page.
 
-2. Enter a name for your job, select `GitLab Group` | select `Ok`.
+2. Enter a name for your job.
 
-3. Now you need to configure your jobs.
+3. Select `Organization Folder` as the job type and press the `Ok` button.
+
+4. In `Configuration`, under `Projects`, select `GitLab Group` as the `Repository Sources`.
+
+5. Now you need to configure your jobs.
 
     i. Select `Server` configured in the initial server setup.
 
