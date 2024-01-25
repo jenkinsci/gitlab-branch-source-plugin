@@ -617,8 +617,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         getGitlabProject();
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
-            String branchUrl = branchUriTemplate(serverName)
-                    .set("project", splitPath(projectPath))
+            String branchUrl = branchUriTemplate(gitlabProject.getWebUrl())
                     .set("branch", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(null, null, branchUrl));
@@ -628,8 +627,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } else if (head instanceof MergeRequestSCMHead) {
             long iid = Long.parseLong(((MergeRequestSCMHead) head).getId());
-            String mergeUrl = mergeRequestUriTemplate(serverName)
-                    .set("project", splitPath(projectPath))
+            String mergeUrl = mergeRequestUriTemplate(gitlabProject.getWebUrl())
                     .set("iid", iid)
                     .expand();
             ObjectMetadataAction metadataAction = mergeRequestMetadataCache.get(iid);
@@ -644,8 +642,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
             result.add(GitLabLink.toMergeRequest(mergeUrl));
         } else if (head instanceof GitLabTagSCMHead) {
-            String tagUrl = tagUriTemplate(serverName)
-                    .set("project", splitPath(projectPath))
+            String tagUrl = tagUriTemplate(gitlabProject.getWebUrl())
                     .set("tag", head.getName())
                     .expand();
             result.add(new ObjectMetadataAction(null, null, tagUrl));
@@ -695,8 +692,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         List<Action> actions = new ArrayList<>();
         if (revision instanceof SCMRevisionImpl) {
             String hash = ((SCMRevisionImpl) revision).getHash();
-            String commitUrl = commitUriTemplate(serverName)
-                    .set("project", splitPath(projectPath))
+            String commitUrl = commitUriTemplate(gitlabProject.getWebUrl())
                     .set("hash", hash)
                     .expand();
             actions.add(GitLabLink.toCommit(commitUrl));
