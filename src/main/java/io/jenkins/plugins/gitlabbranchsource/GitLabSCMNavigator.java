@@ -244,6 +244,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
                 wantSubGroupProjects = request.wantSubgroupProjects();
                 groupProjectsFilter.withIncludeSubGroups(wantSubGroupProjects);
+                groupProjectsFilter.withShared(request.wantSharedProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
                 projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
             }

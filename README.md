@@ -468,6 +468,8 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 
 * `Discover group/subgroup projects` - Discover subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
 
+* `Discover shared projects` - Discover projects that are shared with the configured owner group from another group. Up until version 684 of the plugin this used to be the default behavior but is now a separate trait that is not added by default due to potential security concerns.
+
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar.
 
 * `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel (also includes inherited from ancestor groups). By default only trusted members of project can trigger MR.
