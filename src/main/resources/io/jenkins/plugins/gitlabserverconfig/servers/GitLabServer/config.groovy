@@ -13,7 +13,7 @@ f.entry(title: _("Display Name"), field: "name", "description": "A unique name f
 }
 
 f.entry(title: _("Server URL"), field: "serverUrl", "description": "The url to the GitLab server") {
-    f.textbox(default: GitLabServer.GITLAB_SERVER_URL)
+    f.textbox(default: GitLabServer.GITLAB_SERVER_URL, checkMethod: 'post')
 }
 
 f.entry(title: _("Credentials"), field: "credentialsId", "description": "The Personal Access Token for GitLab APIs access") {

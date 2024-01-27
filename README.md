@@ -411,9 +411,13 @@ To create a `GitLab Group Job`:
 
 1. Select `New Item` on Jenkins home page.
 
-2. Enter a name for your job, select `GitLab Group` | select `Ok`.
+2. Enter a name for your job.
 
-3. Now you need to configure your jobs.
+3. Select `Organization Folder` as the job type and press the `Ok` button.
+
+4. In `Configuration`, under `Projects`, select `GitLab Group` as the `Repository Sources`.
+
+5. Now you need to configure your jobs.
 
     i. Select `Server` configured in the initial server setup.
 
@@ -467,6 +471,8 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 * `Tag discovery` - Discover tags in the project. To automatically build tags install `basic-branch-build-plugin`.
 
 * `Discover group/subgroup projects` - Discover subgroup projects inside a group/subgroup. Only applicable to `GitLab Group` Job type whose owner is a `Group`/`Subgroup` but not `User`.
+
+* `Discover shared projects` - Discover projects that are shared with the configured owner group from another group. Up until version 684 of the plugin this used to be the default behavior but is now a separate trait that is not added by default due to potential security concerns.
 
 * `Log build status as comment on GitLab` - Enable logging build status as comment on GitLab. A comment is logged on the commit or merge request once the build is completed. You can decide if you want to log success builds or not. You can also use sudo user to comment the build status as commment e.g. `jenkinsadmin` or something similar.
 
@@ -526,6 +532,7 @@ GITLAB_REF
 GITLAB_CHECKOUT_SHA
 GITLAB_USER_ID
 GITLAB_USER_NAME
+GITLAB_USER_USERNAME
 GITLAB_USER_EMAIL
 GITLAB_PROJECT_ID
 GITLAB_PROJECT_ID_2
@@ -585,6 +592,7 @@ GITLAB_REF
 GITLAB_CHECKOUT_SHA
 GITLAB_USER_ID
 GITLAB_USER_NAME
+GITLAB_USER_USERNAME
 GITLAB_USER_EMAIL
 GITLAB_PROJECT_ID
 GITLAB_PROJECT_ID_2

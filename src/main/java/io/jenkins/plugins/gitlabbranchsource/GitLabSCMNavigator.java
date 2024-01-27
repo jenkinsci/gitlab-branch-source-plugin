@@ -35,6 +35,7 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabUser;
 import io.jenkins.plugins.gitlabserverconfig.credentials.helpers.GitLabCredentialMatcher;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
@@ -246,6 +246,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
                 wantSubGroupProjects = request.wantSubgroupProjects();
                 groupProjectsFilter.withIncludeSubGroups(wantSubGroupProjects);
+                groupProjectsFilter.withShared(request.wantSharedProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
                 projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
             }

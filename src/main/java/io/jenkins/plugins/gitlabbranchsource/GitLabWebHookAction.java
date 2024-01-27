@@ -1,5 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.model.UnprotectedRootAction;
 import hudson.security.csrf.CrumbExclusion;
@@ -7,8 +10,8 @@ import hudson.util.HttpResponses;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.FilterChain;
@@ -81,12 +84,18 @@ public final class GitLabWebHookAction extends CrumbExclusion implements Unprote
         return HttpResponses.ok(); // TODO find a better response
     }
 
+    @SuppressFBWarnings(
+            value = "NP_NULL_PARAM_DEREF",
+            justification = "MessageDigest.isEqual does handle null and spotbugs is wrong")
     private boolean isValidToken(String secretToken) {
         try {
             List<GitLabServer> servers = GitLabServers.get().getServers();
+            byte[] secretTokenBytes = secretToken != null ? secretToken.getBytes(UTF_8) : null;
             for (GitLabServer server : servers) {
                 String secretTokenAsPlainText = server.getSecretTokenAsPlainText();
-                if (Objects.equals(secretToken, secretTokenAsPlainText)
+                byte[] secretTokenAsPlainTextBytes =
+                        secretTokenAsPlainText != null ? secretTokenAsPlainText.getBytes(UTF_8) : null;
+                if (MessageDigest.isEqual(secretTokenBytes, secretTokenAsPlainTextBytes)
                         || (secretTokenAsPlainText != null
                                 && secretTokenAsPlainText.isEmpty()
                                 && secretToken == null)) {

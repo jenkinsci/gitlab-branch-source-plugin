@@ -24,6 +24,7 @@ public class GitLabTagPushCauseData {
         this.variables.put("GITLAB_CHECKOUT_SHA", defaultString(tagPushEvent.getCheckoutSha()));
         this.variables.put("GITLAB_USER_ID", defaultLongString(tagPushEvent.getUserId()));
         this.variables.put("GITLAB_USER_NAME", defaultString(tagPushEvent.getUserName()));
+        this.variables.put("GITLAB_USER_USERNAME", defaultString(tagPushEvent.getUserUsername()));
         this.variables.put("GITLAB_USER_EMAIL", defaultString(tagPushEvent.getUserEmail()));
         this.variables.put("GITLAB_PROJECT_ID", defaultLongString(tagPushEvent.getProjectId()));
         this.variables.put(
