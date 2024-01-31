@@ -1,4 +1,4 @@
-ackage io.jenkins.plugins.gitlabbranchsource;
+package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
