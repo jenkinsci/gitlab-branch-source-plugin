@@ -262,16 +262,14 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         serverUrl, getPrivateTokenAsPlainText(webHookCredentials), null, getProxyConfig(serverUrl));
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
-	    // we may check with web hooks but we don't check if the projects returned are null
+            // we may check with web hooks but we don't check if the projects returned are null
 
             for (Project p : projects) {
                 count++;
-		//in here we should check if the project is null
-		//in this loop we should check to see if there is a null pointer
-		if(p == null){
-		    System.out.println("null project");
-            continue;
-		}
+                if (p == null) {
+                    System.out.println("null project");
+                    continue;
+                }
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
