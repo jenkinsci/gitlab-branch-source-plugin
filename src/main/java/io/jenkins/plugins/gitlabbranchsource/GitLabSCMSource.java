@@ -438,14 +438,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                             // This is a hack to get the path with namespace of source project for forked
                             // mrs
                             try {
-                                  originProjectPath = gitLabApi
-		                                  .getProjectApi()
-		                                  .getProject(mr.getSourceProjectId())
-		                                  .getPathWithNamespace();
-		                          forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
-                                } catch(GitLabApiException e) {
+                                originProjectPath = gitLabApi
+                                        .getProjectApi()
+                                        .getProject(mr.getSourceProjectId())
+                                        .getPathWithNamespace();
+                                forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                            } catch (GitLabApiException e) {
                                 if (e.getHttpStatus() == 404) {
-                                    LOGGER.log(Level.WARNING, "Ignoring this MR, Please check if fork repo have right permission");
+                                    listener.getLogger()
+                                            .format(
+                                                    "%nIgnoring merge requests as source project not found, Please check permission on source repo...%n");
+                                    continue;
                                 } else {
                                     throw e;
                                 }
