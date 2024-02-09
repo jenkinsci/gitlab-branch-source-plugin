@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -323,13 +324,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
-            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer);
-            try (GitLabSCMSourceRequest request = ctx.withTraits(getTraits()).newRequest(this, listener)) {
+            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
+            try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
+                }
+                Predicate<MergeRequest> filter = ignore -> false;
+                if (ctx.alwaysIgnoreMRWorkInProgress()) {
+                    filter = mr -> !mr.getWorkInProgress();
                 }
                 if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
@@ -342,6 +347,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                 .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
                         mrs = mrs.stream()
                                 .filter(mr -> mr.getSourceProjectId() != null)
+                                .filter(filter)
                                 .collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     } else if (ctx.buildMRForksNotMirror()) {
@@ -356,6 +362,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                 .equals(gitlabProject
                                                         .getForkedFromProject()
                                                         .getId()))
+                                .filter(filter)
                                 .collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     } else {
