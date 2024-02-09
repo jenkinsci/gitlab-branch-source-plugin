@@ -48,10 +48,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitTagSCMRevision;
@@ -86,6 +86,7 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -332,41 +333,33 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                Predicate<MergeRequest> filter = ignore -> false;
-                if (ctx.alwaysIgnoreMRWorkInProgress()) {
-                    filter = mr -> !mr.getWorkInProgress();
-                }
                 if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
-                    // If not authenticated GitLabApi cannot detect if it is a fork
-                    // If `forkedFromProject` is null it doesn't mean anything
-                    if (gitlabProject.getForkedFromProject() == null) {
-                        listener.getLogger()
-                                .format("%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
-                        List<MergeRequest> mrs = gitLabApi
-                                .getMergeRequestApi()
-                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
-                        mrs = mrs.stream()
-                                .filter(mr -> mr.getSourceProjectId() != null)
-                                .filter(filter)
-                                .collect(Collectors.toList());
-                        request.setMergeRequests(mrs);
-                    } else if (ctx.buildMRForksNotMirror()) {
-                        listener.getLogger()
-                                .format("%nCollecting MRs for fork except those that target its upstream...%n");
-                        List<MergeRequest> mrs = gitLabApi
-                                .getMergeRequestApi()
-                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
-                        mrs = mrs.stream()
-                                .filter(mr -> mr.getSourceProjectId() != null
-                                        && !mr.getTargetProjectId()
-                                                .equals(gitlabProject
-                                                        .getForkedFromProject()
-                                                        .getId()))
-                                .filter(filter)
-                                .collect(Collectors.toList());
-                        request.setMergeRequests(mrs);
-                    } else {
+                    if (!ctx.buildMRForksNotMirror() && gitlabProject.getForkedFromProject() != null) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
+                    } else {
+                        // If not authenticated GitLabApi cannot detect if it is a fork
+                        // If `forkedFromProject` is null it doesn't mean anything
+                        listener.getLogger()
+                                .format(
+                                        gitlabProject.getForkedFromProject() == null
+                                                ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
+                                                : "%nCollecting MRs for fork except those that target its upstream...%n");
+                        Stream<MergeRequest> mrs =
+                                gitLabApi
+                                        .getMergeRequestApi()
+                                        .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
+                                        .stream()
+                                        .filter(mr -> mr.getSourceProjectId() != null);
+                        if (ctx.buildMRForksNotMirror()) {
+                            mrs = mrs.filter(mr -> !mr.getTargetProjectId()
+                                    .equals(gitlabProject.getForkedFromProject().getId()));
+                        }
+
+                        if (ctx.alwaysIgnoreMRWorkInProgress()) {
+                            mrs = mrs.filter(mr -> !mr.getWorkInProgress());
+                        }
+
+                        request.setMergeRequests(mrs.collect(Collectors.toList()));
                     }
                 }
                 if (request.isFetchTags()) {
