@@ -51,7 +51,6 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * Constructor for stapler.
      *
      * @param strategyId the strategy id.
-     * @param branchesAlwaysIncludedRegex the branchesAlwaysIncludedRegex.
      */
     @DataBoundConstructor
     public BranchDiscoveryTrait(int strategyId) {
@@ -86,6 +85,9 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         return branchesAlwaysIncludedRegex;
     }
 
+    /**
+     * Sets the branchesAlwaysIncludedRegex.
+     */
     @DataBoundSetter
     public void setBranchesAlwaysIncludedRegex(@CheckForNull String branchesAlwaysIncludedRegex) {
         this.branchesAlwaysIncludedRegex = Util.fixEmptyAndTrim(branchesAlwaysIncludedRegex);
