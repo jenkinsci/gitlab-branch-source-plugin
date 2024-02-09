@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.ListBoxModel;
 import java.util.regex.Pattern;
 import jenkins.scm.api.SCMHead;
@@ -23,6 +24,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A {@link Discovery} trait for GitLab that will discover branches on the repository.
@@ -49,12 +51,10 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * Constructor for stapler.
      *
      * @param strategyId the strategy id.
-     * @param branchesAlwaysIncludedRegex the branchesAlwaysIncludedRegex.
      */
     @DataBoundConstructor
-    public BranchDiscoveryTrait(int strategyId, String branchesAlwaysIncludedRegex) {
+    public BranchDiscoveryTrait(int strategyId) {
         this.strategyId = strategyId;
-        this.branchesAlwaysIncludedRegex = branchesAlwaysIncludedRegex;
     }
 
     /**
@@ -83,6 +83,14 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      */
     public String getBranchesAlwaysIncludedRegex() {
         return branchesAlwaysIncludedRegex;
+    }
+
+    /**
+     * Sets the branchesAlwaysIncludedRegex.
+     */
+    @DataBoundSetter
+    public void setBranchesAlwaysIncludedRegex(@CheckForNull String branchesAlwaysIncludedRegex) {
+        this.branchesAlwaysIncludedRegex = Util.fixEmptyAndTrim(branchesAlwaysIncludedRegex);
     }
 
     /**
