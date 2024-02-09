@@ -332,9 +332,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                Predicate<MergeRequest> filter = ignore -> false;
+                Predicate<MergeRequest> includeWorkInProgress = mr -> true;
                 if (ctx.alwaysIgnoreMRWorkInProgress()) {
-                    filter = mr -> !mr.getWorkInProgress();
+                    includeWorkInProgress = mr -> !mr.getWorkInProgress();
                 }
                 if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
                     // If not authenticated GitLabApi cannot detect if it is a fork
@@ -347,7 +347,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                 .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
                         mrs = mrs.stream()
                                 .filter(mr -> mr.getSourceProjectId() != null)
-                                .filter(filter)
+                                .filter(includeWorkInProgress)
                                 .collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     } else if (ctx.buildMRForksNotMirror()) {
@@ -362,7 +362,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                 .equals(gitlabProject
                                                         .getForkedFromProject()
                                                         .getId()))
-                                .filter(filter)
+                                .filter(includeWorkInProgress)
                                 .collect(Collectors.toList());
                         request.setMergeRequests(mrs);
                     } else {
