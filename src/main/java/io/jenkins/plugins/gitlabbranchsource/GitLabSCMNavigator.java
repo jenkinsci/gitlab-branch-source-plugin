@@ -44,9 +44,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
@@ -263,13 +265,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
             // we may check with web hooks but we don't check if the projects returned are null
+            projects = projects.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
             for (Project p : projects) {
                 count++;
-                if (p == null) {
-                    System.out.println("null project");
-                    continue;
-                }
+
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
