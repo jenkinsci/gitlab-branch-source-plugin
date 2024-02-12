@@ -1,8 +1,11 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.ListBoxModel;
+import java.util.regex.Pattern;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadOrigin;
@@ -21,6 +24,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A {@link Discovery} trait for GitLab that will discover branches on the repository.
@@ -31,6 +35,17 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      * The strategy encoded as a bit-field.
      */
     private int strategyId;
+
+    /**
+     * Regex of branches that should always be included regardless of whether a merge request exists or not.
+     */
+    private String branchesAlwaysIncludedRegex;
+
+    /**
+     * The compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
+     */
+    @CheckForNull
+    private transient Pattern branchesAlwaysIncludedRegexPattern;
 
     /**
      * Constructor for stapler.
@@ -45,7 +60,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Constructor for legacy code.
      *
-     * @param buildBranch build branches that are not filed as a MR.
+     * @param buildBranch       build branches that are not filed as a MR.
      * @param buildBranchWithMr build branches that are also MRs.
      */
     public BranchDiscoveryTrait(boolean buildBranch, boolean buildBranchWithMr) {
@@ -59,6 +74,36 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
      */
     public int getStrategyId() {
         return strategyId;
+    }
+
+    /**
+     * Returns the branchesAlwaysIncludedRegex.
+     *
+     * @return the branchesAlwaysIncludedRegex.
+     */
+    public String getBranchesAlwaysIncludedRegex() {
+        return branchesAlwaysIncludedRegex;
+    }
+
+    /**
+     * Sets the branchesAlwaysIncludedRegex.
+     */
+    @DataBoundSetter
+    public void setBranchesAlwaysIncludedRegex(@CheckForNull String branchesAlwaysIncludedRegex) {
+        this.branchesAlwaysIncludedRegex = Util.fixEmptyAndTrim(branchesAlwaysIncludedRegex);
+    }
+
+    /**
+     * Returns the compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
+     *
+     * @return the branchesAlwaysIncludedRegexPattern.
+     */
+    public Pattern getBranchesAlwaysIncludedRegexPattern() {
+        if (branchesAlwaysIncludedRegex != null && branchesAlwaysIncludedRegexPattern == null) {
+            branchesAlwaysIncludedRegexPattern = Pattern.compile(branchesAlwaysIncludedRegex);
+        }
+
+        return branchesAlwaysIncludedRegexPattern;
     }
 
     /**
@@ -92,11 +137,11 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
         switch (strategyId) {
             case 1:
                 ctx.wantOriginMRs(true);
-                ctx.withFilter(new ExcludeOriginMRBranchesSCMHeadFilter());
+                ctx.withFilter(new ExcludeOriginMRBranchesSCMHeadFilter(getBranchesAlwaysIncludedRegexPattern()));
                 break;
             case 2:
                 ctx.wantOriginMRs(true);
-                ctx.withFilter(new OnlyOriginMRBranchesSCMHeadFilter());
+                ctx.withFilter(new OnlyOriginMRBranchesSCMHeadFilter(getBranchesAlwaysIncludedRegexPattern()));
                 break;
             case 3:
             default:
@@ -209,11 +254,32 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     public static class ExcludeOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
 
         /**
+         * The compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
+         */
+        private final Pattern branchesAlwaysIncludedRegexPattern;
+
+        /**
+         * Constructor
+         *
+         * @param branchesAlwaysIncludedRegexPattern the branchesAlwaysIncludedRegexPattern.
+         */
+        public ExcludeOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
+            this.branchesAlwaysIncludedRegexPattern = branchesAlwaysIncludedRegexPattern;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
             if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
+                if (branchesAlwaysIncludedRegexPattern != null
+                        && branchesAlwaysIncludedRegexPattern
+                                .matcher(head.getName())
+                                .matches()) {
+                    return false;
+                }
+
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     // only match if the merge request is an origin merge request
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
@@ -232,11 +298,32 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     public static class OnlyOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
 
         /**
+         * The compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
+         */
+        private final Pattern branchesAlwaysIncludedRegexPattern;
+
+        /**
+         * Constructor
+         *
+         * @param branchesAlwaysIncludedRegexPattern the branchesAlwaysIncludedRegexPattern.
+         */
+        public OnlyOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
+            this.branchesAlwaysIncludedRegexPattern = branchesAlwaysIncludedRegexPattern;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
             if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
+                if (branchesAlwaysIncludedRegexPattern != null
+                        && branchesAlwaysIncludedRegexPattern
+                                .matcher(head.getName())
+                                .matches()) {
+                    return false;
+                }
+
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
                             && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {

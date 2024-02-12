@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.AbstractGitSCMSource;
 import jenkins.plugins.git.GitTagSCMRevision;
@@ -85,6 +86,7 @@ import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -323,8 +325,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
             getGitlabProject(gitLabApi);
-            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer);
-            try (GitLabSCMSourceRequest request = ctx.withTraits(getTraits()).newRequest(this, listener)) {
+            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
+            try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
                 request.setGitLabApi(gitLabApi);
                 request.setProject(gitlabProject);
                 request.setMembers(getMembers());
@@ -332,34 +334,32 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
                 if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
-                    // If not authenticated GitLabApi cannot detect if it is a fork
-                    // If `forkedFromProject` is null it doesn't mean anything
-                    if (gitlabProject.getForkedFromProject() == null) {
-                        listener.getLogger()
-                                .format("%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n");
-                        List<MergeRequest> mrs = gitLabApi
-                                .getMergeRequestApi()
-                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
-                        mrs = mrs.stream()
-                                .filter(mr -> mr.getSourceProjectId() != null)
-                                .collect(Collectors.toList());
-                        request.setMergeRequests(mrs);
-                    } else if (ctx.buildMRForksNotMirror()) {
-                        listener.getLogger()
-                                .format("%nCollecting MRs for fork except those that target its upstream...%n");
-                        List<MergeRequest> mrs = gitLabApi
-                                .getMergeRequestApi()
-                                .getMergeRequests(gitlabProject, Constants.MergeRequestState.OPENED);
-                        mrs = mrs.stream()
-                                .filter(mr -> mr.getSourceProjectId() != null
-                                        && !mr.getTargetProjectId()
-                                                .equals(gitlabProject
-                                                        .getForkedFromProject()
-                                                        .getId()))
-                                .collect(Collectors.toList());
-                        request.setMergeRequests(mrs);
-                    } else {
+                    if (!ctx.buildMRForksNotMirror() && gitlabProject.getForkedFromProject() != null) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
+                    } else {
+                        // If not authenticated GitLabApi cannot detect if it is a fork
+                        // If `forkedFromProject` is null it doesn't mean anything
+                        listener.getLogger()
+                                .format(
+                                        gitlabProject.getForkedFromProject() == null
+                                                ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
+                                                : "%nCollecting MRs for fork except those that target its upstream...%n");
+                        Stream<MergeRequest> mrs =
+                                gitLabApi
+                                        .getMergeRequestApi()
+                                        .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
+                                        .stream()
+                                        .filter(mr -> mr.getSourceProjectId() != null);
+                        if (ctx.buildMRForksNotMirror()) {
+                            mrs = mrs.filter(mr -> !mr.getTargetProjectId()
+                                    .equals(gitlabProject.getForkedFromProject().getId()));
+                        }
+
+                        if (ctx.alwaysIgnoreMRWorkInProgress()) {
+                            mrs = mrs.filter(mr -> !mr.getWorkInProgress());
+                        }
+
+                        request.setMergeRequests(mrs.collect(Collectors.toList()));
                     }
                 }
                 if (request.isFetchTags()) {
@@ -437,11 +437,22 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
                             // This is a hack to get the path with namespace of source project for forked
                             // mrs
-                            originProjectPath = gitLabApi
-                                    .getProjectApi()
-                                    .getProject(mr.getSourceProjectId())
-                                    .getPathWithNamespace();
-                            forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                            try {
+                                originProjectPath = gitLabApi
+                                        .getProjectApi()
+                                        .getProject(mr.getSourceProjectId())
+                                        .getPathWithNamespace();
+                                forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                            } catch (GitLabApiException e) {
+                                if (e.getHttpStatus() == 404) {
+                                    listener.getLogger()
+                                            .format(
+                                                    "%nIgnoring merge requests as source project not found, Please check permission on source repo...%n");
+                                    continue;
+                                } else {
+                                    throw e;
+                                }
+                            }
                         } else if (fork) {
                             originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                         }
