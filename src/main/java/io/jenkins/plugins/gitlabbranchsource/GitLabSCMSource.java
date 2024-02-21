@@ -17,14 +17,12 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
-import hudson.util.FormValidation;
 import hudson.console.HyperlinkNote;
 import hudson.model.Action;
 import hudson.model.Item;
@@ -32,11 +30,11 @@ import hudson.model.Queue;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
-import io.jenkins.plugins.gitlabserverconfig.credentials.helpers.GitLabCredentialMatcher;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
@@ -841,32 +839,38 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             return GitLabServers.get().getServerItems();
         }
 
-        public FormValidation doCheckCredentialId(@AncestorInPath SCMSourceOwner context, @QueryParameter String serverName, @QueryParameter String value) throws IOException, InterruptedException {
-           if (context == null) {
-               if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-                   return FormValidation.ok();
+        public FormValidation doCheckCredentialsId(
+                @AncestorInPath SCMSourceOwner context, @QueryParameter String serverName, @QueryParameter String value)
+                throws IOException, InterruptedException {
+            if (context == null) {
+                if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
                 }
-           } else {
-               if (!context.hasPermission(Item.EXTENDED_READ) && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
-                   return FormValidation.ok();
-               }
-           }
-           GitLabServer server = GitLabServers.get().findServer(serverName);
-           if (server == null) {
-               return FormValidation.ok();
-           }
-           if (StringUtils.isBlank(value)) {
-               return FormValidation.warning("Credentials are recommended");
-           }
-           if (CredentialsProvider.listCredentialsInItem(
-               StandardCredentials.class,
-               context,
-               context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication2() : ACL.SYSTEM2,
-               URIRequirementBuilder.fromUri(serverName).build(),
-               GitLabServer.CREDENTIALS_MATCHER).isEmpty()) {
-               return FormValidation.error(Messages.GitLabSCMNavigator_selectedCredentialsMissing());
-           }
-           return FormValidation.ok();
+            } else {
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return FormValidation.ok();
+                }
+            }
+            GitLabServer server = GitLabServers.get().findServer(serverName);
+            if (server == null) {
+                return FormValidation.ok();
+            }
+            if (StringUtils.isBlank(value)) {
+                return FormValidation.warning("Credentials are recommended");
+            }
+            if (CredentialsProvider.listCredentialsInItem(
+                            StandardCredentials.class,
+                            context,
+                            context instanceof Queue.Task
+                                    ? ((Queue.Task) context).getDefaultAuthentication2()
+                                    : ACL.SYSTEM2,
+                            URIRequirementBuilder.fromUri(serverName).build(),
+                            GitLabServer.CREDENTIALS_MATCHER)
+                    .isEmpty()) {
+                return FormValidation.error(Messages.GitLabSCMNavigator_selectedCredentialsMissing());
+            }
+            return FormValidation.ok();
         }
 
         public ListBoxModel doFillCredentialsIdItems(
