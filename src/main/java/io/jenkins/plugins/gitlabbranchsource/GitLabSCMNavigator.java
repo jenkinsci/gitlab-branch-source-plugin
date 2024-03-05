@@ -196,7 +196,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
         }
     }
 
-    // gets the owner of the gitlab
     private GitLabOwner getGitlabOwner(SCMNavigatorOwner owner) {
         if (gitlabOwner == null) {
             getGitlabOwner(apiBuilder(owner, serverName));
@@ -232,7 +231,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
         return getServerUrlFromName(serverName) + "::" + projectOwner;
     }
 
-    // this checks all of our project source files
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
         GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext().withTraits(traits);
@@ -264,12 +262,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         serverUrl, getPrivateTokenAsPlainText(webHookCredentials), null, getProxyConfig(serverUrl));
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
-            // we may check with web hooks but we don't check if the projects returned are null
             projects = projects.stream().filter(Objects::nonNull).collect(Collectors.toList());
-
             for (Project p : projects) {
                 count++;
-
                 String projectPathWithNamespace = p.getPathWithNamespace();
                 String projectOwner = getProjectOwnerFromNamespace(projectPathWithNamespace);
                 String projectName = getProjectName(gitLabApi, request.withProjectNamingStrategy(), p);
