@@ -44,9 +44,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
 import jenkins.scm.api.SCMHeadObserver;
@@ -260,6 +262,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                         serverUrl, getPrivateTokenAsPlainText(webHookCredentials), null, getProxyConfig(serverUrl));
                 webHookUrl = GitLabHookCreator.getHookUrl(server, true);
             }
+            projects = projects.stream().filter(Objects::nonNull).collect(Collectors.toList());
             for (Project p : projects) {
                 count++;
                 String projectPathWithNamespace = p.getPathWithNamespace();
