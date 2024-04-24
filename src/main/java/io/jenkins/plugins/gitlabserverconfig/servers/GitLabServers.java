@@ -8,6 +8,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.model.PersistentDescriptor;
+import hudson.security.Permission;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabserverconfig.servers.helpers.GitLabPersonalAccessTokenCreator;
 import java.util.ArrayList;
@@ -37,6 +38,12 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * be one entry for each {@link GitLabServer#getServerUrl()}.
      */
     private List<GitLabServer> servers;
+
+    @NonNull
+    @Override
+    public Permission getRequiredGlobalConfigPagePermission() {
+        return Jenkins.MANAGE;
+    }
 
     /**
      * Gets the {@link GitLabServers} singleton.
@@ -96,7 +103,7 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
      * @param servers the list of endpoints.
      */
     public void setServers(@CheckForNull List<? extends GitLabServer> servers) {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
         this.servers = fixNull(servers).stream()
                 .filter(distinctByKey(GitLabServer::getName))
                 .collect(Collectors.toList());

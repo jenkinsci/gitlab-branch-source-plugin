@@ -819,7 +819,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         public ListBoxModel doFillServerNameItems(
                 @AncestorInPath SCMSourceOwner context, @QueryParameter String serverName) {
             if (context == null) {
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
                     result.add(serverName);
@@ -843,7 +843,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
                 // must have admin if you want the list without a context
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     result.includeCurrentValue(credentialsId);
                     return result;
                 }

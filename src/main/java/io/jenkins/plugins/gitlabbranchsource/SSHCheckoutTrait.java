@@ -88,7 +88,7 @@ public class SSHCheckoutTrait extends SCMSourceTrait {
                 @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     // must have admin if you want the list without a context
                     result.includeCurrentValue(credentialsId);
                     return result;

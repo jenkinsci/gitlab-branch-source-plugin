@@ -34,7 +34,7 @@ public class GitlabAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doServerList() {
-        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+        if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
         }
 
@@ -52,7 +52,7 @@ public class GitlabAction implements RootAction {
     @RequirePOST
     public HttpResponse doProjectList(
             @AncestorInPath SCMSourceOwner context, @QueryParameter String server, @QueryParameter String owner) {
-        if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+        if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
         }
 
