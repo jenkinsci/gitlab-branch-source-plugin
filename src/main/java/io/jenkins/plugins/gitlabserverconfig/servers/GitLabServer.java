@@ -507,7 +507,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
          */
         @POST
         public static FormValidation doCheckServerUrl(@QueryParameter String serverUrl) {
-            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.get().checkPermission(Jenkins.MANAGE);
             try {
                 new URL(serverUrl);
             } catch (MalformedURLException e) {
@@ -626,7 +626,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public ListBoxModel doFillCredentialsIdItems(
                 @QueryParameter String serverUrl, @QueryParameter String credentialsId) {
             Jenkins jenkins = Jenkins.get();
-            if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
+            if (!jenkins.hasPermission(Jenkins.MANAGE)) {
                 return new StandardListBoxModel().includeCurrentValue(credentialsId);
             }
             return new StandardListBoxModel()
@@ -650,7 +650,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         public ListBoxModel doFillWebhookSecretCredentialsIdItems(
                 @QueryParameter String serverUrl, @QueryParameter String webhookSecretCredentialsId) {
             Jenkins jenkins = Jenkins.get();
-            if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
+            if (!jenkins.hasPermission(Jenkins.MANAGE)) {
                 return new StandardListBoxModel().includeCurrentValue(webhookSecretCredentialsId);
             }
             return new StandardListBoxModel()
@@ -665,7 +665,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
         private StandardCredentials getCredentials(String serverUrl, String credentialsId) {
             Jenkins jenkins = Jenkins.get();
-            jenkins.checkPermission(Jenkins.ADMINISTER);
+            jenkins.checkPermission(Jenkins.MANAGE);
             return StringUtils.isBlank(credentialsId)
                     ? null
                     : CredentialsMatchers.firstOrNull(

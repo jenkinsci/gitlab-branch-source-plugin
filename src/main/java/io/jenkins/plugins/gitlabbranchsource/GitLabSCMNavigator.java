@@ -512,7 +512,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         public ListBoxModel doFillServerNameItems(
                 @AncestorInPath SCMSourceOwner context, @QueryParameter String serverName) {
             if (context == null) {
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     // must have admin if you want the list without a context
                     ListBoxModel result = new ListBoxModel();
                     result.add(serverName);
@@ -535,7 +535,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 @QueryParameter String credentialsId) {
             StandardListBoxModel result = new StandardListBoxModel();
             if (context == null) {
-                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
                     // must have admin if you want the list without a context
                     result.includeCurrentValue(credentialsId);
                     return result;

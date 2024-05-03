@@ -81,7 +81,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
     public ListBoxModel doFillCredentialsIdItems(
             @QueryParameter String serverUrl, @QueryParameter String credentialsId) {
         Jenkins jenkins = Jenkins.get();
-        if (!jenkins.hasPermission(Jenkins.ADMINISTER)) {
+        if (!jenkins.hasPermission(Jenkins.MANAGE)) {
             return new StandardListBoxModel().includeCurrentValue(credentialsId);
         }
         return new StandardUsernameListBoxModel()
@@ -108,7 +108,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
             @QueryParameter String serverUrl, @QueryParameter String credentialsId) {
 
         Jenkins jenkins = Jenkins.get();
-        jenkins.checkPermission(Jenkins.ADMINISTER);
+        jenkins.checkPermission(Jenkins.MANAGE);
         if (isEmpty(credentialsId)) {
             return FormValidation.error("Please specify credentials to create token");
         }
@@ -156,7 +156,7 @@ public class GitLabPersonalAccessTokenCreator extends Descriptor<GitLabPersonalA
     @RequirePOST
     public FormValidation doCreateTokenByPassword(
             @QueryParameter String serverUrl, @QueryParameter String login, @QueryParameter String password) {
-        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        Jenkins.get().checkPermission(Jenkins.MANAGE);
         try {
             String tokenName = UUID.randomUUID().toString();
             String token = AccessTokenUtils.createPersonalAccessToken(
