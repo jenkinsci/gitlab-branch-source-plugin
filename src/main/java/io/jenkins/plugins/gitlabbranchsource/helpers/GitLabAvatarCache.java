@@ -56,7 +56,7 @@ import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * An avatar cache that will serve URLs that have been recently registered
- * through {@link #buildUrl(String, String)}
+ * through {@link #buildUrl(GitLabAvatarLocation, String)}
  */
 @Extension
 public class GitLabAvatarCache implements UnprotectedRootAction {

@@ -19,7 +19,7 @@ public class GitLabAvatarLocation implements Serializable {
     /**
      * Constructor
      *
-     * @param url the external GitLab URL of the source avatar image.
+     * @param avatarUrl the external GitLab URL of the source avatar image.
      * @param serverName server to use for API call, null to fall back to URL instead
      * @param fullPath project/group id parameter for API call, null to fall back to URL instead
      * @param isProject does the fullPath represent a project (true) or group (false)
