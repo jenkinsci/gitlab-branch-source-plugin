@@ -293,8 +293,8 @@ public class GitLabMergeRequestCauseData {
                 "GITLAB_OA_URL",
                 defaultString(mergeRequestEvent.getObjectAttributes().getUrl()));
         this.variables.put(
-                "GITLAB_OA_ACTION",
-                defaultString(mergeRequestEvent.getObjectAttributes().getAction()));
+                "GITLAB_OA_OLDREV",
+                defaultString(mergeRequestEvent.getObjectAttributes().getOldrev()));
         this.variables.put(
                 "GITLAB_OA_OLDREV",
                 defaultString(mergeRequestEvent.getObjectAttributes().getOldrev()));
