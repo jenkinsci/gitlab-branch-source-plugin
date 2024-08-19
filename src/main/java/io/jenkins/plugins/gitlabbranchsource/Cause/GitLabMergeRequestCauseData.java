@@ -295,6 +295,9 @@ public class GitLabMergeRequestCauseData {
         this.variables.put(
                 "GITLAB_OA_ACTION",
                 defaultString(mergeRequestEvent.getObjectAttributes().getAction()));
+        this.variables.put(
+                "GITLAB_OA_OLDREV",
+                defaultString(mergeRequestEvent.getObjectAttributes().getOldrev()));
         if (mergeRequestEvent.getObjectAttributes().getAssignee() != null) {
             this.variables.put(
                     "GITLAB_OA_ASSIGNEE_NAME",
