@@ -1,0 +1,23 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers>
+  <servers>
+    <io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer>
+      <name>default</name>
+      <serverUrl>https://gitlab.com</serverUrl>
+      <manageWebHooks>false</manageWebHooks>
+      <manageSystemHooks>false</manageSystemHooks>
+      <credentialsId></credentialsId>
+      <webhookSecretCredentialsId></webhookSecretCredentialsId>
+      <immediateHookTrigger>false</immediateHookTrigger>
+    </io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer>
+    <io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer>
+      <name>my-server</name>
+      <serverUrl>http://localhost</serverUrl>
+      <manageWebHooks>false</manageWebHooks>
+      <manageSystemHooks>false</manageSystemHooks>
+      <secretToken>s3cr3t!</secretToken> <!-- Manually modified to be plain text rather than the encrypted value so we do not have to store secret.key as a test resource, which makes security scanners unhappy. -->
+      <webhookSecretCredentialsId></webhookSecretCredentialsId>
+      <immediateHookTrigger>false</immediateHookTrigger>
+    </io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer>
+  </servers>
+</io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers>
