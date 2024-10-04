@@ -1,5 +1,12 @@
 package io.jenkins.plugins.gitlabserverconfig.servers;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -20,20 +27,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.recipes.LocalData;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
 
 public class GitLabServersTest {
     @Rule
-    public LoggerRule logger = new LoggerRule().record(OldDataMonitor.class, Level.FINE).capture(50);;
-    
+    public LoggerRule logger =
+            new LoggerRule().record(OldDataMonitor.class, Level.FINE).capture(50);
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
-    
+
     @LocalData
     @Test
     public void migrationToCredentials() throws Throwable {
@@ -43,14 +45,18 @@ public class GitLabServersTest {
         server.setSecretToken(Secret.fromString("s3cr3t!"));
         GitLabServers.get().addServer(server);
         */
-        var server = GitLabServers.get().getServers().stream().filter(s -> s.getName().equals("my-server")).findFirst().orElseThrow();
+        var server = GitLabServers.get().getServers().stream()
+                .filter(s -> s.getName().equals("my-server"))
+                .findFirst()
+                .orElseThrow();
         var credentialsId = server.getWebhookSecretCredentialsId();
         var credentials = CredentialsMatchers.filter(
                 CredentialsProvider.lookupCredentialsInItemGroup(StringCredentials.class, Jenkins.get(), ACL.SYSTEM2),
                 CredentialsMatchers.withId(credentialsId));
         assertThat(credentials, hasSize(1));
         assertThat(credentials.get(0).getSecret().getPlainText(), equalTo("s3cr3t!"));
-        assertThat(logger.getMessages(), not(hasItem(containsString("Trouble loading " + GitLabServers.class.getName()))));
+        assertThat(
+                logger.getMessages(), not(hasItem(containsString("Trouble loading " + GitLabServers.class.getName()))));
     }
 
     @TestExtension("migrationToCredentials")
@@ -61,8 +67,10 @@ public class GitLabServersTest {
                 @Nullable ItemGroup itemGroup,
                 @Nullable Authentication authentication,
                 @NonNull List<DomainRequirement> domainRequirements) {
-            // Prior to fix, this caused the GitLabServer migration code to recurse infinitely, causing problems when starting Jenkins.
-            // In practice this was caused by a lookup of another descriptor type, but I am using GitLabServers for clarity.
+            // Prior to fix, this caused the GitLabServer migration code to recurse infinitely, causing problems when
+            // starting Jenkins.
+            // In practice this was caused by a lookup of another descriptor type, but I am using GitLabServers for
+            // clarity.
             Jenkins.get().getDescriptor(GitLabServers.class);
             return List.of();
         }
