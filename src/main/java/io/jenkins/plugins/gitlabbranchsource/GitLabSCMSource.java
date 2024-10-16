@@ -334,14 +334,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
                 if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
-                    if (!ctx.buildMRForksNotMirror() && gitlabProject.getForkedFromProject() != null) {
+                    final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
+                    if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
                     } else {
                         // If not authenticated GitLabApi cannot detect if it is a fork
-                        // If `forkedFromProject` is null it doesn't mean anything
+                        // If `forkedFromProject` is false it doesn't mean anything
                         listener.getLogger()
                                 .format(
-                                        gitlabProject.getForkedFromProject() == null
+                                        !forkedFromProject
                                                 ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
                                                 : "%nCollecting MRs for fork except those that target its upstream...%n");
                         Stream<MergeRequest> mrs =
@@ -350,7 +351,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
                                         .stream()
                                         .filter(mr -> mr.getSourceProjectId() != null);
-                        if (ctx.buildMRForksNotMirror()) {
+                        // Patch for issue 453 - avoid an NPE if this isn't a forked project
+                        if (ctx.buildMRForksNotMirror() && forkedFromProject) {
                             mrs = mrs.filter(mr -> !mr.getTargetProjectId()
                                     .equals(gitlabProject.getForkedFromProject().getId()));
                         }
