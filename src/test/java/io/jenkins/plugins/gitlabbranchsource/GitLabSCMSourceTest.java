@@ -4,11 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import hudson.model.TaskListener;
+import hudson.security.AccessControlled;
+import hudson.util.StreamTaskListener;
+import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Set;
-
+import jenkins.branch.BranchSource;
+import jenkins.scm.api.SCMHead;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.ProjectApi;
@@ -20,15 +27,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-
-import hudson.model.TaskListener;
-import hudson.security.AccessControlled;
-import hudson.util.StreamTaskListener;
-import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
-import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
-import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-import jenkins.branch.BranchSource;
-import jenkins.scm.api.SCMHead;
 
 public class GitLabSCMSourceTest {
 
@@ -51,12 +49,12 @@ public class GitLabSCMSourceTest {
             Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
             Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
             try (MockedStatic<GitLabHelper> utilities = Mockito.mockStatic(GitLabHelper.class)) {
-                utilities.when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
+                utilities
+                        .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
                         .thenReturn(gitLabApi);
                 GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
-                GitLabSCMSourceBuilder sb = new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po",
-                        "group/project",
-                        "project");
+                GitLabSCMSourceBuilder sb =
+                        new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
                 WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
                 BranchSource source = new BranchSource(sb.build());
                 source.getSource()
