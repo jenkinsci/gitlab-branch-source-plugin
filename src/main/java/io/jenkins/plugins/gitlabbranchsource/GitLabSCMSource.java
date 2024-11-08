@@ -116,7 +116,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private long projectId;
+    private Long projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -333,7 +333,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
+                boolean mergeRequestsEnabled = !Boolean.FALSE.equals(gitlabProject.getMergeRequestsEnabled());
+                if (request.isFetchMRs() && mergeRequestsEnabled) {
                     final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
                     if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
@@ -409,7 +410,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
                 }
-                if (request.isFetchMRs() && !request.isComplete() && gitlabProject.getMergeRequestsEnabled()) {
+                if (request.isFetchMRs() && !request.isComplete() && mergeRequestsEnabled) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Long, String> forkMrSources = new HashMap<>();
