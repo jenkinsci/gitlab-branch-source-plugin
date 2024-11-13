@@ -48,6 +48,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -117,6 +123,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String httpRemote;
     private transient Project gitlabProject;
     private Long projectId;
+    private Integer indexingTimeout = 0;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -187,6 +194,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @DataBoundSetter
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = credentialsId;
+    }
+
+    public Integer getIndexingTimeout() {
+        return indexingTimeout;
+    }
+
+    @DataBoundSetter
+    public void setIndexingTimeout(Integer indexingTimeout) {
+        this.indexingTimeout = indexingTimeout;
     }
 
     @Override
@@ -260,58 +276,88 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+        if (indexingTimeout != null && indexingTimeout > 0) {
+            listener.getLogger()
+                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                            + indexingTimeout);
+        } else {
+            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
+        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<SCMRevision> future = null;
         try {
-            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
-            getGitlabProject(gitLabApi);
-            if (head instanceof BranchSCMHead) {
-                listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
-                String revision = gitLabApi
-                        .getRepositoryApi()
-                        .getBranch(gitlabProject, head.getName())
-                        .getCommit()
-                        .getId();
-                listener.getLogger().format("Current revision of branch %s is %s%n", head.getName(), revision);
-                return new BranchSCMRevision((BranchSCMHead) head, revision);
-            } else if (head instanceof MergeRequestSCMHead) {
-                MergeRequestSCMHead h = (MergeRequestSCMHead) head;
-                listener.getLogger().format("Querying the current revision of merge request #%s...%n", h.getId());
-                MergeRequest mr =
-                        gitLabApi.getMergeRequestApi().getMergeRequest(gitlabProject, Long.parseLong(h.getId()));
-                String targetSha = gitLabApi
-                        .getRepositoryApi()
-                        .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
-                        .getCommit()
-                        .getId();
-                if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
-                    listener.getLogger()
-                            .format("Current revision of merge request #%s is %s%n", h.getId(), mr.getSha());
-                    return new MergeRequestSCMRevision(
-                            h,
-                            new BranchSCMRevision(h.getTarget(), targetSha),
-                            new BranchSCMRevision(new BranchSCMHead(h.getOriginName()), mr.getSha()));
-                } else {
-                    listener.getLogger().format("Merge request #%s is CLOSED%n", h.getId());
-                    return null;
+            future = executor.submit(() -> {
+                try {
+                    GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
+                    getGitlabProject(gitLabApi);
+                    if (head instanceof BranchSCMHead) {
+                        listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
+                        String revision = gitLabApi
+                                .getRepositoryApi()
+                                .getBranch(gitlabProject, head.getName())
+                                .getCommit()
+                                .getId();
+                        listener.getLogger().format("Current revision of branch %s is %s%n", head.getName(), revision);
+                        return new BranchSCMRevision((BranchSCMHead) head, revision);
+                    } else if (head instanceof MergeRequestSCMHead) {
+                        MergeRequestSCMHead h = (MergeRequestSCMHead) head;
+                        listener.getLogger()
+                                .format("Querying the current revision of merge request #%s...%n", h.getId());
+                        MergeRequest mr = gitLabApi
+                                .getMergeRequestApi()
+                                .getMergeRequest(gitlabProject, Long.parseLong(h.getId()));
+                        String targetSha = gitLabApi
+                                .getRepositoryApi()
+                                .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
+                                .getCommit()
+                                .getId();
+                        if (mr.getState().equals(Constants.MergeRequestState.OPENED.toString())) {
+                            listener.getLogger()
+                                    .format("Current revision of merge request #%s is %s%n", h.getId(), mr.getSha());
+                            return new MergeRequestSCMRevision(
+                                    h,
+                                    new BranchSCMRevision(h.getTarget(), targetSha),
+                                    new BranchSCMRevision(new BranchSCMHead(h.getOriginName()), mr.getSha()));
+                        } else {
+                            listener.getLogger().format("Merge request #%s is CLOSED%n", h.getId());
+                            return null;
+                        }
+                    } else if (head instanceof GitLabTagSCMHead) {
+                        listener.getLogger().format("Querying the current revision of tag %s...%n", head.getName());
+                        String revision = gitLabApi
+                                .getTagsApi()
+                                .getTag(gitlabProject, head.getName())
+                                .getCommit()
+                                .getId();
+                        listener.getLogger().format("Current revision of tag %s is %s%n", head.getName(), revision);
+                        return new GitTagSCMRevision((GitLabTagSCMHead) head, revision);
+                    } else {
+                        listener.getLogger()
+                                .format(
+                                        "Unknown head: %s of type %s%n",
+                                        head.getName(), head.getClass().getName());
+                        return null;
+                    }
+                } catch (GitLabApiException e) {
+                    LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+                    throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
                 }
-            } else if (head instanceof GitLabTagSCMHead) {
-                listener.getLogger().format("Querying the current revision of tag %s...%n", head.getName());
-                String revision = gitLabApi
-                        .getTagsApi()
-                        .getTag(gitlabProject, head.getName())
-                        .getCommit()
-                        .getId();
-                listener.getLogger().format("Current revision of tag %s is %s%n", head.getName(), revision);
-                return new GitTagSCMRevision((GitLabTagSCMHead) head, revision);
+            });
+
+            if (indexingTimeout != null && indexingTimeout > 0) {
+                return future.get(indexingTimeout, TimeUnit.SECONDS);
             } else {
-                listener.getLogger()
-                        .format(
-                                "Unknown head: %s of type %s%n",
-                                head.getName(), head.getClass().getName());
-                return null;
+                return future.get();
             }
-        } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
-            throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
+        } catch (TimeoutException e) {
+            listener.getLogger().println("SCM revision fetch operation timed out");
+            future.cancel(true);
+            throw new IOException("SCM revision fetch operation timed out", e);
+        } catch (InterruptedException | ExecutionException e) {
+            listener.getLogger().println("Failed to retrieve SCM revision");
+            throw new IOException("Failed to retrieve SCM revision", e);
+        } finally {
+            executor.shutdown();
         }
     }
 
@@ -322,266 +368,312 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             SCMHeadEvent<?> event,
             @NonNull TaskListener listener)
             throws IOException, InterruptedException {
+
+        if (indexingTimeout != null && indexingTimeout > 0) {
+            listener.getLogger()
+                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                            + indexingTimeout);
+        } else {
+            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
+        }
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<?> future = null;
         try {
-            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
-            getGitlabProject(gitLabApi);
-            GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
-            try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
-                request.setGitLabApi(gitLabApi);
-                request.setProject(gitlabProject);
-                request.setMembers(getMembers());
-                if (request.isFetchBranches()) {
-                    request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
-                }
-                boolean mergeRequestsEnabled = !Boolean.FALSE.equals(gitlabProject.getMergeRequestsEnabled());
-                if (request.isFetchMRs() && mergeRequestsEnabled) {
-                    final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
-                    if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
-                        listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
-                    } else {
-                        // If not authenticated GitLabApi cannot detect if it is a fork
-                        // If `forkedFromProject` is false it doesn't mean anything
-                        listener.getLogger()
-                                .format(
-                                        !forkedFromProject
-                                                ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
-                                                : "%nCollecting MRs for fork except those that target its upstream...%n");
-                        Stream<MergeRequest> mrs =
-                                gitLabApi
+
+            future = executor.submit(() -> {
+                try {
+                    GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
+                    getGitlabProject(gitLabApi);
+                    GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
+                    try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
+                        request.setGitLabApi(gitLabApi);
+                        request.setProject(gitlabProject);
+                        request.setMembers(getMembers());
+                        if (request.isFetchBranches()) {
+                            request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
+                        }
+                        boolean mergeRequestsEnabled = !Boolean.FALSE.equals(gitlabProject.getMergeRequestsEnabled());
+                        if (request.isFetchMRs() && mergeRequestsEnabled) {
+                            final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
+                            if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
+                                listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
+                            } else {
+                                // If not authenticated GitLabApi cannot detect if it is a fork
+                                // If `forkedFromProject` is false it doesn't mean anything
+                                listener.getLogger()
+                                        .format(
+                                                !forkedFromProject
+                                                        ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
+                                                        : "%nCollecting MRs for fork except those that target its upstream...%n");
+                                Stream<MergeRequest> mrs = gitLabApi
                                         .getMergeRequestApi()
                                         .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
                                         .stream()
                                         .filter(mr -> mr.getSourceProjectId() != null);
-                        // Patch for issue 453 - avoid an NPE if this isn't a forked project
-                        if (ctx.buildMRForksNotMirror() && forkedFromProject) {
-                            mrs = mrs.filter(mr -> !mr.getTargetProjectId()
-                                    .equals(gitlabProject.getForkedFromProject().getId()));
-                        }
+                                // Patch for issue 453 - avoid an NPE if this isn't a forked project
+                                if (ctx.buildMRForksNotMirror() && forkedFromProject) {
+                                    mrs = mrs.filter(mr -> !mr.getTargetProjectId()
+                                            .equals(gitlabProject
+                                                    .getForkedFromProject()
+                                                    .getId()));
+                                }
 
-                        if (ctx.alwaysIgnoreMRWorkInProgress()) {
-                            mrs = mrs.filter(mr -> !mr.getWorkInProgress());
-                        }
+                                if (ctx.alwaysIgnoreMRWorkInProgress()) {
+                                    mrs = mrs.filter(mr -> !mr.getWorkInProgress());
+                                }
 
-                        request.setMergeRequests(mrs.collect(Collectors.toList()));
-                    }
-                }
-                if (request.isFetchTags()) {
-                    request.setTags(gitLabApi.getTagsApi().getTags(gitlabProject));
-                }
-                if (request.isFetchBranches()) {
-                    int count = 0;
-                    listener.getLogger().format("%nChecking branches.. %n");
-                    Iterable<Branch> branches = request.getBranches();
-                    for (final Branch branch : branches) {
-                        count++;
-                        String branchName = branch.getName();
-                        String sha = branch.getCommit().getId();
-                        listener.getLogger()
-                                .format(
-                                        "%nChecking branch %s%n",
-                                        HyperlinkNote.encodeTo(
-                                                branchUriTemplate(gitlabProject.getWebUrl())
-                                                        .set("branch", splitPath(branchName))
-                                                        .expand(),
-                                                branchName));
-                        if (request.process(
-                                new BranchSCMHead(branchName),
-                                (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>)
-                                        head -> new BranchSCMRevision(head, sha),
-                                new SCMSourceRequest.ProbeLambda<BranchSCMHead, BranchSCMRevision>() {
-                                    @NonNull
-                                    @Override
-                                    public SCMSourceCriteria.Probe create(
-                                            @NonNull BranchSCMHead head, @Nullable BranchSCMRevision revision)
-                                            throws IOException {
-                                        return createProbe(head, revision);
-                                    }
-                                },
-                                (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
-                                    if (isMatch) {
-                                        listener.getLogger().format("Met criteria%n");
-                                    } else {
-                                        listener.getLogger().format("Does not meet criteria%n");
-                                    }
-                                })) {
-                            listener.getLogger().format("%n%d branches were processed (query completed)%n", count);
-                            return;
+                                request.setMergeRequests(mrs.collect(Collectors.toList()));
+                            }
                         }
-                    }
-                    listener.getLogger().format("%n%d branches were processed%n", count);
-                }
-                if (request.isFetchMRs() && !request.isComplete() && mergeRequestsEnabled) {
-                    int count = 0;
-                    listener.getLogger().format("%nChecking merge requests..%n");
-                    HashMap<Long, String> forkMrSources = new HashMap<>();
-                    for (MergeRequest mr : request.getMergeRequests()) {
-                        mergeRequestContributorCache.put(
-                                mr.getIid(),
-                                new ContributorMetadataAction(
-                                        mr.getAuthor().getUsername(),
-                                        mr.getAuthor().getName(),
-                                        mr.getAuthor().getEmail()));
-                        mergeRequestMetadataCache.put(
-                                mr.getIid(),
-                                new ObjectMetadataAction(mr.getTitle(), mr.getDescription(), mr.getWebUrl()));
-                        count++;
-                        listener.getLogger()
-                                .format(
-                                        "%nChecking merge request %s%n",
-                                        HyperlinkNote.encodeTo(
-                                                mergeRequestUriTemplate(gitlabProject.getWebUrl())
-                                                        .set("iid", mr.getIid())
-                                                        .expand(),
-                                                "!" + mr.getIid()));
-                        Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
-                        boolean fork = !mr.getSourceProjectId().equals(mr.getTargetProjectId());
-                        String originOwner = mr.getAuthor().getUsername();
-                        String originProjectPath = projectPath;
-                        if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
-                            // This is a hack to get the path with namespace of source project for forked
-                            // mrs
-                            try {
-                                originProjectPath = gitLabApi
-                                        .getProjectApi()
-                                        .getProject(mr.getSourceProjectId())
-                                        .getPathWithNamespace();
-                                forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
-                            } catch (GitLabApiException e) {
-                                if (e.getHttpStatus() == 404) {
+                        if (request.isFetchTags()) {
+                            request.setTags(gitLabApi.getTagsApi().getTags(gitlabProject));
+                        }
+                        if (request.isFetchBranches()) {
+                            int count = 0;
+                            listener.getLogger().format("%nChecking branches.. %n");
+                            Iterable<Branch> branches = request.getBranches();
+                            for (final Branch branch : branches) {
+                                count++;
+                                String branchName = branch.getName();
+                                String sha = branch.getCommit().getId();
+                                listener.getLogger()
+                                        .format(
+                                                "%nChecking branch %s%n",
+                                                HyperlinkNote.encodeTo(
+                                                        branchUriTemplate(gitlabProject.getWebUrl())
+                                                                .set("branch", splitPath(branchName))
+                                                                .expand(),
+                                                        branchName));
+                                if (request.process(
+                                        new BranchSCMHead(branchName),
+                                        (SCMSourceRequest.RevisionLambda<BranchSCMHead, BranchSCMRevision>)
+                                                head -> new BranchSCMRevision(head, sha),
+                                        new SCMSourceRequest.ProbeLambda<BranchSCMHead, BranchSCMRevision>() {
+                                            @NonNull
+                                            @Override
+                                            public SCMSourceCriteria.Probe create(
+                                                    @NonNull BranchSCMHead head, @Nullable BranchSCMRevision revision)
+                                                    throws IOException {
+                                                return createProbe(head, revision);
+                                            }
+                                        },
+                                        (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
+                                            if (isMatch) {
+                                                listener.getLogger().format("Met criteria%n");
+                                            } else {
+                                                listener.getLogger().format("Does not meet criteria%n");
+                                            }
+                                        })) {
                                     listener.getLogger()
-                                            .format(
-                                                    "%nIgnoring merge requests as source project not found, Please check permission on source repo...%n");
-                                    continue;
-                                } else {
-                                    throw e;
+                                            .format("%n%d branches were processed (query completed)%n", count);
+                                    return;
                                 }
                             }
-                        } else if (fork) {
-                            originProjectPath = forkMrSources.get(mr.getSourceProjectId());
+                            listener.getLogger().format("%n%d branches were processed%n", count);
                         }
-                        String targetSha;
-                        try {
-                            targetSha = gitLabApi
-                                    .getRepositoryApi()
-                                    .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
-                                    .getCommit()
-                                    .getId();
-                        } catch (Exception e) {
-                            listener.getLogger()
-                                    .format(
-                                            "Failed getting TargetBranch from Merge Request: " + mr.getIid() + " ("
-                                                    + mr.getTitle() + ")%n%s",
-                                            e);
-                            continue;
-                        }
-                        LOGGER.log(
-                                Level.FINE,
-                                String.format(
-                                        "%s -> %s",
-                                        originOwner, (request.isMember(originOwner) ? "Trusted" : "Untrusted")));
-                        for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
-                            if (request.process(
-                                    new MergeRequestSCMHead(
-                                            "MR-" + mr.getIid()
-                                                    + (strategies.get(fork).size() > 1
-                                                            ? "-"
-                                                                    + strategy.name()
-                                                                            .toLowerCase(Locale.ENGLISH)
-                                                            : ""),
-                                            mr.getIid(),
-                                            new BranchSCMHead(mr.getTargetBranch()),
-                                            strategy,
-                                            fork ? new SCMHeadOrigin.Fork(originProjectPath) : SCMHeadOrigin.DEFAULT,
-                                            originOwner,
-                                            originProjectPath,
-                                            mr.getSourceBranch(),
-                                            mr.getTitle()),
-                                    (SCMSourceRequest.RevisionLambda<MergeRequestSCMHead, MergeRequestSCMRevision>)
-                                            head -> new MergeRequestSCMRevision(
-                                                    head,
-                                                    new BranchSCMRevision(
-                                                            head.getTarget(),
-                                                            targetSha // Latest revision of target branch
-                                                            ),
-                                                    new BranchSCMRevision(
-                                                            new BranchSCMHead(head.getOriginName()), mr.getSha())),
-                                    new SCMSourceRequest.ProbeLambda<MergeRequestSCMHead, MergeRequestSCMRevision>() {
-                                        @NonNull
-                                        @Override
-                                        public SCMSourceCriteria.Probe create(
-                                                @NonNull MergeRequestSCMHead head,
-                                                @Nullable MergeRequestSCMRevision revision)
-                                                throws IOException, InterruptedException {
-                                            boolean isTrusted = request.isTrusted(head);
-                                            if (!isTrusted) {
-                                                listener.getLogger().format("(not from a trusted source)%n");
-                                            }
-                                            return createProbe(isTrusted ? head : head.getTarget(), revision);
-                                        }
-                                    },
-                                    (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
-                                        if (isMatch) {
-                                            listener.getLogger().format("Met criteria%n");
-                                        } else {
-                                            listener.getLogger().format("Does not meet criteria%n");
-                                        }
-                                    })) {
+                        if (request.isFetchMRs() && !request.isComplete() && mergeRequestsEnabled) {
+                            int count = 0;
+                            listener.getLogger().format("%nChecking merge requests..%n");
+                            HashMap<Long, String> forkMrSources = new HashMap<>();
+                            for (MergeRequest mr : request.getMergeRequests()) {
+                                mergeRequestContributorCache.put(
+                                        mr.getIid(),
+                                        new ContributorMetadataAction(
+                                                mr.getAuthor().getUsername(),
+                                                mr.getAuthor().getName(),
+                                                mr.getAuthor().getEmail()));
+                                mergeRequestMetadataCache.put(
+                                        mr.getIid(),
+                                        new ObjectMetadataAction(mr.getTitle(), mr.getDescription(), mr.getWebUrl()));
+                                count++;
                                 listener.getLogger()
-                                        .format("%n%d merge requests were processed (query completed)%n", count);
-                                return;
+                                        .format(
+                                                "%nChecking merge request %s%n",
+                                                HyperlinkNote.encodeTo(
+                                                        mergeRequestUriTemplate(gitlabProject.getWebUrl())
+                                                                .set("iid", mr.getIid())
+                                                                .expand(),
+                                                        "!" + mr.getIid()));
+                                Map<Boolean, Set<ChangeRequestCheckoutStrategy>> strategies = request.getMRStrategies();
+                                boolean fork = !mr.getSourceProjectId().equals(mr.getTargetProjectId());
+                                String originOwner = mr.getAuthor().getUsername();
+                                String originProjectPath = projectPath;
+                                if (fork && !forkMrSources.containsKey(mr.getSourceProjectId())) {
+                                    // This is a hack to get the path with namespace of source project for forked
+                                    // mrs
+                                    try {
+                                        originProjectPath = gitLabApi
+                                                .getProjectApi()
+                                                .getProject(mr.getSourceProjectId())
+                                                .getPathWithNamespace();
+                                        forkMrSources.put(mr.getSourceProjectId(), originProjectPath);
+                                    } catch (GitLabApiException e) {
+                                        if (e.getHttpStatus() == 404) {
+                                            listener.getLogger()
+                                                    .format(
+                                                            "%nIgnoring merge requests as source project not found, Please check permission on source repo...%n");
+                                            continue;
+                                        } else {
+                                            throw e;
+                                        }
+                                    }
+                                } else if (fork) {
+                                    originProjectPath = forkMrSources.get(mr.getSourceProjectId());
+                                }
+                                String targetSha;
+                                try {
+                                    targetSha = gitLabApi
+                                            .getRepositoryApi()
+                                            .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
+                                            .getCommit()
+                                            .getId();
+                                } catch (Exception e) {
+                                    listener.getLogger()
+                                            .format(
+                                                    "Failed getting TargetBranch from Merge Request: " + mr.getIid()
+                                                            + " ("
+                                                            + mr.getTitle() + ")%n%s",
+                                                    e);
+                                    continue;
+                                }
+                                LOGGER.log(
+                                        Level.FINE,
+                                        String.format(
+                                                "%s -> %s",
+                                                originOwner,
+                                                (request.isMember(originOwner) ? "Trusted" : "Untrusted")));
+                                for (ChangeRequestCheckoutStrategy strategy : strategies.get(fork)) {
+                                    if (request.process(
+                                            new MergeRequestSCMHead(
+                                                    "MR-" + mr.getIid()
+                                                            + (strategies
+                                                                                    .get(fork)
+                                                                                    .size()
+                                                                            > 1
+                                                                    ? "-"
+                                                                            + strategy.name()
+                                                                                    .toLowerCase(Locale.ENGLISH)
+                                                                    : ""),
+                                                    mr.getIid(),
+                                                    new BranchSCMHead(mr.getTargetBranch()),
+                                                    strategy,
+                                                    fork
+                                                            ? new SCMHeadOrigin.Fork(originProjectPath)
+                                                            : SCMHeadOrigin.DEFAULT,
+                                                    originOwner,
+                                                    originProjectPath,
+                                                    mr.getSourceBranch(),
+                                                    mr.getTitle()),
+                                            (SCMSourceRequest.RevisionLambda<
+                                                            MergeRequestSCMHead, MergeRequestSCMRevision>)
+                                                    head -> new MergeRequestSCMRevision(
+                                                            head,
+                                                            new BranchSCMRevision(
+                                                                    head.getTarget(),
+                                                                    targetSha // Latest revision of target branch
+                                                                    ),
+                                                            new BranchSCMRevision(
+                                                                    new BranchSCMHead(head.getOriginName()),
+                                                                    mr.getSha())),
+                                            new SCMSourceRequest.ProbeLambda<
+                                                    MergeRequestSCMHead, MergeRequestSCMRevision>() {
+                                                @NonNull
+                                                @Override
+                                                public SCMSourceCriteria.Probe create(
+                                                        @NonNull MergeRequestSCMHead head,
+                                                        @Nullable MergeRequestSCMRevision revision)
+                                                        throws IOException, InterruptedException {
+                                                    boolean isTrusted = request.isTrusted(head);
+                                                    if (!isTrusted) {
+                                                        listener.getLogger().format("(not from a trusted source)%n");
+                                                    }
+                                                    return createProbe(isTrusted ? head : head.getTarget(), revision);
+                                                }
+                                            },
+                                            (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
+                                                if (isMatch) {
+                                                    listener.getLogger().format("Met criteria%n");
+                                                } else {
+                                                    listener.getLogger().format("Does not meet criteria%n");
+                                                }
+                                            })) {
+                                        listener.getLogger()
+                                                .format(
+                                                        "%n%d merge requests were processed (query completed)%n",
+                                                        count);
+                                        return;
+                                    }
+                                }
                             }
+                            listener.getLogger().format("%n%d merge requests were processed%n", count);
                         }
-                    }
-                    listener.getLogger().format("%n%d merge requests were processed%n", count);
-                }
-                if (request.isFetchTags()) {
-                    int count = 0;
-                    listener.getLogger().format("%nChecking tags..%n");
-                    Iterable<Tag> tags = request.getTags();
-                    for (Tag tag : tags) {
-                        count++;
-                        String tagName = tag.getName();
-                        Long tagDate = tag.getCommit().getCommittedDate().getTime();
-                        String sha = tag.getCommit().getId();
-                        listener.getLogger()
-                                .format(
-                                        "%nChecking tag %s%n",
-                                        HyperlinkNote.encodeTo(
-                                                tagUriTemplate(gitlabProject.getWebUrl())
-                                                        .set("tag", splitPath(tag.getName()))
-                                                        .expand(),
-                                                tag.getName()));
-                        GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
-                        if (request.process(
-                                head,
-                                new GitTagSCMRevision(head, sha),
-                                new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
-                                    @NonNull
-                                    @Override
-                                    public SCMSourceCriteria.Probe create(
-                                            @NonNull GitLabTagSCMHead head, @Nullable GitTagSCMRevision revision)
-                                            throws IOException {
-                                        return createProbe(head, revision);
-                                    }
-                                },
-                                (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
-                                    if (isMatch) {
-                                        listener.getLogger().format("Met criteria%n");
-                                    } else {
-                                        listener.getLogger().format("Does not meet criteria%n");
-                                    }
-                                })) {
+                        if (request.isFetchTags()) {
+                            int count = 0;
+                            listener.getLogger().format("%nChecking tags..%n");
+                            Iterable<Tag> tags = request.getTags();
+                            for (Tag tag : tags) {
+                                count++;
+                                String tagName = tag.getName();
+                                Long tagDate =
+                                        tag.getCommit().getCommittedDate().getTime();
+                                String sha = tag.getCommit().getId();
+                                listener.getLogger()
+                                        .format(
+                                                "%nChecking tag %s%n",
+                                                HyperlinkNote.encodeTo(
+                                                        tagUriTemplate(gitlabProject.getWebUrl())
+                                                                .set("tag", splitPath(tag.getName()))
+                                                                .expand(),
+                                                        tag.getName()));
+                                GitLabTagSCMHead head = new GitLabTagSCMHead(tagName, tagDate);
+                                if (request.process(
+                                        head,
+                                        new GitTagSCMRevision(head, sha),
+                                        new SCMSourceRequest.ProbeLambda<GitLabTagSCMHead, GitTagSCMRevision>() {
+                                            @NonNull
+                                            @Override
+                                            public SCMSourceCriteria.Probe create(
+                                                    @NonNull GitLabTagSCMHead head,
+                                                    @Nullable GitTagSCMRevision revision)
+                                                    throws IOException {
+                                                return createProbe(head, revision);
+                                            }
+                                        },
+                                        (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
+                                            if (isMatch) {
+                                                listener.getLogger().format("Met criteria%n");
+                                            } else {
+                                                listener.getLogger().format("Does not meet criteria%n");
+                                            }
+                                        })) {
+                                    listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
+                                    return;
+                                }
+                            }
                             listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
-                            return;
                         }
                     }
-                    listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
+                } catch (GitLabApiException | IOException | InterruptedException e) {
+                    LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+                    throw new RuntimeException("Failed to fetch latest heads", e);
                 }
+            });
+
+            if (indexingTimeout != null && indexingTimeout > 0) {
+                future.get(indexingTimeout, TimeUnit.SECONDS);
+            } else {
+                future.get();
             }
-        } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
-            throw new IOException("Failed to fetch latest heads", e);
+
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            listener.getLogger().println("Operation timed out while fetching data from GitLab");
+            throw new IOException("Operation timed out while fetching data from GitLab", e);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException("Failed to fetch data from GitLab", e);
         } finally {
+            executor.shutdown();
             SCMSourceOwner owner = this.getOwner();
             if (owner != null) {
                 owner.save();
