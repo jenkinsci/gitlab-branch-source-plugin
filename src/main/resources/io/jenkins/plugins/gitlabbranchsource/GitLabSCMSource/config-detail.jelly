@@ -24,21 +24,4 @@
   <f:invisibleEntry>
     <f:number clazz="project-id" field="projectId"/>
   </f:invisibleEntry>
-
-  <script>
-    // var projectOwner = document.getElementsByClassName('project-owner');
-    //
-    // var projectPath = document.getElementsByClassName('project-path');
-    //
-    // projectPath.addEventListener('change', function() {
-    //     var currentPath = projectPath.value;
-    //     for(var i = currentPath.length-1; i >= 0; i--) {
-    //         currentPath = currentPath.substring(0, currentPath.length-1);
-    //         if(currentPath[i] === '/') {
-    //             break;
-    //         }
-    //     }
-    //     projectOwner.item(0).value = currentPath;
-    // })
-  </script>
 </j:jelly>
