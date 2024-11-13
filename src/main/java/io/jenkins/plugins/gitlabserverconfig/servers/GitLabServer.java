@@ -171,6 +171,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      *                      credentials to use for
      *                      GitLab Server Authentication to access GitLab APIs
      */
+    private Integer indexingTimeout = 3600;
+
     @DataBoundConstructor
     public GitLabServer(@NonNull String serverUrl, @NonNull String name, @NonNull String credentialsId) {
         this.serverUrl = defaultIfBlank(StringUtils.trim(serverUrl), GITLAB_SERVER_URL);
@@ -490,6 +492,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public Integer getHookTriggerDelay() {
         return this.hookTriggerDelay;
+    }
+
+    @CheckForNull
+    public Integer getIndexingTimeout() {
+        return indexingTimeout;
+    }
+
+    @DataBoundSetter
+    public void setIndexingTimeout(Integer indexingTimeout) {
+        this.indexingTimeout = indexingTimeout;
     }
 
     /**
