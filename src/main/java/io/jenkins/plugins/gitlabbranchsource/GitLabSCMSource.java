@@ -274,6 +274,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_EXCEPTION")
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         if (indexingTimeout != null && indexingTimeout > 0) {
@@ -362,6 +363,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_EXCEPTION")
     protected void retrieve(
             SCMSourceCriteria criteria,
             @NonNull SCMHeadObserver observer,
