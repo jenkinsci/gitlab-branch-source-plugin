@@ -237,12 +237,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return members;
     }
 
-    public long getProjectId() {
+    public Long getProjectId() {
         return projectId;
     }
 
     @DataBoundSetter
-    public void setProjectId(long projectId) {
+    public void setProjectId(Long projectId) {
         this.projectId = projectId;
     }
 
