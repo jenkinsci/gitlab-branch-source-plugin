@@ -49,7 +49,7 @@ public class GitLabSCMSourceDeserializationTest {
     public void projectIdSurvivesConfigRoundtrip() {
         plan.then(j -> {
             GitLabSCMSourceBuilder sb =
-                new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project");
+                    new GitLabSCMSourceBuilder(SOURCE_ID, "server", "creds", "po", "group/project", "project");
             WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
             GitLabSCMSource source = sb.build();
             project.getSourcesList().add(new BranchSource(source));
@@ -57,8 +57,8 @@ public class GitLabSCMSourceDeserializationTest {
             source.setProjectId(p);
             j.configRoundtrip(project);
 
-            WorkflowMultiBranchProject item = j.jenkins.getItemByFullName(PROJECT_NAME,
-                WorkflowMultiBranchProject.class);
+            WorkflowMultiBranchProject item =
+                    j.jenkins.getItemByFullName(PROJECT_NAME, WorkflowMultiBranchProject.class);
             assertNotNull(item);
             GitLabSCMSource scmSource = (GitLabSCMSource) item.getSCMSource(SOURCE_ID);
             assertNotNull(scmSource);
