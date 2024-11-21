@@ -14,6 +14,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.SCMSourceOwners;
+import org.apache.commons.lang.math.NumberUtils;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.webhook.NoteEvent;
 
@@ -52,8 +53,8 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         if (!sourceContext.mrCommentTriggerEnabled()) {
                             continue;
                         }
-                        if (gitLabSCMSource.getProjectId()
-                                        == getPayload().getMergeRequest().getTargetProjectId()
+                        Long projectId = gitLabSCMSource.getProjectId();
+                        if (projectId != null && projectId.equals(getPayload().getMergeRequest().getTargetProjectId())
                                 && isTrustedMember(gitLabSCMSource, sourceContext.getOnlyTrustedMembersCanTrigger())) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
                                 if (MultiBranchProject.class.isAssignableFrom(
