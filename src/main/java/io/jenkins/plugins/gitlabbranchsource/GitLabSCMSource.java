@@ -225,15 +225,37 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     protected Project getGitlabProject(GitLabApi gitLabApi) {
+
         if (gitlabProject == null) {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            Future<?> future = executor.submit(() -> {
+                try {
+                    gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
+                    sshRemote = gitlabProject.getSshUrlToRepo();
+                    httpRemote = gitlabProject.getHttpUrlToRepo();
+                    projectId = gitlabProject.getId();
+                } catch (GitLabApiException e) {
+                    throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
+                }
+            });
+
             try {
-                gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-                sshRemote = gitlabProject.getSshUrlToRepo();
-                httpRemote = gitlabProject.getHttpUrlToRepo();
-                projectId = gitlabProject.getId();
-            } catch (GitLabApiException e) {
-                throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
+                if (indexingTimeout != null && indexingTimeout > 0) {
+                    future.get(indexingTimeout, TimeUnit.SECONDS);
+                } else {
+                     future.get();
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (TimeoutException e) {
+                future.cancel(true);
+                throw new RuntimeException("Operation timed out while fetching data from GitLab", e);
+            } catch (Exception e) {
+                throw e;
             }
+
         }
         return gitlabProject;
     }
@@ -277,13 +299,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_EXCEPTION")
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        if (indexingTimeout != null && indexingTimeout > 0) {
-            listener.getLogger()
-                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
-                            + indexingTimeout);
-        } else {
-            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
-        }
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<SCMRevision> future = null;
         try {
@@ -370,14 +385,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             SCMHeadEvent<?> event,
             @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-
-        if (indexingTimeout != null && indexingTimeout > 0) {
-            listener.getLogger()
-                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
-                            + indexingTimeout);
-        } else {
-            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
-        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = null;
@@ -705,6 +712,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) {
+        if (indexingTimeout != null && indexingTimeout > 0) {
+            listener.getLogger()
+                .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                    + indexingTimeout);
+        } else {
+            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
+        }
+
         List<Action> result = new ArrayList<>();
         getGitlabProject();
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(traits);
@@ -722,6 +737,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
+        if (indexingTimeout != null && indexingTimeout > 0) {
+            listener.getLogger()
+                .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                    + indexingTimeout);
+        } else {
+            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
+        }
+
         getGitlabProject();
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
