@@ -245,7 +245,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (indexingTimeout != null && indexingTimeout > 0) {
                     future.get(indexingTimeout, TimeUnit.SECONDS);
                 } else {
-                     future.get();
+                    future.get();
                 }
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
@@ -255,7 +255,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             } catch (Exception e) {
                 throw e;
             }
-
         }
         return gitlabProject;
     }
@@ -714,8 +713,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) {
         if (indexingTimeout != null && indexingTimeout > 0) {
             listener.getLogger()
-                .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
-                    + indexingTimeout);
+                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                            + indexingTimeout);
         } else {
             listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
         }
@@ -739,8 +738,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
         if (indexingTimeout != null && indexingTimeout > 0) {
             listener.getLogger()
-                .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
-                    + indexingTimeout);
+                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
+                            + indexingTimeout);
         } else {
             listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
         }
