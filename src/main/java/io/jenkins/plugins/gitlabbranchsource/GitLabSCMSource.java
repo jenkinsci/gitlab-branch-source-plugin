@@ -919,8 +919,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                 } catch (GitLabApiException e) {
                     for (Project p : gitLabApi
-                        .getProjectApi()
-                        .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
+                            .getProjectApi()
+                            .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
                         result.add(p.getPathWithNamespace());
                     }
                 }
