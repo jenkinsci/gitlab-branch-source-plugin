@@ -56,6 +56,10 @@ public class MergeRequestSCMRevision extends ChangeRequestSCMRevision<MergeReque
 
     @Override
     public String toString() {
-        return (isMerge() ? ((BranchSCMRevision) getTarget()).getHash() + "+" : "") + origin.getHash();
+        String result = origin.getHash();
+        if (isMerge()) {
+            result += "+" + ((BranchSCMRevision) getTarget()).getHash();
+        }
+        return result;
     }
 }
