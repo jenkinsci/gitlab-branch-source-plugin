@@ -44,7 +44,7 @@ public final class GitLabIcons {
         }
 
         JellyContext ctx = new JellyContext();
-        ctx.setVariable("resURL", Stapler.getCurrentRequest().getContextPath() + Jenkins.RESOURCE_PATH);
+        ctx.setVariable("resURL", Stapler.getCurrentRequest2().getContextPath() + Jenkins.RESOURCE_PATH);
         return icon.getQualifiedUrl(ctx);
     }
 
