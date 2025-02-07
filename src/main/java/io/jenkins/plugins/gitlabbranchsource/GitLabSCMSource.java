@@ -108,6 +108,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     public static final Logger LOGGER = Logger.getLogger(GitLabSCMSource.class.getName());
     private final String serverName;
+    private String serverVersion;
     private final String projectOwner;
     private final String projectPath;
     private String projectName;
@@ -217,6 +218,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 projectId = gitlabProject.getId();
             } catch (GitLabApiException e) {
                 throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
+            }
+            try {
+                serverVersion = gitLabApi.getVersion().getVersion();
+            } catch (GitLabApiException e) {
+                serverVersion = "0.0";
             }
         }
         return gitlabProject;
@@ -619,7 +625,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         result.add(new ObjectMetadataAction(name, gitlabProject.getDescription(), projectUrl));
         String avatarUrl = gitlabProject.getAvatarUrl();
         if (!ctx.projectAvatarDisabled() && StringUtils.isNotBlank(avatarUrl)) {
-            result.add(new GitLabAvatar(avatarUrl));
+            if (GitLabServer.projectAvatarsApiAvailable(serverVersion)) {
+                result.add(new GitLabAvatar(avatarUrl, serverName, projectPath, true));
+            } else {
+                result.add(new GitLabAvatar(avatarUrl));
+            }
         }
         result.add(GitLabLink.toProject(projectUrl));
         return result;

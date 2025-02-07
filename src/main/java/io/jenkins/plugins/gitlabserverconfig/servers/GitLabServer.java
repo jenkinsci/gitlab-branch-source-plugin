@@ -37,6 +37,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
 import org.apache.commons.lang.RandomStringUtils;
@@ -90,6 +92,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Common prefixes that we should remove when inferring a display name.
      */
     private static final String[] COMMON_PREFIX_HOSTNAMES = {"git.", "gitlab.", "vcs.", "scm.", "source."};
+
+    /**
+     * Regex to extract the major and minor entries from the server version
+     */
+    private static final Pattern versionMajorMinorPattern = Pattern.compile("^(\\d+)\\.(\\d)\\..*");
 
     /**
      * A unique name used to identify the endpoint.
@@ -267,16 +274,23 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return credentialsId;
     }
 
+    public StandardCredentials getCredentials(AccessControlled context) {
+        return getCredentials(context, true);
+    }
+
+    public StandardCredentials getCredentialsNoAccessControl() {
+        return getCredentials(null, false);
+    }
     /**
      * Looks up for PersonalAccessToken and StringCredentials
      *
      * @return {@link StandardCredentials}
      */
-    public StandardCredentials getCredentials(AccessControlled context) {
+    private StandardCredentials getCredentials(AccessControlled context, boolean validateContextPermission) {
         Jenkins jenkins = Jenkins.get();
-        if (context == null) {
+        if (context == null && validateContextPermission) {
             jenkins.checkPermission(CredentialsProvider.USE_OWN);
-        } else {
+        } else if (validateContextPermission) {
             context.checkPermission(CredentialsProvider.USE_OWN);
         }
         return StringUtils.isBlank(credentialsId)
@@ -490,6 +504,20 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public Integer getHookTriggerDelay() {
         return this.hookTriggerDelay;
+    }
+
+    public static boolean projectAvatarsApiAvailable(String serverVersion) {
+        Matcher matcher = GitLabServer.versionMajorMinorPattern.matcher(serverVersion);
+        // Avatar by API only on version 16.9 or above
+        return (matcher.find()
+                && (Integer.parseInt(matcher.group(1)) > 16
+                        || (Integer.parseInt(matcher.group(1)) == 16 && Integer.parseInt(matcher.group(2)) >= 9)));
+    }
+
+    public static boolean groupAvatarsApiAvailable(String serverVersion) {
+        Matcher matcher = GitLabServer.versionMajorMinorPattern.matcher(serverVersion);
+        // Avatar by API only on version 14.0 or above
+        return (matcher.find() && (Integer.parseInt(matcher.group(1)) >= 14));
     }
 
     /**
