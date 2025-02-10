@@ -33,12 +33,12 @@
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+    <!--jenkins.version>${jenkins.baseline}.1</jenkins.version-->
+    <!-- REMOVE -->
+    <jenkins.version>2.495</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
     <hpi.compatibleSinceVersion>685</hpi.compatibleSinceVersion>
-    <!-- Jenkins.MANAGE is still considered beta -->
-    <useBeta>true</useBeta>
   </properties>
 
   <dependencyManagement>
