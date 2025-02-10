@@ -15,23 +15,21 @@ import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.util.Collections;
 import java.util.List;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ConfigurationAsCodeTest {
-
-    @ClassRule
-    @ConfiguredWithCode("configuration-as-code.yml")
-    public static JenkinsConfiguredWithCodeRule j = new JenkinsConfiguredWithCodeRule();
+@WithJenkinsConfiguredWithCode
+class ConfigurationAsCodeTest {
 
     @Test
-    public void should_support_configuration_as_code() {
+    @ConfiguredWithCode("configuration-as-code.yml")
+    void should_support_configuration_as_code(JenkinsConfiguredWithCodeRule j) {
         List<GitLabServer> servers = GitLabServers.get().getServers();
         assertThat(servers.size(), is(1));
         GitLabServer server = servers.get(0);
@@ -41,8 +39,8 @@ public class ConfigurationAsCodeTest {
         assertThat(server.isManageSystemHooks(), is(true));
         assertThat(server.getHooksRootUrl(), is("https://jenkins.intranet/"));
 
-        List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
-                PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM, Collections.emptyList());
+        List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentialsInItemGroup(
+                PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM2, Collections.emptyList());
         assertThat(credentials, hasSize(1));
         final PersonalAccessTokenImpl credential = credentials.get(0);
         assertThat(credential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));
@@ -50,7 +48,8 @@ public class ConfigurationAsCodeTest {
     }
 
     @Test
-    public void should_support_configuration_export() throws Exception {
+    @ConfiguredWithCode("configuration-as-code.yml")
+    void should_support_configuration_export(JenkinsConfiguredWithCodeRule j) throws Exception {
         ConfiguratorRegistry registry = ConfiguratorRegistry.get();
         ConfigurationContext context = new ConfigurationContext(registry);
         CNode gitLabServers = getUnclassifiedRoot(context).get("gitLabServers");

@@ -20,13 +20,15 @@ import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.MergeRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
-public class GitLabPipelineStatusNotifierTest {
+class GitLabPipelineStatusNotifierTest {
 
     @Test
-    public void should_set_branch_status_name() {
+    void should_set_branch_status_name() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         BranchSCMHead head = new BranchSCMHead("head");
@@ -43,7 +45,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_branch_status_name_withBuildStatusNameCustomPart() {
+    void should_set_branch_status_name_withBuildStatusNameCustomPart() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
         sourceContext.withBuildStatusNameCustomPart("CUSTOM");
         sourceContext.withBuildStatusNameOverwrite(false);
@@ -64,7 +66,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_branch_status_name_withIgnoreTypeInStatusName() {
+    void should_set_branch_status_name_withIgnoreTypeInStatusName() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
         sourceContext.withIgnoreTypeInStatusName(true);
 
@@ -78,7 +80,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_merge_request_head_status_name() {
+    void should_set_merge_request_head_status_name() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         BranchSCMHead targetHead = new BranchSCMHead("target");
@@ -100,7 +102,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_merge_request_merge_status_name() {
+    void should_set_merge_request_merge_status_name() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         BranchSCMHead targetHead = new BranchSCMHead("target");
@@ -122,7 +124,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_tag_status_name() {
+    void should_set_tag_status_name() {
         GitLabSCMSourceContext sourceContext = new GitLabSCMSourceContext(null, null);
 
         GitTagSCMHead head = new GitTagSCMHead("tagName", 0);
@@ -139,7 +141,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_branch_ref_name() {
+    void should_set_branch_ref_name() {
         String branchName = "branch_name";
         BranchSCMHead head = new BranchSCMHead(branchName);
         SCMRevision revision = new BranchSCMRevision(head, "hash");
@@ -150,7 +152,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_merge_request_ref_name() {
+    void should_set_merge_request_ref_name() {
         String sourceBranchName = "sourceBranchName";
         String targetBranchName = "targetBranchName";
 
@@ -167,7 +169,7 @@ public class GitLabPipelineStatusNotifierTest {
     }
 
     @Test
-    public void should_set_tag_ref_name() {
+    void should_set_tag_ref_name() {
         String tagName = "tagName";
         GitTagSCMHead head = new GitTagSCMHead(tagName, 0);
         SCMRevision revision = new GitTagSCMRevision(head, "tag-hash");
@@ -177,61 +179,16 @@ public class GitLabPipelineStatusNotifierTest {
         assertThat(refName, is(tagName));
     }
 
-    @Test
-    public void should_get_mr_project_id() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"MR-123", "MR-123-head", "MR-123-merge"})
+    void should_get_mr_project_id(String name) throws Exception {
         String projectPath = "project_path";
-        Long projectId = Long.valueOf(100);
+        Long projectId = 100L;
 
         ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
         Mockito.when(parent.getFullName()).thenReturn("folder/project");
 
-        Job<?, ?> job = new FreeStyleProject(parent, "MR-123");
-
-        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
-        MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
-        MergeRequest mr = Mockito.mock(MergeRequest.class);
-
-        Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
-        Mockito.when(mrApi.getMergeRequest(any(), eq(Long.valueOf(123)))).thenReturn(mr);
-        Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
-
-        Long sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
-
-        assertThat(sourceProjectId, is(projectId));
-    }
-
-    @Test
-    public void should_get_mr_project_id_projects_using_both_strategy_head() throws Exception {
-        String projectPath = "project_path";
-        Long projectId = Long.valueOf(100);
-
-        ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
-        Mockito.when(parent.getFullName()).thenReturn("folder/project");
-
-        Job<?, ?> job = new FreeStyleProject(parent, "MR-123-head");
-
-        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
-        MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
-        MergeRequest mr = Mockito.mock(MergeRequest.class);
-
-        Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
-        Mockito.when(mrApi.getMergeRequest(any(), eq(Long.valueOf(123)))).thenReturn(mr);
-        Mockito.when(mr.getSourceProjectId()).thenReturn(projectId);
-
-        Long sourceProjectId = GitLabPipelineStatusNotifier.getSourceProjectId(job, gitLabApi, projectPath);
-
-        assertThat(sourceProjectId, is(projectId));
-    }
-
-    @Test
-    public void should_get_mr_project_id_projects_using_both_strategy_merge() throws Exception {
-        String projectPath = "project_path";
-        Long projectId = Long.valueOf(100);
-
-        ItemGroup<?> parent = Mockito.mock(ItemGroup.class);
-        Mockito.when(parent.getFullName()).thenReturn("folder/project");
-
-        Job<?, ?> job = new FreeStyleProject(parent, "MR-123-merge");
+        Job<?, ?> job = new FreeStyleProject(parent, name);
 
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         MergeRequestApi mrApi = Mockito.mock(MergeRequestApi.class);
