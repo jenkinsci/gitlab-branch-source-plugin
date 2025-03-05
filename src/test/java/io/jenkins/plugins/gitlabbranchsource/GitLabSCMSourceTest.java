@@ -51,7 +51,7 @@ public class GitLabSCMSourceTest {
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
         try (MockedStatic<GitLabHelper> utilities = Mockito.mockStatic(GitLabHelper.class)) {
             utilities
-                    .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
+                    .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
                     .thenReturn(gitLabApi);
             GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
             GitLabSCMSourceBuilder sb =

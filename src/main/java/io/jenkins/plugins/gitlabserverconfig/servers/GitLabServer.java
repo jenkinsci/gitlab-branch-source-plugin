@@ -62,7 +62,7 @@ import org.kohsuke.stapler.verb.POST;
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
-     * The credentials matcher for PersonalAccessToken and StringCredentials
+     * The credentials matcher for PersonalAccessToken, GroupAccessToken and StringCredentials
      */
     public static final CredentialsMatcher CREDENTIALS_MATCHER = new GitLabCredentialMatcher();
     /**
@@ -268,7 +268,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     }
 
     /**
-     * Looks up for PersonalAccessToken and StringCredentials
+     * Looks up for PersonalAccessToken, GroupAccessToken and StringCredentials
      *
      * @return {@link StandardCredentials}
      */
