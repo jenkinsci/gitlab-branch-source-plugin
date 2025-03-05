@@ -76,7 +76,7 @@ public class GitLabSCMSourceTest {
         Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
         utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
+                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
                 .thenReturn(gitLabApi);
         GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
         GitLabSCMSourceBuilder sb =
