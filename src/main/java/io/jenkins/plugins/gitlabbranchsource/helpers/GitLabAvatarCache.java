@@ -1,5 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
+import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.apiBuilderNoAccessControl;
 import static java.awt.RenderingHints.KEY_ALPHA_INTERPOLATION;
 import static java.awt.RenderingHints.KEY_INTERPOLATION;
 import static java.awt.RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY;
@@ -47,6 +48,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.gitlab4j.api.GitLabApi;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -54,7 +56,7 @@ import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * An avatar cache that will serve URLs that have been recently registered
- * through {@link #buildUrl(String, String)}
+ * through {@link #buildUrl(GitLabAvatarLocation, String)}
  */
 @Extension
 public class GitLabAvatarCache implements UnprotectedRootAction {
@@ -94,19 +96,18 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     /**
      * Builds the URL for the cached avatar image of the required size.
      *
-     * @param url  the URL of the source avatar image.
-     * @param size the size of the image.
-     * @return the URL of the cached image.
+     * @param location the external endpoint details (url/API)
+     * @return the Jenkins URL of the cached image.
      */
-    public static String buildUrl(String url, String size) {
+    public static String buildUrl(GitLabAvatarLocation location, String size) {
         Jenkins j = Jenkins.get();
         GitLabAvatarCache instance = j.getExtensionList(RootAction.class).get(GitLabAvatarCache.class);
         if (instance == null) {
             throw new AssertionError();
         }
-        String key = Util.getDigestOf(GitLabAvatarCache.class.getName() + url);
+        String key = Util.getDigestOf(GitLabAvatarCache.class.getName() + location.toString());
         // seed the cache
-        instance.getCacheEntry(key, url);
+        instance.getCacheEntry(key, location);
         return UriTemplate.buildFromTemplate(j.getRootUrlFromRequest())
                 .literal(instance.getUrlName())
                 .path("key")
@@ -283,12 +284,10 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             }
         }
         final CacheEntry avatar = getCacheEntry(key, null);
-        if (avatar == null || !(avatar.url.startsWith("http://") || avatar.url.startsWith("https://"))) {
-            // we will generate avatars if the URL is not HTTP based
-            // since the url string will not magically turn itself into a HTTP url this
-            // avatar is immutable
+        if (avatar == null) {
+            // we will generate immutable avatars if cache did not get seeded for some reason
             return new ImageResponse(
-                    generateAvatar(avatar == null ? "" : avatar.url, targetSize),
+                    generateAvatar("", targetSize),
                     true,
                     System.currentTimeMillis(),
                     "max-age=365000000, immutable, public");
@@ -297,7 +296,8 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             // serve a temporary avatar until we get the remote one, no caching as we could
             // have the real deal
             // real soon now
-            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "no-cache, public");
+            return new ImageResponse(
+                    generateAvatar(avatar.avatarLocation.toString(), targetSize), true, -1L, "no-cache, public");
         }
         long since = req.getDateHeader("If-Modified-Since");
         if (avatar.lastModified <= since) {
@@ -313,7 +313,8 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
         if (avatar.image == null) {
             // we can retry in an hour
-            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "max-age=3600, public");
+            return new ImageResponse(
+                    generateAvatar(avatar.avatarLocation.toString(), targetSize), true, -1L, "max-age=3600, public");
         }
 
         BufferedImage image = avatar.image;
@@ -329,22 +330,22 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
      * Retrieves the entry from the cache.
      *
      * @param key the cache key.
-     * @param url the URL to fetch if the entry is missing or {@code null} to
+     * @param avatarLocation the location details to fetch the avatar from or {@code null} to
      *            perform a read-only check.
      * @return the entry or {@code null} if a read-only check found no matching
      *         entry.
      */
     @Nullable
-    private CacheEntry getCacheEntry(@NonNull final String key, @Nullable final String url) {
+    private CacheEntry getCacheEntry(@NonNull final String key, @Nullable final GitLabAvatarLocation avatarLocation) {
         CacheEntry entry = cache.get(key);
         if (entry == null) {
             synchronized (serviceLock) {
                 entry = cache.get(key);
                 if (entry == null) {
-                    if (url == null) {
+                    if (avatarLocation == null) {
                         return null;
                     }
-                    entry = new CacheEntry(url, service.submit(new FetchImage(url)));
+                    entry = new CacheEntry(avatarLocation, service.submit(new FetchImage(avatarLocation)));
                     cache.put(key, entry);
                 }
             }
@@ -352,7 +353,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             if (entry.isStale()) {
                 synchronized (serviceLock) {
                     if (!entry.pending()) {
-                        entry.setFuture(service.submit(new FetchImage(entry.url)));
+                        entry.setFuture(service.submit(new FetchImage(entry.avatarLocation)));
                     }
                 }
             }
@@ -381,15 +382,15 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     }
 
     private static class CacheEntry {
-        private final String url;
+        private GitLabAvatarLocation avatarLocation;
         private BufferedImage image;
         private long lastModified;
         private long lastAccessed = -1L;
 
         private Future<CacheEntry> future;
 
-        public CacheEntry(String url, BufferedImage image, long lastModified) {
-            this.url = url;
+        public CacheEntry(GitLabAvatarLocation avatarLocation, BufferedImage image, long lastModified) {
+            this.avatarLocation = avatarLocation;
             if (image.getHeight() > 128 || image.getWidth() > 128) {
                 // limit the amount of storage
                 this.image = scaleImage(image, 128);
@@ -400,15 +401,15 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             this.lastModified = lastModified < 0 ? System.currentTimeMillis() : lastModified;
         }
 
-        public CacheEntry(String url, Future<CacheEntry> future) {
-            this.url = url;
+        public CacheEntry(GitLabAvatarLocation avatarLocation, Future<CacheEntry> future) {
+            this.avatarLocation = avatarLocation;
             this.image = null;
             this.lastModified = System.currentTimeMillis();
             this.future = future;
         }
 
-        public CacheEntry(String url) {
-            this.url = url;
+        public CacheEntry(GitLabAvatarLocation avatarLocation) {
+            this.avatarLocation = avatarLocation;
             this.lastModified = System.currentTimeMillis();
         }
 
@@ -426,6 +427,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                         image = pending.image;
                     }
                     lastModified = pending.lastModified;
+                    avatarLocation = pending.avatarLocation;
                     future = null;
                     return false;
                 } catch (InterruptedException | ExecutionException e) {
@@ -489,23 +491,37 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     }
 
     private static class FetchImage implements Callable<CacheEntry> {
-        private final String url;
+        private final GitLabAvatarLocation avatarLocation;
 
-        public FetchImage(String url) {
-            this.url = url;
+        public FetchImage(GitLabAvatarLocation avatarLocation) {
+            this.avatarLocation = avatarLocation;
         }
 
         @Override
         public CacheEntry call() throws Exception {
-            LOGGER.log(Level.FINE, "Attempting to fetch remote avatar: {0}", url);
+            LOGGER.log(Level.FINE, "Attempting to fetch remote avatar: {0}", avatarLocation.toString());
             long start = System.nanoTime();
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+                if (avatarLocation.apiAvailable()) {
+                    try (GitLabApi apiClient = apiBuilderNoAccessControl(avatarLocation.getServerName());
+                            InputStream is = avatarLocation.isProject()
+                                    ? apiClient.getProjectApi().getAvatar(avatarLocation.getFullPath())
+                                    : apiClient.getGroupApi().getAvatar(avatarLocation.getFullPath())) {
+                        BufferedImage image = ImageIO.read(is);
+                        if (image == null) {
+                            return new CacheEntry(avatarLocation);
+                        }
+                        return new CacheEntry(avatarLocation, image, -1);
+                    }
+                }
+
+                HttpURLConnection connection =
+                        (HttpURLConnection) new URL(avatarLocation.getAvatarUrl()).openConnection();
                 try {
                     connection.setConnectTimeout(10000);
                     connection.setReadTimeout(30000);
                     if (!connection.getContentType().startsWith("image/")) {
-                        return new CacheEntry(url);
+                        return new CacheEntry(avatarLocation);
                     }
                     int length = connection.getContentLength();
                     // buffered stream should be no more than 16k if we know the length
@@ -515,21 +531,21 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                             BufferedInputStream bis = new BufferedInputStream(is, length)) {
                         BufferedImage image = ImageIO.read(bis);
                         if (image == null) {
-                            return new CacheEntry(url);
+                            return new CacheEntry(avatarLocation);
                         }
-                        return new CacheEntry(url, image, connection.getLastModified());
+                        return new CacheEntry(avatarLocation, image, connection.getLastModified());
                     }
                 } finally {
                     connection.disconnect();
                 }
             } catch (IOException e) {
                 LOGGER.log(Level.INFO, e.getMessage(), e);
-                return new CacheEntry(url);
+                return new CacheEntry(avatarLocation);
             } finally {
                 long end = System.nanoTime();
                 long duration = TimeUnit.NANOSECONDS.toMillis(end - start);
                 LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms", new Object[] {
-                    url, duration
+                    avatarLocation.toString(), duration
                 });
             }
         }

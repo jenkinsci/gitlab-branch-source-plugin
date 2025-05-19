@@ -22,10 +22,12 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
 public class GitLabHelper {
 
-    public static GitLabApi apiBuilder(AccessControlled context, String serverName) {
+    private static GitLabApi apiBuilder(
+            AccessControlled context, String serverName, boolean validateContextPermission) {
         GitLabServer server = GitLabServers.get().findServer(serverName);
         if (server != null) {
-            StandardCredentials credentials = server.getCredentials(context);
+            StandardCredentials credentials =
+                    validateContextPermission ? server.getCredentials(context) : server.getCredentialsNoAccessControl();
             String serverUrl = server.getServerUrl();
             String privateToken = getPrivateTokenAsPlainText(credentials);
             if (privateToken.equals(GitLabServer.EMPTY_TOKEN)) {
@@ -35,6 +37,14 @@ public class GitLabHelper {
             }
         }
         throw new IllegalStateException(String.format("No server found with the name: %s", serverName));
+    }
+
+    public static GitLabApi apiBuilder(AccessControlled context, String serverNameString) {
+        return apiBuilder(context, serverNameString, true);
+    }
+
+    public static GitLabApi apiBuilderNoAccessControl(String serverName) {
+        return apiBuilder(null, serverName, false);
     }
 
     public static Map<String, Object> getProxyConfig(String serverUrl) {

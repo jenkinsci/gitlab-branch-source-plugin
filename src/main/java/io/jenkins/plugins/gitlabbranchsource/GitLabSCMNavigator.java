@@ -93,6 +93,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
      * The GitLab server name configured in Jenkins.
      */
     private String serverName;
+
+    /**
+     * The full version of the GitLab server.
+     */
+    private String serverVersion;
     /**
      * The default credentials to use for checking out).
      */
@@ -206,6 +211,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
     private GitLabOwner getGitlabOwner(GitLabApi gitLabApi) {
         if (gitlabOwner == null) {
             gitlabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
+            try {
+                serverVersion = gitLabApi.getVersion().getVersion();
+            } catch (GitLabApiException e) {
+                serverVersion = "0.0";
+            }
         }
         return gitlabOwner;
     }
@@ -417,7 +427,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
         List<Action> result = new ArrayList<>();
         result.add(new ObjectMetadataAction(Util.fixEmpty(fullName), description, webUrl));
         if (StringUtils.isNotBlank(avatarUrl)) {
-            result.add(new GitLabAvatar(avatarUrl));
+            if (GitLabServer.groupAvatarsApiAvailable(serverVersion)) {
+                result.add(new GitLabAvatar(avatarUrl, serverName, projectOwner, false));
+            } else {
+                result.add(new GitLabAvatar(avatarUrl));
+            }
         }
         result.add(GitLabLink.toGroup(webUrl));
         if (StringUtils.isBlank(webUrl)) {

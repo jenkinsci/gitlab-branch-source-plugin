@@ -1,21 +1,36 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import io.jenkins.cli.shaded.org.apache.commons.lang.StringUtils;
 import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
-import org.apache.commons.lang.StringUtils;
 
 public class GitLabAvatar extends AvatarMetadataAction {
 
+    private final GitLabAvatarLocation location;
+
+    /**
+     * Back compat, to keep existing configs working upon plugin upgrade
+     */
     private final String avatar;
 
-    public GitLabAvatar(String avatar) {
-        this.avatar = avatar;
+    public GitLabAvatar(String avatarUrl, String serverName, String projectPath, boolean isProject) {
+        this.avatar = null;
+        this.location = new GitLabAvatarLocation(avatarUrl, serverName, projectPath, isProject);
+    }
+
+    public GitLabAvatar(String avatarUrl) {
+        this.avatar = null;
+        this.location = new GitLabAvatarLocation(avatarUrl);
     }
 
     @Override
     public String getAvatarImageOf(@NonNull String size) {
-        return StringUtils.isBlank(avatar) ? null : GitLabAvatarCache.buildUrl(avatar, size);
+        if (StringUtils.isNotBlank(avatar)) {
+            // Back compat, to keep existing configs working upon plugin upgrade
+            return GitLabAvatarCache.buildUrl(new GitLabAvatarLocation(avatar), size);
+        }
+        return location != null && location.available() ? GitLabAvatarCache.buildUrl(location, size) : null;
     }
 
     @Override
@@ -29,11 +44,11 @@ public class GitLabAvatar extends AvatarMetadataAction {
 
         GitLabAvatar that = (GitLabAvatar) o;
 
-        return Objects.equals(avatar, that.avatar);
+        return Objects.equals(location, that.location);
     }
 
     @Override
     public int hashCode() {
-        return avatar != null ? avatar.hashCode() : 0;
+        return location != null ? location.hashCode() : 0;
     }
 }
