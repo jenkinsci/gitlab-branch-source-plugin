@@ -117,7 +117,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private long projectId;
+    private Long projectId;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -243,12 +243,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return members;
     }
 
-    public long getProjectId() {
+    public Long getProjectId() {
         return projectId;
     }
 
     @DataBoundSetter
-    public void setProjectId(long projectId) {
+    public void setProjectId(Long projectId) {
         this.projectId = projectId;
     }
 
@@ -339,15 +339,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
-                    if (!ctx.buildMRForksNotMirror() && gitlabProject.getForkedFromProject() != null) {
+                boolean mergeRequestsEnabled = !Boolean.FALSE.equals(gitlabProject.getMergeRequestsEnabled());
+                if (request.isFetchMRs() && mergeRequestsEnabled) {
+                    final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
+                    if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
                     } else {
                         // If not authenticated GitLabApi cannot detect if it is a fork
-                        // If `forkedFromProject` is null it doesn't mean anything
+                        // If `forkedFromProject` is false it doesn't mean anything
                         listener.getLogger()
                                 .format(
-                                        gitlabProject.getForkedFromProject() == null
+                                        !forkedFromProject
                                                 ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
                                                 : "%nCollecting MRs for fork except those that target its upstream...%n");
                         Stream<MergeRequest> mrs =
@@ -356,7 +358,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
                                         .stream()
                                         .filter(mr -> mr.getSourceProjectId() != null);
-                        if (ctx.buildMRForksNotMirror()) {
+                        // Patch for issue 453 - avoid an NPE if this isn't a forked project
+                        if (ctx.buildMRForksNotMirror() && forkedFromProject) {
                             mrs = mrs.filter(mr -> !mr.getTargetProjectId()
                                     .equals(gitlabProject.getForkedFromProject().getId()));
                         }
@@ -413,7 +416,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
                 }
-                if (request.isFetchMRs() && !request.isComplete() && gitlabProject.getMergeRequestsEnabled()) {
+                if (request.isFetchMRs() && !request.isComplete() && mergeRequestsEnabled) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Long, String> forkMrSources = new HashMap<>();

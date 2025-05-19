@@ -421,17 +421,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return secretToken;
     }
 
-    private Object readResolve() {
-        if (StringUtils.isBlank(webhookSecretCredentialsId) && secretToken != null) {
-            migrateWebhookSecretCredentials();
-        }
-        return this;
-    }
-
     /**
      * Migrate webhook secret token to Jenkins credentials
+     *
+     * @return {@code true} if migration occurred, {@code false} otherwise
+     * @see GitLabServers#migrateWebhookSecretsToCredentials
      */
-    private void migrateWebhookSecretCredentials() {
+    boolean migrateWebhookSecretCredentials() {
+        if (!StringUtils.isBlank(webhookSecretCredentialsId) || secretToken == null) {
+            return false;
+        }
         final List<StringCredentials> credentials = CredentialsProvider.lookupCredentials(
                 StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
         for (final StringCredentials cred : credentials) {
@@ -452,6 +451,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             webhookSecretCredentialsId = newCredentials.getId();
         }
         secretToken = null;
+        return true;
     }
 
     /**

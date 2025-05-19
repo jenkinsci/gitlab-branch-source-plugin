@@ -17,7 +17,7 @@ import java.net.URL;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class GitLabBrowser extends GitRepositoryBrowser {
 
@@ -89,7 +89,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
         }
 
         @Override
-        public GitLabBrowser newInstance(StaplerRequest req, @NonNull JSONObject jsonObject) throws FormException {
+        public GitLabBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) throws FormException {
             return req.bindJSON(GitLabBrowser.class, jsonObject);
         }
     }
