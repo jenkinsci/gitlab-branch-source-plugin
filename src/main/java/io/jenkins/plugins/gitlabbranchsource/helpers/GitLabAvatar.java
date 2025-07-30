@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 import jenkins.scm.api.metadata.AvatarMetadataAction;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class GitLabAvatar extends AvatarMetadataAction {
 
