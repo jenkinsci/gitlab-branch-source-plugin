@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import org.apache.http.HttpStatus;
 import org.htmlunit.html.HtmlPage;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -79,8 +78,7 @@ public class GitLabServerTest {
             HtmlPage page = wc.goTo(
                     "descriptorByName/io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer/checkServerUrl?serverUrl=http://attacker.example.com");
             assertEquals(
-                    HttpStatus.SC_NOT_FOUND,
-                    page.getWebResponse().getStatusCode()); // Should be 405 but Stapler doesn't work that way.
+                    404, page.getWebResponse().getStatusCode()); // Should be 405 but Stapler doesn't work that way.
         }
     }
 }
