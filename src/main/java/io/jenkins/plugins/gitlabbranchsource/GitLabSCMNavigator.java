@@ -342,8 +342,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         String fullPath = project.getPathWithNamespace();
         String projectName;
         switch (projectNamingStrategy) {
-            default:
-                // for legacy reasons default naming strategy is set to Full Project path
+            default: // for legacy reasons default naming strategy is set to Full Project path
             case 1:
                 projectName = fullPath;
                 break;
