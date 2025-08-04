@@ -16,6 +16,7 @@ import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.model.CNode;
+import io.jenkins.plugins.gitlabserverconfig.credentials.GroupAccessTokenImpl;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessTokenImpl;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -41,12 +42,19 @@ public class ConfigurationAsCodeTest {
         assertThat(server.isManageSystemHooks(), is(true));
         assertThat(server.getHooksRootUrl(), is("https://jenkins.intranet/"));
 
-        List<PersonalAccessTokenImpl> credentials = CredentialsProvider.lookupCredentials(
+        List<PersonalAccessTokenImpl> personalCredentials = CredentialsProvider.lookupCredentials(
                 PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM, Collections.emptyList());
-        assertThat(credentials, hasSize(1));
-        final PersonalAccessTokenImpl credential = credentials.get(0);
-        assertThat(credential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));
-        assertThat(credential.getToken().getEncryptedValue(), is(not("glpat-XfsqZvVtAx5YCph5bq3r")));
+        assertThat(personalCredentials, hasSize(1));
+        final PersonalAccessTokenImpl personalCredential = personalCredentials.get(0);
+        assertThat(personalCredential.getToken().getPlainText(), is("glpat-XfsqZvVtAx5YCph5bq3r"));
+        assertThat(personalCredential.getToken().getEncryptedValue(), is(not("glpat-XfsqZvVtAx5YCph5bq3r")));
+
+        List<GroupAccessTokenImpl> groupCredentials = CredentialsProvider.lookupCredentials(
+                GroupAccessTokenImpl.class, j.jenkins, ACL.SYSTEM, Collections.emptyList());
+        assertThat(groupCredentials, hasSize(1));
+        final GroupAccessTokenImpl groupCredential = groupCredentials.get(0);
+        assertThat(groupCredential.getToken().getPlainText(), is("glgat-XfsqZvVtAx5YCph5bq3r"));
+        assertThat(groupCredential.getToken().getEncryptedValue(), is(not("glgat-XfsqZvVtAx5YCph5bq3r")));
     }
 
     @Test
