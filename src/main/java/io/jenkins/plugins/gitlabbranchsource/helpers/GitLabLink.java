@@ -1,6 +1,6 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;

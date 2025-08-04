@@ -3,7 +3,7 @@ package io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer
 import lib.CredentialsTagLib
 import lib.FormTagLib
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 def f = namespace(FormTagLib)
 def c = namespace(CredentialsTagLib)
