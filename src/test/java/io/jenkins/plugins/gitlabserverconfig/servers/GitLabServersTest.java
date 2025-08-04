@@ -21,24 +21,23 @@ import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
-import org.junit.Rule;
-import org.junit.Test;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-public class GitLabServersTest {
-    @Rule
-    public LoggerRule logger =
-            new LoggerRule().record(OldDataMonitor.class, Level.FINE).capture(50);
+@WithJenkins
+class GitLabServersTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private final LogRecorder logger =
+            new LogRecorder().record(OldDataMonitor.class, Level.FINE).capture(50);
 
     @LocalData
     @Test
-    public void migrationToCredentials() throws Throwable {
+    void migrationToCredentials(JenkinsRule j) throws Throwable {
         // LocalData creating using the following:
         /*
         GitLabServer server = new GitLabServer("http://localhost", "my-server", null);
@@ -62,7 +61,7 @@ public class GitLabServersTest {
     @TestExtension("migrationToCredentials")
     public static class CredentialsProviderThatRequiresDescriptorLookup extends CredentialsProvider {
         @Override
-        public <C extends Credentials> List<C> getCredentials(
+        public <C extends Credentials> @NotNull List<C> getCredentials(
                 @NonNull Class<C> type,
                 @Nullable ItemGroup itemGroup,
                 @Nullable Authentication authentication,

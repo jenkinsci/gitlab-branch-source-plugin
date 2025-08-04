@@ -24,23 +24,29 @@ import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.Project;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-public class GitLabSCMSourceTest {
+@WithJenkins
+class GitLabSCMSourceTest {
 
     private static final String SERVER = "server";
     private static final String PROJECT_NAME = "project";
     private static final String SOURCE_ID = "id";
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
+
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void retrieveMRWithEmptyProjectSettings() throws GitLabApiException, IOException, InterruptedException {
+    void retrieveMRWithEmptyProjectSettings() throws GitLabApiException, IOException, InterruptedException {
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         ProjectApi projectApi = Mockito.mock(ProjectApi.class);
         RepositoryApi repoApi = Mockito.mock(RepositoryApi.class);

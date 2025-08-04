@@ -4,24 +4,30 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import org.htmlunit.html.HtmlPage;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.xml.sax.SAXException;
 
-public class GitLabServerTest {
+@WithJenkins
+class GitLabServerTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
+
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void testFixEmptyAndTrimOne() throws Exception {
+    void testFixEmptyAndTrimOne() throws Exception {
         GitLabServer server = new GitLabServer("https://gitlab.com", "default", null);
         server.setHooksRootUrl("https://myhooks/");
         assertThat(server.getName(), is("default"));
@@ -31,7 +37,7 @@ public class GitLabServerTest {
     }
 
     @Test
-    public void testFixEmptyAndTrimTwo() throws Exception {
+    void testFixEmptyAndTrimTwo() throws Exception {
         GitLabServer server = new GitLabServer("     https://gitlab.com    ", "     default      ", null);
         server.setHooksRootUrl("       https://myhooks/        ");
         assertThat(server.getName(), is("default"));
@@ -41,7 +47,7 @@ public class GitLabServerTest {
     }
 
     @Test
-    public void testFixEmptyAndTrimThree() throws Exception {
+    void testFixEmptyAndTrimThree() throws Exception {
         GitLabServer server = new GitLabServer(null, null, null);
         server.setHooksRootUrl(null);
         assertThat(server.getName(), startsWith("gitlab-"));
@@ -51,7 +57,7 @@ public class GitLabServerTest {
     }
 
     @Test
-    public void testFixEmptyAndTrimFour() throws Exception {
+    void testFixEmptyAndTrimFour() throws Exception {
         GitLabServer server = new GitLabServer("https://whatever.com", "whatever", null);
         server.setHooksRootUrl("https://myhooks/");
         assertThat(server.getName(), is("whatever"));
@@ -61,7 +67,7 @@ public class GitLabServerTest {
     }
 
     @Test
-    public void testFixEmptyAndTrimFive() throws Exception {
+    void testFixEmptyAndTrimFive() throws Exception {
         GitLabServer server = new GitLabServer("", "", "");
         server.setHooksRootUrl("");
         assertThat(server.getName(), startsWith("gitlab-"));
@@ -72,7 +78,7 @@ public class GitLabServerTest {
 
     @Test
     @Issue("SECURITY-3251")
-    public void testGetDoCheckServerUrl() throws IOException, SAXException {
+    void testGetDoCheckServerUrl() throws IOException, SAXException {
         try (WebClient wc = j.createWebClient()) {
             wc.setThrowExceptionOnFailingStatusCode(false);
             HtmlPage page = wc.goTo(

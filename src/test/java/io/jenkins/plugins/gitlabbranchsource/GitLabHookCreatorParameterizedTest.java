@@ -1,49 +1,42 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import java.util.Arrays;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-@RunWith(Parameterized.class)
-public class GitLabHookCreatorParameterizedTest {
+@WithJenkins
+class GitLabHookCreatorParameterizedTest {
 
-    @ClassRule
-    public static JenkinsRule r = new JenkinsRule();
+    private static JenkinsRule r;
 
-    private final String jenkinsUrl;
-    private final boolean hookType;
-    private final String expectedPath;
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        r = rule;
+    }
 
-    @Parameters(name = "check {0}")
-    public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][] {
+    static Object[][] data() {
+        return new Object[][] {
             {"intranet.local:8080", false, "/gitlab-systemhook/post"},
             {"intranet.local", true, "/gitlab-webhook/post"},
             {"www.mydomain.com:8000", true, "/gitlab-webhook/post"},
             {"www.mydomain.com", false, "/gitlab-systemhook/post"},
             {"www.mydomain.com/jenkins", true, "/gitlab-webhook/post"}
-        });
+        };
     }
 
-    public GitLabHookCreatorParameterizedTest(String jenkinsUrl, boolean hookType, String expectedPath) {
-        this.jenkinsUrl = jenkinsUrl;
-        this.hookType = hookType;
-        this.expectedPath = expectedPath;
-    }
-
-    @Test
-    public void hookUrl() {
+    @ParameterizedTest
+    @MethodSource("data")
+    void hookUrl(String jenkinsUrl, boolean hookType, String expectedPath) {
         Arrays.asList("http://", "https://").forEach(proto -> {
             String expected = proto + jenkinsUrl + expectedPath;
             JenkinsLocationConfiguration.get().setUrl(proto + jenkinsUrl);
@@ -54,8 +47,9 @@ public class GitLabHookCreatorParameterizedTest {
         });
     }
 
-    @Test
-    public void hookUrlFromCustomRootUrl() {
+    @ParameterizedTest
+    @MethodSource("data")
+    void hookUrlFromCustomRootUrl(String jenkinsUrl, boolean hookType, String expectedPath) {
         Arrays.asList("http://", "https://").forEach(proto -> {
             String expected = proto + jenkinsUrl + expectedPath;
             JenkinsLocationConfiguration.get().setUrl("http://whatever");
