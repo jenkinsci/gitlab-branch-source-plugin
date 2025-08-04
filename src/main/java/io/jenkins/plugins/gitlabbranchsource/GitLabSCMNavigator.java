@@ -15,6 +15,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -526,6 +527,40 @@ public class GitLabSCMNavigator extends SCMNavigator {
                 }
             }
             return GitLabServers.get().getServerItems();
+        }
+
+        public FormValidation doCheckCredentialsId(
+                @AncestorInPath SCMSourceOwner context, @QueryParameter String serverName, @QueryParameter String value)
+                throws IOException, InterruptedException {
+            if (context == null) {
+                if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
+                }
+            } else {
+                if (!context.hasPermission(Item.EXTENDED_READ)
+                        && !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                    return FormValidation.ok();
+                }
+            }
+            GitLabServer server = GitLabServers.get().findServer(serverName);
+            if (server == null) {
+                return FormValidation.ok();
+            }
+            if (StringUtils.isBlank(value)) {
+                return FormValidation.warning("Credentials are recommended");
+            }
+            if (CredentialsProvider.listCredentialsInItem(
+                            StandardCredentials.class,
+                            context,
+                            context instanceof Queue.Task
+                                    ? ((Queue.Task) context).getDefaultAuthentication2()
+                                    : ACL.SYSTEM2,
+                            URIRequirementBuilder.fromUri(serverName).build(),
+                            GitLabServer.CREDENTIALS_MATCHER)
+                    .isEmpty()) {
+                return FormValidation.error(Messages.GitLabSCMNavigator_selectedCredentialsMissing());
+            }
+            return FormValidation.ok();
         }
 
         public ListBoxModel doFillCredentialsIdItems(
