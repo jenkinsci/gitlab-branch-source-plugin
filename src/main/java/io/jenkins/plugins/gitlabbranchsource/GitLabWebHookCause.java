@@ -4,7 +4,7 @@ import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabMergeRequestCauseData;
 import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabPushCauseData;
 import io.jenkins.plugins.gitlabbranchsource.Cause.GitLabTagPushCauseData;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 import org.gitlab4j.api.webhook.MergeRequestEvent.ObjectAttributes;
 import org.gitlab4j.api.webhook.PushEvent;

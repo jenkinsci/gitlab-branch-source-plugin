@@ -68,7 +68,7 @@ import jenkins.scm.api.trait.SCMTraitDescriptor;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.GroupProjectsFilter;
@@ -342,8 +342,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         String fullPath = project.getPathWithNamespace();
         String projectName;
         switch (projectNamingStrategy) {
-            default:
-                // for legacy reasons default naming strategy is set to Full Project path
+            default: // for legacy reasons default naming strategy is set to Full Project path
             case 1:
                 projectName = fullPath;
                 break;
