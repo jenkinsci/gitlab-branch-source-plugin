@@ -228,7 +228,9 @@ public class GitLabPipelineStatusNotifier {
                             .createMergeRequestNote(
                                     source.getProjectPath(),
                                     Long.valueOf(head.getId()),
-                                    symbol + buildName + note + suffix);
+                                    symbol + buildName + note + suffix,
+                                    null,
+                                    false);
                 } else if (revision instanceof GitTagSCMRevision) {
                     hash = ((GitTagSCMRevision) revision).getHash();
                     gitLabApi
