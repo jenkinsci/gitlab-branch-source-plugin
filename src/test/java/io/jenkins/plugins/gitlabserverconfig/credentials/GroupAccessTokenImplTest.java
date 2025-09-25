@@ -19,7 +19,8 @@ public class GroupAccessTokenImplTest {
     @Test
     public void configRoundtrip() throws Exception {
         GroupAccessTokenImpl expected =
-                new GroupAccessTokenImpl(CredentialsScope.GLOBAL, "magic-id", "configRoundtrip", "sAf_Xasnou47yxoAsC");
+                new GroupAccessTokenImpl(CredentialsScope.GLOBAL, "magic-id", "configRoundtrip");
+        expected.setToken("sAf_Xasnou47yxoAsC");
         CredentialsBuilder builder = new CredentialsBuilder(expected);
         j.configRoundtrip(builder);
         j.assertEqualDataBoundBeans(expected, builder.credentials);

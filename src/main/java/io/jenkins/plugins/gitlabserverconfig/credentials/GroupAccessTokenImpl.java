@@ -6,16 +6,19 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Default implementation of {@link GroupAccessToken} for use by {@link Jenkins} {@link
@@ -26,8 +29,8 @@ public class GroupAccessTokenImpl extends BaseStandardCredentials implements Gro
     /**
      * Our token.
      */
-    @NonNull
-    private final Secret token;
+    @Nullable
+    private Secret token;
 
     /**
      * Constructor.
@@ -35,16 +38,11 @@ public class GroupAccessTokenImpl extends BaseStandardCredentials implements Gro
      * @param scope the credentials scope.
      * @param id the credentials id.
      * @param description the description of the token.
-     * @param token the token itself (will be passed through {@link Secret#fromString(String)})
      */
     @DataBoundConstructor
     public GroupAccessTokenImpl(
-            @CheckForNull CredentialsScope scope,
-            @CheckForNull String id,
-            @CheckForNull String description,
-            @NonNull String token) {
+            @CheckForNull CredentialsScope scope, @CheckForNull String id, @CheckForNull String description) {
         super(scope, id, description);
-        this.token = Secret.fromString(token);
     }
 
     /**
@@ -54,6 +52,11 @@ public class GroupAccessTokenImpl extends BaseStandardCredentials implements Gro
     @NonNull
     public Secret getToken() {
         return token;
+    }
+
+    @DataBoundSetter
+    public void setToken(String token) {
+        this.token = Secret.fromString(token);
     }
 
     @NonNull
@@ -94,7 +97,10 @@ public class GroupAccessTokenImpl extends BaseStandardCredentials implements Gro
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
+        @RequirePOST
         public FormValidation doCheckToken(@QueryParameter String value) {
+            Jenkins.get().checkPermission(CredentialsProvider.USE_OWN);
+
             Secret secret = Secret.fromString(value);
             if (StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() < GITLAB_ACCESS_TOKEN_MINIMAL_LENGTH) {
