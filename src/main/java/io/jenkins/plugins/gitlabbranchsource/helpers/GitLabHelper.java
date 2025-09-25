@@ -3,7 +3,6 @@ package io.jenkins.plugins.gitlabbranchsource.helpers;
 import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.annotations.NonNull;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.ProxyClientConfig;
@@ -175,7 +174,7 @@ public class GitLabHelper {
                                 StandardCredentials.class,
                                 (ItemGroup) context,
                                 ACL.SYSTEM,
-                                fromUri(defaultIfBlank(
+                                fromUri(StringUtils.defaultIfBlank(
                                                 getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
                         withId(credentialsId));
@@ -185,7 +184,7 @@ public class GitLabHelper {
                                 StandardCredentials.class,
                                 (Item) context,
                                 ACL.SYSTEM,
-                                fromUri(defaultIfBlank(
+                                fromUri(StringUtils.defaultIfBlank(
                                                 getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
                         withId(credentialsId));
