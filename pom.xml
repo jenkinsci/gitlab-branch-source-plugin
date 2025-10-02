@@ -46,9 +46,15 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>5473.vb_9533d9e5d88</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- TODO until https://github.com/jenkinsci/jackson2-api-plugin/pull/312 in BOM-->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>jackson2-api</artifactId>
+        <version>2.20.0-417.va_5311a_823a_b_8</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -59,9 +65,10 @@
       <artifactId>commons-lang3-api</artifactId>
     </dependency>
     <dependency>
+      <!-- TODO https://github.com/jenkinsci/gitlab-api-plugin/pull/121/ -->
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>gitlab-api</artifactId>
-      <version>5.8.1-106.vef1de800710e</version>
+      <version>6.1.0-106.v6c0b_5b_df4ee6</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
