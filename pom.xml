@@ -68,7 +68,7 @@
       <!-- TODO https://github.com/jenkinsci/gitlab-api-plugin/pull/121/ -->
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>gitlab-api</artifactId>
-      <version>6.1.0-106.v6c0b_5b_df4ee6</version>
+      <version>6.1.0-109.v6d933577c873</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
