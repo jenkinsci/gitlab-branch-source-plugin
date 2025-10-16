@@ -46,15 +46,9 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5473.vb_9533d9e5d88</version>
+        <version>5543.vfd758c7c868d</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-      <!-- TODO until https://github.com/jenkinsci/jackson2-api-plugin/pull/312 in BOM-->
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>jackson2-api</artifactId>
-        <version>2.20.0-420.v8a_08b_d57ca_05</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
