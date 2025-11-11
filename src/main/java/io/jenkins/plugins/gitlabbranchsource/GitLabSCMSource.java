@@ -676,17 +676,24 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if (revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits(traits)
-                    .newRequest(this, listener)) {
-                request.setMembers(getMembers());
-                boolean isTrusted = request.isTrusted(head);
-                LOGGER.log(Level.FINEST, String.format("Trusted Revision: %s -> %s", head.getOriginOwner(), isTrusted));
-                if (isTrusted) {
-                    return revision;
+            if (SCMHeadOrigin.Default.class.isAssignableFrom(head.getOrigin().getClass())) {
+                return revision;
+            } else if (SCMHeadOrigin.Fork.class.isAssignableFrom(
+                    head.getOrigin().getClass())) {
+                try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                        .withTraits(traits)
+                        .newRequest(this, listener)) {
+                    request.setMembers(getMembers());
+                    boolean isTrusted = request.isTrusted(head);
+                    LOGGER.log(
+                            Level.FINEST,
+                            String.format("Trusted Revision: %s -> %s", head.getOriginOwner(), isTrusted));
+                    if (isTrusted) {
+                        return revision;
+                    }
+                } catch (IOException | InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
                 }
-            } catch (IOException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger()
