@@ -54,7 +54,7 @@
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>gitlab-api</artifactId>
-        <version>6.1.0-118.v78e2a_35b_f209</version>
+        <version>6.2.0-129.v770352b_103a_6</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
