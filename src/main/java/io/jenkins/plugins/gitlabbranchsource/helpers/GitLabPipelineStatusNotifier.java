@@ -207,7 +207,8 @@ public class GitLabPipelineStatusNotifier {
         String suffix = " - [Details](" + url + ")";
         SCMRevision revision = SCMRevisionAction.getRevision(source, build);
         try {
-            GitLabApi gitLabApi = GitLabHelper.apiBuilder(build.getParent(), source.getServerName());
+            GitLabApi gitLabApi =
+                    GitLabHelper.apiBuilder(build.getParent(), source.getServerName(), source.getCredentialsId());
             String sudoUsername = sourceContext.getSudoUser();
             if (!sudoUsername.isEmpty()) {
                 gitLabApi.sudo(sudoUsername);
@@ -375,7 +376,8 @@ public class GitLabPipelineStatusNotifier {
                 }
             }
             try {
-                GitLabApi gitLabApi = GitLabHelper.apiBuilder(build.getParent(), source.getServerName());
+                GitLabApi gitLabApi =
+                        GitLabHelper.apiBuilder(build.getParent(), source.getServerName(), source.getCredentialsId());
                 LOGGER.log(Level.FINE, String.format("Notifiying commit: %s", hash));
 
                 if (revision instanceof MergeRequestSCMRevision) {
@@ -476,7 +478,8 @@ public class GitLabPipelineStatusNotifier {
 
                     Constants.CommitBuildState state = Constants.CommitBuildState.PENDING;
                     try {
-                        GitLabApi gitLabApi = GitLabHelper.apiBuilder(job, source.getServerName());
+                        GitLabApi gitLabApi =
+                                GitLabHelper.apiBuilder(job, source.getServerName(), source.getCredentialsId());
                         // check are we still the task to set pending
                         synchronized (resolving) {
                             if (!nonce.equals(resolving.get(job))) {

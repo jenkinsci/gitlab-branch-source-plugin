@@ -11,15 +11,15 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class PersonalAccessTokenImplTest {
+public class GroupAccessTokenImplTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
 
     @Test
     public void configRoundtrip() throws Exception {
-        PersonalAccessTokenImpl expected =
-                new PersonalAccessTokenImpl(CredentialsScope.GLOBAL, "magic-id", "configRoundtrip");
+        GroupAccessTokenImpl expected =
+                new GroupAccessTokenImpl(CredentialsScope.GLOBAL, "magic-id", "configRoundtrip");
         expected.setToken("sAf_Xasnou47yxoAsC");
         CredentialsBuilder builder = new CredentialsBuilder(expected);
         j.configRoundtrip(builder);

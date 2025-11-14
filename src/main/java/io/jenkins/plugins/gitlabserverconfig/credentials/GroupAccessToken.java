@@ -4,7 +4,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.Secret;
 
-public interface PersonalAccessToken extends StandardUsernamePasswordCredentials {
+public interface GroupAccessToken extends StandardUsernamePasswordCredentials {
 
     /**
      * Returns the token.
