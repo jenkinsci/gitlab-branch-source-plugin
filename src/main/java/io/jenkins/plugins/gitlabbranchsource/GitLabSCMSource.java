@@ -270,8 +270,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         if (e instanceof GitLabApiException) {
             return ((GitLabApiException) e).getHttpStatus() == 429;
         } else if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(GitLabApiException.class)) {
-                GitLabApiException cause = (GitLabApiException) e.getCause();
-                return cause.getHttpStatus() == 429;
+            GitLabApiException cause = (GitLabApiException) e.getCause();
+            return cause.getHttpStatus() == 429;
         }
         return false;
     }
