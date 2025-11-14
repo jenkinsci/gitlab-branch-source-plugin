@@ -5,19 +5,26 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class PersonalAccessTokenImplTest {
+@WithJenkins
+class PersonalAccessTokenImplTest {
 
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+    private static JenkinsRule j;
+
+    @BeforeAll
+    static void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void configRoundtrip() throws Exception {
+    void configRoundtrip() throws Exception {
         PersonalAccessTokenImpl expected = new PersonalAccessTokenImpl(
                 CredentialsScope.GLOBAL, "magic-id", "configRoundtrip", "sAf_Xasnou47yxoAsC");
         CredentialsBuilder builder = new CredentialsBuilder(expected);
@@ -41,11 +48,10 @@ public class PersonalAccessTokenImplTest {
         public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
             @Override
-            public String getDisplayName() {
+            public @NotNull String getDisplayName() {
                 return "CredentialsBuilder";
             }
 
-            @SuppressWarnings("rawtypes")
             @Override
             public boolean isApplicable(Class<? extends AbstractProject> jobType) {
                 return true;
