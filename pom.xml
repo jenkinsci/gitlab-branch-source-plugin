@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.18</version>
+    <version>5.26</version>
     <relativePath />
   </parent>
   <groupId>io.jenkins.plugins</groupId>
@@ -37,8 +37,6 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
     <hpi.compatibleSinceVersion>685</hpi.compatibleSinceVersion>
-    <!-- Jenkins.MANAGE is still considered beta -->
-    <useBeta>true</useBeta>
   </properties>
 
   <dependencyManagement>
