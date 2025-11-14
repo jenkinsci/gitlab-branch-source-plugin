@@ -251,19 +251,29 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         while (true) {
             try {
                 return gitLabApi.getProjectApi().getAllMembers(projectPath);
-            } catch (GitLabApiException e) {
-                if (e.getHttpStatus() == 429) {
+            } catch (GitLabApiException | RuntimeException e) {
+                if (isRateLimitException(e)) {
                     sleeper.sleep(delay);
                     delay *= 2;
                     attemptNb++;
                     if (attemptNb > MAX_RETRIES) {
                         throw e;
                     }
-                } else {
-                    throw e;
+                    continue;
                 }
+                throw e;
             }
         }
+    }
+
+    private static boolean isRateLimitException(Exception e) {
+        if (e instanceof GitLabApiException) {
+            return ((GitLabApiException) e).getHttpStatus() == 429;
+        } else if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(GitLabApiException.class)) {
+                GitLabApiException cause = (GitLabApiException) e.getCause();
+                return cause.getHttpStatus() == 429;
+        }
+        return false;
     }
 
     public Long getProjectId() {
