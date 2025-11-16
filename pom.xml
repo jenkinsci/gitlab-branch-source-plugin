@@ -32,7 +32,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.492</jenkins.baseline>
+    <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
@@ -46,9 +46,15 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5473.vb_9533d9e5d88</version>
+        <version>5681.v79d2ddf61465</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- TODO Remove once in BOM -->
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>gitlab-api</artifactId>
+        <version>6.2.0-111.vf174d6b_8c12e</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -61,7 +67,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>gitlab-api</artifactId>
-      <version>5.8.1-106.vef1de800710e</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
