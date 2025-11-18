@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.ProjectHook;
-import org.gitlab4j.api.models.SystemHook;
 
 public class GitLabHookCreator {
 
@@ -139,26 +138,29 @@ public class GitLabHookCreator {
     }
 
     public static void createSystemHookWhenMissing(GitLabServer server, StandardCredentials credentials) {
-        String systemHookUrl = getHookUrl(server, false);
         try {
             GitLabApi gitLabApi = new GitLabApi(
                     server.getServerUrl(),
                     getPrivateTokenAsPlainText(credentials),
                     null,
                     getProxyConfig(server.getServerUrl()));
-            SystemHook systemHook = gitLabApi
-                    .getSystemHooksApi()
-                    .getSystemHookStream()
-                    .filter(hook -> systemHookUrl.equals(hook.getUrl()))
-                    .findFirst()
-                    .orElse(null);
-            if (systemHook == null) {
-                gitLabApi
-                        .getSystemHooksApi()
-                        .addSystemHook(systemHookUrl, server.getSecretTokenAsPlainText(), false, false, false);
-            }
+            createSystemHookWhenMissing(server, gitLabApi);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.INFO, "User is not admin so cannot set system hooks", e);
+        }
+    }
+
+    // visible for testing
+    static void createSystemHookWhenMissing(GitLabServer server, GitLabApi gitLabApi) throws GitLabApiException {
+        String systemHookUrl = getHookUrl(server, false);
+        boolean systemHookDoesNotExists = gitLabApi
+                .getSystemHooksApi()
+                .getSystemHookStream()
+                .noneMatch(hook -> systemHookUrl.equals(hook.getUrl()));
+        if (systemHookDoesNotExists) {
+            gitLabApi
+                    .getSystemHooksApi()
+                    .addSystemHook(systemHookUrl, server.getSecretTokenAsPlainText(), false, false, true);
         }
     }
 
@@ -228,7 +230,7 @@ public class GitLabHookCreator {
                 .findFirst()
                 .orElseGet(GitLabHookCreator::createWebHook);
         if (projectHook.getId() == null) {
-            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, false, secretToken);
+            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, true, secretToken);
             return "created";
         }
         // Primarily done due to legacy reason, secret token might not be configured in previous releases. So setting up
