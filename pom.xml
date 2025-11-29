@@ -37,8 +37,6 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotless.check.skip>false</spotless.check.skip>
     <hpi.compatibleSinceVersion>685</hpi.compatibleSinceVersion>
-    <!-- Jenkins.MANAGE is still considered beta -->
-    <useBeta>true</useBeta>
   </properties>
 
   <dependencyManagement>
