@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.26</version>
+    <version>5.28</version>
     <relativePath />
   </parent>
   <groupId>io.jenkins.plugins</groupId>
@@ -44,9 +44,15 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>5701.va_b_018a_a_6b_0d3</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- TODO Remove once in BOM -->
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>gitlab-api</artifactId>
+        <version>6.2.0-111.vf174d6b_8c12e</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -59,7 +65,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>gitlab-api</artifactId>
-      <version>5.8.1-106.vef1de800710e</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
