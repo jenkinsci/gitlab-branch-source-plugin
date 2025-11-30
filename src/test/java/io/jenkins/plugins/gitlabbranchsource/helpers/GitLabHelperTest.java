@@ -4,12 +4,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class GitLabHelperTest {
+class GitLabHelperTest {
 
     @Test
-    public void server_url_does_not_have_trailing_slash() {
+    void server_url_does_not_have_trailing_slash() {
         assertThat(GitLabHelper.getServerUrl(null), is("https://gitlab.com"));
 
         GitLabServer server1 = new GitLabServer("https://company.com/gitlab/", "comp_server", "1245");
