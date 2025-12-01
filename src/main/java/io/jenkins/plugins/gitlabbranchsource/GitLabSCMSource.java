@@ -960,13 +960,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return new StandardListBoxModel().includeEmptyValue();
                 }
                 try {
-                    for (Project p : gitLabApi
-                            .getProjectApi()
-                            .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
+                    for (Project p : gitLabApi.getGroupApi().getProjects(projectOwner)) {
                         result.add(p.getPathWithNamespace());
                     }
                 } catch (GitLabApiException e) {
-                    for (Project p : gitLabApi.getGroupApi().getProjects(projectOwner)) {
+                    for (Project p : gitLabApi
+                            .getProjectApi()
+                            .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
                         result.add(p.getPathWithNamespace());
                     }
                 }
