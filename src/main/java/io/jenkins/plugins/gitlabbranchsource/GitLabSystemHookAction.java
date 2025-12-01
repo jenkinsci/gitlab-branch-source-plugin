@@ -9,21 +9,21 @@ import hudson.security.csrf.CrumbExclusion;
 import hudson.util.HttpResponses;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.scm.api.SCMEvent;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.systemhooks.SystemHookManager;
+import org.gitlab4j.api.SystemHookManager;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 @Extension
 public final class GitLabSystemHookAction extends CrumbExclusion implements UnprotectedRootAction {
@@ -56,7 +56,7 @@ public final class GitLabSystemHookAction extends CrumbExclusion implements Unpr
         return false;
     }
 
-    public HttpResponse doPost(StaplerRequest request) throws GitLabApiException {
+    public HttpResponse doPost(StaplerRequest2 request) throws GitLabApiException {
         if (!request.getMethod().equals("POST")) {
             return HttpResponses.error(
                     HttpServletResponse.SC_BAD_REQUEST,

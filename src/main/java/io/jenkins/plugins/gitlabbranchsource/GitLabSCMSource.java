@@ -31,6 +31,7 @@ import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
+import io.jenkins.plugins.gitlabbranchsource.helpers.Sleeper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -84,9 +85,7 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
-import org.apache.commons.lang.StringUtils;
-import org.gitlab4j.api.Constants;
-import org.gitlab4j.api.Constants.MergeRequestState;
+import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -96,6 +95,8 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Tag;
+import org.gitlab4j.models.Constants;
+import org.gitlab4j.models.Constants.MergeRequestState;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -116,7 +117,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String sshRemote;
     private String httpRemote;
     private transient Project gitlabProject;
-    private long projectId;
+    private Long projectId;
+
+    private static final Integer MAX_RETRIES = 5;
+
+    private static final Integer INITIAL_DELAY_MS = 5000;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -226,23 +231,57 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public HashMap<String, AccessLevel> getMembers() {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
-            for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
+            for (Member m : getMembersWithRetries()) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception while fetching members" + e, e);
             return new HashMap<>();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         return members;
     }
 
-    public long getProjectId() {
+    private List<Member> getMembersWithRetries() throws GitLabApiException, InterruptedException {
+        int delay = INITIAL_DELAY_MS;
+        int attemptNb = 0;
+        final Sleeper sleeper = new Sleeper();
+        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
+        while (true) {
+            try {
+                return gitLabApi.getProjectApi().getAllMembers(projectPath);
+            } catch (GitLabApiException | RuntimeException e) {
+                if (isRateLimitException(e)) {
+                    sleeper.sleep(delay);
+                    delay *= 2;
+                    attemptNb++;
+                    if (attemptNb > MAX_RETRIES) {
+                        throw e;
+                    }
+                    continue;
+                }
+                throw e;
+            }
+        }
+    }
+
+    private static boolean isRateLimitException(Exception e) {
+        if (e instanceof GitLabApiException) {
+            return ((GitLabApiException) e).getHttpStatus() == 429;
+        } else if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(GitLabApiException.class)) {
+            GitLabApiException cause = (GitLabApiException) e.getCause();
+            return cause.getHttpStatus() == 429;
+        }
+        return false;
+    }
+
+    public Long getProjectId() {
         return projectId;
     }
 
     @DataBoundSetter
-    public void setProjectId(long projectId) {
+    public void setProjectId(Long projectId) {
         this.projectId = projectId;
     }
 
@@ -333,15 +372,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 if (request.isFetchBranches()) {
                     request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                 }
-                if (request.isFetchMRs() && gitlabProject.getMergeRequestsEnabled()) {
-                    if (!ctx.buildMRForksNotMirror() && gitlabProject.getForkedFromProject() != null) {
+                boolean mergeRequestsEnabled = !Boolean.FALSE.equals(gitlabProject.getMergeRequestsEnabled());
+                if (request.isFetchMRs() && mergeRequestsEnabled) {
+                    final boolean forkedFromProject = (gitlabProject.getForkedFromProject() != null);
+                    if (!ctx.buildMRForksNotMirror() && forkedFromProject) {
                         listener.getLogger().format("%nIgnoring merge requests as project is a mirror...%n");
                     } else {
                         // If not authenticated GitLabApi cannot detect if it is a fork
-                        // If `forkedFromProject` is null it doesn't mean anything
+                        // If `forkedFromProject` is false it doesn't mean anything
                         listener.getLogger()
                                 .format(
-                                        gitlabProject.getForkedFromProject() == null
+                                        !forkedFromProject
                                                 ? "%nUnable to detect if it is a mirror or not still fetching MRs anyway...%n"
                                                 : "%nCollecting MRs for fork except those that target its upstream...%n");
                         Stream<MergeRequest> mrs =
@@ -350,7 +391,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         .getMergeRequests(gitlabProject, MergeRequestState.OPENED)
                                         .stream()
                                         .filter(mr -> mr.getSourceProjectId() != null);
-                        if (ctx.buildMRForksNotMirror()) {
+                        // Patch for issue 453 - avoid an NPE if this isn't a forked project
+                        if (ctx.buildMRForksNotMirror() && forkedFromProject) {
                             mrs = mrs.filter(mr -> !mr.getTargetProjectId()
                                     .equals(gitlabProject.getForkedFromProject().getId()));
                         }
@@ -407,7 +449,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     }
                     listener.getLogger().format("%n%d branches were processed%n", count);
                 }
-                if (request.isFetchMRs() && !request.isComplete() && gitlabProject.getMergeRequestsEnabled()) {
+                if (request.isFetchMRs() && !request.isComplete() && mergeRequestsEnabled) {
                     int count = 0;
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Long, String> forkMrSources = new HashMap<>();
@@ -673,17 +715,24 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public SCMRevision getTrustedRevision(@NonNull SCMRevision revision, @NonNull TaskListener listener) {
         if (revision instanceof MergeRequestSCMRevision) {
             MergeRequestSCMHead head = (MergeRequestSCMHead) revision.getHead();
-            try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
-                    .withTraits(traits)
-                    .newRequest(this, listener)) {
-                request.setMembers(getMembers());
-                boolean isTrusted = request.isTrusted(head);
-                LOGGER.log(Level.FINEST, String.format("Trusted Revision: %s -> %s", head.getOriginOwner(), isTrusted));
-                if (isTrusted) {
-                    return revision;
+            if (SCMHeadOrigin.Default.class.isAssignableFrom(head.getOrigin().getClass())) {
+                return revision;
+            } else if (SCMHeadOrigin.Fork.class.isAssignableFrom(
+                    head.getOrigin().getClass())) {
+                try (GitLabSCMSourceRequest request = new GitLabSCMSourceContext(null, SCMHeadObserver.none())
+                        .withTraits(traits)
+                        .newRequest(this, listener)) {
+                    request.setMembers(getMembers());
+                    boolean isTrusted = request.isTrusted(head);
+                    LOGGER.log(
+                            Level.FINEST,
+                            String.format("Trusted Revision: %s -> %s", head.getOriginOwner(), isTrusted));
+                    if (isTrusted) {
+                        return revision;
+                    }
+                } catch (IOException | InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
                 }
-            } catch (IOException | InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Exception caught: " + e, e);
             }
             MergeRequestSCMRevision rev = (MergeRequestSCMRevision) revision;
             listener.getLogger()
@@ -911,13 +960,13 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     return new StandardListBoxModel().includeEmptyValue();
                 }
                 try {
-                    for (Project p : gitLabApi
-                            .getProjectApi()
-                            .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
+                    for (Project p : gitLabApi.getGroupApi().getProjects(projectOwner)) {
                         result.add(p.getPathWithNamespace());
                     }
                 } catch (GitLabApiException e) {
-                    for (Project p : gitLabApi.getGroupApi().getProjects(projectOwner)) {
+                    for (Project p : gitLabApi
+                            .getProjectApi()
+                            .getUserProjects(projectOwner, new ProjectFilter().withOwned(true))) {
                         result.add(p.getPathWithNamespace());
                     }
                 }

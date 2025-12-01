@@ -5,7 +5,7 @@ import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCreden
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getPrivateTokenAsPlainText;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProxyConfig;
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import com.cloudbees.plugins.credentials.CredentialsMatcher;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -39,8 +39,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMName;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
@@ -407,17 +407,16 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         return secretToken;
     }
 
-    private Object readResolve() {
-        if (StringUtils.isBlank(webhookSecretCredentialsId) && secretToken != null) {
-            migrateWebhookSecretCredentials();
-        }
-        return this;
-    }
-
     /**
      * Migrate webhook secret token to Jenkins credentials
+     *
+     * @return {@code true} if migration occurred, {@code false} otherwise
+     * @see GitLabServers#migrateWebhookSecretsToCredentials
      */
-    private void migrateWebhookSecretCredentials() {
+    boolean migrateWebhookSecretCredentials() {
+        if (!StringUtils.isBlank(webhookSecretCredentialsId) || secretToken == null) {
+            return false;
+        }
         final List<StringCredentials> credentials = CredentialsProvider.lookupCredentials(
                 StringCredentials.class, Jenkins.get(), ACL.SYSTEM, Collections.emptyList());
         for (final StringCredentials cred : credentials) {
@@ -438,6 +437,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
             webhookSecretCredentialsId = newCredentials.getId();
         }
         secretToken = null;
+        return true;
     }
 
     /**

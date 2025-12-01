@@ -16,6 +16,8 @@ import hudson.util.DaemonThreadFactory;
 import hudson.util.HttpResponses;
 import hudson.util.NamingThreadFactory;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -43,14 +45,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * An avatar cache that will serve URLs that have been recently registered
@@ -260,7 +260,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
      * @param size the requested size (defaults to {@code 48x48} if unspecified).
      * @return the response.
      */
-    public HttpResponse doDynamic(StaplerRequest req, @QueryParameter String size) {
+    public HttpResponse doDynamic(StaplerRequest2 req, @QueryParameter String size) {
         if (StringUtils.isBlank(req.getRestOfPath())) {
             return HttpResponses.notFound();
         }
@@ -303,7 +303,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         if (avatar.lastModified <= since) {
             return new HttpResponse() {
                 @Override
-                public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
+                public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                         throws IOException, ServletException {
                     rsp.addDateHeader("Last-Modified", avatar.lastModified);
                     rsp.addHeader("Cache-control", "max-age=3600, public");
@@ -467,7 +467,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
 
         @Override
-        public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node)
+        public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                 throws IOException, ServletException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             try {

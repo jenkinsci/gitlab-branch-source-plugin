@@ -52,8 +52,10 @@ public class GitLabMergeRequestCommentTrigger extends AbstractGitLabJobTrigger<N
                         if (!sourceContext.mrCommentTriggerEnabled()) {
                             continue;
                         }
-                        if (gitLabSCMSource.getProjectId()
-                                        == getPayload().getMergeRequest().getTargetProjectId()
+                        Long projectId = gitLabSCMSource.getProjectId();
+                        if (projectId != null
+                                && projectId.equals(
+                                        getPayload().getMergeRequest().getTargetProjectId())
                                 && isTrustedMember(gitLabSCMSource, sourceContext.getOnlyTrustedMembersCanTrigger())) {
                             for (Job<?, ?> job : owner.getAllJobs()) {
                                 if (MultiBranchProject.class.isAssignableFrom(

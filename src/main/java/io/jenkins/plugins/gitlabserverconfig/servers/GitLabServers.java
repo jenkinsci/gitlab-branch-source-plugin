@@ -6,6 +6,8 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
 import hudson.model.Descriptor;
 import hudson.model.PersistentDescriptor;
 import hudson.security.Permission;
@@ -22,7 +24,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represents the global configuration of GitLab servers.
@@ -195,5 +197,17 @@ public class GitLabServers extends GlobalConfiguration implements PersistentDesc
                 .filter(server -> server.getName().equals(serverName))
                 .findAny()
                 .orElse(null);
+    }
+
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    public static void migrateWebhookSecretsToCredentials() {
+        boolean modified = false;
+        var servers = GitLabServers.get();
+        for (GitLabServer server : servers.getServers()) {
+            modified |= server.migrateWebhookSecretCredentials();
+        }
+        if (modified) {
+            servers.save();
+        }
     }
 }
