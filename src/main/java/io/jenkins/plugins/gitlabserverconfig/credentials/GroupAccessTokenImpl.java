@@ -21,10 +21,10 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
- * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link
+ * Default implementation of {@link GroupAccessToken} for use by {@link Jenkins} {@link
  * CredentialsProvider} instances that store {@link Secret} locally.
  */
-public class PersonalAccessTokenImpl extends BaseStandardCredentials implements PersonalAccessToken {
+public class GroupAccessTokenImpl extends BaseStandardCredentials implements GroupAccessToken {
 
     /**
      * Our token.
@@ -40,7 +40,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * @param description the description of the token.
      */
     @DataBoundConstructor
-    public PersonalAccessTokenImpl(
+    public GroupAccessTokenImpl(
             @CheckForNull CredentialsScope scope, @CheckForNull String id, @CheckForNull String description) {
         super(scope, id, description);
     }
@@ -75,7 +75,7 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * Our descriptor.
      */
     @Extension
-    @Symbol("gitlabPersonalAccessToken")
+    @Symbol("gitlabGroupAccessToken")
     public static class DescriptorImpl extends CredentialsDescriptor {
 
         private static final int GITLAB_ACCESS_TOKEN_MINIMAL_LENGTH = 20;
@@ -86,13 +86,13 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
         @Override
         @NonNull
         public String getDisplayName() {
-            return Messages.PersonalAccessTokenImpl_displayName();
+            return Messages.GroupAccessTokenImpl_displayName();
         }
 
         /**
          * Sanity check for a Gitlab access token.
          *
-         * @param value the personal access token.
+         * @param value the group access token.
          * @return the results of the sanity check.
          */
         @Restricted(NoExternalUse.class) // stapler
@@ -104,10 +104,10 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
             Secret secret = Secret.fromString(value);
             if (StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() < GITLAB_ACCESS_TOKEN_MINIMAL_LENGTH) {
-                    return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
+                    return FormValidation.error(Messages.GroupAccessTokenImpl_tokenWrongLength());
                 }
             } else if (secret.getPlainText().length() < GITLAB_ACCESS_TOKEN_MINIMAL_LENGTH) {
-                return FormValidation.error(Messages.PersonalAccessTokenImpl_tokenWrongLength());
+                return FormValidation.error(Messages.GroupAccessTokenImpl_tokenWrongLength());
             }
             return FormValidation.ok();
         }
