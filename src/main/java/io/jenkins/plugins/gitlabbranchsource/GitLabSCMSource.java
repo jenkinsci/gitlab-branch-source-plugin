@@ -31,6 +31,7 @@ import hudson.security.ACL;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatar;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabLink;
+import io.jenkins.plugins.gitlabbranchsource.helpers.Sleeper;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
@@ -85,8 +86,6 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import org.apache.commons.lang3.StringUtils;
-import org.gitlab4j.api.Constants;
-import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -96,6 +95,8 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.Tag;
+import org.gitlab4j.models.Constants;
+import org.gitlab4j.models.Constants.MergeRequestState;
 import org.jenkins.ui.icon.IconSpec;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -117,6 +118,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private String httpRemote;
     private transient Project gitlabProject;
     private Long projectId;
+
+    private static final Integer MAX_RETRIES = 5;
+
+    private static final Integer INITIAL_DELAY_MS = 5000;
 
     /**
      * The cache of {@link ObjectMetadataAction} instances for each open MR.
@@ -226,15 +231,49 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     public HashMap<String, AccessLevel> getMembers() {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
-            for (Member m : gitLabApi.getProjectApi().getAllMembers(projectPath)) {
+            for (Member m : getMembersWithRetries()) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception while fetching members" + e, e);
             return new HashMap<>();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         return members;
+    }
+
+    private List<Member> getMembersWithRetries() throws GitLabApiException, InterruptedException {
+        int delay = INITIAL_DELAY_MS;
+        int attemptNb = 0;
+        final Sleeper sleeper = new Sleeper();
+        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName);
+        while (true) {
+            try {
+                return gitLabApi.getProjectApi().getAllMembers(projectPath);
+            } catch (GitLabApiException | RuntimeException e) {
+                if (isRateLimitException(e)) {
+                    sleeper.sleep(delay);
+                    delay *= 2;
+                    attemptNb++;
+                    if (attemptNb > MAX_RETRIES) {
+                        throw e;
+                    }
+                    continue;
+                }
+                throw e;
+            }
+        }
+    }
+
+    private static boolean isRateLimitException(Exception e) {
+        if (e instanceof GitLabApiException) {
+            return ((GitLabApiException) e).getHttpStatus() == 429;
+        } else if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(GitLabApiException.class)) {
+            GitLabApiException cause = (GitLabApiException) e.getCause();
+            return cause.getHttpStatus() == 429;
+        }
+        return false;
     }
 
     public Long getProjectId() {
