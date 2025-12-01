@@ -21,9 +21,8 @@ import java.util.logging.Logger;
 import jenkins.scm.api.SCMEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.systemhooks.SystemHookManager;
+import org.gitlab4j.api.SystemHookManager;
 import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerRequest2;
 
 @Extension
@@ -81,7 +80,7 @@ public final class GitLabSystemHookAction extends CrumbExclusion implements Unpr
         String origin = SCMEvent.originOf(request);
         SystemHookManager systemHookManager = new SystemHookManager();
         systemHookManager.addListener(new GitLabSystemHookListener(origin));
-        systemHookManager.handleEvent(StaplerRequest.fromStaplerRequest2(request));
+        systemHookManager.handleEvent(request);
         return HttpResponses.ok(); // TODO find a better response
     }
 
