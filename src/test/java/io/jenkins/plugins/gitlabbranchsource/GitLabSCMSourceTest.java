@@ -76,7 +76,7 @@ public class GitLabSCMSourceTest {
         Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
         utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
                 .thenReturn(gitLabApi);
         GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
         GitLabSCMSourceBuilder sb =
@@ -103,7 +103,7 @@ public class GitLabSCMSourceTest {
         SCMSourceOwner mockOwner = Mockito.mock(SCMSourceOwner.class);
         Mockito.when(projectApi.getAllMembers("group/project")).thenReturn(List.of(mockMember));
         utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
                 .thenReturn(gitLabApi);
         GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
         GitLabSCMSourceBuilder sb =
@@ -124,7 +124,7 @@ public class GitLabSCMSourceTest {
         GitLabApiException rateLimitException = new GitLabApiException("Rate limit", 429);
         Mockito.when(projectApi.getAllMembers("group/project")).thenThrow(rateLimitException);
         utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
                 .thenReturn(gitLabApi);
         GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
         GitLabSCMSourceBuilder sb =
@@ -160,7 +160,7 @@ public class GitLabSCMSourceTest {
             return List.of(mockMember);
         });
         utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString()))
                 .thenReturn(gitLabApi);
         GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
         GitLabSCMSourceBuilder sb =

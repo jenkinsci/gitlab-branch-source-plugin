@@ -51,10 +51,7 @@ public class GitlabAction implements RootAction {
 
     @RequirePOST
     public HttpResponse doProjectList(
-            @AncestorInPath SCMSourceOwner context,
-            @QueryParameter String server,
-            @QueryParameter String credentialsId,
-            @QueryParameter String owner) {
+            @AncestorInPath SCMSourceOwner context, @QueryParameter String server, @QueryParameter String owner) {
         if (!Jenkins.get().hasPermission(Jenkins.MANAGE)) {
             return HttpResponses.errorJSON("no permission to get Gitlab server list");
         }
@@ -65,7 +62,7 @@ public class GitlabAction implements RootAction {
 
         JSONArray servers = new JSONArray();
 
-        GitLabApi gitLabApi = GitLabHelper.apiBuilder(context, server, credentialsId);
+        GitLabApi gitLabApi = GitLabHelper.apiBuilder(context, server);
         try {
             for (Project project :
                     gitLabApi.getProjectApi().getUserProjects(owner, new ProjectFilter().withOwned(true))) {

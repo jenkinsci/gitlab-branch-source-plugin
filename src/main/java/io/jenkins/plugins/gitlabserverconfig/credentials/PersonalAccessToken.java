@@ -1,10 +1,10 @@
 package io.jenkins.plugins.gitlabserverconfig.credentials;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.Secret;
 
-public interface PersonalAccessToken extends StandardUsernamePasswordCredentials {
+public interface PersonalAccessToken extends StandardCredentials {
 
     /**
      * Returns the token.

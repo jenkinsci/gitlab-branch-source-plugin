@@ -14,6 +14,7 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -197,7 +198,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     private GitLabOwner getGitlabOwner(SCMNavigatorOwner owner) {
         if (gitlabOwner == null) {
-            getGitlabOwner(apiBuilder(owner, serverName, credentialsId));
+            getGitlabOwner(apiBuilder(owner, serverName));
         }
         return gitlabOwner;
     }
@@ -234,7 +235,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
         GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext().withTraits(traits);
         try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
-            GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName, credentialsId);
+            GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName);
             getGitlabOwner(gitLabApi);
             List<Project> projects;
             if (gitlabOwner instanceof GitLabUser) {
@@ -458,7 +459,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
         public static FormValidation doCheckProjectOwner(
                 @AncestorInPath SCMSourceOwner context,
-                @QueryParameter String credentialsId,
                 @QueryParameter String projectOwner,
                 @QueryParameter String serverName) {
             if (projectOwner.equals("")) {
@@ -466,7 +466,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
             }
             GitLabApi gitLabApi = null;
             try {
-                gitLabApi = apiBuilder(context, serverName, credentialsId);
+                gitLabApi = apiBuilder(context, serverName);
                 GitLabOwner gitLabOwner = GitLabOwner.fetchOwner(gitLabApi, projectOwner);
                 return FormValidation.ok(projectOwner + " is a valid " + gitLabOwner.getWord());
             } catch (IllegalStateException e) {
@@ -552,9 +552,9 @@ public class GitLabSCMNavigator extends SCMNavigator {
             result.includeMatchingAs(
                     context instanceof Queue.Task ? ((Queue.Task) context).getDefaultAuthentication() : ACL.SYSTEM,
                     context,
-                    StandardCredentials.class,
+                    StandardUsernameCredentials.class,
                     fromUri(getServerUrlFromName(serverName)).build(),
-                    CredentialsMatchers.anyOf(GitClient.CREDENTIALS_MATCHER, GitLabServer.CREDENTIALS_MATCHER));
+                    GitClient.CREDENTIALS_MATCHER);
             return result;
         }
 
