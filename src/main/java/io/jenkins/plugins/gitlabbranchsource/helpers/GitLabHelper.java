@@ -177,7 +177,7 @@ public class GitLabHelper {
                                 fromUri(StringUtils.defaultIfBlank(
                                                 getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
-                        withId(credentialsId));
+                        CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
             } else {
                 return CredentialsMatchers.firstOrNull(
                         lookupCredentials(
@@ -187,7 +187,7 @@ public class GitLabHelper {
                                 fromUri(StringUtils.defaultIfBlank(
                                                 getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
-                        withId(credentialsId));
+                        CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
             }
         }
 
