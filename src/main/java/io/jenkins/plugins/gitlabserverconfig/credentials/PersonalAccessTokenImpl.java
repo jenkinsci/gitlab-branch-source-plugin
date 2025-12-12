@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
@@ -15,7 +16,9 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Default implementation of {@link PersonalAccessToken} for use by {@link Jenkins} {@link
@@ -26,8 +29,8 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     /**
      * Our token.
      */
-    @NonNull
-    private final Secret token;
+    @Nullable
+    private Secret token;
 
     /**
      * Constructor.
@@ -36,8 +39,9 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
      * @param id the credentials id.
      * @param description the description of the token.
      * @param token the token itself (will be passed through {@link Secret#fromString(String)})
+     * @deprecated
      */
-    @DataBoundConstructor
+    @Deprecated
     public PersonalAccessTokenImpl(
             @CheckForNull CredentialsScope scope,
             @CheckForNull String id,
@@ -48,12 +52,31 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
     }
 
     /**
+     * Constructor.
+     *
+     * @param scope the credentials scope.
+     * @param id the credentials id.
+     * @param description the description of the token.
+     */
+    @DataBoundConstructor
+    public PersonalAccessTokenImpl(
+            @CheckForNull CredentialsScope scope, @CheckForNull String id, @CheckForNull String description) {
+        super(scope, id, description);
+        this.token = null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     @NonNull
     public Secret getToken() {
         return token;
+    }
+
+    @DataBoundSetter
+    public void setToken(String token) {
+        this.token = Secret.fromString(token);
     }
 
     /**
@@ -82,7 +105,10 @@ public class PersonalAccessTokenImpl extends BaseStandardCredentials implements 
          */
         @Restricted(NoExternalUse.class) // stapler
         @SuppressWarnings("unused")
+        @RequirePOST
         public FormValidation doCheckToken(@QueryParameter String value) {
+            Jenkins.get().checkPermission(CredentialsProvider.USE_OWN);
+
             Secret secret = Secret.fromString(value);
             if (StringUtils.equals(value, secret.getPlainText())) {
                 if (value.length() < GITLAB_ACCESS_TOKEN_MINIMAL_LENGTH) {
