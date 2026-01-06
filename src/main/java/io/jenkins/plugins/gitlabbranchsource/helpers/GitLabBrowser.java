@@ -54,7 +54,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
             return diffLink(path);
         } else {
             return new URL(getUriTemplateFromServer(getProjectUrl())
-                    .literal("/blob")
+                    .literal(GitLabHelper.getActionPrefix(getProjectUrl()) + "/blob")
                     .path(UriTemplateBuilder.var("changeSet"))
                     .path(UriTemplateBuilder.var("path", true))
                     .build()
@@ -66,7 +66,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     private URL diffLink(GitChangeSet.Path path) throws IOException {
         return new URL(getUriTemplateFromServer(getProjectUrl())
-                .literal("/commit")
+                .literal(GitLabHelper.getActionPrefix(getProjectUrl()) + "/commit")
                 .path(UriTemplateBuilder.var("changeSet"))
                 .fragment(UriTemplateBuilder.var("diff"))
                 .build()
@@ -77,7 +77,7 @@ public class GitLabBrowser extends GitRepositoryBrowser {
 
     // [JENKINS-72104] notes that the symbol 'gitLabBrowser' is used
     // instead of the preferred 'gitLab' symbol in order to not break
-    // compatibility for existing git plugin users.  The git plugin
+    // compatibility for existing git plugin users. The git plugin
     // already defines a repository browser with the symbol "gitLab".
     @Symbol("gitLabBrowser")
     @Extension

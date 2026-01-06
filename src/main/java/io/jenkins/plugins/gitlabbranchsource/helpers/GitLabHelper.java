@@ -140,26 +140,38 @@ public class GitLabHelper {
 
     public static UriTemplate branchUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/-/tree/{branch*}")
+                .template("{/project*}" + getActionPrefix(serverNameOrUrl) + "/tree/{branch*}")
                 .build();
     }
 
     public static UriTemplate mergeRequestUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/-/merge_requests/{iid}")
+                .template("{/project*}" + getActionPrefix(serverNameOrUrl) + "/merge_requests/{iid}")
                 .build();
     }
 
     public static UriTemplate tagUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/-/tree/{tag*}")
+                .template("{/project*}" + getActionPrefix(serverNameOrUrl) + "/tree/{tag*}")
                 .build();
     }
 
     public static UriTemplate commitUriTemplate(String serverNameOrUrl) {
         return getUriTemplateFromServer(serverNameOrUrl)
-                .template("{/project*}/-/commit/{hash}")
+                .template("{/project*}" + getActionPrefix(serverNameOrUrl) + "/commit/{hash}")
                 .build();
+    }
+
+    @NonNull
+    public static String getActionPrefix(String serverNameOrUrl) {
+        GitLabServer server = GitLabServers.get().getServers().stream()
+                .filter(s -> s.getName().equals(serverNameOrUrl) || serverNameOrUrl.startsWith(s.getServerUrl()))
+                .findAny()
+                .orElse(null);
+        if (server != null && !server.isUseActionPrefix()) {
+            return "";
+        }
+        return "/-";
     }
 
     public static String[] splitPath(String path) {
@@ -175,7 +187,7 @@ public class GitLabHelper {
                                 (ItemGroup) context,
                                 ACL.SYSTEM,
                                 fromUri(StringUtils.defaultIfBlank(
-                                                getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
+                                        getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
                         CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
             } else {
@@ -185,7 +197,7 @@ public class GitLabHelper {
                                 (Item) context,
                                 ACL.SYSTEM,
                                 fromUri(StringUtils.defaultIfBlank(
-                                                getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
+                                        getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
                                         .build()),
                         CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
             }

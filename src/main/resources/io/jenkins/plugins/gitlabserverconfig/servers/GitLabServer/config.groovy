@@ -43,6 +43,9 @@ f.advanced() {
     f.entry(title: _("Web Hook trigger delay"), field: "hookTriggerDelay", "description": "Delay in seconds to be used for GitLab Web Hook build triggers (defaults to GitLab cache timeout)") {
         f.textbox()
     }
+    f.entry(title: _("Use /-/ prefix"), field: "useActionPrefix", "description": "Use the /-/ prefix in URLs (GitLab 11.0+). Uncheck this for older GitLab versions (e.g., 10.7 or older).") {
+        f.checkbox(default: true)
+    }
 }
 
 f.validateButton(

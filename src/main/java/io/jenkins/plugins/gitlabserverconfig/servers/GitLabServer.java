@@ -62,7 +62,8 @@ import org.kohsuke.stapler.verb.POST;
 public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
-     * The credentials matcher for PersonalAccessToken, GroupAccessToken and StringCredentials
+     * The credentials matcher for PersonalAccessToken, GroupAccessToken and
+     * StringCredentials
      */
     public static final CredentialsMatcher CREDENTIALS_MATCHER = new GitLabCredentialMatcher();
     /**
@@ -89,7 +90,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * Common prefixes that we should remove when inferring a display name.
      */
-    private static final String[] COMMON_PREFIX_HOSTNAMES = {"git.", "gitlab.", "vcs.", "scm.", "source."};
+    private static final String[] COMMON_PREFIX_HOSTNAMES = { "git.", "gitlab.", "vcs.", "scm.", "source." };
 
     /**
      * A unique name used to identify the endpoint.
@@ -133,12 +134,14 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
 
     /**
      * The secret token used while setting up hook url in the GitLab server
+     * 
      * @Deprecated Use webhookSecretCredentialsId instead
      */
     private transient Secret secretToken;
 
     /**
-     * The credentials id of the webhook secret token used while setting up hook url in the GitLab server
+     * The credentials id of the webhook secret token used while setting up hook url
+     * in the GitLab server
      */
     @NonNull
     private String webhookSecretCredentialsId;
@@ -146,8 +149,8 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     /**
      * The credentials matcher for StringCredentials
      */
-    public static final CredentialsMatcher WEBHOOK_SECRET_CREDENTIALS_MATCHER =
-            CredentialsMatchers.instanceOf(StringCredentials.class);
+    public static final CredentialsMatcher WEBHOOK_SECRET_CREDENTIALS_MATCHER = CredentialsMatchers
+            .instanceOf(StringCredentials.class);
 
     /**
      * {@code true} if and only if Jenkins should trigger a build immediately on a
@@ -159,6 +162,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      * Delay to be used for GitLab Web Hook build triggers.
      */
     private Integer hookTriggerDelay;
+
+    /**
+     * {@code true} if we should use the /-/ prefix in URLs (GitLab 11.0+)
+     */
+    private boolean useActionPrefix = true;
 
     /**
      * Data Bound Constructor for only mandatory parameter serverUrl
@@ -177,6 +185,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
         this.name = StringUtils.isBlank(name) ? getRandomName() : StringUtils.trim(name);
         this.credentialsId = credentialsId;
         this.webhookSecretCredentialsId = "";
+        this.useActionPrefix = true;
     }
 
     /**
@@ -490,6 +499,25 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public Integer getHookTriggerDelay() {
         return this.hookTriggerDelay;
+    }
+
+    /**
+     * Returns {@code true} if we should use the /-/ prefix in URLs
+     * 
+     * @return {@code true} if we should use the /-/ prefix in URLs
+     */
+    public boolean isUseActionPrefix() {
+        return useActionPrefix;
+    }
+
+    /**
+     * Data Bound Setter for using the /-/ prefix in URLs
+     * 
+     * @param useActionPrefix {@code true} if we should use the /-/ prefix in URLs
+     */
+    @DataBoundSetter
+    public void setUseActionPrefix(boolean useActionPrefix) {
+        this.useActionPrefix = useActionPrefix;
     }
 
     /**
