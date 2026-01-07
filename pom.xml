@@ -44,7 +44,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5750.vec44cb_c78352</version>
+        <version>5804.v80587a_38d937</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -53,6 +53,12 @@
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>gitlab-api</artifactId>
         <version>6.2.0-111.vf174d6b_8c12e</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials</artifactId>
+        <!-- TODO https://github.com/jenkinsci/credentials-plugin/pull/1003 -->
+        <version>1469.vb_13b_4cfb_391d</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
