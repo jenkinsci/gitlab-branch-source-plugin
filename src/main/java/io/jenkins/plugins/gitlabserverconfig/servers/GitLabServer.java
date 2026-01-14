@@ -274,6 +274,11 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
      */
     public StandardCredentials getCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
+        if (context == null) {
+            jenkins.checkPermission(CredentialsProvider.USE_OWN);
+        } else {
+            context.checkPermission(CredentialsProvider.USE_OWN);
+        }
         return StringUtils.isBlank(credentialsId)
                 ? null
                 : CredentialsMatchers.firstOrNull(
@@ -329,6 +334,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     public StringCredentials getWebhookSecretCredentials(AccessControlled context) {
         Jenkins jenkins = Jenkins.get();
         if (context == null) {
+            jenkins.checkPermission(CredentialsProvider.USE_OWN);
             return StringUtils.isBlank(webhookSecretCredentialsId)
                     ? null
                     : CredentialsMatchers.firstOrNull(
@@ -340,6 +346,7 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
                                             .build()),
                             withId(webhookSecretCredentialsId));
         } else {
+            context.checkPermission(CredentialsProvider.USE_OWN);
             if (context instanceof ItemGroup) {
                 return StringUtils.isBlank(webhookSecretCredentialsId)
                         ? null
