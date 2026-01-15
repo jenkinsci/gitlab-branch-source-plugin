@@ -232,9 +232,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     protected Project getGitlabProject(GitLabApi gitLabApi) {
-
         if (gitlabProject == null) {
-
             ExecutorService executor = Executors.newSingleThreadExecutor();
 
             Future<?> future = executor.submit(() -> {
@@ -777,13 +775,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
-        if (indexingTimeout != null && indexingTimeout > 0) {
-            listener.getLogger()
-                    .println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: "
-                            + indexingTimeout);
-        } else {
-            listener.getLogger().println("Starting Gitlab Indexing: #Gitlab Server: " + serverName + " #Timeout: N/A");
-        }
+        Object timeoutDisplay = (indexingTimeout != null && indexingTimeout > 0) ? indexingTimeout : "N/A";
+        listener.getLogger().println(
+            String.format("Starting Gitlab Indexing: #Gitlab Server: %s #Timeout: %s", serverName, timeoutDisplay)
+        );
 
         getGitlabProject();
         List<Action> result = new ArrayList<>();
