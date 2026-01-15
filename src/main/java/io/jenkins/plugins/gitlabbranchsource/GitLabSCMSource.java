@@ -776,9 +776,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) {
         Object timeoutDisplay = (indexingTimeout != null && indexingTimeout > 0) ? indexingTimeout : "N/A";
-        listener.getLogger().println(
-            String.format("Starting Gitlab Indexing: #Gitlab Server: %s #Timeout: %s", serverName, timeoutDisplay)
-        );
+        listener.getLogger()
+                .println(String.format(
+                        "Starting Gitlab Indexing: #Gitlab Server: %s #Timeout: %s", serverName, timeoutDisplay));
 
         getGitlabProject();
         List<Action> result = new ArrayList<>();

@@ -9,16 +9,15 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import io.jenkins.plugins.gitlabbranchsource.helpers.Sleeper;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
-
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.scm.api.SCMSourceOwner;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Member;
-import org.gitlab4j.api.ProjectApi;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
