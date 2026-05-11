@@ -2,6 +2,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import hudson.model.TaskListener;
@@ -18,6 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
@@ -75,21 +79,37 @@ public class GitLabSCMSourceTest {
         Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
         Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
-        utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
-                .thenReturn(gitLabApi);
-        GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
-        GitLabSCMSourceBuilder sb =
-                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
-        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
-        BranchSource source = new BranchSource(sb.build());
-        source.getSource()
-                .setTraits(Arrays.asList(new BranchDiscoveryTrait(0), new OriginMergeRequestDiscoveryTrait(1)));
-        project.getSourcesList().add(source);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final TaskListener listener = new StreamTaskListener(out, StandardCharsets.UTF_8);
-        Set<SCMHead> scmHead = source.getSource().fetch(listener);
-        assertEquals(0, scmHead.size());
+
+        // Create a Synchronous Executor Mock
+        ExecutorService syncExecutor = Mockito.mock(ExecutorService.class);
+        Mockito.when(syncExecutor.submit(any(Runnable.class))).thenAnswer(invocation -> {
+            Runnable task = (Runnable) invocation.getArgument(0);
+            task.run();
+            Future<?> completedFuture = Mockito.mock(Future.class);
+            Mockito.when(completedFuture.get()).thenReturn(null);
+            Mockito.when(completedFuture.get(anyLong(), any(java.util.concurrent.TimeUnit.class)))
+                    .thenReturn(null);
+            return completedFuture;
+        });
+
+        try (MockedStatic<Executors> executorsMockedStatic = Mockito.mockStatic(Executors.class)) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                    .thenReturn(gitLabApi);
+            executorsMockedStatic.when(Executors::newSingleThreadExecutor).thenReturn(syncExecutor);
+            GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
+            GitLabSCMSourceBuilder sb =
+                    new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
+            WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
+            BranchSource source = new BranchSource(sb.build());
+            source.getSource()
+                    .setTraits(Arrays.asList(new BranchDiscoveryTrait(0), new OriginMergeRequestDiscoveryTrait(1)));
+            project.getSourcesList().add(source);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            final TaskListener listener = new StreamTaskListener(out, StandardCharsets.UTF_8);
+            Set<SCMHead> scmHead = source.getSource().fetch(listener);
+            assertEquals(0, scmHead.size());
+        }
     }
 
     @Test
