@@ -72,12 +72,10 @@ public class GitLabSCMSourceTest {
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         ProjectApi projectApi = Mockito.mock(ProjectApi.class);
         Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
-        Mockito.when(projectApi.getProject(any()))
-            .thenThrow(new GitLabApiException("GitLab unreachable"));
+        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
 
         GitLabSCMSource gitLabSCMSource =
-            new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project")
-                .build();
+                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
 
         assertThrows(GitLabApiException.class, () -> gitLabSCMSource.getGitlabProject(gitLabApi));
     }
@@ -89,17 +87,20 @@ public class GitLabSCMSourceTest {
         SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
 
         Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
-        Mockito.when(projectApi.getProject(any()))
-            .thenThrow(new GitLabApiException("GitLab unreachable"));
+        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
 
         GitLabSCMSource gitLabSCMSource =
-            new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project")
-                .build();
+                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
         utilities
-            .when(() -> GitLabHelper.apiBuilder(gitLabSCMSource.getOwner(), gitLabSCMSource.getServerName(), gitLabSCMSource.getCredentialsId()))
-            .thenReturn(gitLabApi);
+                .when(() -> GitLabHelper.apiBuilder(
+                        gitLabSCMSource.getOwner(),
+                        gitLabSCMSource.getServerName(),
+                        gitLabSCMSource.getCredentialsId()))
+                .thenReturn(gitLabApi);
 
-        assertThrows(IOException.class, () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
+        assertThrows(
+                IOException.class,
+                () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
         Mockito.verify(owner, Mockito.never()).save();
     }
 
