@@ -83,9 +83,11 @@ public class GitLabSCMSourceTest {
     }
 
     @Test
-    public void failToRetrieve() throws GitLabApiException {
+    public void failToRetrieve() throws GitLabApiException, IOException {
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
+
         Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
         Mockito.when(projectApi.getProject(any()))
             .thenThrow(new GitLabApiException("GitLab unreachable"));
@@ -98,6 +100,7 @@ public class GitLabSCMSourceTest {
             .thenReturn(gitLabApi);
 
         assertThrows(IOException.class, () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
+        Mockito.verify(owner, Mockito.never()).save();
     }
 
     @Test
