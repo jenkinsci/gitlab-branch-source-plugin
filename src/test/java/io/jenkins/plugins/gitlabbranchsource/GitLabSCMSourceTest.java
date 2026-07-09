@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -13,6 +14,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -63,6 +65,39 @@ public class GitLabSCMSourceTest {
     public void tearDown() {
         utilities.close();
         sleeperMockedConstruction.close();
+    }
+
+    @Test
+    public void failToGetGitlabProject() throws GitLabApiException {
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(projectApi.getProject(any()))
+            .thenThrow(new GitLabApiException("GitLab unreachable"));
+
+        GitLabSCMSource gitLabSCMSource =
+            new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project")
+                .build();
+
+        assertThrows(GitLabApiException.class, () -> gitLabSCMSource.getGitlabProject(gitLabApi));
+    }
+
+    @Test
+    public void failToRetrieve() throws GitLabApiException {
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(projectApi.getProject(any()))
+            .thenThrow(new GitLabApiException("GitLab unreachable"));
+
+        GitLabSCMSource gitLabSCMSource =
+            new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project")
+                .build();
+        utilities
+            .when(() -> GitLabHelper.apiBuilder(gitLabSCMSource.getOwner(), gitLabSCMSource.getServerName(), gitLabSCMSource.getCredentialsId()))
+            .thenReturn(gitLabApi);
+
+        assertThrows(IOException.class, () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
     }
 
     @Test
