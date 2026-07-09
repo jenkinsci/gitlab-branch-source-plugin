@@ -381,8 +381,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             getGitlabProject(gitLabApi);
         } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught trying to get GitLab project details:" + e, e);
-            throw new IOException("Failed to fetch GitLab project", e);
+            LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
         }
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
         try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
@@ -669,8 +669,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             getGitlabProject();
         } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught trying to get GitLab project details:" + e, e);
-            throw new IOException("Failed to fetch GitLab project", e);
+            LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
         }
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(traits);
         String projectUrl = gitlabProject.getWebUrl();
@@ -691,8 +691,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         try {
             getGitlabProject();
         } catch (GitLabApiException e) {
-            LOGGER.log(Level.WARNING, "Exception caught trying to get GitLab project details:" + e, e);
-            throw new IOException("Failed to fetch GitLab project", e);
+            LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
         }
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
@@ -804,8 +804,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             try {
                 getGitlabProject(gitLabApi);
             } catch (GitLabApiException e) {
-                LOGGER.log(Level.WARNING, "Exception caught trying to get GitLab project details:" + e, e);
-                throw new IOException("Failed to fetch GitLab project", e);
+                LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+                throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
             }
             final SCMFileSystem fs = builder.build(head, revision, gitLabApi, projectPath);
             return new SCMProbe() {
