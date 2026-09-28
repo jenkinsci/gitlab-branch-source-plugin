@@ -342,9 +342,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      * <p/>
      * Because in the above case, the config didn't change, these retrieve() methods are never
      * called again.
-     * We force the saving of a timestamp to make sure _something_ is written in the config at
-     * all times (and the jobDSL plugin doesn't see it as being unnecessary to resync)
-     * and future reattempts are allowed.
+     * Save a timestamp after a GitLab API or client initialization failure so Job DSL can retry
+     * an otherwise unchanged configuration. Successful retrievals must not update this field: Branch API includes it
+     * in the source configuration digest, so changing it would cause organisation scans to
+     * reindex unchanged projects.
      *
      * @throws IOException When saving into the file fails.
      */
@@ -355,11 +356,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     @Override
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener) throws IOException {
-        saveTimestampInOwner();
-
-        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
-
         try {
+            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
             getGitlabProject(gitLabApi);
             if (head instanceof BranchSCMHead) {
                 listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
@@ -409,7 +407,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            saveTimestampInOwner();
             throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
+        } catch (RuntimeException e) {
+            saveTimestampInOwner();
+            throw e;
         }
     }
 
@@ -420,14 +422,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             SCMHeadEvent<?> event,
             @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        saveTimestampInOwner();
-
-        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
+        GitLabApi gitLabApi;
         try {
+            gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
             getGitlabProject(gitLabApi);
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            saveTimestampInOwner();
             throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
+        } catch (RuntimeException e) {
+            saveTimestampInOwner();
+            throw e;
         }
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
         try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
@@ -679,6 +684,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
+            saveTimestampInOwner();
             throw new IOException("Failed to fetch latest heads", e);
         } finally {
             saveOwner();
@@ -707,14 +713,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected List<Action> retrieveActions(SCMSourceEvent event, @NonNull TaskListener listener) throws IOException {
-        saveTimestampInOwner();
-
         List<Action> result = new ArrayList<>();
         try {
             getGitlabProject();
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            saveTimestampInOwner();
             throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
+        } catch (RuntimeException e) {
+            saveTimestampInOwner();
+            throw e;
         }
         GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits(traits);
         String projectUrl = gitlabProject.getWebUrl();
@@ -732,13 +740,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @Override
     protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener)
             throws IOException {
-        saveTimestampInOwner();
-
         try {
             getGitlabProject();
         } catch (GitLabApiException e) {
             LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
+            saveTimestampInOwner();
             throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
+        } catch (RuntimeException e) {
+            saveTimestampInOwner();
+            throw e;
         }
         List<Action> result = new ArrayList<>();
         if (head instanceof BranchSCMHead) {
