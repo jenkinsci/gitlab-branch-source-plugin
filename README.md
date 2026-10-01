@@ -442,6 +442,7 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 
 	* `Only Branches that are not also filed as MRs` - If you are discovering origin merge requests, it may not make sense to discover the same changes both as a merge request and as a branch.
 	* `Only Branches that are filed as MRs` - This option exists to preserve legacy behaviour when upgrading from older versions of the plugin. NOTE: If you have an actual use case for this option please file a merge request against this text.
+    * `Only explicitly listed branches` - Only branches matching the "Branches to always include" regex are built as branches. Useful when builing only long-lived branches (e.g. `main`) and MRs (discovered separately).
 	* `All Branches` - Ignores whether the branch is also filed as a merge request and instead discovers all branches on the origin project.
 
 * `Discover merge requests from origin` - To discover merge requests made from origin branches.

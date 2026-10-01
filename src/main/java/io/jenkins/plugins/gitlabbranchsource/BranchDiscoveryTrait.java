@@ -143,6 +143,9 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 ctx.wantOriginMRs(true);
                 ctx.withFilter(new OnlyOriginMRBranchesSCMHeadFilter(getBranchesAlwaysIncludedRegexPattern()));
                 break;
+            case 4:
+                ctx.withFilter(new OnlyExplicitlyListedBranchesSCMHeadFilter(getBranchesAlwaysIncludedRegexPattern()));
+                break;
             case 3:
             default:
                 // we don't care if it is a MR or not, we're taking them all, no need to ask for MRs and no need
@@ -204,6 +207,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             ListBoxModel result = new ListBoxModel();
             result.add(Messages.BranchDiscoveryTrait_excludeMRs(), "1");
             result.add(Messages.BranchDiscoveryTrait_onlyMRs(), "2");
+            result.add(Messages.BranchDiscoveryTrait_onlyExplicitlyListed(), "4");
             result.add(Messages.BranchDiscoveryTrait_allBranches(), "3");
             return result;
         }
@@ -249,9 +253,10 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     }
 
     /**
-     * Filter that excludes branches that are also filed as a merge request.
+     * Base class for branch filters that support an always-included regex.
+     * Handles the common filter then delegates to {@link #isExcludedBranch} for strategy-specific logic.
      */
-    public static class ExcludeOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
+    public abstract static class BranchDiscoverySCMHeadFilter extends SCMHeadFilter {
 
         /**
          * The compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
@@ -263,7 +268,7 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
          *
          * @param branchesAlwaysIncludedRegexPattern the branchesAlwaysIncludedRegexPattern.
          */
-        public ExcludeOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
+        protected BranchDiscoverySCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
             this.branchesAlwaysIncludedRegexPattern = branchesAlwaysIncludedRegexPattern;
         }
 
@@ -271,15 +276,42 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
          * {@inheritDoc}
          */
         @Override
-        public boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
-            if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
-                if (branchesAlwaysIncludedRegexPattern != null
-                        && branchesAlwaysIncludedRegexPattern
-                                .matcher(head.getName())
-                                .matches()) {
-                    return false;
-                }
+        public final boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
+            if (!(head instanceof BranchSCMHead)) {
+                return false;
+            }
+            if (branchesAlwaysIncludedRegexPattern != null
+                    && branchesAlwaysIncludedRegexPattern
+                            .matcher(head.getName())
+                            .matches()) {
+                return false;
+            }
+            return isExcludedBranch(request, (BranchSCMHead) head);
+        }
 
+        /**
+         * Strategy-specific exclusion logic, called only for branch heads not covered by
+         * the always-included regex.
+         *
+         * @param request the current SCM source request.
+         * @param head    the branch head being evaluated.
+         * @return {@code true} if the branch should be excluded from discovery.
+         */
+        protected abstract boolean isExcludedBranch(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head);
+    }
+
+    /**
+     * Filter that excludes branches that are also filed as a merge request.
+     */
+    public static class ExcludeOriginMRBranchesSCMHeadFilter extends BranchDiscoverySCMHeadFilter {
+
+        public ExcludeOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
+            super(branchesAlwaysIncludedRegexPattern);
+        }
+
+        @Override
+        protected boolean isExcludedBranch(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head) {
+            if (request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     // only match if the merge request is an origin merge request
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
@@ -295,35 +327,15 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
     /**
      * Filter that excludes branches that are not also filed as a merge request.
      */
-    public static class OnlyOriginMRBranchesSCMHeadFilter extends SCMHeadFilter {
+    public static class OnlyOriginMRBranchesSCMHeadFilter extends BranchDiscoverySCMHeadFilter {
 
-        /**
-         * The compiled {@link Pattern} of the branchesAlwaysIncludedRegex.
-         */
-        private final Pattern branchesAlwaysIncludedRegexPattern;
-
-        /**
-         * Constructor
-         *
-         * @param branchesAlwaysIncludedRegexPattern the branchesAlwaysIncludedRegexPattern.
-         */
         public OnlyOriginMRBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
-            this.branchesAlwaysIncludedRegexPattern = branchesAlwaysIncludedRegexPattern;
+            super(branchesAlwaysIncludedRegexPattern);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public boolean isExcluded(@NonNull SCMSourceRequest request, @NonNull SCMHead head) {
-            if (head instanceof BranchSCMHead && request instanceof GitLabSCMSourceRequest) {
-                if (branchesAlwaysIncludedRegexPattern != null
-                        && branchesAlwaysIncludedRegexPattern
-                                .matcher(head.getName())
-                                .matches()) {
-                    return false;
-                }
-
+        protected boolean isExcludedBranch(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head) {
+            if (request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
                             && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
@@ -332,6 +344,21 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
                 }
             }
             return false;
+        }
+    }
+
+    /**
+     * Filter that excludes all branches except those matching the always-included regex.
+     */
+    public static class OnlyExplicitlyListedBranchesSCMHeadFilter extends BranchDiscoverySCMHeadFilter {
+
+        public OnlyExplicitlyListedBranchesSCMHeadFilter(Pattern branchesAlwaysIncludedRegexPattern) {
+            super(branchesAlwaysIncludedRegexPattern);
+        }
+
+        @Override
+        protected boolean isExcludedBranch(@NonNull SCMSourceRequest request, @NonNull BranchSCMHead head) {
+            return true;
         }
     }
 }
