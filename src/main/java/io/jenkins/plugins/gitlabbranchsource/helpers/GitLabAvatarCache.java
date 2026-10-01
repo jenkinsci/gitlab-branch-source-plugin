@@ -12,10 +12,14 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.RootAction;
 import hudson.model.UnprotectedRootAction;
+import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.util.DaemonThreadFactory;
 import hudson.util.HttpResponses;
 import hudson.util.NamingThreadFactory;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMNavigator;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
+import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.awt.Color;
@@ -44,9 +48,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
+import org.gitlab4j.api.GitLabApi;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -488,6 +495,52 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
     }
 
+    // Project/group avatars live at e.g. /uploads/-/system/project/avatar/42/logo.png. That web
+    // path needs a browser session and 401s for private resources (JENKINS-64814 / #690), so we
+    // spot these URLs and pull the image from the API instead.
+    private static final Pattern GITLAB_AVATAR_PATH =
+            Pattern.compile("^/uploads/-/system/(project|group)/avatar/(\\d+)/");
+
+    @Nullable
+    private static GitLabAvatarLocation resolveGitLabAvatar(String url) {
+        for (GitLabServer server : GitLabServers.get().getServers()) {
+            GitLabAvatarLocation location = matchAvatar(server, url);
+            if (location != null) {
+                return location;
+            }
+        }
+        return null;
+    }
+
+    // package-private for testing
+    @Nullable
+    static GitLabAvatarLocation matchAvatar(GitLabServer server, String url) {
+        String base = StringUtils.removeEnd(server.getServerUrl(), "/");
+        if (base == null || !url.startsWith(base)) {
+            return null;
+        }
+        Matcher matcher = GITLAB_AVATAR_PATH.matcher(url.substring(base.length()));
+        if (!matcher.find()) {
+            return null;
+        }
+        try {
+            return new GitLabAvatarLocation(server, matcher.group(1), Long.parseLong(matcher.group(2)));
+        } catch (NumberFormatException e) {
+            // id too large to be a real project/group - let the plain URL fetch deal with it
+            return null;
+        }
+    }
+
+    record GitLabAvatarLocation(GitLabServer server, String type, long id) {}
+
+    // package-private for testing. Runs on a background thread with no authenticated user, so we
+    // impersonate SYSTEM to let the server credential lookup pass its permission check (#690).
+    static GitLabApi openApi(GitLabAvatarLocation location) {
+        try (ACLContext ignored = ACL.as2(ACL.SYSTEM2)) {
+            return GitLabHelper.apiBuilder(Jenkins.get(), location.server().getName(), (String) null);
+        }
+    }
+
     private static class FetchImage implements Callable<CacheEntry> {
         private final String url;
 
@@ -496,33 +549,23 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
 
         @Override
-        public CacheEntry call() throws Exception {
-            LOGGER.log(Level.FINE, "Attempting to fetch remote avatar: {0}", url);
+        public CacheEntry call() {
             long start = System.nanoTime();
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-                try {
-                    connection.setConnectTimeout(10000);
-                    connection.setReadTimeout(30000);
-                    if (!connection.getContentType().startsWith("image/")) {
-                        return new CacheEntry(url);
+                GitLabAvatarLocation location = resolveGitLabAvatar(url);
+                if (location != null) {
+                    try {
+                        return fetchViaApi(location);
+                    } catch (Exception e) {
+                        // e.g. a GitLab older than the avatar endpoint - the anonymous URL still
+                        // works for public projects and groups, so give it a try
+                        LOGGER.log(Level.FINE, e, () -> "API avatar fetch failed, falling back to direct URL: " + url);
                     }
-                    int length = connection.getContentLength();
-                    // buffered stream should be no more than 16k if we know the length
-                    // if we don't know the length then 8k is what we will use
-                    length = length > 0 ? Math.min(16384, length) : 8192;
-                    try (InputStream is = connection.getInputStream();
-                            BufferedInputStream bis = new BufferedInputStream(is, length)) {
-                        BufferedImage image = ImageIO.read(bis);
-                        if (image == null) {
-                            return new CacheEntry(url);
-                        }
-                        return new CacheEntry(url, image, connection.getLastModified());
-                    }
-                } finally {
-                    connection.disconnect();
                 }
-            } catch (IOException e) {
+                return fetchViaUrl();
+            } catch (Exception e) {
+                // best effort - fall back to a generated avatar rather than leaving the cache
+                // entry stuck pending forever
                 LOGGER.log(Level.INFO, e.getMessage(), e);
                 return new CacheEntry(url);
             } finally {
@@ -531,6 +574,53 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 LOGGER.log(duration > 250 ? Level.INFO : Level.FINE, "Avatar lookup of {0} took {1}ms", new Object[] {
                     url, duration
                 });
+            }
+        }
+
+        private CacheEntry fetchViaApi(GitLabAvatarLocation location) throws Exception {
+            LOGGER.log(Level.FINE, "Fetching avatar via API: {0}", url);
+            try (GitLabApi gitLabApi = openApi(location)) {
+                InputStream is = "group".equals(location.type())
+                        ? gitLabApi.getGroupApi().getAvatar(location.id())
+                        : gitLabApi.getProjectApi().getAvatar(location.id());
+                if (is == null) {
+                    return new CacheEntry(url);
+                }
+                try (InputStream in = is;
+                        BufferedInputStream bis = new BufferedInputStream(in)) {
+                    BufferedImage image = ImageIO.read(bis);
+                    if (image == null) {
+                        return new CacheEntry(url);
+                    }
+                    return new CacheEntry(url, image, System.currentTimeMillis());
+                }
+            }
+        }
+
+        private CacheEntry fetchViaUrl() throws IOException {
+            LOGGER.log(Level.FINE, "Attempting to fetch remote avatar: {0}", url);
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            try {
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(30000);
+                String contentType = connection.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return new CacheEntry(url);
+                }
+                int length = connection.getContentLength();
+                // buffered stream should be no more than 16k if we know the length
+                // if we don't know the length then 8k is what we will use
+                length = length > 0 ? Math.min(16384, length) : 8192;
+                try (InputStream is = connection.getInputStream();
+                        BufferedInputStream bis = new BufferedInputStream(is, length)) {
+                    BufferedImage image = ImageIO.read(bis);
+                    if (image == null) {
+                        return new CacheEntry(url);
+                    }
+                    return new CacheEntry(url, image, connection.getLastModified());
+                }
+            } finally {
+                connection.disconnect();
             }
         }
     }
