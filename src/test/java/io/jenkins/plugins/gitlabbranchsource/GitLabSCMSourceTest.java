@@ -1,10 +1,16 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import hudson.Util;
+import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.security.AccessControlled;
 import hudson.util.StreamTaskListener;
@@ -14,6 +20,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServer;
 import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSourceOwner;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -67,6 +75,82 @@ public class GitLabSCMSourceTest {
     public void tearDown() {
         utilities.close();
         sleeperMockedConstruction.close();
+    }
+
+    @Test
+    public void failToGetGitlabProject() throws GitLabApiException {
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
+
+        GitLabSCMSource gitLabSCMSource =
+                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
+
+        assertThrows(GitLabApiException.class, () -> gitLabSCMSource.getGitlabProject(gitLabApi));
+    }
+
+    @Test
+    public void failToRetrieve() throws GitLabApiException, IOException {
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
+
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
+
+        GitLabSCMSource gitLabSCMSource =
+                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
+        gitLabSCMSource.setOwner(owner);
+        utilities
+                .when(() -> GitLabHelper.apiBuilder(
+                        gitLabSCMSource.getOwner(),
+                        gitLabSCMSource.getServerName(),
+                        gitLabSCMSource.getCredentialsId()))
+                .thenReturn(gitLabApi);
+
+        assertThrows(
+                IOException.class,
+                () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
+        Mockito.verify(owner).save();
+    }
+
+    @Test
+    public void failedHeadEnumerationSavesTimestampAndSuccessfulRetryKeepsDigestStable() throws Exception {
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        RepositoryApi repositoryApi = Mockito.mock(RepositoryApi.class);
+        Project project = new Project().withId(42L);
+        GitLabApiException failure = new GitLabApiException("Branch enumeration unavailable", 503);
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repositoryApi);
+        Mockito.when(projectApi.getProject("group/project")).thenReturn(project);
+        Mockito.when(repositoryApi.getBranches(project)).thenThrow(failure).thenReturn(List.of());
+
+        GitLabSCMSource source =
+                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
+        source.setTraits(List.of(new BranchDiscoveryTrait(3)));
+        SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
+        source.setOwner(owner);
+        utilities.when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds")).thenReturn(gitLabApi);
+        assertNull(source.getLastRetrieveTimestamp());
+
+        IOException error = assertThrows(
+                IOException.class, () -> source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL));
+
+        assertEquals("Failed to fetch latest heads", error.getMessage());
+        assertSame(failure, error.getCause());
+        assertEquals(Long.valueOf(42L), source.getProjectId());
+        Long timestamp = source.getLastRetrieveTimestamp();
+        assertNotNull(timestamp);
+        Mockito.verify(owner, Mockito.atLeastOnce()).save();
+        String digest = Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source))));
+
+        source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
+
+        assertEquals(timestamp, source.getLastRetrieveTimestamp());
+        assertEquals(digest, Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source)))));
+        Mockito.verify(repositoryApi, Mockito.times(2)).getBranches(project);
     }
 
     @Test

@@ -1,10 +1,8 @@
 package io.jenkins.plugins.gitlabbranchsource.helpers;
 
-import static com.cloudbees.plugins.credentials.CredentialsMatchers.withId;
-import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static com.cloudbees.plugins.credentials.domains.URIRequirementBuilder.fromUri;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.damnhandy.uri.template.UriTemplate;
 import com.damnhandy.uri.template.UriTemplateBuilder;
@@ -12,7 +10,6 @@ import com.damnhandy.uri.template.impl.Operator;
 import hudson.ProxyConfiguration;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
-import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import io.jenkins.plugins.gitlabserverconfig.credentials.GroupAccessToken;
 import io.jenkins.plugins.gitlabserverconfig.credentials.PersonalAccessToken;
@@ -168,26 +165,28 @@ public class GitLabHelper {
 
     public static StandardCredentials getCredential(String credentialsId, String serverName, AccessControlled context) {
         if (StringUtils.isNotBlank(credentialsId)) {
-            if (context instanceof ItemGroup) {
-                return CredentialsMatchers.firstOrNull(
-                        lookupCredentials(
-                                StandardCredentials.class,
-                                (ItemGroup) context,
-                                ACL.SYSTEM,
-                                fromUri(StringUtils.defaultIfBlank(
-                                                getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
-                                        .build()),
-                        CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
-            } else {
-                return CredentialsMatchers.firstOrNull(
-                        lookupCredentials(
-                                StandardCredentials.class,
-                                (Item) context,
-                                ACL.SYSTEM,
-                                fromUri(StringUtils.defaultIfBlank(
-                                                getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
-                                        .build()),
-                        CredentialsMatchers.allOf(withId(credentialsId), GitLabServer.CREDENTIALS_MATCHER));
+            StandardCredentials c = null;
+            if (context instanceof ItemGroup<?> g) {
+                c = CredentialsProvider.findCredentialByIdInItemGroup(
+                        credentialsId,
+                        StandardCredentials.class,
+                        g,
+                        null,
+                        fromUri(StringUtils.defaultIfBlank(
+                                        getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
+                                .build());
+            } else if (context instanceof Item i) {
+                c = CredentialsProvider.findCredentialByIdInItem(
+                        credentialsId,
+                        StandardCredentials.class,
+                        i,
+                        null,
+                        fromUri(StringUtils.defaultIfBlank(
+                                        getServerUrlFromName(serverName), GitLabServer.GITLAB_SERVER_URL))
+                                .build());
+            }
+            if (c != null && GitLabServer.CREDENTIALS_MATCHER.matches(c)) {
+                return c;
             }
         }
 
