@@ -287,8 +287,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             } catch (TimeoutException e) {
                 future.cancel(true);
                 throw new RuntimeException("Operation timed out while fetching data from GitLab", e);
-            } catch (Exception e) {
-                throw e;
+            } finally {
+                executor.shutdown();
             }
         }
         return gitlabProject;
