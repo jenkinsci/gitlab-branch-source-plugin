@@ -271,8 +271,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     sshRemote = gitlabProject.getSshUrlToRepo();
                     httpRemote = gitlabProject.getHttpUrlToRepo();
                     projectId = gitlabProject.getId();
-                } catch (GitLabApiException e) {
-                    throw new IllegalStateException("Failed to retrieve project " + projectPath, e);
+                    return null;
                 }
             });
 
@@ -282,7 +281,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 } else {
                     future.get();
                 }
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof GitLabApiException) {
+                    throw (GitLabApiException) cause;
+                }
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             } catch (TimeoutException e) {
                 future.cancel(true);
