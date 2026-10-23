@@ -768,10 +768,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             listener.getLogger().println("Operation timed out while fetching data from GitLab");
             saveTimestampInOwner();
             throw new IOException("Operation timed out while fetching data from GitLab", e);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
             saveTimestampInOwner();
             throw new IOException("Failed to fetch latest heads", e);
+        } catch (ExecutionException e) {
+            saveTimestampInOwner();
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            listener.getLogger().println("Failed to fetch latest heads");
+            throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
             saveOwner();
