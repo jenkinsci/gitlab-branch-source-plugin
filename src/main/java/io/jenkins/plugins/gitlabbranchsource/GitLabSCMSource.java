@@ -467,10 +467,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             future.cancel(true);
             saveTimestampInOwner();
             throw new IOException("SCM revision fetch operation timed out", e);
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             listener.getLogger().println("Failed to retrieve SCM revision");
             saveTimestampInOwner();
             throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
+        } catch (ExecutionException e) {
+            saveTimestampInOwner();
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            listener.getLogger().println("Failed to fetch latest heads");
+            throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
         }
