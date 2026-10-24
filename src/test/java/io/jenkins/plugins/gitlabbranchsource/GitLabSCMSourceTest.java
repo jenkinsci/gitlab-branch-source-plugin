@@ -1,15 +1,18 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import com.damnhandy.uri.template.UriTemplate;
 import hudson.Util;
+import hudson.console.ConsoleNote;
 import hudson.model.Items;
 import hudson.model.TaskListener;
 import hudson.security.AccessControlled;
@@ -31,8 +34,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
@@ -207,6 +212,37 @@ public class GitLabSCMSourceTest {
         Mockito.verify(fixture.repoApi).getBranch(42L, "master");
     }
 
+    @Test
+    public void retrieveScopedToMergeRequestsOnlyInspectsThose() throws Exception {
+        MergeRequestFixture fixture = new MergeRequestFixture(
+                List.of(mergeRequest(3, "dev"), mergeRequest(2, "dev"), mergeRequest(1, "master")));
+        // What a merge request event for !2 scopes the retrieve to (see GitLabSCMSourceRequest).
+        MergeRequestSCMHead wanted = new MergeRequestSCMHead(
+                "MR-2",
+                2L,
+                new BranchSCMHead("dev"),
+                ChangeRequestCheckoutStrategy.MERGE,
+                SCMHeadOrigin.DEFAULT,
+                "author",
+                "group/project",
+                "feature-2",
+                "MR 2");
+
+        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+        fixture.source.retrieve(null, new SCMHeadObserver.Filter<>(collector, wanted), null, fixture.listener);
+
+        assertEquals(Set.of(wanted), collector.result().keySet());
+        // The two other merge requests are never checked: no log line, no API call.
+        String log = fixture.log();
+        assertTrue(log.contains("scoped to: !2"), log);
+        assertTrue(log.contains("Checking merge request !2"), log);
+        assertFalse(log.contains("Checking merge request !3"), log);
+        assertFalse(log.contains("Checking merge request !1"), log);
+        assertTrue(log.contains("1 merge requests were processed"), log);
+        Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
+        Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
+    }
+
     private static MergeRequest mergeRequest(long iid, String targetBranch) {
         Author author = new Author();
         author.setUsername("author");
@@ -266,6 +302,10 @@ public class GitLabSCMSourceTest {
             utilities
                     .when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds"))
                     .thenReturn(gitLabApi);
+        }
+
+        String log() {
+            return ConsoleNote.removeNotes(out.toString(StandardCharsets.UTF_8));
         }
     }
 

@@ -527,6 +527,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 // project share a handful of target branches, and one GET per merge request is what
                 // exhausts GitLab.com's per-user rate limit on projects with many open merge requests.
                 Map<String, String> targetShaCache = new HashMap<>();
+                // Event-driven retrieves are scoped to the merge requests of the event: the observer
+                // ignores every other head, so there is no point paying API calls for them.
+                Set<Long> requestedMrs = request.getRequestedMergeRequestNumbers();
+                if (requestedMrs != null) {
+                    listener.getLogger()
+                            .format(
+                                    "Only inspecting the merge requests this request is scoped to: %s%n",
+                                    requestedMrs.stream()
+                                            .sorted()
+                                            .map(iid -> "!" + iid)
+                                            .collect(Collectors.joining(", ")));
+                }
                 for (MergeRequest mr : request.getMergeRequests()) {
                     mergeRequestContributorCache.put(
                             mr.getIid(),
@@ -536,6 +548,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                     mr.getAuthor().getEmail()));
                     mergeRequestMetadataCache.put(
                             mr.getIid(), new ObjectMetadataAction(mr.getTitle(), mr.getDescription(), mr.getWebUrl()));
+                    if (requestedMrs != null && !requestedMrs.contains(mr.getIid())) {
+                        continue;
+                    }
                     count++;
                     listener.getLogger()
                             .format(
