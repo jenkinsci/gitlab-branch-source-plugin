@@ -523,6 +523,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 int count = 0;
                 listener.getLogger().format("%nChecking merge requests..%n");
                 HashMap<Long, String> forkMrSources = new HashMap<>();
+                // Revision of each target branch, resolved once per retrieve. Most merge requests of a
+                // project share a handful of target branches, and one GET per merge request is what
+                // exhausts GitLab.com's per-user rate limit on projects with many open merge requests.
+                Map<String, String> targetShaCache = new HashMap<>();
                 for (MergeRequest mr : request.getMergeRequests()) {
                     mergeRequestContributorCache.put(
                             mr.getIid(),
@@ -567,21 +571,26 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     } else if (fork) {
                         originProjectPath = forkMrSources.get(mr.getSourceProjectId());
                     }
-                    String targetSha;
-                    try {
-                        targetSha = gitLabApi
-                                .getRepositoryApi()
-                                .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
-                                .getCommit()
-                                .getId();
-                    } catch (Exception e) {
-                        listener.getLogger()
-                                .format(
-                                        "Failed getting TargetBranch from Merge Request: " + mr.getIid() + " ("
-                                                + mr.getTitle() + ")%n%s",
-                                        e);
-                        continue;
+                    String targetShaKey = mr.getTargetProjectId() + "/" + mr.getTargetBranch();
+                    String targetSha = targetShaCache.get(targetShaKey);
+                    if (targetSha == null) {
+                        try {
+                            targetSha = gitLabApi
+                                    .getRepositoryApi()
+                                    .getBranch(mr.getTargetProjectId(), mr.getTargetBranch())
+                                    .getCommit()
+                                    .getId();
+                        } catch (Exception e) {
+                            listener.getLogger()
+                                    .format(
+                                            "Failed getting TargetBranch from Merge Request: " + mr.getIid() + " ("
+                                                    + mr.getTitle() + ")%n%s",
+                                            e);
+                            continue;
+                        }
+                        targetShaCache.put(targetShaKey, targetSha);
                     }
+                    final String resolvedTargetSha = targetSha;
                     LOGGER.log(
                             Level.FINE,
                             String.format(
@@ -606,7 +615,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         head -> new MergeRequestSCMRevision(
                                                 head,
                                                 new BranchSCMRevision(
-                                                        head.getTarget(), targetSha // Latest revision of target branch
+                                                        head.getTarget(),
+                                                        resolvedTargetSha // Latest revision of target branch
                                                         ),
                                                 new BranchSCMRevision(
                                                         new BranchSCMHead(head.getOriginName()), mr.getSha())),
