@@ -596,6 +596,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                     .getCommit()
                                     .getId();
                         } catch (Exception e) {
+                            if (e instanceof GitLabApiException gle && gle.getHttpStatus() == 429) {
+                                // Skipping on a rate limit would silently drop this merge request (and let
+                                // a scan treat its job as orphaned): fail the whole retrieve instead.
+                                listener.getLogger()
+                                        .format(
+                                                "GitLab rate limit (HTTP 429) while reading the target branch of merge request !%d; aborting instead of silently skipping merge requests%n",
+                                                mr.getIid());
+                                throw gle;
+                            }
                             listener.getLogger()
                                     .format(
                                             "Failed getting TargetBranch from Merge Request: " + mr.getIid() + " ("

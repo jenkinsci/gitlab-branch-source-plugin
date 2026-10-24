@@ -243,6 +243,39 @@ public class GitLabSCMSourceTest {
         Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
     }
 
+    @Test
+    public void retrieveFailsOnRateLimitInsteadOfSkippingMergeRequests() throws Exception {
+        MergeRequestFixture fixture = new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
+        GitLabApiException rateLimited = new GitLabApiException("Too many requests", 429);
+        Mockito.when(fixture.repoApi.getBranch(any(), anyString())).thenThrow(rateLimited);
+
+        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+        IOException error =
+                assertThrows(IOException.class, () -> fixture.source.retrieve(null, collector, null, fixture.listener));
+
+        assertEquals("Failed to fetch latest heads", error.getMessage());
+        assertSame(rateLimited, error.getCause());
+        assertEquals(0, collector.result().size());
+        assertTrue(fixture.log().contains("GitLab rate limit (HTTP 429)"), fixture.log());
+        // The walk stops at the first 429 instead of burning the rest of the minute.
+        Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
+    }
+
+    @Test
+    public void retrieveStillSkipsMergeRequestsWhoseTargetBranchLookupFails() throws Exception {
+        MergeRequestFixture fixture = new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
+        Mockito.when(fixture.repoApi.getBranch(any(), anyString()))
+                .thenThrow(new GitLabApiException("Internal server error", 500));
+
+        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+        fixture.source.retrieve(null, collector, null, fixture.listener);
+
+        assertEquals(0, collector.result().size());
+        assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 2"), fixture.log());
+        assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 1"), fixture.log());
+        Mockito.verify(fixture.repoApi, Mockito.times(2)).getBranch(any(), anyString());
+    }
+
     private static MergeRequest mergeRequest(long iid, String targetBranch) {
         Author author = new Author();
         author.setUsername("author");
