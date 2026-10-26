@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 
 import hudson.Util;
@@ -26,9 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
@@ -102,17 +101,19 @@ public class GitLabSCMSourceTest {
         GitLabSCMSource gitLabSCMSource =
                 new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
         gitLabSCMSource.setOwner(owner);
-        utilities
-                .when(() -> GitLabHelper.apiBuilder(
-                        gitLabSCMSource.getOwner(),
-                        gitLabSCMSource.getServerName(),
-                        gitLabSCMSource.getCredentialsId()))
-                .thenReturn(gitLabApi);
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(
+                            gitLabSCMSource.getOwner(),
+                            gitLabSCMSource.getServerName(),
+                            gitLabSCMSource.getCredentialsId()))
+                    .thenReturn(gitLabApi);
 
-        assertThrows(
-                IOException.class,
-                () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
-        Mockito.verify(owner).save();
+            assertThrows(
+                    IOException.class,
+                    () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
+            Mockito.verify(owner).save();
+        }
     }
 
     @Test
@@ -132,25 +133,29 @@ public class GitLabSCMSourceTest {
         source.setTraits(List.of(new BranchDiscoveryTrait(3)));
         SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
         source.setOwner(owner);
-        utilities.when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds")).thenReturn(gitLabApi);
-        assertNull(source.getLastRetrieveTimestamp());
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds"))
+                    .thenReturn(gitLabApi);
+            assertNull(source.getLastRetrieveTimestamp());
 
-        IOException error = assertThrows(
-                IOException.class, () -> source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL));
+            IOException error = assertThrows(
+                    IOException.class, () -> source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL));
 
-        assertEquals("Failed to fetch latest heads", error.getMessage());
-        assertSame(failure, error.getCause());
-        assertEquals(Long.valueOf(42L), source.getProjectId());
-        Long timestamp = source.getLastRetrieveTimestamp();
-        assertNotNull(timestamp);
-        Mockito.verify(owner, Mockito.atLeastOnce()).save();
-        String digest = Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source))));
+            assertEquals("Failed to fetch latest heads", error.getMessage());
+            assertSame(failure, error.getCause());
+            assertEquals(Long.valueOf(42L), source.getProjectId());
+            Long timestamp = source.getLastRetrieveTimestamp();
+            assertNotNull(timestamp);
+            Mockito.verify(owner, Mockito.atLeastOnce()).save();
+            String digest = Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source))));
 
-        source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
+            source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
 
-        assertEquals(timestamp, source.getLastRetrieveTimestamp());
-        assertEquals(digest, Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source)))));
-        Mockito.verify(repositoryApi, Mockito.times(2)).getBranches(project);
+            assertEquals(timestamp, source.getLastRetrieveTimestamp());
+            assertEquals(digest, Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source)))));
+            Mockito.verify(repositoryApi, Mockito.times(2)).getBranches(project);
+        }
     }
 
     @Test
@@ -164,23 +169,10 @@ public class GitLabSCMSourceTest {
         Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
 
-        // Create a Synchronous Executor Mock
-        ExecutorService syncExecutor = Mockito.mock(ExecutorService.class);
-        Mockito.when(syncExecutor.submit(any(Runnable.class))).thenAnswer(invocation -> {
-            Runnable task = (Runnable) invocation.getArgument(0);
-            task.run();
-            Future<?> completedFuture = Mockito.mock(Future.class);
-            Mockito.when(completedFuture.get()).thenReturn(null);
-            Mockito.when(completedFuture.get(anyLong(), any(java.util.concurrent.TimeUnit.class)))
-                    .thenReturn(null);
-            return completedFuture;
-        });
-
-        try (MockedStatic<Executors> executorsMockedStatic = Mockito.mockStatic(Executors.class)) {
+        try (MockedStatic<Executors> executorsMockedStatic = mockSynchronousExecutors()) {
             utilities
                     .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
                     .thenReturn(gitLabApi);
-            executorsMockedStatic.when(Executors::newSingleThreadExecutor).thenReturn(syncExecutor);
             GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
             GitLabSCMSourceBuilder sb =
                     new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
@@ -194,6 +186,48 @@ public class GitLabSCMSourceTest {
             Set<SCMHead> scmHead = source.getSource().fetch(listener);
             assertEquals(0, scmHead.size());
         }
+    }
+
+    private MockedStatic<Executors> mockSynchronousExecutors() {
+        MockedStatic<Executors> executors = Mockito.mockStatic(Executors.class);
+        executors.when(Executors::newSingleThreadExecutor).thenAnswer(invocation -> new AbstractExecutorService() {
+            private boolean shutdown;
+
+            @Override
+            public void shutdown() {
+                shutdown = true;
+            }
+
+            @Override
+            public List<Runnable> shutdownNow() {
+                shutdown = true;
+                return List.of();
+            }
+
+            @Override
+            public boolean isShutdown() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean isTerminated() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean awaitTermination(long timeout, TimeUnit unit) {
+                return shutdown;
+            }
+
+            @Override
+            public void execute(Runnable command) {
+                if (shutdown) {
+                    throw new IllegalStateException("Executor is shut down");
+                }
+                command.run();
+            }
+        });
+        return executors;
     }
 
     @Test

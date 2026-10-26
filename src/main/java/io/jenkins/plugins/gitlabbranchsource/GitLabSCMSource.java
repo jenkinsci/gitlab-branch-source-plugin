@@ -271,7 +271,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     sshRemote = gitlabProject.getSshUrlToRepo();
                     httpRemote = gitlabProject.getHttpUrlToRepo();
                     projectId = gitlabProject.getId();
-                    return null;
+                    return gitlabProject;
                 }
             });
 
@@ -504,6 +504,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = null;
+        boolean ownerSavedOnFailure = false;
         try {
             Authentication auth = Jenkins.getAuthentication2();
             future = executor.submit(() -> {
@@ -514,10 +515,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                         getGitlabProject(gitLabApi);
                     } catch (GitLabApiException e) {
                         LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
-                        saveTimestampInOwner();
                         throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
                     } catch (RuntimeException e) {
-                        saveTimestampInOwner();
                         throw e;
                     }
                     GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
@@ -602,7 +601,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                         })) {
                                     listener.getLogger()
                                             .format("%n%d branches were processed (query completed)%n", count);
-                                    return;
+                                    return null;
                                 }
                             }
                             listener.getLogger().format("%n%d branches were processed%n", count);
@@ -736,7 +735,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                 .format(
                                                         "%n%d merge requests were processed (query completed)%n",
                                                         count);
-                                        return;
+                                        return null;
                                     }
                                 }
                             }
@@ -782,15 +781,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             }
                                         })) {
                                     listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
-                                    return;
+                                    return null;
                                 }
                             }
                             listener.getLogger().format("%n%d tags were processed (query completed)%n", count);
                         }
                     }
-                } catch (GitLabApiException | IOException | InterruptedException e) {
+                    return null;
+                } catch (GitLabApiException e) {
                     LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
-                    throw new RuntimeException("Failed to fetch latest heads", e);
+                    throw new IOException("Failed to fetch latest heads", e);
                 }
             });
 
@@ -804,15 +804,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             future.cancel(true);
             listener.getLogger().println("Operation timed out while fetching data from GitLab");
             saveTimestampInOwner();
+            ownerSavedOnFailure = true;
             throw new IOException("Operation timed out while fetching data from GitLab", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
             future.cancel(true);
             saveTimestampInOwner();
+            ownerSavedOnFailure = true;
             throw new IOException("Failed to fetch latest heads", e);
         } catch (ExecutionException e) {
+            ownerSavedOnFailure = true;
             saveTimestampInOwner();
             Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
+            }
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
             }
@@ -820,7 +826,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
-            saveOwner();
+            if (!ownerSavedOnFailure) {
+                saveOwner();
+            }
         }
     }
 
