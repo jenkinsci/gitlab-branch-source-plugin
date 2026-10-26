@@ -288,6 +288,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 }
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
+                future.cancel(true);
                 Thread.currentThread().interrupt();
                 throw new RuntimeException(e);
             } catch (TimeoutException e) {
@@ -477,6 +478,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("SCM revision fetch operation timed out", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to retrieve SCM revision");
+            future.cancel(true);
             saveTimestampInOwner();
             throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
         } catch (ExecutionException e) {
@@ -805,6 +807,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Operation timed out while fetching data from GitLab", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
+            future.cancel(true);
             saveTimestampInOwner();
             throw new IOException("Failed to fetch latest heads", e);
         } catch (ExecutionException e) {
