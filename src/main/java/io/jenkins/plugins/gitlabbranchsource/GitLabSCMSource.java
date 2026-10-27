@@ -58,6 +58,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -244,9 +246,39 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      */
     protected Project getGitlabProject() throws GitLabApiException {
         if (gitlabProject == null) {
-            getGitlabProject(apiBuilder(this.getOwner(), serverName, credentialsId));
+            getGitlabProject(createGitLabApi());
         }
         return gitlabProject;
+    }
+
+    private GitLabApi createGitLabApi() {
+        return apiBuilder(this.getOwner(), serverName, credentialsId);
+    }
+
+    private GitLabApi registerApi(
+            GitLabApi gitLabApi,
+            AtomicReference<GitLabApi> activeApi,
+            AtomicBoolean cancelled,
+            AtomicBoolean apiClosed) {
+        activeApi.set(gitLabApi);
+        if (cancelled.get()) {
+            closeApi(activeApi, apiClosed);
+        }
+        return gitLabApi;
+    }
+
+    private static void cancelApiTask(
+            Future<?> future, AtomicReference<GitLabApi> activeApi, AtomicBoolean cancelled, AtomicBoolean apiClosed) {
+        cancelled.set(true);
+        future.cancel(true);
+        closeApi(activeApi, apiClosed);
+    }
+
+    private static void closeApi(AtomicReference<GitLabApi> activeApi, AtomicBoolean apiClosed) {
+        GitLabApi gitLabApi = activeApi.get();
+        if (gitLabApi != null && apiClosed.compareAndSet(false, true)) {
+            gitLabApi.close();
+        }
     }
 
     /**
@@ -304,9 +336,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
     // This method always returns the latest list of members of the project
     public HashMap<String, AccessLevel> getMembers() {
+        GitLabApi gitLabApi = createGitLabApi();
+        try {
+            return getMembers(gitLabApi);
+        } finally {
+            gitLabApi.close();
+        }
+    }
+
+    private HashMap<String, AccessLevel> getMembers(GitLabApi gitLabApi) {
         HashMap<String, AccessLevel> members = new HashMap<>();
         try {
-            for (Member m : getMembersWithRetries()) {
+            for (Member m : getMembersWithRetries(gitLabApi)) {
                 members.put(m.getUsername(), m.getAccessLevel());
             }
         } catch (GitLabApiException e) {
@@ -318,11 +359,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         return members;
     }
 
-    private List<Member> getMembersWithRetries() throws GitLabApiException, InterruptedException {
+    private List<Member> getMembersWithRetries(GitLabApi gitLabApi) throws GitLabApiException, InterruptedException {
         int delay = INITIAL_DELAY_MS;
         int attemptNb = 0;
         final Sleeper sleeper = new Sleeper();
-        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
         while (true) {
             try {
                 return gitLabApi.getProjectApi().getAllMembers(projectPath);
@@ -410,11 +450,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<SCMRevision> future = null;
+        AtomicReference<GitLabApi> activeApi = new AtomicReference<>();
+        AtomicBoolean cancelled = new AtomicBoolean();
+        AtomicBoolean apiClosed = new AtomicBoolean();
         Authentication auth = Jenkins.getAuthentication2();
         try {
             future = executor.submit(() -> {
                 try (ACLContext aclCtx = ACL.as2(auth)) {
-                    GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
+                    GitLabApi gitLabApi = registerApi(createGitLabApi(), activeApi, cancelled, apiClosed);
+                    if (cancelled.get()) {
+                        return null;
+                    }
                     getGitlabProject(gitLabApi);
                     if (head instanceof BranchSCMHead) {
                         listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
@@ -474,12 +520,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (TimeoutException e) {
             listener.getLogger().println("SCM revision fetch operation timed out");
-            future.cancel(true);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             saveTimestampInOwner();
             throw new IOException("SCM revision fetch operation timed out", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to retrieve SCM revision");
-            future.cancel(true);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             saveTimestampInOwner();
             throw e;
         } catch (ExecutionException e) {
@@ -492,6 +538,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
+            closeApi(activeApi, apiClosed);
         }
     }
 
@@ -505,6 +552,27 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throws IOException, InterruptedException {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<?> future = null;
+        AtomicReference<GitLabApi> activeApi = new AtomicReference<>();
+        AtomicBoolean cancelled = new AtomicBoolean();
+        AtomicBoolean apiClosed = new AtomicBoolean();
+        SCMHeadObserver cancellableObserver = new SCMHeadObserver() {
+            @Override
+            public void observe(SCMHead head, SCMRevision revision) throws IOException, InterruptedException {
+                if (!cancelled.get()) {
+                    observer.observe(head, revision);
+                }
+            }
+
+            @Override
+            public boolean isObserving() {
+                return !cancelled.get() && observer.isObserving();
+            }
+
+            @Override
+            public Set<SCMHead> getIncludes() {
+                return observer.getIncludes();
+            }
+        };
         boolean ownerSavedOnFailure = false;
         try {
             Authentication auth = Jenkins.getAuthentication2();
@@ -512,7 +580,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                 try (ACLContext aclCtx = ACL.as2(auth)) {
                     GitLabApi gitLabApi;
                     try {
-                        gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
+                        gitLabApi = registerApi(createGitLabApi(), activeApi, cancelled, apiClosed);
+                        if (cancelled.get()) {
+                            return null;
+                        }
                         getGitlabProject(gitLabApi);
                     } catch (GitLabApiException e) {
                         LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
@@ -520,11 +591,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     } catch (RuntimeException e) {
                         throw e;
                     }
-                    GitLabSCMSourceContext ctx = new GitLabSCMSourceContext(criteria, observer).withTraits(getTraits());
+                    GitLabSCMSourceContext ctx =
+                            new GitLabSCMSourceContext(criteria, cancellableObserver).withTraits(getTraits());
                     try (GitLabSCMSourceRequest request = ctx.newRequest(this, listener)) {
                         request.setGitLabApi(gitLabApi);
                         request.setProject(gitlabProject);
-                        request.setMembers(getMembers());
+                        request.setMembers(getMembers(gitLabApi));
                         if (request.isFetchBranches()) {
                             request.setBranches(gitLabApi.getRepositoryApi().getBranches(gitlabProject));
                         }
@@ -590,7 +662,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                             public SCMSourceCriteria.Probe create(
                                                     @NonNull BranchSCMHead head, @Nullable BranchSCMRevision revision)
                                                     throws IOException {
-                                                return createProbe(head, revision);
+                                                return createProbe(head, revision, gitLabApi);
                                             }
                                         },
                                         (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
@@ -722,7 +794,8 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                     if (!isTrusted) {
                                                         listener.getLogger().format("(not from a trusted source)%n");
                                                     }
-                                                    return createProbe(isTrusted ? head : head.getTarget(), revision);
+                                                    return createProbe(
+                                                            isTrusted ? head : head.getTarget(), revision, gitLabApi);
                                                 }
                                             },
                                             (SCMSourceRequest.Witness) (head, revision, isMatch) -> {
@@ -771,7 +844,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                                                     @NonNull GitLabTagSCMHead head,
                                                     @Nullable GitTagSCMRevision revision)
                                                     throws IOException {
-                                                return createProbe(head, revision);
+                                                return createProbe(head, revision, gitLabApi);
                                             }
                                         },
                                         (SCMSourceRequest.Witness) (head1, revision, isMatch) -> {
@@ -802,14 +875,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
 
         } catch (TimeoutException e) {
-            future.cancel(true);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             listener.getLogger().println("Operation timed out while fetching data from GitLab");
             saveTimestampInOwner();
             ownerSavedOnFailure = true;
             throw new IOException("Operation timed out while fetching data from GitLab", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
-            future.cancel(true);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             saveTimestampInOwner();
             ownerSavedOnFailure = true;
             throw e;
@@ -830,6 +903,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
+            closeApi(activeApi, apiClosed);
             if (!ownerSavedOnFailure) {
                 saveOwner();
             }
@@ -1008,13 +1082,17 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     @NonNull
     @Override
     protected SCMProbe createProbe(@NonNull final SCMHead head, SCMRevision revision) throws IOException {
+        return createProbe(head, revision, createGitLabApi());
+    }
+
+    private SCMProbe createProbe(@NonNull final SCMHead head, SCMRevision revision, GitLabApi gitLabApi)
+            throws IOException {
         try {
             GitLabSCMFileSystem.BuilderImpl builder =
                     ExtensionList.lookup(SCMFileSystem.Builder.class).get(GitLabSCMFileSystem.BuilderImpl.class);
             if (builder == null) {
                 throw new AssertionError();
             }
-            GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
             try {
                 getGitlabProject(gitLabApi);
             } catch (GitLabApiException e) {
