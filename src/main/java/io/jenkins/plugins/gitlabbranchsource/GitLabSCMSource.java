@@ -268,9 +268,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     private static void cancelApiTask(
-            Future<?> future, AtomicReference<GitLabApi> activeApi, AtomicBoolean cancelled, AtomicBoolean apiClosed) {
+            @Nullable Future<?> future,
+            AtomicReference<GitLabApi> activeApi,
+            AtomicBoolean cancelled,
+            AtomicBoolean apiClosed) {
         cancelled.set(true);
-        future.cancel(true);
+        if (future != null) {
+            future.cancel(true);
+        }
         closeApi(activeApi, apiClosed);
     }
 
@@ -445,7 +450,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_EXCEPTION")
     protected SCMRevision retrieve(@NonNull SCMHead head, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -543,7 +547,6 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     @Override
-    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_EXCEPTION")
     protected void retrieve(
             SCMSourceCriteria criteria,
             @NonNull SCMHeadObserver observer,
