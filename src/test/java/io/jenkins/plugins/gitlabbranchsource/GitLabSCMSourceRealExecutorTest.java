@@ -167,15 +167,16 @@ public class GitLabSCMSourceRealExecutorTest {
             AtomicReference<Thread> callerThread = new AtomicReference<>();
             ExecutorService caller = Executors.newSingleThreadExecutor();
             try {
-                Future<IOException> retrieval = caller.submit(() -> {
+                Future<InterruptedException> retrieval = caller.submit(() -> {
                     callerThread.set(Thread.currentThread());
-                    return expectIOException(source, observer(observed));
+                    return assertThrows(
+                            InterruptedException.class,
+                            () -> source.retrieve(null, observer(observed), null, TaskListener.NULL));
                 });
 
                 assertTrue(gitLab.branchRequestStarted.await(5, TimeUnit.SECONDS));
                 callerThread.get().interrupt();
-                IOException failure = retrieval.get(5, TimeUnit.SECONDS);
-                assertEquals("Failed to fetch latest heads", failure.getMessage());
+                retrieval.get(5, TimeUnit.SECONDS);
 
                 gitLab.releaseBranches();
                 assertTrue(gitLab.branchResponseCompleted.await(5, TimeUnit.SECONDS));
