@@ -3,6 +3,7 @@ package io.jenkins.plugins.gitlabbranchsource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -29,6 +30,9 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSourceOwner;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.ProjectApi;
+import org.gitlab4j.api.models.Project;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,6 +45,69 @@ public class GitLabSCMSourceRealExecutorTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
+
+    @Test
+    public void projectLookupDoesNotPublishMetadataAfterItsTimedOutTaskReturns() throws Exception {
+        GitLabSCMSource source =
+                new GitLabSCMSourceBuilder("id", "server", "", "group", "group/project", "project").build();
+        source.setIndexingTimeout(1);
+        GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
+        ProjectApi projectApi = Mockito.mock(ProjectApi.class);
+        Project project = Mockito.mock(Project.class);
+        CountDownLatch requestStarted = new CountDownLatch(1);
+        CountDownLatch releaseRequest = new CountDownLatch(1);
+        CountDownLatch requestReturned = new CountDownLatch(1);
+        CountDownLatch metadataPublished = new CountDownLatch(1);
+        Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+        Mockito.when(projectApi.getProject(Mockito.any())).thenAnswer(invocation -> {
+            requestStarted.countDown();
+            boolean interrupted = false;
+            while (true) {
+                try {
+                    releaseRequest.await();
+                    break;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+            requestReturned.countDown();
+            return project;
+        });
+        Mockito.when(project.getSshUrlToRepo()).thenReturn("git@gitlab.example:group/project.git");
+        Mockito.when(project.getHttpUrlToRepo()).thenReturn("https://gitlab.example/group/project.git");
+        Mockito.when(project.getId()).thenAnswer(invocation -> {
+            metadataPublished.countDown();
+            return 42L;
+        });
+        ExecutorService caller = Executors.newSingleThreadExecutor();
+        try {
+            Future<RuntimeException> lookup = caller.submit(() -> {
+                try {
+                    source.getGitlabProject(gitLabApi);
+                    return null;
+                } catch (RuntimeException e) {
+                    return e;
+                }
+            });
+
+            assertTrue(requestStarted.await(5, TimeUnit.SECONDS));
+            RuntimeException timeout = lookup.get(5, TimeUnit.SECONDS);
+            assertTrue(timeout.getMessage().contains("timed out"));
+
+            releaseRequest.countDown();
+            assertTrue(requestReturned.await(5, TimeUnit.SECONDS));
+            assertFalse(metadataPublished.await(1, TimeUnit.SECONDS));
+            assertNull(source.getProjectId());
+            assertNull(source.getSshRemote());
+            assertNull(source.getHttpRemote());
+        } finally {
+            releaseRequest.countDown();
+            caller.shutdownNow();
+        }
+    }
 
     @Test
     public void positiveTimeoutCancelsRetrievalAndSuppressesLateObserverCallbacks() throws Exception {

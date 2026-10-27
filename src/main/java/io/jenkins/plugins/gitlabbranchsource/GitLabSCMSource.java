@@ -265,21 +265,18 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             Authentication auth = Jenkins.getAuthentication2();
 
-            Future<?> future = executor.submit(() -> {
+            Future<Project> future = executor.submit(() -> {
                 try (ACLContext aclCtx = ACL.as2(auth)) {
-                    gitlabProject = gitLabApi.getProjectApi().getProject(projectPath);
-                    sshRemote = gitlabProject.getSshUrlToRepo();
-                    httpRemote = gitlabProject.getHttpUrlToRepo();
-                    projectId = gitlabProject.getId();
-                    return gitlabProject;
+                    return gitLabApi.getProjectApi().getProject(projectPath);
                 }
             });
 
+            Project project;
             try {
                 if (indexingTimeout != null && indexingTimeout > 0) {
-                    future.get(indexingTimeout, TimeUnit.SECONDS);
+                    project = future.get(indexingTimeout, TimeUnit.SECONDS);
                 } else {
-                    future.get();
+                    project = future.get();
                 }
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause();
@@ -297,6 +294,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             } finally {
                 executor.shutdown();
             }
+            gitlabProject = project;
+            sshRemote = project.getSshUrlToRepo();
+            httpRemote = project.getHttpUrlToRepo();
+            projectId = project.getId();
         }
         return gitlabProject;
     }
