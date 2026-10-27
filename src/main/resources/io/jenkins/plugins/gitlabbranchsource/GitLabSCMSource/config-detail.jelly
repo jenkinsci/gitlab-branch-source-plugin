@@ -17,7 +17,7 @@
     <scm:traits field="traits"/>
   </f:entry>
   <f:advanced title="${%Advanced}">
-    <f:entry title="${%Indexing Timeout}" description="Maximum time to index a repository (Seconds)">
+    <f:entry title="${%Indexing Timeout}" description="Indexing timeout in seconds (0 disables it), also used for HTTP requests. Cancellation waits for running observer callbacks to finish.">
       <f:number clazz="indexing-timeout" field="indexingTimeout" default="0"/>
     </f:entry>
   </f:advanced>

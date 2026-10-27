@@ -246,13 +246,21 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      */
     protected Project getGitlabProject() throws GitLabApiException {
         if (gitlabProject == null) {
-            getGitlabProject(createGitLabApi());
+            try (GitLabApi gitLabApi = createGitLabApi()) {
+                getGitlabProject(gitLabApi);
+            }
         }
         return gitlabProject;
     }
 
     private GitLabApi createGitLabApi() {
-        return apiBuilder(this.getOwner(), serverName, credentialsId);
+        GitLabApi gitLabApi = apiBuilder(this.getOwner(), serverName, credentialsId);
+        if (indexingTimeout != null && indexingTimeout > 0) {
+            int timeoutMillis =
+                    (int) Math.min(TimeUnit.SECONDS.toMillis(indexingTimeout.longValue()), Integer.MAX_VALUE);
+            gitLabApi.setRequestTimeout(timeoutMillis, timeoutMillis);
+        }
+        return gitLabApi;
     }
 
     private GitLabApi registerApi(
@@ -558,22 +566,29 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         AtomicReference<GitLabApi> activeApi = new AtomicReference<>();
         AtomicBoolean cancelled = new AtomicBoolean();
         AtomicBoolean apiClosed = new AtomicBoolean();
+        Object callbackLock = new Object();
         SCMHeadObserver cancellableObserver = new SCMHeadObserver() {
             @Override
             public void observe(SCMHead head, SCMRevision revision) throws IOException, InterruptedException {
-                if (!cancelled.get()) {
-                    observer.observe(head, revision);
+                synchronized (callbackLock) {
+                    if (!cancelled.get()) {
+                        observer.observe(head, revision);
+                    }
                 }
             }
 
             @Override
             public boolean isObserving() {
-                return !cancelled.get() && observer.isObserving();
+                synchronized (callbackLock) {
+                    return !cancelled.get() && observer.isObserving();
+                }
             }
 
             @Override
             public Set<SCMHead> getIncludes() {
-                return observer.getIncludes();
+                synchronized (callbackLock) {
+                    return cancelled.get() ? Set.of() : observer.getIncludes();
+                }
             }
         };
         boolean ownerSavedOnFailure = false;
@@ -906,9 +921,12 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
-            closeApi(activeApi, apiClosed);
-            if (!ownerSavedOnFailure) {
-                saveOwner();
+            synchronized (callbackLock) {
+                // Wait for any observer callback already in progress before completing cancellation.
+                closeApi(activeApi, apiClosed);
+                if (!ownerSavedOnFailure) {
+                    saveOwner();
+                }
             }
         }
     }
