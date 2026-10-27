@@ -480,7 +480,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             listener.getLogger().println("Failed to retrieve SCM revision");
             future.cancel(true);
             saveTimestampInOwner();
-            throw new IOException("Failed to retrieve the SCM revision for " + head.getName(), e);
+            throw e;
         } catch (ExecutionException e) {
             saveTimestampInOwner();
             Throwable cause = e.getCause();
@@ -811,11 +811,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             future.cancel(true);
             saveTimestampInOwner();
             ownerSavedOnFailure = true;
-            throw new IOException("Failed to fetch latest heads", e);
+            throw e;
         } catch (ExecutionException e) {
             ownerSavedOnFailure = true;
             saveTimestampInOwner();
             Throwable cause = e.getCause();
+            if (cause instanceof InterruptedException) {
+                throw (InterruptedException) cause;
+            }
             if (cause instanceof IOException) {
                 throw (IOException) cause;
             }
