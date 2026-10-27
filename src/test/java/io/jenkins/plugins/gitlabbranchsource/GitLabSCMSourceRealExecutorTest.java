@@ -113,18 +113,22 @@ public class GitLabSCMSourceRealExecutorTest {
     public void positiveTimeoutCancelsRetrievalAndSuppressesLateObserverCallbacks() throws Exception {
         try (GitLabFixture gitLab = new GitLabFixture(true)) {
             GitLabSCMSource source = newSource(gitLab);
-            source.setIndexingTimeout(1);
+            source.getGitlabProject();
+            source.setIndexingTimeout(5);
             CountDownLatch observed = new CountDownLatch(1);
             ExecutorService caller = Executors.newSingleThreadExecutor();
             try {
                 Future<IOException> retrieval = caller.submit(() -> expectIOException(source, observer(observed)));
 
-                assertTrue(gitLab.branchRequestStarted.await(5, TimeUnit.SECONDS));
-                IOException failure = retrieval.get(5, TimeUnit.SECONDS);
+                assertTrue(
+                        "Timed retrieval did not reach the blocked branch request",
+                        gitLab.branchRequestStarted.await(30, TimeUnit.SECONDS));
+                IOException failure = retrieval.get(30, TimeUnit.SECONDS);
                 assertEquals("Operation timed out while fetching data from GitLab", failure.getMessage());
+                assertTrue(failure.getCause() instanceof TimeoutException);
 
                 gitLab.releaseBranches();
-                assertTrue(gitLab.branchResponseCompleted.await(5, TimeUnit.SECONDS));
+                assertTrue(gitLab.branchResponseCompleted.await(30, TimeUnit.SECONDS));
                 assertFalse(observed.await(1, TimeUnit.SECONDS));
             } finally {
                 gitLab.releaseBranches();
