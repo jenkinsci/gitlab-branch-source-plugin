@@ -134,21 +134,28 @@ public class BranchDiscoveryTraitTest {
     }
 
     @Test
-    public void onlyOriginMergeRequestsRequiresAnyMatchingOriginMergeRequest() throws Exception {
+    public void onlyOriginMergeRequestsPreservesLegacyFiltering() throws Exception {
         GitLabSCMSourceContext context = context(2, null);
         assertTrue(context.wantOriginMRs());
-        // A different MR must not exclude a branch with its own MR, regardless of iteration order.
+        // Strategy 2 preserves legacy behavior: any different origin MR excludes the branch.
         for (List<MergeRequest> mrs : List.of(
                 List.of(mr(1L, "other"), mr(1L, "feature"), mr(2L, "fork")),
                 List.of(mr(1L, "feature"), mr(1L, "other"), mr(2L, "fork")))) {
             try (GitLabSCMSourceRequest request = request(context, mrs.toArray(new MergeRequest[0]))) {
-                assertFalse(request.isExcluded(new BranchSCMHead("FEATURE")));
+                assertTrue(request.isExcluded(new BranchSCMHead("FEATURE")));
                 assertTrue(request.isExcluded(new BranchSCMHead("main")));
                 assertTrue(request.isExcluded(new BranchSCMHead("fork")));
             }
         }
-        try (GitLabSCMSourceRequest request = request(context)) {
+        try (GitLabSCMSourceRequest request = request(context, mr(1L, "feature"))) {
+            assertFalse(request.isExcluded(new BranchSCMHead("FEATURE")));
             assertTrue(request.isExcluded(new BranchSCMHead("main")));
+        }
+        try (GitLabSCMSourceRequest request = request(context)) {
+            assertFalse(request.isExcluded(new BranchSCMHead("main")));
+        }
+        try (GitLabSCMSourceRequest request = request(context, mr(2L, "fork"))) {
+            assertFalse(request.isExcluded(new BranchSCMHead("main")));
         }
     }
 

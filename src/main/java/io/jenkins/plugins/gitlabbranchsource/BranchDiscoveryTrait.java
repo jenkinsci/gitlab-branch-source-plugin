@@ -339,11 +339,10 @@ public class BranchDiscoveryTrait extends SCMSourceTrait {
             if (request instanceof GitLabSCMSourceRequest) {
                 for (MergeRequest m : ((GitLabSCMSourceRequest) request).getMergeRequests()) {
                     if (m.getSourceProjectId().equals(m.getTargetProjectId())
-                            && m.getSourceBranch().equalsIgnoreCase(head.getName())) {
-                        return false;
+                            && !m.getSourceBranch().equalsIgnoreCase(head.getName())) {
+                        return true;
                     }
                 }
-                return true;
             }
             return false;
         }
