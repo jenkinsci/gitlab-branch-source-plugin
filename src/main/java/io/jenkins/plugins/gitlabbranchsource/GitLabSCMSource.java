@@ -448,7 +448,15 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     private void saveOwner() throws IOException {
         SCMSourceOwner owner = this.getOwner();
         if (owner != null) {
-            owner.save();
+            // Cancellation cleanup may restore interruption before this file-backed save.
+            boolean interrupted = Thread.interrupted();
+            try {
+                owner.save();
+            } finally {
+                if (interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 

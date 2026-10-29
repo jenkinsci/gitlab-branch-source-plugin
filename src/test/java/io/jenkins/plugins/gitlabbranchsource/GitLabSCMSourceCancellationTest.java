@@ -53,6 +53,51 @@ public class GitLabSCMSourceCancellationTest {
     public static JenkinsRule j = new JenkinsRule();
 
     @Test
+    public void cancellationSavesOwnerWhenClientCleanupRestoresInterruption() throws Exception {
+        for (boolean heads : new boolean[] {true, false}) {
+            GitLabSCMSource source = source();
+            Project project = new Project().withId(42L);
+            GitLabApi api = api(project);
+            CountDownLatch requestStarted = new CountDownLatch(1);
+            CountDownLatch releaseRequest = new CountDownLatch(1);
+            when(api.getProjectApi().getProject("group/project")).thenAnswer(invocation -> {
+                requestStarted.countDown();
+                awaitIgnoringInterrupts(releaseRequest);
+                return project;
+            });
+            doAnswer(invocation -> {
+                        Thread.currentThread().interrupt();
+                        return null;
+                    })
+                    .when(api)
+                    .close();
+            SCMSourceOwner owner = source.getOwner();
+            doAnswer(invocation -> {
+                        assertFalse(
+                                "Metadata saving must not inherit the cleanup interrupt flag",
+                                Thread.currentThread().isInterrupted());
+                        return null;
+                    })
+                    .when(owner)
+                    .save();
+            try (RetrievalRun run = new RetrievalRun(source, api, heads)) {
+                try {
+                    assertTrue(requestStarted.await(30, TimeUnit.SECONDS));
+                    run.caller.interrupt();
+                    assertTrue(
+                            assertThrows(ExecutionException.class, () -> run.result.get(30, TimeUnit.SECONDS))
+                                            .getCause()
+                                    instanceof InterruptedException);
+                    verify(owner).save();
+                    verify(api).close();
+                } finally {
+                    releaseRequest.countDown();
+                }
+            }
+        }
+    }
+
+    @Test
     public void cancellationBetweenProjectLookupAndPublicationDoesNotChangeSavedMetadata() throws Exception {
         for (boolean heads : new boolean[] {true, false}) {
             for (boolean timeout : new boolean[] {true, false}) {

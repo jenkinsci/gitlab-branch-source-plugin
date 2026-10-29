@@ -10,7 +10,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import hudson.model.Executor;
+import hudson.model.Item;
+import hudson.model.Queue;
+import hudson.model.Result;
 import hudson.model.TaskListener;
+import hudson.model.listeners.ItemListener;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
@@ -19,6 +24,7 @@ import io.jenkins.plugins.gitlabserverconfig.servers.GitLabServers;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -27,6 +33,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import jenkins.branch.BranchProperty;
+import jenkins.branch.BranchSource;
+import jenkins.branch.DefaultBranchPropertyStrategy;
+import jenkins.branch.NoTriggerBranchProperty;
 import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
@@ -38,6 +48,9 @@ import jenkins.scm.api.SCMSourceOwner;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.Project;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.multibranch.SCMBinder;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -217,6 +230,161 @@ public class GitLabSCMSourceRealExecutorTest {
     }
 
     @Test
+    public void multibranchIndexingCreatesPipelineJobFromJenkinsfile() throws Exception {
+        try (GitLabFixture gitLab = new GitLabFixture(false)) {
+            WorkflowMultiBranchProject project = multibranchProject("successful-indexing", gitLab, 0);
+
+            scheduleIndexing(project).get(30, TimeUnit.SECONDS);
+
+            assertIndexingResult(project, Result.SUCCESS);
+            assertPipelineJob(project);
+        }
+    }
+
+    @Test
+    public void multibranchIndexingTimeoutDoesNotCreateLateJobsAndAllowsRetry() throws Exception {
+        checkMultibranchCancellation(false);
+    }
+
+    @Test
+    public void abortingMultibranchIndexingDoesNotCreateLateJobsAndAllowsRetry() throws Exception {
+        checkMultibranchCancellation(true);
+    }
+
+    @Test
+    public void abortingMultibranchIndexingWaitsForActualJobCreationCallback() throws Exception {
+        try (GitLabFixture gitLab = new GitLabFixture(false)) {
+            WorkflowMultiBranchProject project = multibranchProject("aborted-job-creation", gitLab, 0);
+            CountDownLatch callbackStarted = new CountDownLatch(1);
+            CountDownLatch callbackInterrupted = new CountDownLatch(1);
+            CountDownLatch releaseCallback = new CountDownLatch(1);
+            CountDownLatch callbackFinished = new CountDownLatch(1);
+            AtomicReference<Thread> workerThread = new AtomicReference<>();
+            ItemListener listener = new ItemListener() {
+                @Override
+                public void onCreated(Item item) {
+                    if (item.getParent() != project) {
+                        return;
+                    }
+                    workerThread.set(Thread.currentThread());
+                    callbackStarted.countDown();
+                    awaitCallbackRelease(releaseCallback, callbackInterrupted);
+                    callbackFinished.countDown();
+                }
+            };
+            j.jenkins.getExtensionList(ItemListener.class).add(listener);
+            try {
+                Future<?> indexing = scheduleIndexing(project);
+                assertTrue(
+                        "The real branch observer did not create a job", callbackStarted.await(30, TimeUnit.SECONDS));
+                Executor executor = Executor.of(project.getComputation());
+                assertNotNull(executor);
+                executor.interrupt(Result.ABORTED);
+                assertTrue(callbackInterrupted.await(30, TimeUnit.SECONDS));
+                assertThrows(TimeoutException.class, () -> indexing.get(200, TimeUnit.MILLISECONDS));
+
+                releaseCallback.countDown();
+                indexing.get(30, TimeUnit.SECONDS);
+                assertIndexingResult(project, Result.ABORTED);
+                assertEquals(0L, callbackFinished.getCount());
+                workerThread.get().join(30_000);
+                assertFalse(
+                        "The job-creation worker must finish after abort",
+                        workerThread.get().isAlive());
+
+                scheduleIndexing(project).get(30, TimeUnit.SECONDS);
+                assertIndexingResult(project, Result.SUCCESS);
+                assertPipelineJob(project);
+            } finally {
+                releaseCallback.countDown();
+                j.jenkins.getExtensionList(ItemListener.class).remove(listener);
+                Executor executor = Executor.of(project.getComputation());
+                if (executor != null) {
+                    executor.interrupt(Result.ABORTED);
+                }
+                j.waitUntilNoActivityUpTo(30_000);
+            }
+        }
+    }
+
+    private void checkMultibranchCancellation(boolean abort) throws Exception {
+        try (GitLabFixture gitLab = new GitLabFixture(false, false, true)) {
+            WorkflowMultiBranchProject project =
+                    multibranchProject(abort ? "aborted-indexing" : "timed-out-indexing", gitLab, abort ? 0 : 5);
+            Future<?> indexing = scheduleIndexing(project);
+            try {
+                assertTrue(
+                        "Multibranch indexing did not reach the Jenkinsfile probe",
+                        gitLab.fileRequestStarted.await(30, TimeUnit.SECONDS));
+                if (abort) {
+                    Executor executor = Executor.of(project.getComputation());
+                    assertNotNull(executor);
+                    executor.interrupt(Result.ABORTED);
+                }
+                indexing.get(30, TimeUnit.SECONDS);
+
+                assertIndexingResult(project, abort ? Result.ABORTED : Result.FAILURE);
+                assertEquals(1L, gitLab.releaseFile.getCount());
+                assertNull(project.getItem("master"));
+                if (!abort) {
+                    assertTrue(Files.readString(
+                                    project.getComputation().getLogFile().toPath())
+                            .contains("Operation timed out while fetching data from GitLab"));
+                }
+
+                gitLab.releaseFile.countDown();
+                assertTrue(gitLab.fileResponseCompleted.await(30, TimeUnit.SECONDS));
+                j.waitUntilNoActivityUpTo(30_000);
+                assertNull("Cancelled indexing must not create a branch job", project.getItem("master"));
+
+                scheduleIndexing(project).get(30, TimeUnit.SECONDS);
+                assertIndexingResult(project, Result.SUCCESS);
+                assertPipelineJob(project);
+            } finally {
+                gitLab.releaseFile.countDown();
+                Executor executor = Executor.of(project.getComputation());
+                if (executor != null) {
+                    executor.interrupt(Result.ABORTED);
+                }
+                j.waitUntilNoActivityUpTo(30_000);
+            }
+        }
+    }
+
+    private static WorkflowMultiBranchProject multibranchProject(String name, GitLabFixture gitLab, int indexingTimeout)
+            throws Exception {
+        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, name);
+        GitLabSCMSource source = newSource(gitLab);
+        source.setOwner(project);
+        source.getGitlabProject();
+        source.setIndexingTimeout(indexingTimeout);
+        project.getSourcesList().add(new BranchSource(source, new DefaultBranchPropertyStrategy(new BranchProperty[] {
+            new NoTriggerBranchProperty()
+        })));
+        return project;
+    }
+
+    private static Future<?> scheduleIndexing(WorkflowMultiBranchProject project) {
+        Queue.Item scheduled = project.scheduleBuild2(0);
+        assertNotNull("Indexing should be scheduled", scheduled);
+        return scheduled.getFuture();
+    }
+
+    private static void assertIndexingResult(WorkflowMultiBranchProject project, Result expected) throws IOException {
+        assertEquals(
+                Files.readString(project.getComputation().getLogFile().toPath()),
+                expected,
+                project.getComputation().getResult());
+    }
+
+    private static void assertPipelineJob(WorkflowMultiBranchProject project) {
+        WorkflowJob job = project.getItem("master");
+        assertNotNull("The real branch observer should create a Pipeline job", job);
+        assertTrue(job.getDefinition() instanceof SCMBinder);
+        assertNull("Indexing must not start a checkout in this fixture", job.getLastBuild());
+    }
+
+    @Test
     public void standaloneProjectTimeoutClosesClientAndTerminatesWorkerWithoutResponse() throws Exception {
         try (GitLabFixture gitLab = new GitLabFixture(false, true);
                 GitLabApi api = Mockito.spy(new GitLabApi(
@@ -328,19 +496,7 @@ public class GitLabSCMSourceRealExecutorTest {
                 @Override
                 public void observe(SCMHead head, SCMRevision revision) {
                     callbackStarted.countDown();
-                    boolean interrupted = false;
-                    while (true) {
-                        try {
-                            releaseCallback.await();
-                            break;
-                        } catch (InterruptedException e) {
-                            interrupted = true;
-                            callbackInterrupted.countDown();
-                        }
-                    }
-                    if (interrupted) {
-                        Thread.currentThread().interrupt();
-                    }
+                    awaitCallbackRelease(releaseCallback, callbackInterrupted);
                     callbackFinished.countDown();
                 }
             };
@@ -365,6 +521,22 @@ public class GitLabSCMSourceRealExecutorTest {
                 caller.shutdownNow();
                 assertTrue(caller.awaitTermination(30, TimeUnit.SECONDS));
             }
+        }
+    }
+
+    private static void awaitCallbackRelease(CountDownLatch releaseCallback, CountDownLatch callbackInterrupted) {
+        boolean interrupted = false;
+        while (true) {
+            try {
+                releaseCallback.await();
+                break;
+            } catch (InterruptedException e) {
+                interrupted = true;
+                callbackInterrupted.countDown();
+            }
+        }
+        if (interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 
