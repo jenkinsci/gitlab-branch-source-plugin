@@ -28,9 +28,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
 import org.gitlab4j.api.GitLabApi;
@@ -137,6 +139,79 @@ public class GitLabSCMSourceRealExecutorTest {
             } finally {
                 gitLab.releaseBranches();
                 caller.shutdownNow();
+            }
+        }
+    }
+
+    @Test
+    public void timeoutDuringJenkinsfileProbeSuppressesLateObserverCallbacks() throws Exception {
+        checkBlockedJenkinsfileProbe(true);
+    }
+
+    @Test
+    public void disabledTimeoutAllowsJenkinsfileProbeToComplete() throws Exception {
+        checkBlockedJenkinsfileProbe(false);
+    }
+
+    private void checkBlockedJenkinsfileProbe(boolean timeoutEnabled) throws Exception {
+        try (GitLabFixture gitLab = new GitLabFixture(false, false, true)) {
+            GitLabSCMSource source = newSource(gitLab);
+            source.getGitlabProject();
+            source.setIndexingTimeout(timeoutEnabled ? 5 : 0);
+            CountDownLatch observed = new CountDownLatch(1);
+            AtomicReference<Thread> worker = new AtomicReference<>();
+            SCMSourceCriteria criteria = (probe, listener) -> {
+                worker.set(Thread.currentThread());
+                return probe.stat("Jenkinsfile").getType() == SCMFile.Type.REGULAR_FILE;
+            };
+            ExecutorService caller = Executors.newSingleThreadExecutor();
+            try {
+                Future<?> retrieval = caller.submit(() -> {
+                    if (timeoutEnabled) {
+                        IOException failure = assertThrows(
+                                IOException.class,
+                                () -> source.retrieve(criteria, observer(observed), null, TaskListener.NULL));
+                        assertEquals("Operation timed out while fetching data from GitLab", failure.getMessage());
+                        assertTrue(failure.getCause() instanceof TimeoutException);
+                    } else {
+                        source.retrieve(criteria, observer(observed), null, TaskListener.NULL);
+                    }
+                    return null;
+                });
+                assertTrue(
+                        "Criteria did not reach the repository-file endpoint",
+                        gitLab.fileRequestStarted.await(30, TimeUnit.SECONDS));
+                if (timeoutEnabled) {
+                    retrieval.get(30, TimeUnit.SECONDS);
+                    assertEquals(
+                            "Retrieval must finish before the server sends the file",
+                            1L,
+                            gitLab.releaseFile.getCount());
+                    worker.get().join(TimeUnit.SECONDS.toMillis(30));
+                    assertFalse(
+                            "Probe worker must exit without the repository-file response",
+                            worker.get().isAlive());
+                    assertEquals(1L, observed.getCount());
+                } else {
+                    assertThrows(TimeoutException.class, () -> retrieval.get(200, TimeUnit.MILLISECONDS));
+                }
+
+                gitLab.releaseFile.countDown();
+                assertTrue(gitLab.fileResponseCompleted.await(30, TimeUnit.SECONDS));
+                if (timeoutEnabled) {
+                    assertFalse(observed.await(1, TimeUnit.SECONDS));
+                } else {
+                    retrieval.get(30, TimeUnit.SECONDS);
+                    assertTrue(observed.await(30, TimeUnit.SECONDS));
+                }
+            } finally {
+                gitLab.releaseFile.countDown();
+                caller.shutdownNow();
+                assertTrue(caller.awaitTermination(30, TimeUnit.SECONDS));
+                if (worker.get() != null) {
+                    worker.get().join(TimeUnit.SECONDS.toMillis(30));
+                    assertFalse(worker.get().isAlive());
+                }
             }
         }
     }
@@ -348,6 +423,11 @@ public class GitLabSCMSourceRealExecutorTest {
     private static class GitLabFixture implements AutoCloseable {
         private static final String PROJECT_PATH = "/api/v4/projects/group/project";
         private static final String BRANCHES_PATH = "/api/v4/projects/42/repository/branches";
+        private static final String FILE_PATH = PROJECT_PATH + "/repository/files/Jenkinsfile";
+        private static final String FILE_RESPONSE = """
+                {"file_name":"Jenkinsfile","file_path":"Jenkinsfile","size":1,
+                 "encoding":"base64","content":"Cg==","ref":"master"}
+                """;
         private static final String PROJECT_RESPONSE = """
                 {"id":42,"name":"project","path_with_namespace":"group/project",
                  "web_url":"https://gitlab.example/group/project",
@@ -367,13 +447,21 @@ public class GitLabSCMSourceRealExecutorTest {
         private final CountDownLatch branchRequestStarted = new CountDownLatch(1);
         private final CountDownLatch releaseBranches = new CountDownLatch(1);
         private final CountDownLatch branchResponseCompleted = new CountDownLatch(1);
+        private final CountDownLatch fileRequestStarted = new CountDownLatch(1);
+        private final CountDownLatch releaseFile;
+        private final CountDownLatch fileResponseCompleted = new CountDownLatch(1);
 
         private GitLabFixture(boolean delayBranches) throws IOException {
             this(delayBranches, false);
         }
 
         private GitLabFixture(boolean delayBranches, boolean delayProject) throws IOException {
+            this(delayBranches, delayProject, false);
+        }
+
+        private GitLabFixture(boolean delayBranches, boolean delayProject, boolean delayFile) throws IOException {
             this.delayBranches = delayBranches;
+            releaseFile = new CountDownLatch(delayFile ? 1 : 0);
             releaseProject = new CountDownLatch(delayProject ? 1 : 0);
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
             serverName = "real-executor-" + server.getAddress().getPort();
@@ -404,6 +492,20 @@ public class GitLabSCMSourceRealExecutorTest {
                     send(exchange, 200, BRANCHES_RESPONSE);
                 } finally {
                     branchResponseCompleted.countDown();
+                }
+                return;
+            }
+
+            if (FILE_PATH.equals(path)) {
+                fileRequestStarted.countDown();
+                try {
+                    releaseFile.await();
+                    send(exchange, 200, FILE_RESPONSE);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    exchange.close();
+                } finally {
+                    fileResponseCompleted.countDown();
                 }
                 return;
             }
@@ -442,6 +544,7 @@ public class GitLabSCMSourceRealExecutorTest {
         public void close() {
             releaseProject.countDown();
             releaseBranches();
+            releaseFile.countDown();
             GitLabServers.get().removeServer(serverName);
             server.stop(0);
         }
