@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.Items;
@@ -15,8 +17,10 @@ import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabAvatarCache.CacheEntr
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentMap;
 import jenkins.model.Jenkins;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
@@ -89,6 +93,43 @@ class GitLabAvatarCacheAccessTest {
             assertEquals(404, denied.getStatusCode());
             assertEquals("private, no-store", denied.getResponseHeaderValue("Cache-Control"));
             assertEquals(404, request(user, modified).getStatusCode());
+        }
+    }
+
+    @Test
+    void a_protected_entry_inserted_between_cache_lookups_never_leaks_to_anonymous_requests() throws Exception {
+        byte[] privateImage = request("reader", null).getContentAsStream().readAllBytes();
+        String key = GitLabAvatarCache.cacheKey(avatar, "selected");
+        GitLabAvatarCache cache =
+                r.jenkins.getExtensionList(GitLabAvatarCache.class).get(0);
+        Field field = GitLabAvatarCache.class.getDeclaredField("cache");
+        field.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        ConcurrentMap<String, CacheEntry> original = (ConcurrentMap<String, CacheEntry>) field.get(cache);
+        CacheEntry protectedEntry = original.get(key);
+        try {
+            for (int misses : new int[] {1, 2}) {
+                @SuppressWarnings("unchecked")
+                ConcurrentMap<String, CacheEntry> raced = mock(ConcurrentMap.class);
+                // Model another thread publishing a completed authenticated fetch between reads.
+                if (misses == 1) {
+                    when(raced.get(key)).thenReturn(null, protectedEntry);
+                } else {
+                    when(raced.get(key)).thenReturn(null, null, protectedEntry);
+                }
+                field.set(cache, raced);
+                WebResponse response = request(null, null);
+                if (response.getStatusCode() == 200) {
+                    // A cache miss may serve a generated placeholder, but never the protected bytes.
+                    assertFalse(Arrays.equals(
+                            privateImage, response.getContentAsStream().readAllBytes()));
+                } else {
+                    assertEquals(404, response.getStatusCode());
+                    assertEquals("private, no-store", response.getResponseHeaderValue("Cache-Control"));
+                }
+            }
+        } finally {
+            field.set(cache, original);
         }
     }
 

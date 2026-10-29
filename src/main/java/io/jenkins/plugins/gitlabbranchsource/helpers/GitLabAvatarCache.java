@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -302,8 +303,9 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 // ignore
             }
         }
-        CacheEntry existing = cache.get(key);
-        if (existing != null && existing.serverName != null && !Jenkins.get().hasPermission(Jenkins.READ)) {
+        final CacheEntry avatar = getCacheEntry(key, null);
+        // Authorize the exact entry returned, including one published during cache initialization.
+        if (avatar != null && avatar.serverName != null && !Jenkins.get().hasPermission(Jenkins.READ)) {
             return new HttpResponse() {
                 @Override
                 public void generateResponse(StaplerRequest2 request, StaplerResponse2 response, Object node) {
@@ -312,7 +314,6 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 }
             };
         }
-        final CacheEntry avatar = getCacheEntry(key, null);
         final String cacheControl =
                 avatar != null && avatar.serverName != null ? "private, no-store" : "max-age=3600, public";
         if (avatar == null || !(avatar.url.startsWith("http://") || avatar.url.startsWith("https://"))) {
@@ -390,15 +391,15 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                     cache.put(key, entry);
                 }
             }
-        } else {
-            if (entry.serverName != null && !Jenkins.get().hasPermission(Jenkins.READ)) {
-                return null;
-            }
-            if (entry.isStale()) {
-                synchronized (serviceLock) {
-                    if (!entry.pending()) {
-                        entry.setFuture(service.submit(new FetchImage(entry.url, entry.serverName)));
-                    }
+        }
+        if (entry.serverName != null && !Jenkins.get().hasPermission(Jenkins.READ)) {
+            // Let doDynamic deny the response without touching or refreshing the entry.
+            return entry;
+        }
+        if (entry.isStale()) {
+            synchronized (serviceLock) {
+                if (!entry.pending()) {
+                    entry.setFuture(service.submit(new FetchImage(entry.url, entry.serverName)));
                 }
             }
         }
@@ -563,20 +564,39 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
     // package-private for testing
     @Nullable
     static GitLabAvatarLocation matchAvatar(GitLabServer server, String url) {
-        String base = StringUtils.removeEnd(server.getServerUrl(), "/");
-        if (base == null || !url.startsWith(base)) {
-            return null;
-        }
-        Matcher matcher = GITLAB_AVATAR_PATH.matcher(url.substring(base.length()));
-        if (!matcher.find()) {
+        if (server.getServerUrl() == null || url == null) {
             return null;
         }
         try {
+            URI base = URI.create(server.getServerUrl());
+            URI avatar = URI.create(url);
+            String scheme = base.getScheme();
+            if (!("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    || !scheme.equalsIgnoreCase(avatar.getScheme())
+                    || base.getHost() == null
+                    || avatar.getHost() == null
+                    || !base.getHost().equalsIgnoreCase(avatar.getHost())
+                    || effectivePort(base) != effectivePort(avatar)) {
+                return null;
+            }
+            String basePath = StringUtils.removeEnd(base.getRawPath(), "/");
+            String avatarPath = avatar.getRawPath();
+            if (!avatarPath.startsWith(basePath)) {
+                return null;
+            }
+            Matcher matcher = GITLAB_AVATAR_PATH.matcher(avatarPath.substring(basePath.length()));
+            if (!matcher.find()) {
+                return null;
+            }
             return new GitLabAvatarLocation(server, matcher.group(1), Long.parseLong(matcher.group(2)));
-        } catch (NumberFormatException e) {
-            // id too large to be a real project/group - let the plain URL fetch deal with it
+        } catch (IllegalArgumentException e) {
+            // Malformed URLs or an unrepresentable ID use the anonymous URL fallback.
             return null;
         }
+    }
+
+    private static int effectivePort(URI uri) {
+        return uri.getPort() >= 0 ? uri.getPort() : "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
     }
 
     record GitLabAvatarLocation(GitLabServer server, String type, long id) {}

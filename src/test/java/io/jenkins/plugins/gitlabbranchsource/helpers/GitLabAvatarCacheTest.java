@@ -51,6 +51,43 @@ public class GitLabAvatarCacheTest {
     }
 
     @Test
+    public void matches_equivalent_origins_without_changing_base_path_case() {
+        String suffix = "/uploads/-/system/project/avatar/42/logo.png";
+        for (String[] urls : new String[][] {
+            {"https://GITLAB.example.com", "https://gitlab.example.com"},
+            {"https://gitlab.example.com:443", "https://gitlab.example.com"},
+            {"https://gitlab.example.com", "HTTPS://GITLAB.example.com:443"},
+            {"http://GITLAB.example.com:80", "http://gitlab.example.com"},
+            {"https://example.com/GitLab/", "https://EXAMPLE.com:443/GitLab"},
+            {"https://[2001:db8::1]:443", "HTTPS://[2001:DB8::1]"}
+        }) {
+            GitLabServer server = new GitLabServer(urls[0], "selected", "");
+            assertThat(
+                    urls[0] + " -> " + urls[1],
+                    GitLabAvatarCache.matchAvatar(server, urls[1] + suffix),
+                    is(notNullValue()));
+        }
+    }
+
+    @Test
+    public void rejects_different_origins_base_paths_and_malformed_urls() {
+        String suffix = "/uploads/-/system/project/avatar/42/logo.png";
+        for (String[] urls : new String[][] {
+            {"https://example.com", "http://example.com" + suffix},
+            {"https://example.com", "https://example.com:8443" + suffix},
+            {"https://example.com", "https://example.com.evil.test" + suffix},
+            {"https://example.com", "https://example.com@evil.test" + suffix},
+            {"https://example.com/GitLab", "https://example.com/gitlab" + suffix},
+            {"https://example.com/gitlab", "https://example.com/gitlab-other" + suffix},
+            {"https://example.com", "https://[invalid"},
+            {"https://example.com", suffix}
+        }) {
+            GitLabServer server = new GitLabServer(urls[0], "selected", "");
+            assertThat(urls[0] + " -> " + urls[1], GitLabAvatarCache.matchAvatar(server, urls[1]), is(nullValue()));
+        }
+    }
+
+    @Test
     public void ignores_user_avatars() {
         // user avatars are public, so they keep using the plain URL fetch
         assertThat(
