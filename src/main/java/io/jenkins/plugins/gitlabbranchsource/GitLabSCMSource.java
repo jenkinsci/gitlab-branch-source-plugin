@@ -51,6 +51,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -279,10 +280,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             @Nullable Future<?> future,
             AtomicReference<GitLabApi> activeApi,
             AtomicBoolean cancelled,
-            AtomicBoolean apiClosed) {
-        cancelled.set(true);
+            AtomicBoolean apiClosed,
+            Object retrievalLock) {
+        // Interrupt a running observer before waiting for it to release the publication lock.
         if (future != null) {
             future.cancel(true);
+        }
+        synchronized (retrievalLock) {
+            cancelled.set(true);
         }
         closeApi(activeApi, apiClosed);
     }
@@ -306,6 +311,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
      * @throws GitLabApiException When any exception occurs while communicating with a GitLab API endpoint.
      */
     protected Project getGitlabProject(GitLabApi gitLabApi) throws GitLabApiException {
+        return getGitlabProject(gitLabApi, new Object(), new AtomicBoolean());
+    }
+
+    private Project getGitlabProject(GitLabApi gitLabApi, Object retrievalLock, AtomicBoolean cancelled)
+            throws GitLabApiException {
         if (gitlabProject == null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             Authentication auth = Jenkins.getAuthentication2();
@@ -339,10 +349,19 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             } finally {
                 executor.shutdown();
             }
-            gitlabProject = project;
-            sshRemote = project.getSshUrlToRepo();
-            httpRemote = project.getHttpUrlToRepo();
-            projectId = project.getId();
+            String projectSshRemote = project.getSshUrlToRepo();
+            String projectHttpRemote = project.getHttpUrlToRepo();
+            Long id = project.getId();
+            // Publish the complete snapshot before owner saving, or discard it after cancellation.
+            synchronized (retrievalLock) {
+                if (cancelled.get()) {
+                    throw new CancellationException("Retrieval cancelled before publishing project metadata");
+                }
+                sshRemote = projectSshRemote;
+                httpRemote = projectHttpRemote;
+                projectId = id;
+                gitlabProject = project;
+            }
         }
         return gitlabProject;
     }
@@ -465,6 +484,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         AtomicReference<GitLabApi> activeApi = new AtomicReference<>();
         AtomicBoolean cancelled = new AtomicBoolean();
         AtomicBoolean apiClosed = new AtomicBoolean();
+        Object retrievalLock = new Object();
         Authentication auth = Jenkins.getAuthentication2();
         try {
             future = executor.submit(() -> {
@@ -473,7 +493,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     if (cancelled.get()) {
                         return null;
                     }
-                    return retrieveRevision(gitLabApi, head, listener);
+                    return retrieveRevision(gitLabApi, head, listener, retrievalLock, cancelled);
                 }
             });
 
@@ -484,16 +504,22 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (TimeoutException e) {
             listener.getLogger().println("SCM revision fetch operation timed out");
-            cancelApiTask(future, activeApi, cancelled, apiClosed);
-            saveTimestampInOwner();
+            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             throw new IOException("SCM revision fetch operation timed out", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to retrieve SCM revision");
-            cancelApiTask(future, activeApi, cancelled, apiClosed);
-            saveTimestampInOwner();
+            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             throw e;
         } catch (ExecutionException e) {
-            saveTimestampInOwner();
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
@@ -506,9 +532,10 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         }
     }
 
-    private SCMRevision retrieveRevision(GitLabApi gitLabApi, SCMHead head, TaskListener listener)
+    private SCMRevision retrieveRevision(
+            GitLabApi gitLabApi, SCMHead head, TaskListener listener, Object retrievalLock, AtomicBoolean cancelled)
             throws GitLabApiException {
-        getGitlabProject(gitLabApi);
+        getGitlabProject(gitLabApi, retrievalLock, cancelled);
         if (head instanceof BranchSCMHead) {
             listener.getLogger().format("Querying the current revision of branch %s...%n", head.getName());
             String revision = gitLabApi
@@ -567,11 +594,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         AtomicReference<GitLabApi> activeApi = new AtomicReference<>();
         AtomicBoolean cancelled = new AtomicBoolean();
         AtomicBoolean apiClosed = new AtomicBoolean();
-        Object callbackLock = new Object();
+        Object retrievalLock = new Object();
         SCMHeadObserver cancellableObserver = new SCMHeadObserver() {
             @Override
             public void observe(SCMHead head, SCMRevision revision) throws IOException, InterruptedException {
-                synchronized (callbackLock) {
+                synchronized (retrievalLock) {
                     if (!cancelled.get()) {
                         observer.observe(head, revision);
                     }
@@ -580,14 +607,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
 
             @Override
             public boolean isObserving() {
-                synchronized (callbackLock) {
+                synchronized (retrievalLock) {
                     return !cancelled.get() && observer.isObserving();
                 }
             }
 
             @Override
             public Set<SCMHead> getIncludes() {
-                synchronized (callbackLock) {
+                synchronized (retrievalLock) {
                     return cancelled.get() ? Set.of() : observer.getIncludes();
                 }
             }
@@ -601,7 +628,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     if (cancelled.get()) {
                         return null;
                     }
-                    retrieveHeads(gitLabApi, criteria, cancellableObserver, listener);
+                    retrieveHeads(gitLabApi, criteria, cancellableObserver, listener, retrievalLock, cancelled);
                     return null;
                 }
             });
@@ -613,20 +640,26 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
 
         } catch (TimeoutException e) {
-            cancelApiTask(future, activeApi, cancelled, apiClosed);
+            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
             listener.getLogger().println("Operation timed out while fetching data from GitLab");
-            saveTimestampInOwner();
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             ownerSavedOnFailure = true;
             throw new IOException("Operation timed out while fetching data from GitLab", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
-            cancelApiTask(future, activeApi, cancelled, apiClosed);
-            saveTimestampInOwner();
+            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             ownerSavedOnFailure = true;
             throw e;
         } catch (ExecutionException e) {
             ownerSavedOnFailure = true;
-            saveTimestampInOwner();
+            synchronized (retrievalLock) {
+                saveTimestampInOwner();
+            }
             Throwable cause = e.getCause();
             if (cause instanceof InterruptedException) {
                 throw (InterruptedException) cause;
@@ -641,7 +674,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
         } finally {
             executor.shutdown();
-            synchronized (callbackLock) {
+            synchronized (retrievalLock) {
                 // Wait for any observer callback already in progress before completing cancellation.
                 closeApi(activeApi, apiClosed);
                 if (!ownerSavedOnFailure) {
@@ -652,11 +685,16 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
     }
 
     private void retrieveHeads(
-            GitLabApi gitLabApi, SCMSourceCriteria criteria, SCMHeadObserver observer, TaskListener listener)
+            GitLabApi gitLabApi,
+            SCMSourceCriteria criteria,
+            SCMHeadObserver observer,
+            TaskListener listener,
+            Object retrievalLock,
+            AtomicBoolean cancelled)
             throws IOException, InterruptedException {
         try {
             try {
-                getGitlabProject(gitLabApi);
+                getGitlabProject(gitLabApi, retrievalLock, cancelled);
             } catch (GitLabApiException e) {
                 LOGGER.log(Level.WARNING, "Failed to fetch GitLab project details for " + projectPath, e);
                 throw new IOException("Failed to fetch GitLab project details for " + projectPath, e);
@@ -753,15 +791,20 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
                     listener.getLogger().format("%nChecking merge requests..%n");
                     HashMap<Long, String> forkMrSources = new HashMap<>();
                     for (MergeRequest mr : request.getMergeRequests()) {
-                        mergeRequestContributorCache.put(
-                                mr.getIid(),
-                                new ContributorMetadataAction(
-                                        mr.getAuthor().getUsername(),
-                                        mr.getAuthor().getName(),
-                                        mr.getAuthor().getEmail()));
-                        mergeRequestMetadataCache.put(
-                                mr.getIid(),
-                                new ObjectMetadataAction(mr.getTitle(), mr.getDescription(), mr.getWebUrl()));
+                        synchronized (retrievalLock) {
+                            if (request.isComplete()) {
+                                return;
+                            }
+                            mergeRequestContributorCache.put(
+                                    mr.getIid(),
+                                    new ContributorMetadataAction(
+                                            mr.getAuthor().getUsername(),
+                                            mr.getAuthor().getName(),
+                                            mr.getAuthor().getEmail()));
+                            mergeRequestMetadataCache.put(
+                                    mr.getIid(),
+                                    new ObjectMetadataAction(mr.getTitle(), mr.getDescription(), mr.getWebUrl()));
+                        }
                         count++;
                         listener.getLogger()
                                 .format(
