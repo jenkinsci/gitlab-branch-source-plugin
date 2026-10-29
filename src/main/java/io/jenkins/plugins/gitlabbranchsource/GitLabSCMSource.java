@@ -280,14 +280,11 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             @Nullable Future<?> future,
             AtomicReference<GitLabApi> activeApi,
             AtomicBoolean cancelled,
-            AtomicBoolean apiClosed,
-            Object retrievalLock) {
-        // Interrupt a running observer before waiting for it to release the publication lock.
+            AtomicBoolean apiClosed) {
+        // Close admission before interrupting. The caller's publication lock drains work already in progress.
+        cancelled.set(true);
         if (future != null) {
             future.cancel(true);
-        }
-        synchronized (retrievalLock) {
-            cancelled.set(true);
         }
         closeApi(activeApi, apiClosed);
     }
@@ -504,14 +501,14 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
         } catch (TimeoutException e) {
             listener.getLogger().println("SCM revision fetch operation timed out");
-            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             synchronized (retrievalLock) {
                 saveTimestampInOwner();
             }
             throw new IOException("SCM revision fetch operation timed out", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to retrieve SCM revision");
-            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             synchronized (retrievalLock) {
                 saveTimestampInOwner();
             }
@@ -640,7 +637,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             }
 
         } catch (TimeoutException e) {
-            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             listener.getLogger().println("Operation timed out while fetching data from GitLab");
             synchronized (retrievalLock) {
                 saveTimestampInOwner();
@@ -649,7 +646,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             throw new IOException("Operation timed out while fetching data from GitLab", e);
         } catch (InterruptedException e) {
             listener.getLogger().println("Failed to fetch latest heads");
-            cancelApiTask(future, activeApi, cancelled, apiClosed, retrievalLock);
+            cancelApiTask(future, activeApi, cancelled, apiClosed);
             synchronized (retrievalLock) {
                 saveTimestampInOwner();
             }

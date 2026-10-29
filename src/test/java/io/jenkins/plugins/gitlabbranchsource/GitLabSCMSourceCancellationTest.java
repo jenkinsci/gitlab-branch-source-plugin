@@ -1,6 +1,7 @@
 package io.jenkins.plugins.gitlabbranchsource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -17,15 +18,22 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
 import org.gitlab4j.api.GitLabApi;
@@ -148,6 +156,64 @@ public class GitLabSCMSourceCancellationTest {
         }
     }
 
+    @Test
+    public void cancellationClosesObserverAdmissionBeforeInterruptingWorker() throws Exception {
+        GitLabSCMSource source = source();
+        Project project = new Project().withId(42L).withWebUrl("https://gitlab.example/group/project");
+        GitLabApi api = api(project);
+        when(api.getRepositoryApi().getBranches(project))
+                .thenReturn(List.of(new Branch().withName("main").withCommit(new Commit().withId("abcdef"))));
+        CountDownLatch probeStarted = new CountDownLatch(1);
+        CountDownLatch releaseProbe = new CountDownLatch(1);
+        CountDownLatch workerFinished = new CountDownLatch(1);
+        AtomicBoolean observed = new AtomicBoolean();
+        AtomicBoolean interrupted = new AtomicBoolean();
+        SCMSourceCriteria criteria = (probe, listener) -> {
+            probeStarted.countDown();
+            try {
+                releaseProbe.await();
+            } catch (InterruptedException e) {
+                // Model a probe that handles interruption and still reports a matching Jenkinsfile.
+            }
+            return true;
+        };
+        SCMHeadObserver observer = new SCMHeadObserver() {
+            @Override
+            public void observe(SCMHead head, SCMRevision revision) {
+                observed.set(true);
+            }
+        };
+        ThreadFactory threads = task -> new Thread(task, "cancellation-race-worker") {
+            @Override
+            public void interrupt() {
+                super.interrupt();
+                if (probeStarted.getCount() == 0 && interrupted.compareAndSet(false, true)) {
+                    try {
+                        // Hold Future.cancel inside interrupt until the worker has tried to finish discovery.
+                        assertTrue(workerFinished.await(30, TimeUnit.SECONDS));
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new AssertionError(e);
+                    }
+                }
+            }
+        };
+        try (RetrievalRun run = new RetrievalRun(source, api, true, criteria, observer, threads, workerFinished)) {
+            try {
+                assertTrue(probeStarted.await(30, TimeUnit.SECONDS));
+                run.caller.interrupt();
+                assertTrue(
+                        assertThrows(ExecutionException.class, () -> run.result.get(30, TimeUnit.SECONDS))
+                                        .getCause()
+                                instanceof InterruptedException);
+                assertTrue(interrupted.get());
+                assertFalse("A callback must not start after cancellation interrupts the worker", observed.get());
+            } finally {
+                releaseProbe.countDown();
+            }
+        }
+    }
+
     private static GitLabSCMSource source() {
         GitLabSCMSource source =
                 new GitLabSCMSourceBuilder("id", "server", "", "group", "group/project", "project").build();
@@ -198,7 +264,31 @@ public class GitLabSCMSourceCancellationTest {
         private final Thread caller;
 
         private RetrievalRun(GitLabSCMSource source, GitLabApi api, boolean heads) {
-            worker = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>()) {
+            this(source, api, heads, null, SCMHeadObserver.collect(), Executors.defaultThreadFactory(), null);
+        }
+
+        private RetrievalRun(
+                GitLabSCMSource source,
+                GitLabApi api,
+                boolean heads,
+                SCMSourceCriteria criteria,
+                SCMHeadObserver observer,
+                ThreadFactory threads,
+                CountDownLatch finished) {
+            worker = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), threads) {
+                @Override
+                protected <T> RunnableFuture<T> newTaskFor(Callable<T> task) {
+                    return super.newTaskFor(() -> {
+                        try {
+                            return task.call();
+                        } finally {
+                            if (finished != null) {
+                                finished.countDown();
+                            }
+                        }
+                    });
+                }
+
                 @Override
                 public void execute(Runnable command) {
                     super.execute(() -> {
@@ -210,6 +300,11 @@ public class GitLabSCMSourceCancellationTest {
                                                     invocation.<String>getArgument(0))
                                             .template("/-/merge_requests/{iid}")
                                             .build());
+                            helper.when(() -> GitLabHelper.branchUriTemplate(anyString()))
+                                    .thenAnswer(invocation -> UriTemplate.buildFromTemplate(
+                                                    invocation.<String>getArgument(0))
+                                            .template("/-/tree/{branch}")
+                                            .build());
                             command.run();
                         }
                     });
@@ -219,7 +314,7 @@ public class GitLabSCMSourceCancellationTest {
                 try (MockedStatic<Executors> executors = mockStatic(Executors.class)) {
                     executors.when(Executors::newSingleThreadExecutor).thenReturn(worker);
                     if (heads) {
-                        source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
+                        source.retrieve(criteria, observer, null, TaskListener.NULL);
                     } else {
                         source.retrieve(new BranchSCMHead("main"), TaskListener.NULL);
                     }
