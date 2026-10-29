@@ -108,15 +108,37 @@ class GitLabAvatarCacheFetchTest {
     @ParameterizedTest
     @ValueSource(strings = {"project", "group"})
     void fetches_authenticated_project_and_group_images(String type) {
-        assertImage(new FetchImage(url(type)).call());
+        assertImage(new FetchImage(url(type), server.getName()).call());
         assertEquals(List.of("/api/v4/" + type + "s/42/avatar"), paths);
         assertEquals(List.of("local-test-token"), tokens);
     }
 
     @Test
+    void selected_server_wins_over_an_earlier_server_with_the_same_url() {
+        GitLabServer credentialless = new GitLabServer(base, "credentialless", "");
+        GitLabServers.get().setServers(List.of(credentialless, server));
+        assertImage(new FetchImage(url("project"), server.getName()).call());
+        assertEquals(List.of("local-test-token"), tokens);
+    }
+
+    @Test
+    void context_free_metadata_never_uses_server_credentials() {
+        assertImage(new FetchImage(url("project")).call());
+        assertEquals(List.of("/uploads/-/system/project/avatar/42/logo.png"), paths);
+        assertNull(tokens.get(0));
+    }
+
+    @Test
+    void missing_selected_server_does_not_fall_back_to_another_servers_credentials() {
+        assertImage(new FetchImage(url("project"), "removed-server").call());
+        assertEquals(List.of("/uploads/-/system/project/avatar/42/logo.png"), paths);
+        assertNull(tokens.get(0));
+    }
+
+    @Test
     void api_failure_falls_back_without_sending_credentials_to_the_upload_url() {
         apiStatus = 404;
-        assertImage(new FetchImage(url("project")).call());
+        assertImage(new FetchImage(url("project"), server.getName()).call());
         assertEquals(List.of("/api/v4/projects/42/avatar", "/uploads/-/system/project/avatar/42/logo.png"), paths);
         assertEquals("local-test-token", tokens.get(0));
         assertNull(tokens.get(1));
@@ -126,7 +148,7 @@ class GitLabAvatarCacheFetchTest {
     @ValueSource(strings = {"", "not an image", "\u0089PNG\r\n\u001a\n"})
     void unusable_api_body_falls_back(String body) {
         apiBody = body.getBytes(StandardCharsets.ISO_8859_1);
-        assertImage(new FetchImage(url("project")).call());
+        assertImage(new FetchImage(url("project"), server.getName()).call());
         assertEquals(2, paths.size());
     }
 
@@ -136,7 +158,7 @@ class GitLabAvatarCacheFetchTest {
         apiStatus = 404;
         urlContentType = "missing".equals(contentType) ? null : contentType;
         urlBody = "not an image".getBytes(StandardCharsets.UTF_8);
-        CacheEntry entry = new FetchImage(url("group")).call();
+        CacheEntry entry = new FetchImage(url("group"), server.getName()).call();
         assertNull(entry.image);
         assertFalse(entry.pending());
         assertFalse(entry.isStale());
@@ -146,14 +168,15 @@ class GitLabAvatarCacheFetchTest {
     @Test
     void publishes_a_completed_fetch_to_the_cache_and_keeps_it_after_a_failed_refresh() {
         String url = url("project");
-        CacheEntry cached = new CacheEntry(url, CompletableFuture.completedFuture(new FetchImage(url).call()));
+        CacheEntry cached =
+                new CacheEntry(url, CompletableFuture.completedFuture(new FetchImage(url, server.getName()).call()));
         assertFalse(cached.pending());
         assertImage(cached);
         BufferedImage previous = cached.image;
 
         apiStatus = 404;
         urlBody = new byte[0];
-        cached.setFuture(CompletableFuture.completedFuture(new FetchImage(url).call()));
+        cached.setFuture(CompletableFuture.completedFuture(new FetchImage(url, server.getName()).call()));
         assertFalse(cached.pending());
         assertSame(previous, cached.image);
         assertFalse(cached.isStale());
@@ -179,7 +202,7 @@ class GitLabAvatarCacheFetchTest {
         when(projects.getAvatar(42L)).thenReturn("null".equals(response) ? null : stream);
         try (var cache = mockStatic(GitLabAvatarCache.class, CALLS_REAL_METHODS)) {
             cache.when(() -> GitLabAvatarCache.openApi(location)).thenReturn(api);
-            assertImage(new FetchImage(url("project")).call());
+            assertImage(new FetchImage(url("project"), server.getName()).call());
         }
         verify(api).setRequestTimeout(10000, 30000);
         verify(api).close();

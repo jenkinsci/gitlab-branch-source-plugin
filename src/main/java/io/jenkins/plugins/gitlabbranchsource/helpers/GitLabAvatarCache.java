@@ -10,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Item;
 import hudson.model.RootAction;
 import hudson.model.UnprotectedRootAction;
 import hudson.security.ACL;
@@ -58,6 +59,7 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
+import org.springframework.security.access.AccessDeniedException;
 
 /**
  * An avatar cache that will serve URLs that have been recently registered
@@ -106,14 +108,24 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
      * @return the URL of the cached image.
      */
     public static String buildUrl(String url, String size) {
+        return buildUrl(url, size, null, null);
+    }
+
+    /** Builds an item-authorized avatar URL using the explicitly selected server. */
+    public static String buildUrl(String url, String size, String serverName, String ownerFullName) {
+        AvatarContext context =
+                serverName == null || ownerFullName == null ? null : new AvatarContext(serverName, ownerFullName);
+        if (context != null && !context.isAuthorized()) {
+            return null;
+        }
         Jenkins j = Jenkins.get();
         GitLabAvatarCache instance = j.getExtensionList(RootAction.class).get(GitLabAvatarCache.class);
         if (instance == null) {
             throw new AssertionError();
         }
-        String key = Util.getDigestOf(GitLabAvatarCache.class.getName() + url);
-        // seed the cache
-        instance.getCacheEntry(key, url);
+        String key = cacheKey(url, context);
+        // Seed only from an authorized item view. Context-free entries never use API credentials.
+        instance.getCacheEntry(key, url, context);
         return UriTemplate.buildFromTemplate(j.getRootUrlFromRequest())
                 .literal(instance.getUrlName())
                 .path("key")
@@ -122,6 +134,34 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 .set("key", key)
                 .set("size", size)
                 .expand();
+    }
+
+    static String cacheKey(String url, AvatarContext context) {
+        String identity = context == null
+                ? ""
+                : context.serverName().length() + ":" + context.serverName()
+                        + context.ownerFullName().length() + ":" + context.ownerFullName();
+        return Util.getDigestOf(GitLabAvatarCache.class.getName() + url.length() + ":" + url + identity);
+    }
+
+    record AvatarContext(String serverName, String ownerFullName, Item owner) {
+        AvatarContext(String serverName, String ownerFullName) {
+            this(serverName, ownerFullName, findOwner(ownerFullName));
+        }
+
+        private static Item findOwner(String name) {
+            try {
+                return Jenkins.get().getItemByFullName(name);
+            } catch (AccessDeniedException e) {
+                return null;
+            }
+        }
+
+        boolean isAuthorized() {
+            Item item = findOwner(ownerFullName);
+            // Reusing a deleted item's name must not grant access to its cached image.
+            return item != null && item == owner && item.hasPermission(Item.READ);
+        }
     }
 
     private static BufferedImage scaleImage(BufferedImage src, int size) {
@@ -289,7 +329,19 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 // ignore
             }
         }
+        CacheEntry existing = cache.get(key);
+        if (existing != null && existing.context != null && !existing.context.isAuthorized()) {
+            return new HttpResponse() {
+                @Override
+                public void generateResponse(StaplerRequest2 request, StaplerResponse2 response, Object node) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.setHeader("Cache-Control", "private, no-store");
+                }
+            };
+        }
         final CacheEntry avatar = getCacheEntry(key, null);
+        final String cacheControl =
+                avatar != null && avatar.context != null ? "private, no-store" : "max-age=3600, public";
         if (avatar == null || !(avatar.url.startsWith("http://") || avatar.url.startsWith("https://"))) {
             // we will generate avatars if the URL is not HTTP based
             // since the url string will not magically turn itself into a HTTP url this
@@ -298,13 +350,19 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                     generateAvatar(avatar == null ? "" : avatar.url, targetSize),
                     true,
                     System.currentTimeMillis(),
-                    "max-age=365000000, immutable, public");
+                    avatar != null && avatar.context != null
+                            ? "private, no-store"
+                            : "max-age=365000000, immutable, public");
         }
         if (avatar.pending() && avatar.image == null) {
             // serve a temporary avatar until we get the remote one, no caching as we could
             // have the real deal
             // real soon now
-            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "no-cache, public");
+            return new ImageResponse(
+                    generateAvatar(avatar.url, targetSize),
+                    true,
+                    -1L,
+                    avatar.context != null ? "private, no-store" : "no-cache, public");
         }
         long since = req.getDateHeader("If-Modified-Since");
         if (avatar.lastModified <= since) {
@@ -313,14 +371,14 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                 public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node)
                         throws IOException, ServletException {
                     rsp.addDateHeader("Last-Modified", avatar.lastModified);
-                    rsp.addHeader("Cache-control", "max-age=3600, public");
-                    rsp.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+                    rsp.addHeader("Cache-control", cacheControl);
+                    rsp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 }
             };
         }
         if (avatar.image == null) {
             // we can retry in an hour
-            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, "max-age=3600, public");
+            return new ImageResponse(generateAvatar(avatar.url, targetSize), true, -1L, cacheControl);
         }
 
         BufferedImage image = avatar.image;
@@ -329,7 +387,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             image = scaleImage(image, targetSize);
             flushImage = true;
         }
-        return new ImageResponse(image, flushImage, avatar.lastModified, "max-age=3600, public");
+        return new ImageResponse(image, flushImage, avatar.lastModified, cacheControl);
     }
 
     /**
@@ -343,6 +401,10 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
      */
     @Nullable
     private CacheEntry getCacheEntry(@NonNull final String key, @Nullable final String url) {
+        return getCacheEntry(key, url, null);
+    }
+
+    private CacheEntry getCacheEntry(String key, String url, AvatarContext context) {
         CacheEntry entry = cache.get(key);
         if (entry == null) {
             synchronized (serviceLock) {
@@ -351,15 +413,22 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
                     if (url == null) {
                         return null;
                     }
-                    entry = new CacheEntry(url, service.submit(new FetchImage(url)));
+                    entry = new CacheEntry(
+                            url,
+                            service.submit(new FetchImage(url, context == null ? null : context.serverName())),
+                            context);
                     cache.put(key, entry);
                 }
             }
         } else {
+            if (entry.context != null && !entry.context.isAuthorized()) {
+                return null;
+            }
             if (entry.isStale()) {
                 synchronized (serviceLock) {
                     if (!entry.pending()) {
-                        entry.setFuture(service.submit(new FetchImage(entry.url)));
+                        entry.setFuture(service.submit(
+                                new FetchImage(entry.url, entry.context == null ? null : entry.context.serverName())));
                     }
                 }
             }
@@ -389,6 +458,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
 
     static class CacheEntry {
         private final String url;
+        private final AvatarContext context;
         BufferedImage image;
         long lastModified;
         private long lastAccessed = -1L;
@@ -397,6 +467,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
 
         public CacheEntry(String url, BufferedImage image, long lastModified) {
             this.url = url;
+            this.context = null;
             if (image.getHeight() > 128 || image.getWidth() > 128) {
                 // limit the amount of storage
                 this.image = scaleImage(image, 128);
@@ -404,19 +475,25 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             } else {
                 this.image = image;
             }
-            this.lastModified = lastModified <= 0 ? System.currentTimeMillis() : lastModified;
+            this.lastModified = httpTimestamp(lastModified <= 0 ? System.currentTimeMillis() : lastModified);
         }
 
         public CacheEntry(String url, Future<CacheEntry> future) {
+            this(url, future, null);
+        }
+
+        CacheEntry(String url, Future<CacheEntry> future, AvatarContext context) {
+            this.context = context;
             this.url = url;
             this.image = null;
-            this.lastModified = System.currentTimeMillis();
+            this.lastModified = httpTimestamp(System.currentTimeMillis());
             this.future = future;
         }
 
         public CacheEntry(String url) {
             this.url = url;
-            this.lastModified = System.currentTimeMillis();
+            this.context = null;
+            this.lastModified = httpTimestamp(System.currentTimeMillis());
         }
 
         public synchronized boolean pending() {
@@ -457,6 +534,10 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         public boolean isUnused() {
             return lastAccessed > 0L && System.currentTimeMillis() - lastAccessed > TimeUnit.HOURS.toMillis(2);
         }
+    }
+
+    private static long httpTimestamp(long timestamp) {
+        return TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(timestamp));
     }
 
     private static class ImageResponse implements HttpResponse {
@@ -502,14 +583,12 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             Pattern.compile("^/uploads/-/system/(project|group)/avatar/(\\d+)/");
 
     @Nullable
-    private static GitLabAvatarLocation resolveGitLabAvatar(String url) {
-        for (GitLabServer server : GitLabServers.get().getServers()) {
-            GitLabAvatarLocation location = matchAvatar(server, url);
-            if (location != null) {
-                return location;
-            }
+    private static GitLabAvatarLocation resolveGitLabAvatar(String url, String serverName) {
+        if (serverName == null) {
+            return null;
         }
-        return null;
+        GitLabServer server = GitLabServers.get().findServer(serverName);
+        return server == null ? null : matchAvatar(server, url);
     }
 
     // package-private for testing
@@ -543,16 +622,22 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
 
     static class FetchImage implements Callable<CacheEntry> {
         private final String url;
+        private final String serverName;
 
         public FetchImage(String url) {
+            this(url, null);
+        }
+
+        FetchImage(String url, String serverName) {
             this.url = url;
+            this.serverName = serverName;
         }
 
         @Override
         public CacheEntry call() {
             long start = System.nanoTime();
             try {
-                GitLabAvatarLocation location = resolveGitLabAvatar(url);
+                GitLabAvatarLocation location = resolveGitLabAvatar(url, serverName);
                 if (location != null) {
                     try {
                         return fetchViaApi(location);
