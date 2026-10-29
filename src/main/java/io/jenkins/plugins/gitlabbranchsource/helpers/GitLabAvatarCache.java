@@ -387,10 +387,10 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         return entry;
     }
 
-    private static class CacheEntry {
+    static class CacheEntry {
         private final String url;
-        private BufferedImage image;
-        private long lastModified;
+        BufferedImage image;
+        long lastModified;
         private long lastAccessed = -1L;
 
         private Future<CacheEntry> future;
@@ -404,7 +404,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
             } else {
                 this.image = image;
             }
-            this.lastModified = lastModified < 0 ? System.currentTimeMillis() : lastModified;
+            this.lastModified = lastModified <= 0 ? System.currentTimeMillis() : lastModified;
         }
 
         public CacheEntry(String url, Future<CacheEntry> future) {
@@ -541,7 +541,7 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         }
     }
 
-    private static class FetchImage implements Callable<CacheEntry> {
+    static class FetchImage implements Callable<CacheEntry> {
         private final String url;
 
         public FetchImage(String url) {
@@ -580,17 +580,18 @@ public class GitLabAvatarCache implements UnprotectedRootAction {
         private CacheEntry fetchViaApi(GitLabAvatarLocation location) throws Exception {
             LOGGER.log(Level.FINE, "Fetching avatar via API: {0}", url);
             try (GitLabApi gitLabApi = openApi(location)) {
+                gitLabApi.setRequestTimeout(10000, 30000);
                 InputStream is = "group".equals(location.type())
                         ? gitLabApi.getGroupApi().getAvatar(location.id())
                         : gitLabApi.getProjectApi().getAvatar(location.id());
                 if (is == null) {
-                    return new CacheEntry(url);
+                    throw new IOException("Empty API avatar response");
                 }
                 try (InputStream in = is;
                         BufferedInputStream bis = new BufferedInputStream(in)) {
                     BufferedImage image = ImageIO.read(bis);
                     if (image == null) {
-                        return new CacheEntry(url);
+                        throw new IOException("API avatar response is not an image");
                     }
                     return new CacheEntry(url, image, System.currentTimeMillis());
                 }
