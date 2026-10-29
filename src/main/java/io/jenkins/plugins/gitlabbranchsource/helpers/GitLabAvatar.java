@@ -6,16 +6,21 @@ import jenkins.scm.api.metadata.AvatarMetadataAction;
 import org.apache.commons.lang3.StringUtils;
 
 public class GitLabAvatar extends AvatarMetadataAction {
-
     private final String avatar;
+    private final String serverName;
 
     public GitLabAvatar(String avatar) {
+        this(avatar, null);
+    }
+
+    public GitLabAvatar(String avatar, String serverName) {
         this.avatar = avatar;
+        this.serverName = serverName;
     }
 
     @Override
     public String getAvatarImageOf(@NonNull String size) {
-        return StringUtils.isBlank(avatar) ? null : GitLabAvatarCache.buildUrl(avatar, size);
+        return StringUtils.isBlank(avatar) ? null : GitLabAvatarCache.buildUrl(avatar, size, serverName);
     }
 
     @Override
@@ -26,14 +31,12 @@ public class GitLabAvatar extends AvatarMetadataAction {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         GitLabAvatar that = (GitLabAvatar) o;
-
-        return Objects.equals(avatar, that.avatar);
+        return Objects.equals(avatar, that.avatar) && Objects.equals(serverName, that.serverName);
     }
 
     @Override
     public int hashCode() {
-        return avatar != null ? avatar.hashCode() : 0;
+        return Objects.hash(avatar, serverName);
     }
 }

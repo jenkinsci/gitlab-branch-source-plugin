@@ -730,7 +730,7 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
         result.add(new ObjectMetadataAction(name, gitlabProject.getDescription(), projectUrl));
         String avatarUrl = gitlabProject.getAvatarUrl();
         if (!ctx.projectAvatarDisabled() && StringUtils.isNotBlank(avatarUrl)) {
-            result.add(new GitLabAvatar(avatarUrl));
+            result.add(new GitLabAvatar(avatarUrl, getServerName()));
         }
         result.add(GitLabLink.toProject(projectUrl));
         return result;
