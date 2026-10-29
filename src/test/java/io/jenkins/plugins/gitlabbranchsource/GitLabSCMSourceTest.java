@@ -94,9 +94,10 @@ public class GitLabSCMSourceTest {
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         ProjectApi projectApi = Mockito.mock(ProjectApi.class);
         SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
+        GitLabApiException failure = new GitLabApiException("GitLab unreachable");
 
         Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
-        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
+        Mockito.when(projectApi.getProject(any())).thenThrow(failure);
 
         GitLabSCMSource gitLabSCMSource =
                 new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
@@ -109,9 +110,15 @@ public class GitLabSCMSourceTest {
                             gitLabSCMSource.getCredentialsId()))
                     .thenReturn(gitLabApi);
 
-            assertThrows(
+            ByteArrayOutputStream log = new ByteArrayOutputStream();
+            IOException error = assertThrows(
                     IOException.class,
-                    () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
+                    () -> gitLabSCMSource.retrieve(
+                            new BranchSCMHead("feature/diagnostics"), () -> new PrintStream(log)));
+            String message = "Failed to retrieve SCM revision for feature/diagnostics";
+            assertEquals(message, error.getMessage());
+            assertSame(failure, error.getCause());
+            assertEquals(message + System.lineSeparator(), log.toString(StandardCharsets.UTF_8));
             Mockito.verify(owner).save();
         }
     }

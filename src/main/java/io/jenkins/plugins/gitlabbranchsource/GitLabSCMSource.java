@@ -529,8 +529,9 @@ public class GitLabSCMSource extends AbstractGitSCMSource {
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
             }
-            listener.getLogger().println("Failed to fetch latest heads");
-            throw new IOException("Failed to fetch latest heads", cause != null ? cause : e);
+            String message = "Failed to retrieve SCM revision for " + head.getName();
+            listener.getLogger().println(message);
+            throw new IOException(message, cause != null ? cause : e);
         } finally {
             executor.shutdown();
             closeApi(activeApi, apiClosed);
