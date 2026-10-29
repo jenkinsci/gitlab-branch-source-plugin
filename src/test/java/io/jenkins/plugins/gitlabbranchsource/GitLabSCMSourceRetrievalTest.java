@@ -19,6 +19,9 @@ import hudson.model.TaskListener;
 import io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMSourceEvent;
@@ -73,7 +76,8 @@ public class GitLabSCMSourceRetrievalTest {
         GitLabSCMSource source = newSource();
         SCMSourceOwner owner = mock(SCMSourceOwner.class);
         source.setOwner(owner);
-        try (MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
+        try (MockedStatic<Executors> executors = mockExecutors();
+                MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
             // Settle project metadata before comparing, just as an initial scan would.
             source.getGitlabProject(api);
             String digest = sourceDigest(source);
@@ -95,7 +99,8 @@ public class GitLabSCMSourceRetrievalTest {
         when(api.getProjectApi().getProject("group/project"))
                 .thenThrow(new GitLabApiException("GitLab unreachable"))
                 .thenReturn(project);
-        try (MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
+        try (MockedStatic<Executors> executors = mockExecutors();
+                MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
             assertThrows(IOException.class, () -> retrieval.run(source));
 
             assertNotNull(source.getLastRetrieveTimestamp());
@@ -128,7 +133,8 @@ public class GitLabSCMSourceRetrievalTest {
         GitLabApi api = mockApi();
         GitLabSCMSource source = newSource();
         source.setLastRetrieveTimestamp(1L);
-        try (MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
+        try (MockedStatic<Executors> executors = mockExecutors();
+                MockedStatic<GitLabHelper> helper = mockHelper(source, api)) {
             source.getGitlabProject(api);
             String digest = sourceDigest(source);
 
@@ -167,6 +173,48 @@ public class GitLabSCMSourceRetrievalTest {
                         .template("/-/tree/{branch}")
                         .build());
         return helper;
+    }
+
+    private static MockedStatic<Executors> mockExecutors() {
+        MockedStatic<Executors> executors = mockStatic(Executors.class);
+        executors.when(Executors::newSingleThreadExecutor).thenAnswer(invocation -> new AbstractExecutorService() {
+            private boolean shutdown;
+
+            @Override
+            public void shutdown() {
+                shutdown = true;
+            }
+
+            @Override
+            public List<Runnable> shutdownNow() {
+                shutdown = true;
+                return List.of();
+            }
+
+            @Override
+            public boolean isShutdown() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean isTerminated() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean awaitTermination(long timeout, TimeUnit unit) {
+                return shutdown;
+            }
+
+            @Override
+            public void execute(Runnable command) {
+                if (shutdown) {
+                    throw new IllegalStateException("Executor is shut down");
+                }
+                command.run();
+            }
+        });
+        return executors;
     }
 
     private static String sourceDigest(GitLabSCMSource source) {

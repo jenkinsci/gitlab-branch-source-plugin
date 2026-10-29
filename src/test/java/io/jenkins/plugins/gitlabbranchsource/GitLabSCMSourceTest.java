@@ -30,6 +30,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
@@ -104,24 +107,33 @@ public class GitLabSCMSourceTest {
         GitLabApi gitLabApi = Mockito.mock(GitLabApi.class);
         ProjectApi projectApi = Mockito.mock(ProjectApi.class);
         SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
+        GitLabApiException failure = new GitLabApiException("GitLab unreachable");
 
         Mockito.when(gitLabApi.getProjectApi()).thenReturn(projectApi);
-        Mockito.when(projectApi.getProject(any())).thenThrow(new GitLabApiException("GitLab unreachable"));
+        Mockito.when(projectApi.getProject(any())).thenThrow(failure);
 
         GitLabSCMSource gitLabSCMSource =
                 new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project").build();
         gitLabSCMSource.setOwner(owner);
-        utilities
-                .when(() -> GitLabHelper.apiBuilder(
-                        gitLabSCMSource.getOwner(),
-                        gitLabSCMSource.getServerName(),
-                        gitLabSCMSource.getCredentialsId()))
-                .thenReturn(gitLabApi);
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(
+                            gitLabSCMSource.getOwner(),
+                            gitLabSCMSource.getServerName(),
+                            gitLabSCMSource.getCredentialsId()))
+                    .thenReturn(gitLabApi);
 
-        assertThrows(
-                IOException.class,
-                () -> gitLabSCMSource.retrieve("", () -> new PrintStream(PrintStream.nullOutputStream())));
-        Mockito.verify(owner).save();
+            ByteArrayOutputStream log = new ByteArrayOutputStream();
+            IOException error = assertThrows(
+                    IOException.class,
+                    () -> gitLabSCMSource.retrieve(
+                            new BranchSCMHead("feature/diagnostics"), () -> new PrintStream(log)));
+            String message = "Failed to retrieve SCM revision for feature/diagnostics";
+            assertEquals(message, error.getMessage());
+            assertSame(failure, error.getCause());
+            assertEquals(message + System.lineSeparator(), log.toString(StandardCharsets.UTF_8));
+            Mockito.verify(owner).save();
+        }
     }
 
     @Test
@@ -141,25 +153,29 @@ public class GitLabSCMSourceTest {
         source.setTraits(List.of(new BranchDiscoveryTrait(3)));
         SCMSourceOwner owner = Mockito.mock(SCMSourceOwner.class);
         source.setOwner(owner);
-        utilities.when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds")).thenReturn(gitLabApi);
-        assertNull(source.getLastRetrieveTimestamp());
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(owner, SERVER, "creds"))
+                    .thenReturn(gitLabApi);
+            assertNull(source.getLastRetrieveTimestamp());
 
-        IOException error = assertThrows(
-                IOException.class, () -> source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL));
+            IOException error = assertThrows(
+                    IOException.class, () -> source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL));
 
-        assertEquals("Failed to fetch latest heads", error.getMessage());
-        assertSame(failure, error.getCause());
-        assertEquals(Long.valueOf(42L), source.getProjectId());
-        Long timestamp = source.getLastRetrieveTimestamp();
-        assertNotNull(timestamp);
-        Mockito.verify(owner, Mockito.atLeastOnce()).save();
-        String digest = Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source))));
+            assertEquals("Failed to fetch latest heads", error.getMessage());
+            assertSame(failure, error.getCause());
+            assertEquals(Long.valueOf(42L), source.getProjectId());
+            Long timestamp = source.getLastRetrieveTimestamp();
+            assertNotNull(timestamp);
+            Mockito.verify(owner, Mockito.atLeastOnce()).save();
+            String digest = Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source))));
 
-        source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
+            source.retrieve(null, SCMHeadObserver.collect(), null, TaskListener.NULL);
 
-        assertEquals(timestamp, source.getLastRetrieveTimestamp());
-        assertEquals(digest, Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source)))));
-        Mockito.verify(repositoryApi, Mockito.times(2)).getBranches(project);
+            assertEquals(timestamp, source.getLastRetrieveTimestamp());
+            assertEquals(digest, Util.getDigestOf(Items.XSTREAM2.toXML(List.of(new BranchSource(source)))));
+            Mockito.verify(repositoryApi, Mockito.times(2)).getBranches(project);
+        }
     }
 
     @Test
@@ -172,108 +188,165 @@ public class GitLabSCMSourceTest {
         Mockito.when(gitLabApi.getMergeRequestApi()).thenReturn(mrApi);
         Mockito.when(gitLabApi.getRepositoryApi()).thenReturn(repoApi);
         Mockito.when(projectApi.getProject(any())).thenReturn(new Project());
-        utilities
-                .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
-                .thenReturn(gitLabApi);
-        GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
-        GitLabSCMSourceBuilder sb =
-                new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
-        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
-        BranchSource source = new BranchSource(sb.build());
-        source.getSource()
-                .setTraits(Arrays.asList(new BranchDiscoveryTrait(0), new OriginMergeRequestDiscoveryTrait(1)));
-        project.getSourcesList().add(source);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final TaskListener listener = new StreamTaskListener(out, StandardCharsets.UTF_8);
-        Set<SCMHead> scmHead = source.getSource().fetch(listener);
-        assertEquals(0, scmHead.size());
+
+        try (MockedStatic<Executors> executorsMockedStatic = mockSynchronousExecutors()) {
+            utilities
+                    .when(() -> GitLabHelper.apiBuilder(any(AccessControlled.class), anyString(), anyString()))
+                    .thenReturn(gitLabApi);
+            GitLabServers.get().addServer(new GitLabServer("", SERVER, ""));
+            GitLabSCMSourceBuilder sb =
+                    new GitLabSCMSourceBuilder(SOURCE_ID, SERVER, "creds", "po", "group/project", "project");
+            WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class, PROJECT_NAME);
+            BranchSource source = new BranchSource(sb.build());
+            source.getSource()
+                    .setTraits(Arrays.asList(new BranchDiscoveryTrait(0), new OriginMergeRequestDiscoveryTrait(1)));
+            project.getSourcesList().add(source);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            final TaskListener listener = new StreamTaskListener(out, StandardCharsets.UTF_8);
+            Set<SCMHead> scmHead = source.getSource().fetch(listener);
+            assertEquals(0, scmHead.size());
+        }
+    }
+
+    private MockedStatic<Executors> mockSynchronousExecutors() {
+        MockedStatic<Executors> executors = Mockito.mockStatic(Executors.class);
+        executors.when(Executors::newSingleThreadExecutor).thenAnswer(invocation -> new AbstractExecutorService() {
+            private boolean shutdown;
+
+            @Override
+            public void shutdown() {
+                shutdown = true;
+            }
+
+            @Override
+            public List<Runnable> shutdownNow() {
+                shutdown = true;
+                return List.of();
+            }
+
+            @Override
+            public boolean isShutdown() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean isTerminated() {
+                return shutdown;
+            }
+
+            @Override
+            public boolean awaitTermination(long timeout, TimeUnit unit) {
+                return shutdown;
+            }
+
+            @Override
+            public void execute(Runnable command) {
+                if (shutdown) {
+                    throw new IllegalStateException("Executor is shut down");
+                }
+                command.run();
+            }
+        });
+        return executors;
     }
 
     @Test
     public void retrieveMergeRequestsReusesTargetBranchRevision() throws Exception {
-        MergeRequestFixture fixture = new MergeRequestFixture(
-                List.of(mergeRequest(3, "dev"), mergeRequest(2, "dev"), mergeRequest(1, "master")));
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            MergeRequestFixture fixture = new MergeRequestFixture(
+                    List.of(mergeRequest(3, "dev"), mergeRequest(2, "dev"), mergeRequest(1, "master")));
 
-        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
-        fixture.source.retrieve(null, collector, null, fixture.listener);
+            SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+            fixture.source.retrieve(null, collector, null, fixture.listener);
 
-        Map<SCMHead, SCMRevision> heads = collector.result();
-        assertEquals(3, heads.size());
-        for (Map.Entry<SCMHead, SCMRevision> head : heads.entrySet()) {
-            MergeRequestSCMRevision revision = (MergeRequestSCMRevision) head.getValue();
-            assertEquals(
-                    "target-"
-                            + ((MergeRequestSCMHead) head.getKey()).getTarget().getName(),
-                    revision.getBaseHash());
+            Map<SCMHead, SCMRevision> heads = collector.result();
+            assertEquals(3, heads.size());
+            for (Map.Entry<SCMHead, SCMRevision> head : heads.entrySet()) {
+                MergeRequestSCMRevision revision = (MergeRequestSCMRevision) head.getValue();
+                assertEquals(
+                        "target-"
+                                + ((MergeRequestSCMHead) head.getKey())
+                                        .getTarget()
+                                        .getName(),
+                        revision.getBaseHash());
+            }
+            // dev twice, master once: one branch lookup per distinct target branch, not per merge request.
+            Mockito.verify(fixture.repoApi, Mockito.times(2)).getBranch(any(), anyString());
+            Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
+            Mockito.verify(fixture.repoApi).getBranch(42L, "master");
         }
-        // dev twice, master once: one branch lookup per distinct target branch, not per merge request.
-        Mockito.verify(fixture.repoApi, Mockito.times(2)).getBranch(any(), anyString());
-        Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
-        Mockito.verify(fixture.repoApi).getBranch(42L, "master");
     }
 
     @Test
     public void retrieveScopedToMergeRequestsOnlyInspectsThose() throws Exception {
-        MergeRequestFixture fixture = new MergeRequestFixture(
-                List.of(mergeRequest(3, "dev"), mergeRequest(2, "dev"), mergeRequest(1, "master")));
-        // What a merge request event for !2 scopes the retrieve to (see GitLabSCMSourceRequest).
-        MergeRequestSCMHead wanted = new MergeRequestSCMHead(
-                "MR-2",
-                2L,
-                new BranchSCMHead("dev"),
-                ChangeRequestCheckoutStrategy.MERGE,
-                SCMHeadOrigin.DEFAULT,
-                "author",
-                "group/project",
-                "feature-2",
-                "MR 2");
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            MergeRequestFixture fixture = new MergeRequestFixture(
+                    List.of(mergeRequest(3, "dev"), mergeRequest(2, "dev"), mergeRequest(1, "master")));
+            // What a merge request event for !2 scopes the retrieve to (see GitLabSCMSourceRequest).
+            MergeRequestSCMHead wanted = new MergeRequestSCMHead(
+                    "MR-2",
+                    2L,
+                    new BranchSCMHead("dev"),
+                    ChangeRequestCheckoutStrategy.MERGE,
+                    SCMHeadOrigin.DEFAULT,
+                    "author",
+                    "group/project",
+                    "feature-2",
+                    "MR 2");
 
-        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
-        fixture.source.retrieve(null, new SCMHeadObserver.Filter<>(collector, wanted), null, fixture.listener);
+            SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+            fixture.source.retrieve(null, new SCMHeadObserver.Filter<>(collector, wanted), null, fixture.listener);
 
-        assertEquals(Set.of(wanted), collector.result().keySet());
-        // The two other merge requests are never checked: no log line, no API call.
-        String log = fixture.log();
-        assertTrue(log.contains("scoped to: !2"), log);
-        assertTrue(log.contains("Checking merge request !2"), log);
-        assertFalse(log.contains("Checking merge request !3"), log);
-        assertFalse(log.contains("Checking merge request !1"), log);
-        assertTrue(log.contains("1 merge requests were processed"), log);
-        Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
-        Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
+            assertEquals(Set.of(wanted), collector.result().keySet());
+            // The two other merge requests are never checked: no log line, no API call.
+            String log = fixture.log();
+            assertTrue(log.contains("scoped to: !2"), log);
+            assertTrue(log.contains("Checking merge request !2"), log);
+            assertFalse(log.contains("Checking merge request !3"), log);
+            assertFalse(log.contains("Checking merge request !1"), log);
+            assertTrue(log.contains("1 merge requests were processed"), log);
+            Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
+            Mockito.verify(fixture.repoApi).getBranch(42L, "dev");
+        }
     }
 
     @Test
     public void retrieveFailsOnRateLimitInsteadOfSkippingMergeRequests() throws Exception {
-        MergeRequestFixture fixture = new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
-        GitLabApiException rateLimited = new GitLabApiException("Too many requests", 429);
-        Mockito.when(fixture.repoApi.getBranch(any(), anyString())).thenThrow(rateLimited);
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            MergeRequestFixture fixture =
+                    new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
+            GitLabApiException rateLimited = new GitLabApiException("Too many requests", 429);
+            Mockito.when(fixture.repoApi.getBranch(any(), anyString())).thenThrow(rateLimited);
 
-        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
-        IOException error =
-                assertThrows(IOException.class, () -> fixture.source.retrieve(null, collector, null, fixture.listener));
+            SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+            IOException error = assertThrows(
+                    IOException.class, () -> fixture.source.retrieve(null, collector, null, fixture.listener));
 
-        assertEquals("Failed to fetch latest heads", error.getMessage());
-        assertSame(rateLimited, error.getCause());
-        assertEquals(0, collector.result().size());
-        assertTrue(fixture.log().contains("GitLab rate limit (HTTP 429)"), fixture.log());
-        // The walk stops at the first 429 instead of burning the rest of the minute.
-        Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
+            assertEquals("Failed to fetch latest heads", error.getMessage());
+            assertSame(rateLimited, error.getCause());
+            assertEquals(0, collector.result().size());
+            assertTrue(fixture.log().contains("GitLab rate limit (HTTP 429)"), fixture.log());
+            // The walk stops at the first 429 instead of burning the rest of the minute.
+            Mockito.verify(fixture.repoApi, Mockito.times(1)).getBranch(any(), anyString());
+        }
     }
 
     @Test
     public void retrieveStillSkipsMergeRequestsWhoseTargetBranchLookupFails() throws Exception {
-        MergeRequestFixture fixture = new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
-        Mockito.when(fixture.repoApi.getBranch(any(), anyString()))
-                .thenThrow(new GitLabApiException("Internal server error", 500));
+        try (MockedStatic<Executors> executors = mockSynchronousExecutors()) {
+            MergeRequestFixture fixture =
+                    new MergeRequestFixture(List.of(mergeRequest(2, "dev"), mergeRequest(1, "dev")));
+            Mockito.when(fixture.repoApi.getBranch(any(), anyString()))
+                    .thenThrow(new GitLabApiException("Internal server error", 500));
 
-        SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
-        fixture.source.retrieve(null, collector, null, fixture.listener);
+            SCMHeadObserver.Collector collector = SCMHeadObserver.collect();
+            fixture.source.retrieve(null, collector, null, fixture.listener);
 
-        assertEquals(0, collector.result().size());
-        assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 2"), fixture.log());
-        assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 1"), fixture.log());
-        Mockito.verify(fixture.repoApi, Mockito.times(2)).getBranch(any(), anyString());
+            assertEquals(0, collector.result().size());
+            assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 2"), fixture.log());
+            assertTrue(fixture.log().contains("Failed getting TargetBranch from Merge Request: 1"), fixture.log());
+            Mockito.verify(fixture.repoApi, Mockito.times(2)).getBranch(any(), anyString());
+        }
     }
 
     private static MergeRequest mergeRequest(long iid, String targetBranch) {

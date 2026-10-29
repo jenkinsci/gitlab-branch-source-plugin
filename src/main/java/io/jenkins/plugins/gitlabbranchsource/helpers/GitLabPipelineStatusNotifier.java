@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.Computer;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;
@@ -21,9 +22,11 @@ import hudson.scm.SCMRevisionState;
 import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.LogTaskListener;
+import io.jenkins.plugins.gitlabbranchsource.BranchSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.BranchSCMRevision;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
+import io.jenkins.plugins.gitlabbranchsource.GitLabTagSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMRevision;
 import java.io.File;
@@ -35,12 +38,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jenkins.branch.MultiBranchProject;
 import jenkins.plugins.git.GitTagSCMRevision;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.impl.NullSCMSource;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -77,12 +82,70 @@ public class GitLabPipelineStatusNotifier {
         return new GitLabSCMSourceContext(null, SCMHeadObserver.none()).withTraits((source.getTraits()));
     }
 
-    private static GitLabSCMSource getSource(Run<?, ?> build) {
+    static GitLabSCMSource getSource(Run<?, ?> build) {
         final SCMSource s = SCMSource.SourceByItem.findSource(build.getParent());
         if (s instanceof GitLabSCMSource) {
             return (GitLabSCMSource) s;
         }
+        if (s instanceof NullSCMSource) {
+            return getOrphanedSource(build);
+        }
         return null;
+    }
+
+    /**
+     * Recovers the source of a build whose branch job was orphaned while the build ran, for
+     * example because the branch was deleted or because a merge request was opened for it while
+     * branch discovery excludes branches that are also filed as merge requests. Orphaning replaces
+     * the job's {@code Branch} with a {@code Branch.Dead} whose source id is the
+     * {@link NullSCMSource}, so a lookup by job no longer finds the GitLab source. The build itself
+     * still records the id of the source it was created from in its {@link SCMRevisionAction}, and
+     * that source is normally still configured on the parent project. Returns null when the build
+     * carries no such id or the source is gone from the project.
+     */
+    private static GitLabSCMSource getOrphanedSource(Run<?, ?> build) {
+        final MultiBranchProject<?, ?> project = getMultiBranchProject(build.getParent());
+        if (project == null) {
+            return null;
+        }
+        for (SCMRevisionAction action : build.getActions(SCMRevisionAction.class)) {
+            if (action.getSourceId() == null) {
+                continue;
+            }
+            final SCMSource original = project.getSCMSource(action.getSourceId());
+            if (original instanceof GitLabSCMSource) {
+                return (GitLabSCMSource) original;
+            }
+        }
+        return null;
+    }
+
+    private static MultiBranchProject<?, ?> getMultiBranchProject(Job<?, ?> job) {
+        final ItemGroup<?> parent = job.getParent();
+        return parent instanceof MultiBranchProject ? (MultiBranchProject<?, ?>) parent : null;
+    }
+
+    /**
+     * A dead branch keeps its head, and only this plugin creates these head types, so the head
+     * tells which SCM the orphaned job belonged to even after its source id is gone.
+     */
+    private static boolean isOrphanedGitLabJob(Job<?, ?> job) {
+        return SCMSource.SourceByItem.findSource(job) instanceof NullSCMSource
+                && isGitLabHead(SCMHead.HeadByItem.findHead(job));
+    }
+
+    private static boolean isGitLabHead(SCMHead head) {
+        return head instanceof BranchSCMHead || head instanceof MergeRequestSCMHead || head instanceof GitLabTagSCMHead;
+    }
+
+    private static void warnUnresolvedStatus(Run<?, ?> build, TaskListener listener) {
+        final String message = String.format(
+                "[GitLab Pipeline Status] Cannot notify GitLab of the result of %s: the job was orphaned "
+                        + "while the build ran and the build records no revision from a configured GitLab "
+                        + "source. A pending or running commit status posted for this build stays unresolved.",
+                build.getFullDisplayName());
+        LOGGER.log(Level.WARNING, message);
+        listener.getLogger().println(message);
     }
 
     private static String getStatusName(
@@ -284,9 +347,12 @@ public class GitLabPipelineStatusNotifier {
     /**
      * Sends notifications to GitLab on Checkout (for the "In Progress" Status).
      */
-    private static void sendNotifications(Run<?, ?> build, TaskListener listener, Boolean useResult) {
+    static void sendNotifications(Run<?, ?> build, TaskListener listener, Boolean useResult) {
         GitLabSCMSource source = getSource(build);
         if (source == null) {
+            if (useResult && isOrphanedGitLabJob(build.getParent())) {
+                warnUnresolvedStatus(build, listener);
+            }
             return;
         }
         final GitLabSCMSourceContext sourceContext = getSourceContext(build, source);

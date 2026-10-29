@@ -415,7 +415,7 @@ public class GitLabSCMNavigator extends SCMNavigator {
         List<Action> result = new ArrayList<>();
         result.add(new ObjectMetadataAction(Util.fixEmpty(fullName), description, webUrl));
         if (StringUtils.isNotBlank(avatarUrl)) {
-            result.add(new GitLabAvatar(avatarUrl));
+            result.add(new GitLabAvatar(avatarUrl, getServerName()));
         }
         result.add(GitLabLink.toGroup(webUrl));
         if (StringUtils.isBlank(webUrl)) {

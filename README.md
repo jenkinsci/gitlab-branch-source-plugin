@@ -442,6 +442,7 @@ The following behaviours apply to both `Multibranch Pipeline Jobs` and `Folder O
 
 	* `Only Branches that are not also filed as MRs` - If you are discovering origin merge requests, it may not make sense to discover the same changes both as a merge request and as a branch.
 	* `Only Branches that are filed as MRs` - This option exists to preserve legacy behaviour when upgrading from older versions of the plugin. NOTE: If you have an actual use case for this option please file a merge request against this text.
+	* `Only explicitly listed branches` - Only branches matching the "Branches to always include" regex are built as branches. Useful when building only long-lived branches (e.g. `main`) and MRs (discovered separately).
 	* `All Branches` - Ignores whether the branch is also filed as a merge request and instead discovers all branches on the origin project.
 
 * `Discover merge requests from origin` - To discover merge requests made from origin branches.
@@ -482,7 +483,7 @@ These traits can be selected by selecting `Add` in the `Behaviours` section.
 * `Trigger build on merge request comment` - Enable trigger a rebuild of a merge request by comment with your desired comment body (default: `jenkins rebuild`). The job can only be triggered by trusted members of the project i.e. users with Developer/Maintainer/Owner accesslevel (also includes inherited from ancestor groups). By default only trusted members of project can trigger MR.
 You may want to disable this option because trusted members do not include members inherited from shared group (there is no way to get it from GitLabApi as of GitLab 13.0.0). If disabled, MR comment trigger can be done by any user having access to your project.
 
-* `Disable GitLab project avatar` - Disable avatars of GitLab project(s). It is not possible to fetch avatars when API has no token authentication or project is private. So you may use this option as a workaround. We will fix this issue in a later release.
+* `Disable GitLab project avatar` - Disable avatars of GitLab project(s). Private project and group avatars are fetched through the API using the credentials configured on the matching GitLab server in Jenkins system settings. API-fetched avatars are visible to users with Jenkins Overall/Read permission, regardless of item-level permissions. These responses use private, no-store cache headers. Rescan existing sources and organization folders to refresh their avatar metadata after upgrading. These server-level credentials must have access to the project or group; folder- or source-only tokens do not enable private-avatar fetching. If the API fetch fails, Jenkins tries the original avatar URL, which may work for public resources.
 
 * `Project Naming Strategy` - Choose whether you want `project name`, the `full project path (with namespace)`, `contextual project path (partial namespace`, or `simple project path (no namespace)` as job names of each project. Due to legacy reasons, we have `project path (with namespace)` as default naming scheme. Note if a job is already created and the naming strategy is changed it will cause projects and build logs to be destroyed.
 
