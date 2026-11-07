@@ -114,6 +114,12 @@
       <artifactId>hamcrest</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Keep the test classpath on Jackson's matching artifacts instead of GitLab4J's older annotations. -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>jackson2-api</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>job-dsl</artifactId>
