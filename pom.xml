@@ -52,7 +52,7 @@
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>gitlab-api</artifactId>
-        <version>6.2.0-111.vf174d6b_8c12e</version>
+        <version>6.2.0-122.ve34e6a_ee098d</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
