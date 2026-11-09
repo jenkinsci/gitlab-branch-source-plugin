@@ -20,3 +20,4 @@ unclassified:
         manageWebHooks: true
         name: gitlab-3213
         serverUrl: "https://gitlab.com"
+        skipHookSslVerification: true

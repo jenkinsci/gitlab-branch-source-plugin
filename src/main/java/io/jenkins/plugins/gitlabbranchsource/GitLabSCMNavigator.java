@@ -300,7 +300,11 @@ public class GitLabSCMNavigator extends SCMNavigator {
                                 .format(
                                         "Web hook %s%n",
                                         GitLabHookCreator.createWebHookWhenMissing(
-                                                webhookGitLabApi, projectPathWithNamespace, webHookUrl, secretToken));
+                                                webhookGitLabApi,
+                                                projectPathWithNamespace,
+                                                webHookUrl,
+                                                secretToken,
+                                                !server.isSkipHookSslVerification()));
                     }
                 } catch (GitLabApiException e) {
                     observer.getListener().getLogger().format("Cannot set web hook: %s%n", e.getReason());

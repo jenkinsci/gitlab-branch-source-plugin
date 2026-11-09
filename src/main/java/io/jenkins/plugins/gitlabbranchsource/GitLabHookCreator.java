@@ -101,7 +101,8 @@ public class GitLabHookCreator {
                         getPrivateTokenAsPlainText(credentials),
                         null,
                         getProxyConfig(server.getServerUrl()));
-                createWebHookWhenMissing(gitLabApi, source.getProjectPath(), hookUrl, secretToken);
+                createWebHookWhenMissing(
+                        gitLabApi, source.getProjectPath(), hookUrl, secretToken, !server.isSkipHookSslVerification());
             } catch (GitLabApiException e) {
                 LOGGER.log(
                         Level.WARNING,
@@ -160,7 +161,12 @@ public class GitLabHookCreator {
         if (systemHookDoesNotExists) {
             gitLabApi
                     .getSystemHooksApi()
-                    .addSystemHook(systemHookUrl, server.getSecretTokenAsPlainText(), false, false, true);
+                    .addSystemHook(
+                            systemHookUrl,
+                            server.getSecretTokenAsPlainText(),
+                            false,
+                            false,
+                            !server.isSkipHookSslVerification());
         }
     }
 
@@ -221,8 +227,30 @@ public class GitLabHookCreator {
         return enabledHooks;
     }
 
+    /**
+     * @deprecated use {@link #createWebHookWhenMissing(GitLabApi, String, String, String, boolean)} instead
+     */
+    @Deprecated
     public static String createWebHookWhenMissing(
             GitLabApi gitLabApi, String project, String hookUrl, String secretToken) throws GitLabApiException {
+        return createWebHookWhenMissing(gitLabApi, project, hookUrl, secretToken, true);
+    }
+
+    /**
+     * Creates the web hook of a project if it does not exist yet, or updates its secret token if it differs.
+     *
+     * @param gitLabApi the GitLab API client
+     * @param project the path of the project
+     * @param hookUrl the URL of the web hook
+     * @param secretToken the secret token of the web hook
+     * @param enableSslVerification {@code true} if a newly created web hook should verify the SSL certificate of
+     *        Jenkins; existing web hooks keep their setting
+     * @return a short description of what was done with the web hook
+     * @throws GitLabApiException if the web hook cannot be listed, created or modified
+     */
+    public static String createWebHookWhenMissing(
+            GitLabApi gitLabApi, String project, String hookUrl, String secretToken, boolean enableSslVerification)
+            throws GitLabApiException {
         ProjectHook projectHook = gitLabApi
                 .getProjectApi()
                 .getHooksStream(project)
@@ -230,7 +258,7 @@ public class GitLabHookCreator {
                 .findFirst()
                 .orElseGet(GitLabHookCreator::createWebHook);
         if (projectHook.getId() == null) {
-            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, true, secretToken);
+            gitLabApi.getProjectApi().addHook(project, hookUrl, projectHook, enableSslVerification, secretToken);
             return "created";
         }
         // Primarily done due to legacy reason, secret token might not be configured in previous releases. So setting up
