@@ -43,6 +43,9 @@ f.advanced() {
     f.entry(title: _("Web Hook trigger delay"), field: "hookTriggerDelay", "description": "Delay in seconds to be used for GitLab Web Hook build triggers (defaults to GitLab cache timeout)") {
         f.textbox()
     }
+    f.entry(title: _("Skip SSL verification for hooks"), field: "skipHookSslVerification", "description": "Create hooks that do not verify the SSL certificate of Jenkins") {
+        f.checkbox(title: _("Skip SSL verification for hooks"))
+    }
 }
 
 f.validateButton(

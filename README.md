@@ -208,6 +208,8 @@ After installing the plugin on your Jenkins instance, you need configure your Gi
 
     vi. `Root URL for hooks` - By default Root URL for hooks created by this plugin is your Jenkins instance url. You can modify the root URL in by adding your custom root URL. Leave empty if you want Jenkins URL to be your custom hook url. A path is added to your hook ROOT URL `/gitlab-webhook/post` for webhooks and `/gitlab-systemhook/post` for system hooks.
 
+    vii. `Skip SSL verification for hooks` - Available in the Advanced options. By default, the hooks created by this plugin verify the SSL certificate of Jenkins when GitLab delivers them. If your Jenkins instance uses a self-signed or otherwise untrusted certificate, check this box to create hooks with SSL verification disabled. Hooks that already exist on your GitLab Server are not modified.
+
 6. Adding a Personal Access Token Credentials:
 
    This is a manual setup. To automatically generate Personal Access Token see [next section](#creating-personal-access-token-within-jenkins).

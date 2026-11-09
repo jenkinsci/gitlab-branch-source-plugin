@@ -52,6 +52,20 @@ class GitLabHookCreatorTest {
     }
 
     @Test
+    void shouldCreateSystemHookWithoutSslVerificationWhenSkipped() throws Exception {
+        GitLabApi gitLabApi = mock(GitLabApi.class);
+        SystemHooksApi systemHooksApi = mock(SystemHooksApi.class);
+        when(gitLabApi.getSystemHooksApi()).thenReturn(systemHooksApi);
+        GitLabServer server = GitLabServers.get().findServer(GITLAB_SERVER_NAME);
+        server.setSkipHookSslVerification(true);
+
+        GitLabHookCreator.createSystemHookWhenMissing(server, gitLabApi);
+
+        verify(systemHooksApi)
+                .addSystemHook("https://jenkins.example.com/gitlab-systemhook/post", null, false, false, false);
+    }
+
+    @Test
     void shouldNotCreateSystemHookIfAlreadyExist() throws Exception {
         GitLabApi gitLabApi = mock(GitLabApi.class);
         SystemHooksApi systemHooksApi = mock(SystemHooksApi.class);
@@ -73,7 +87,7 @@ class GitLabHookCreatorTest {
         when(gitLabApi.getProjectApi()).thenReturn(projectApi);
 
         String result = GitLabHookCreator.createWebHookWhenMissing(
-                gitLabApi, "project", "https://jenkins.example.com/gitlab-systemhook/post", "secret");
+                gitLabApi, "project", "https://jenkins.example.com/gitlab-systemhook/post", "secret", true);
 
         assertEquals("created", result);
         ArgumentCaptor<ProjectHook> projectHookCaptor = ArgumentCaptor.forClass(ProjectHook.class);
@@ -93,6 +107,25 @@ class GitLabHookCreatorTest {
     }
 
     @Test
+    void shouldCreateWebHookWithoutSslVerificationWhenRequested() throws Exception {
+        GitLabApi gitLabApi = mock(GitLabApi.class);
+        ProjectApi projectApi = mock(ProjectApi.class);
+        when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+
+        String result = GitLabHookCreator.createWebHookWhenMissing(
+                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "secret", false);
+
+        assertEquals("created", result);
+        verify(projectApi)
+                .addHook(
+                        eq("project"),
+                        eq("https://jenkins.example.com/gitlab-webhook/post"),
+                        any(ProjectHook.class),
+                        eq(false),
+                        eq("secret"));
+    }
+
+    @Test
     void shouldUpdateSecretIfWebhookExistAndSecretsDiffers() throws Exception {
         GitLabApi gitLabApi = mock(GitLabApi.class);
         ProjectApi projectApi = mock(ProjectApi.class);
@@ -104,7 +137,7 @@ class GitLabHookCreatorTest {
         when(gitLabApi.getProjectApi()).thenReturn(projectApi);
 
         String result = GitLabHookCreator.createWebHookWhenMissing(
-                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "newSecret");
+                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "newSecret", true);
 
         assertEquals("modified", result);
         assertEquals("newSecret", existingHook.getToken());
@@ -123,7 +156,27 @@ class GitLabHookCreatorTest {
         when(gitLabApi.getProjectApi()).thenReturn(projectApi);
 
         String result = GitLabHookCreator.createWebHookWhenMissing(
-                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "secret");
+                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "secret", true);
+
+        assertEquals("already created", result);
+        verify(projectApi).getHooksStream("project");
+        verifyNoMoreInteractions(projectApi);
+    }
+
+    @Test
+    void shouldNotChangeSslVerificationOfExistingWebhook() throws Exception {
+        GitLabApi gitLabApi = mock(GitLabApi.class);
+        ProjectApi projectApi = mock(ProjectApi.class);
+        ProjectHook existingHook = new ProjectHook();
+        existingHook.setId(4711L);
+        existingHook.setUrl("https://jenkins.example.com/gitlab-webhook/post");
+        existingHook.setToken("secret");
+        existingHook.setEnableSslVerification(true);
+        when(projectApi.getHooksStream("project")).thenReturn(Stream.of(existingHook));
+        when(gitLabApi.getProjectApi()).thenReturn(projectApi);
+
+        String result = GitLabHookCreator.createWebHookWhenMissing(
+                gitLabApi, "project", "https://jenkins.example.com/gitlab-webhook/post", "secret", false);
 
         assertEquals("already created", result);
         verify(projectApi).getHooksStream("project");

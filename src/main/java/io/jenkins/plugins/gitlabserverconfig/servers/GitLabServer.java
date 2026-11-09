@@ -128,6 +128,13 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     private String hooksRootUrl;
 
     /**
+     * {@code true} if and only if the hooks created by Jenkins on this end-point
+     * should not verify the SSL certificate of Jenkins when GitLab delivers them.
+     * Useful when Jenkins uses a self-signed or otherwise untrusted certificate.
+     */
+    private boolean skipHookSslVerification;
+
+    /**
      * The secret token used while setting up hook url in the GitLab server
      * @Deprecated Use webhookSecretCredentialsId instead
      */
@@ -303,6 +310,29 @@ public class GitLabServer extends AbstractDescribableImpl<GitLabServer> {
     @CheckForNull
     public String getHooksRootUrl() {
         return Util.ensureEndsWith(Util.fixEmptyAndTrim(hooksRootUrl), "/");
+    }
+
+    /**
+     * Returns {@code true} if the hooks created by Jenkins on this end-point should
+     * not verify the SSL certificate of Jenkins.
+     *
+     * @return {@code true} if the hooks created by Jenkins on this end-point should
+     *         not verify the SSL certificate of Jenkins.
+     */
+    public boolean isSkipHookSslVerification() {
+        return skipHookSslVerification;
+    }
+
+    /**
+     * Data Bound Setter for the SSL verification of the hooks created by Jenkins
+     *
+     * @param skipHookSslVerification {@code true} if and only if the hooks created
+     *                                by Jenkins on this end-point should not verify
+     *                                the SSL certificate of Jenkins.
+     */
+    @DataBoundSetter
+    public void setSkipHookSslVerification(boolean skipHookSslVerification) {
+        this.skipHookSslVerification = skipHookSslVerification;
     }
 
     @DataBoundSetter

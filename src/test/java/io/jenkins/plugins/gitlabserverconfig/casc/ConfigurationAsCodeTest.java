@@ -41,6 +41,7 @@ public class ConfigurationAsCodeTest {
         assertThat(server.isManageWebHooks(), is(true));
         assertThat(server.isManageSystemHooks(), is(true));
         assertThat(server.getHooksRootUrl(), is("https://jenkins.intranet/"));
+        assertThat(server.isSkipHookSslVerification(), is(true));
 
         List<PersonalAccessTokenImpl> personalCredentials = CredentialsProvider.lookupCredentials(
                 PersonalAccessTokenImpl.class, j.jenkins, ACL.SYSTEM, Collections.emptyList());
