@@ -1,0 +1,35 @@
+{
+  "object_kind": "merge_request",
+  "event_type": "merge_request",
+  "user": {"id": 1, "name": "user", "username": "user"},
+  "project": {
+    "id": 42,
+    "name": "webapp",
+    "web_url": "https://gitlab.example.com/group/webapp",
+    "path_with_namespace": "group/webapp",
+    "default_branch": "main"
+  },
+  "object_attributes": {
+    "id": 1001,
+    "iid": 17,
+    "action": "update",
+    "state": "opened",
+    "draft": false,
+    "work_in_progress": false,
+    "source_branch": "feature/stacked-change",
+    "source_project_id": 42,
+    "target_branch": "main",
+    "target_project_id": 42,
+    "title": "Stacked change",
+    "merge_status": "checking",
+    "last_commit": {"id": "0123456789abcdef0123456789abcdef01234567"},
+    "source": {"id": 42, "path_with_namespace": "group/webapp"},
+    "target": {"id": 42, "path_with_namespace": "group/webapp"}
+  },
+  "changes": {
+    "head_pipeline_id": {"previous": 500, "current": null},
+    "merge_status": {"previous": "can_be_merged", "current": "checking"},
+    "target_branch": {"previous": "feature/base-change", "current": "main"},
+    "updated_at": {"previous": "2026-11-09T14:06:36.645Z", "current": "2026-11-10T15:38:06.528Z"}
+  }
+}
