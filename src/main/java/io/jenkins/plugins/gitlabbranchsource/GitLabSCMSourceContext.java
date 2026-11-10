@@ -69,6 +69,8 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
+    private boolean alwaysIgnoreMRRetarget = false;
+
     private boolean alwaysIgnoreMRWorkInProgress = false;
 
     private boolean markUnstableAsSuccess = false;
@@ -179,6 +181,10 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     public boolean alwaysIgnoreNonCodeRelatedUpdates() {
         return alwaysIgnoreNonCodeRelatedUpdates;
+    }
+
+    public boolean alwaysIgnoreMRRetarget() {
+        return alwaysIgnoreMRRetarget;
     }
 
     public boolean alwaysIgnoreMRWorkInProgress() {
@@ -360,6 +366,11 @@ public class GitLabSCMSourceContext extends SCMSourceContext<GitLabSCMSourceCont
 
     public final GitLabSCMSourceContext withAlwaysIgnoreNonCodeRelatedUpdates(boolean enabled) {
         this.alwaysIgnoreNonCodeRelatedUpdates = enabled;
+        return this;
+    }
+
+    public final GitLabSCMSourceContext withAlwaysIgnoreMRRetarget(boolean enabled) {
+        this.alwaysIgnoreMRRetarget = enabled;
         return this;
     }
 

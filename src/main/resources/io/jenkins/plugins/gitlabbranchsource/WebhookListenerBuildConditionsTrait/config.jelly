@@ -21,6 +21,9 @@
   <f:entry title="${%Ignore builds for non-code related MR updates}" field="alwaysIgnoreNonCodeRelatedUpdates">
     <f:checkbox default="unchecked"/>
   </f:entry>
+  <f:entry title="${%Ignore builds for MR target branch changes}" field="alwaysIgnoreMRRetarget">
+    <f:checkbox default="unchecked"/>
+  </f:entry>
   <f:entry title="${%Ignore builds for Work In Progress MRs}" field="alwaysIgnoreMRWorkInProgress">
     <f:checkbox default="unchecked"/>
   </f:entry>

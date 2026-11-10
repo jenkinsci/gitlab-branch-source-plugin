@@ -48,6 +48,12 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     private boolean alwaysIgnoreNonCodeRelatedUpdates = false;
 
     /**
+     * Always ignore webhook if the MR target branch was changed, e.g. when GitLab retargets a stacked MR after
+     * the MR it was based on got merged
+     */
+    private boolean alwaysIgnoreMRRetarget = false;
+
+    /**
      * Always ignore webhook if MR is WIP
      */
     private boolean alwaysIgnoreMRWorkInProgress = false;
@@ -71,6 +77,7 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
                     .withAlwaysIgnoreMRApproved(getAlwaysIgnoreMRApproved())
                     .withAlwaysIgnoreMRUnApproved(getAlwaysIgnoreMRUnApproved())
                     .withAlwaysIgnoreNonCodeRelatedUpdates(getAlwaysIgnoreNonCodeRelatedUpdates())
+                    .withAlwaysIgnoreMRRetarget(getAlwaysIgnoreMRRetarget())
                     .withAlwaysIgnoreMRWorkInProgress(getAlwaysIgnoreMRWorkInProgress());
         }
     }
@@ -163,6 +170,15 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     }
 
     /**
+     * Run build on MR target branch change
+     *
+     * @return false to run build when the MR target branch changes
+     */
+    public boolean getAlwaysIgnoreMRRetarget() {
+        return alwaysIgnoreMRRetarget;
+    }
+
+    /**
      * Do not run build on MR WIP
      *
      * @return false to run build on non-code related MR updates
@@ -227,6 +243,14 @@ public class WebhookListenerBuildConditionsTrait extends SCMSourceTrait {
     @DataBoundSetter
     public void setAlwaysIgnoreNonCodeRelatedUpdates(boolean alwaysIgnoreNonCodeRelatedUpdates) {
         this.alwaysIgnoreNonCodeRelatedUpdates = alwaysIgnoreNonCodeRelatedUpdates;
+    }
+
+    /**
+     * Setter for stapler to set the alwaysIgnoreMRRetarget of the WebhookListener
+     */
+    @DataBoundSetter
+    public void setAlwaysIgnoreMRRetarget(boolean alwaysIgnoreMRRetarget) {
+        this.alwaysIgnoreMRRetarget = alwaysIgnoreMRRetarget;
     }
 
     /**

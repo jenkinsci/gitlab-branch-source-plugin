@@ -42,8 +42,16 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
         }
 
         if (action != null) {
-            if (action.equals("update") && context.alwaysIgnoreNonCodeRelatedUpdates()) {
-                if (attributes.getOldrev() == null) {
+            if (action.equals("update")) {
+                if (isRetarget(mrEvent)) {
+                    boolean build = !context.alwaysIgnoreMRRetarget();
+                    LOGGER.log(Level.FINE, "shouldBuild for MR-{0} set to {1} for target branch change.", new Object[] {
+                        attributes.getIid(), build
+                    });
+                    return build;
+                }
+
+                if (context.alwaysIgnoreNonCodeRelatedUpdates() && attributes.getOldrev() == null) {
                     shouldBuild = false;
                 }
             }
@@ -86,5 +94,9 @@ public class GitLabMergeRequestTrigger extends GitLabMergeRequestSCMEvent {
         }
 
         return shouldBuild;
+    }
+
+    private static boolean isRetarget(MergeRequestEvent mrEvent) {
+        return mrEvent.getChanges() != null && mrEvent.getChanges().get("target_branch") != null;
     }
 }

@@ -1,0 +1,11 @@
+<div>
+  GitLab will send a webhook to Jenkins when the target branch of an MR changes, e.g. when it retargets a stacked MR
+  to the target of the MR it was based on after that one got merged. By default such an update builds the MR and
+  updates its job to the new target branch, even if builds for non-code related MR updates are ignored.
+
+  Enabling this option will prevent a build running if the cause was a target branch change. The job then also keeps
+  the old target branch until the next MR event or branch indexing, so builds started in the meantime (including
+  manual ones) still merge the old target branch, which fails if GitLab already deleted it.
+
+  Note: these settings do not have any impact on build from comment settings.
+</div>
