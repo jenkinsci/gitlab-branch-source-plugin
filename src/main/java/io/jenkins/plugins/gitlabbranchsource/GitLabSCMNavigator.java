@@ -8,7 +8,6 @@ import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getProx
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrl;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabHelper.getServerUrlFromName;
 import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.ICON_GITLAB;
-import static io.jenkins.plugins.gitlabbranchsource.helpers.GitLabIcons.iconFilePathPattern;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -494,11 +493,6 @@ public class GitLabSCMNavigator extends SCMNavigator {
         @Override
         public String getIconClassName() {
             return ICON_GITLAB;
-        }
-
-        @Override
-        public String getIconFilePathPattern() {
-            return iconFilePathPattern(getIconClassName());
         }
 
         @Override
