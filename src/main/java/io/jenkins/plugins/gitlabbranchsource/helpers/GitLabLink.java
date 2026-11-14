@@ -4,12 +4,7 @@ import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
-import jenkins.model.Jenkins;
-import org.apache.commons.jelly.JellyContext;
-import org.jenkins.ui.icon.Icon;
-import org.jenkins.ui.icon.IconSet;
 import org.jenkins.ui.icon.IconSpec;
-import org.kohsuke.stapler.Stapler;
 
 /**
  * Link to GitLab
@@ -43,27 +38,27 @@ public class GitLabLink implements Action, IconSpec {
     }
 
     public static GitLabLink toGroup(String url) {
-        return new GitLabLink("gitlab-logo", url, "Group");
+        return new GitLabLink(GitLabIcons.ICON_GITLAB, url, "Group");
     }
 
     public static GitLabLink toProject(String url) {
-        return new GitLabLink("gitlab-project", url, "Project");
+        return new GitLabLink(GitLabIcons.ICON_PROJECT, url, "Project");
     }
 
     public static GitLabLink toBranch(String url) {
-        return new GitLabLink("gitlab-branch", url, "Branch");
+        return new GitLabLink(GitLabIcons.ICON_BRANCH, url, "Branch");
     }
 
     public static GitLabLink toMergeRequest(String url) {
-        return new GitLabLink("gitlab-mr", url, "Merge Request");
+        return new GitLabLink(GitLabIcons.ICON_MR, url, "Merge Request");
     }
 
     public static GitLabLink toTag(String url) {
-        return new GitLabLink("gitlab-tag", url, "Tag");
+        return new GitLabLink(GitLabIcons.ICON_TAG, url, "Tag");
     }
 
     public static GitLabLink toCommit(String url) {
-        return new GitLabLink("gitlab-commit", url, "Commit");
+        return new GitLabLink(GitLabIcons.ICON_COMMIT, url, "Commit");
     }
 
     @NonNull
@@ -79,13 +74,8 @@ public class GitLabLink implements Action, IconSpec {
 
     @Override
     public String getIconFileName() {
-        String iconClassName = getIconClassName();
-        Icon icon = IconSet.icons.getIconByClassSpec(iconClassName + " icon-md");
-        if (icon != null) {
-            JellyContext ctx = new JellyContext();
-            ctx.setVariable("resURL", Stapler.getCurrentRequest2().getContextPath() + Jenkins.RESOURCE_PATH);
-            return icon.getQualifiedUrl(ctx);
-        }
+        // the icon is rendered from getIconClassName() as a themable Jenkins Symbol, no file-based fallback
+        // needed
         return null;
     }
 
