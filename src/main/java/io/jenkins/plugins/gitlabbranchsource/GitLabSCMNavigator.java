@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.traits.GitBrowserSCMSourceTrait;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMNavigatorDescriptor;
@@ -232,18 +233,50 @@ public class GitLabSCMNavigator extends SCMNavigator {
 
     @Override
     public void visitSources(@NonNull final SCMSourceObserver observer) throws IOException, InterruptedException {
+        visitProjects(observer, null);
+    }
+
+    /**
+     * Handles an event for a project that has no sub-project (yet), e.g. a push to a repository without a
+     * Jenkinsfile. The default implementation lists every project of the owner, which for large groups means
+     * many slow paginated API calls per event. A GitLab event already names its project, so only that project
+     * is fetched.
+     */
+    @Override
+    public void visitSources(@NonNull SCMSourceObserver observer, @NonNull SCMHeadEvent<?> event)
+            throws IOException, InterruptedException {
+        String projectPath = event.getSourceName();
+        if (!(event instanceof AbstractGitLabSCMHeadEvent)
+                || !getNavigatorProjects().contains(projectPath)) {
+            // unknown project: it may only be discoverable through a full listing
+            super.visitSources(observer, event);
+            return;
+        }
+        visitProjects(SCMSourceObserver.filter(observer, projectPath), projectPath);
+    }
+
+    /**
+     * @param onlyProject path with namespace of the single project to visit, or {@code null} to visit all projects
+     *                    of the {@link #projectOwner}.
+     */
+    private void visitProjects(@NonNull final SCMSourceObserver observer, @CheckForNull String onlyProject)
+            throws IOException, InterruptedException {
         GitLabSCMNavigatorContext context = new GitLabSCMNavigatorContext().withTraits(traits);
         try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
             GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName, credentialsId);
             getGitlabOwner(gitLabApi);
-            List<Project> projects;
-            if (gitlabOwner instanceof GitLabUser) {
+            boolean ownerIsUser = gitlabOwner instanceof GitLabUser;
+            if (!ownerIsUser) {
+                isGroup = true;
+                wantSubGroupProjects = request.wantSubgroupProjects();
+            }
+            List<Project> projects =
+                    onlyProject != null ? fetchProjectIfInScope(gitLabApi, onlyProject, ownerIsUser, request) : null;
+            if (projects == null && ownerIsUser) {
                 // Even returns the group projects owned by the user
                 projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
-            } else {
-                isGroup = true;
+            } else if (projects == null) {
                 GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
-                wantSubGroupProjects = request.wantSubgroupProjects();
                 groupProjectsFilter.withIncludeSubGroups(wantSubGroupProjects);
                 groupProjectsFilter.withShared(request.wantSharedProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
@@ -333,6 +366,53 @@ public class GitLabSCMNavigator extends SCMNavigator {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             throw new IOException("Failed to visit SCM source", e);
         }
+    }
+
+    /**
+     * Fetches a single project, but only if a full listing would also return it. {@link #navigatorProjects} is
+     * never pruned, so a known project may since have left the discovery scope (unshared, moved, subgroup or shared
+     * discovery disabled) or have become inaccessible.
+     *
+     * @return the project, or {@code null} when it is not (or no longer) in scope and a full listing is needed.
+     */
+    @CheckForNull
+    private List<Project> fetchProjectIfInScope(
+            GitLabApi gitLabApi, String path, boolean ownerIsUser, GitLabSCMNavigatorRequest request)
+            throws GitLabApiException {
+        Project project;
+        try {
+            project = gitLabApi.getProjectApi().getProject(path);
+        } catch (GitLabApiException e) {
+            if (e.getHttpStatus() == 403 || e.getHttpStatus() == 404) {
+                return null;
+            }
+            throw e;
+        }
+        if (project == null || !isInScope(project, ownerIsUser, request)) {
+            return null;
+        }
+        return Collections.singletonList(project);
+    }
+
+    private boolean isInScope(Project project, boolean ownerIsUser, GitLabSCMNavigatorRequest request) {
+        String namespace =
+                project.getNamespace() != null ? project.getNamespace().getFullPath() : null;
+        if (namespace == null) {
+            return false;
+        }
+        if (namespace.equalsIgnoreCase(projectOwner)) {
+            return true;
+        }
+        if (ownerIsUser) {
+            return false;
+        }
+        if (request.wantSubgroupProjects() && StringUtils.startsWithIgnoreCase(namespace, projectOwner + "/")) {
+            return true;
+        }
+        return request.wantSharedProjects()
+                && project.getSharedWithGroups() != null
+                && project.getSharedWithGroups().stream()
+                        .anyMatch(g -> projectOwner.equalsIgnoreCase(g.getGroupFullPath()));
     }
 
     @NonNull
