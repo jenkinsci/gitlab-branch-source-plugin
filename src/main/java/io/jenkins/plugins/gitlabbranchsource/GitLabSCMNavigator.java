@@ -265,22 +265,22 @@ public class GitLabSCMNavigator extends SCMNavigator {
         try (GitLabSCMNavigatorRequest request = context.newRequest(this, observer)) {
             GitLabApi gitLabApi = apiBuilder(observer.getContext(), serverName, credentialsId);
             getGitlabOwner(gitLabApi);
-            List<Project> projects;
-            if (gitlabOwner instanceof GitLabUser) {
-                // Even returns the group projects owned by the user
-                projects = onlyProject != null
-                        ? Collections.singletonList(gitLabApi.getProjectApi().getProject(onlyProject))
-                        : gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
-            } else {
+            boolean ownerIsUser = gitlabOwner instanceof GitLabUser;
+            if (!ownerIsUser) {
                 isGroup = true;
-                GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
                 wantSubGroupProjects = request.wantSubgroupProjects();
+            }
+            List<Project> projects =
+                    onlyProject != null ? fetchProjectIfInScope(gitLabApi, onlyProject, ownerIsUser, request) : null;
+            if (projects == null && ownerIsUser) {
+                // Even returns the group projects owned by the user
+                projects = gitLabApi.getProjectApi().getUserProjects(projectOwner, new ProjectFilter().withOwned(true));
+            } else if (projects == null) {
+                GroupProjectsFilter groupProjectsFilter = new GroupProjectsFilter();
                 groupProjectsFilter.withIncludeSubGroups(wantSubGroupProjects);
                 groupProjectsFilter.withShared(request.wantSharedProjects());
                 // If projectOwner is a subgroup, it will only return projects in the subgroup
-                projects = onlyProject != null
-                        ? Collections.singletonList(gitLabApi.getProjectApi().getProject(onlyProject))
-                        : gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
+                projects = gitLabApi.getGroupApi().getProjects(projectOwner, groupProjectsFilter);
             }
             int count = 0;
             observer.getListener().getLogger().format("%nChecking projects...%n");
@@ -366,6 +366,53 @@ public class GitLabSCMNavigator extends SCMNavigator {
             LOGGER.log(Level.WARNING, "Exception caught:" + e, e);
             throw new IOException("Failed to visit SCM source", e);
         }
+    }
+
+    /**
+     * Fetches a single project, but only if a full listing would also return it. {@link #navigatorProjects} is
+     * never pruned, so a known project may since have left the discovery scope (unshared, moved, subgroup or shared
+     * discovery disabled) or have become inaccessible.
+     *
+     * @return the project, or {@code null} when it is not (or no longer) in scope and a full listing is needed.
+     */
+    @CheckForNull
+    private List<Project> fetchProjectIfInScope(
+            GitLabApi gitLabApi, String path, boolean ownerIsUser, GitLabSCMNavigatorRequest request)
+            throws GitLabApiException {
+        Project project;
+        try {
+            project = gitLabApi.getProjectApi().getProject(path);
+        } catch (GitLabApiException e) {
+            if (e.getHttpStatus() == 403 || e.getHttpStatus() == 404) {
+                return null;
+            }
+            throw e;
+        }
+        if (project == null || !isInScope(project, ownerIsUser, request)) {
+            return null;
+        }
+        return Collections.singletonList(project);
+    }
+
+    private boolean isInScope(Project project, boolean ownerIsUser, GitLabSCMNavigatorRequest request) {
+        String namespace =
+                project.getNamespace() != null ? project.getNamespace().getFullPath() : null;
+        if (namespace == null) {
+            return false;
+        }
+        if (namespace.equalsIgnoreCase(projectOwner)) {
+            return true;
+        }
+        if (ownerIsUser) {
+            return false;
+        }
+        if (request.wantSubgroupProjects() && StringUtils.startsWithIgnoreCase(namespace, projectOwner + "/")) {
+            return true;
+        }
+        return request.wantSharedProjects()
+                && project.getSharedWithGroups() != null
+                && project.getSharedWithGroups().stream()
+                        .anyMatch(g -> projectOwner.equalsIgnoreCase(g.getGroupFullPath()));
     }
 
     @NonNull
