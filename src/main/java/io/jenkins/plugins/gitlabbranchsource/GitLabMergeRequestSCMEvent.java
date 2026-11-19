@@ -15,6 +15,7 @@ import jenkins.scm.api.SCMNavigator;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
+import org.gitlab4j.api.webhook.MergeRequestChanges;
 import org.gitlab4j.api.webhook.MergeRequestEvent;
 
 public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<MergeRequestEvent> {
@@ -24,11 +25,67 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
         super(typeOf(mrEvent), mrEvent, origin);
     }
 
+    private static String rootCause(MergeRequestEvent mrEvent) {
+        MergeRequestEvent.ObjectAttributes attributes = mrEvent.getObjectAttributes();
+        StringBuilder causes = new StringBuilder();
+        if (attributes.getOldrev() != null) {
+            causes.append("push");
+        }
+        MergeRequestChanges changes = mrEvent.getChanges();
+        if (changes != null) {
+            StringBuilder changedFields = new StringBuilder();
+            appendField(changedFields, changes.getTitle() != null, "title");
+            appendField(changedFields, changes.getDescription() != null, "description");
+            appendField(changedFields, changes.getLabels() != null, "labels");
+            appendField(changedFields, changes.getAssignees() != null, "assignees");
+            appendField(changedFields, changes.getReviewers() != null, "reviewers");
+            appendField(changedFields, changes.getMergeStatus() != null, "merge status");
+            appendField(changedFields, changes.getMilestoneId() != null, "milestone");
+            appendField(changedFields, changes.get("target_branch") != null, "target branch");
+            appendField(changedFields, changes.get("draft") != null, "draft status");
+            if (changedFields.length() > 0) {
+                if (causes.length() > 0) {
+                    causes.append(", ");
+                }
+                causes.append(changedFields).append(" changed");
+            }
+        }
+        if (causes.length() > 0) {
+            return causes.toString();
+        }
+        String action = attributes.getAction();
+        if (action != null) {
+            switch (action) {
+                case "open":
+                    return "opened";
+                case "close":
+                    return "closed";
+                case "reopen":
+                    return "reopened";
+                case "merge":
+                    return "merged";
+                default:
+                    return action;
+            }
+        }
+        return "updated";
+    }
+
+    private static void appendField(StringBuilder fields, boolean matched, String field) {
+        if (!matched) {
+            return;
+        }
+        if (fields.length() > 0) {
+            fields.append(", ");
+        }
+        fields.append(field);
+    }
+
     // TODO: Take care of "locked" state
     private static Type typeOf(MergeRequestEvent mrEvent) {
-        if (mrEvent.getObjectAttributes().getState().equals("closed")) {
+        if ("closed".equals(mrEvent.getObjectAttributes().getState())) {
             return Type.REMOVED;
-        } else if (mrEvent.getObjectAttributes().getAction().equals("open")) {
+        } else if ("open".equals(mrEvent.getObjectAttributes().getAction())) {
             return Type.CREATED;
         }
         return Type.UPDATED;
@@ -43,21 +100,10 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             getPayload().getObjectAttributes().getAction(),
             getPayload().getProject().getName()
         });
-        if (state != null) {
-            switch (state) {
-                case "opened":
-                case "reopened":
-                case "closed":
-                    return "Merge request !"
-                            + getPayload().getObjectAttributes().getIid()
-                            + " state:" + state
-                            + " action:" + getPayload().getObjectAttributes().getAction()
-                            + " in project " + getPayload().getProject().getName()
-                            + " changes:" + getPayload().getChanges().toString();
-            }
-        }
-        return "Merge request !" + getPayload().getObjectAttributes().getIid() + " event in project "
-                + getPayload().getProject().getName();
+        return "Merge request !"
+                + getPayload().getObjectAttributes().getIid()
+                + " " + rootCause(getPayload())
+                + " in project " + getPayload().getProject().getName();
     }
 
     @Override
@@ -86,19 +132,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             String.valueOf(state),
             getPayload().getObjectAttributes().getAction()
         });
-        if (state != null) {
-            switch (state) {
-                case "opened":
-                case "reopened":
-                case "closed":
-                    return "Merge request !"
-                            + getPayload().getObjectAttributes().getIid()
-                            + " state:" + state
-                            + " action:" + getPayload().getObjectAttributes().getAction()
-                            + " changes:" + getPayload().getChanges().toString();
-            }
-        }
-        return "Merge request !" + getPayload().getObjectAttributes().getIid() + " event";
+        return "Merge request !" + getPayload().getObjectAttributes().getIid() + " " + rootCause(getPayload());
     }
 
     @Override
@@ -110,21 +144,10 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             getPayload().getObjectAttributes().getAction(),
             getPayload().getProject().getPathWithNamespace()
         });
-        if (state != null) {
-            switch (state) {
-                case "opened":
-                case "reopened":
-                case "closed":
-                    return "Merge request !"
-                            + getPayload().getObjectAttributes().getIid()
-                            + " state:" + state
-                            + " action:" + getPayload().getObjectAttributes().getAction()
-                            + " in project "
-                            + getPayload().getProject().getPathWithNamespace()
-                            + " changes:" + getPayload().getChanges().toString();
-            }
-        }
-        return "Merge request !" + getPayload().getObjectAttributes().getIid() + " event";
+        return "Merge request !"
+                + getPayload().getObjectAttributes().getIid()
+                + " " + rootCause(getPayload())
+                + " in project " + getPayload().getProject().getPathWithNamespace();
     }
 
     @NonNull
