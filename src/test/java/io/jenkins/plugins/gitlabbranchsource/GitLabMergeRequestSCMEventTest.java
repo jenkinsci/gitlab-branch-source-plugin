@@ -55,10 +55,10 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.setChanges(changes);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: title changed in project foo/bar", event.description());
+        assertEquals("Merge request !123454 title changed in project foo/bar", event.description());
         assertEquals(
-                "Merge request !123454: title changed in project bar", event.descriptionFor(mock(SCMNavigator.class)));
-        assertEquals("Merge request !123454: title changed", event.descriptionFor(mock(SCMSource.class)));
+                "Merge request !123454 title changed in project bar", event.descriptionFor(mock(SCMNavigator.class)));
+        assertEquals("Merge request !123454 title changed", event.descriptionFor(mock(SCMSource.class)));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.setChanges(changes);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: title, labels changed in project foo/bar", event.description());
+        assertEquals("Merge request !123454 title, labels changed in project foo/bar", event.description());
     }
 
     @Test
@@ -79,7 +79,7 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.getObjectAttributes().setOldrev("abc123");
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: push in project foo/bar", event.description());
+        assertEquals("Merge request !123454 push in project foo/bar", event.description());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.setChanges(changes);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: push, title changed in project foo/bar", event.description());
+        assertEquals("Merge request !123454 push, title changed in project foo/bar", event.description());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.setChanges(changes);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: target branch changed in project foo/bar", event.description());
+        assertEquals("Merge request !123454 target branch changed in project foo/bar", event.description());
     }
 
     @Test
@@ -113,19 +113,19 @@ public class GitLabMergeRequestSCMEventTest {
         mrEvent.setChanges(changes);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: draft status changed in project foo/bar", event.description());
+        assertEquals("Merge request !123454 draft status changed in project foo/bar", event.description());
     }
 
     @Test
     public void fallsBackToRawActionForApprovalEvents() {
         MergeRequestEvent approval = mrEvent("opened", "approval");
         assertEquals(
-                "Merge request !123454: approval in project foo/bar",
+                "Merge request !123454 approval in project foo/bar",
                 event(approval).description());
 
         MergeRequestEvent unapproval = mrEvent("opened", "unapproval");
         assertEquals(
-                "Merge request !123454: unapproval in project foo/bar",
+                "Merge request !123454 unapproval in project foo/bar",
                 event(unapproval).description());
     }
 
@@ -134,7 +134,7 @@ public class GitLabMergeRequestSCMEventTest {
         MergeRequestEvent mrEvent = mrEvent("opened", "approved");
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: approved in project foo/bar", event.description());
+        assertEquals("Merge request !123454 approved in project foo/bar", event.description());
     }
 
     @Test
@@ -142,9 +142,9 @@ public class GitLabMergeRequestSCMEventTest {
         MergeRequestEvent mrEvent = mrEvent(null, "update");
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: update in project foo/bar", event.description());
-        assertEquals("Merge request !123454: update in project bar", event.descriptionFor(mock(SCMNavigator.class)));
-        assertEquals("Merge request !123454: update", event.descriptionFor(mock(SCMSource.class)));
+        assertEquals("Merge request !123454 update in project foo/bar", event.description());
+        assertEquals("Merge request !123454 update in project bar", event.descriptionFor(mock(SCMNavigator.class)));
+        assertEquals("Merge request !123454 update", event.descriptionFor(mock(SCMSource.class)));
     }
 
     @Test
@@ -152,6 +152,6 @@ public class GitLabMergeRequestSCMEventTest {
         MergeRequestEvent mrEvent = mrEvent(null, null);
 
         GitLabMergeRequestSCMEvent event = event(mrEvent);
-        assertEquals("Merge request !123454: updated in project foo/bar", event.description());
+        assertEquals("Merge request !123454 updated in project foo/bar", event.description());
     }
 }

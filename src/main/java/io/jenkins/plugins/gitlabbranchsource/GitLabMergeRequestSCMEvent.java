@@ -102,7 +102,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
         });
         return "Merge request !"
                 + getPayload().getObjectAttributes().getIid()
-                + ": " + rootCause(getPayload())
+                + " " + rootCause(getPayload())
                 + " in project " + getPayload().getProject().getName();
     }
 
@@ -132,7 +132,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
             String.valueOf(state),
             getPayload().getObjectAttributes().getAction()
         });
-        return "Merge request !" + getPayload().getObjectAttributes().getIid() + ": " + rootCause(getPayload());
+        return "Merge request !" + getPayload().getObjectAttributes().getIid() + " " + rootCause(getPayload());
     }
 
     @Override
@@ -146,7 +146,7 @@ public class GitLabMergeRequestSCMEvent extends AbstractGitLabSCMHeadEvent<Merge
         });
         return "Merge request !"
                 + getPayload().getObjectAttributes().getIid()
-                + ": " + rootCause(getPayload())
+                + " " + rootCause(getPayload())
                 + " in project " + getPayload().getProject().getPathWithNamespace();
     }
 
